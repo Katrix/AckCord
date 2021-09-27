@@ -49,7 +49,7 @@ sealed trait Param[Orig, A, F[_]] {
 
   def mapWithResolve[B](f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]): Param[Orig, B, F]
 
-  def ~[B, G[_]](other: Param[Orig, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
+  def ~[B, G[_]](other: Param[_, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
 
   def toCommandOption: ApplicationCommandOption
 }

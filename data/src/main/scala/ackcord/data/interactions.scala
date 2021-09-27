@@ -111,7 +111,7 @@ object ApplicationCommandOptionType
   type Aux[A] = ApplicationCommandOptionType { type Res = A }
 
   override def values: immutable.IndexedSeq[ApplicationCommandOptionType] =
-    ApplicationCommandOptionTypeE.findValues.asInstanceOf[immutable.IndexedSeq[ApplicationCommandOptionType]]
+    ApplicationCommandOptionTypeE.values.asInstanceOf[immutable.IndexedSeq[ApplicationCommandOptionType]]
 
   final val SubCommand: ApplicationCommandOptionType.Aux[Seq[ApplicationCommandInteractionDataOption[_]]] =
     ApplicationCommandOptionTypeE.SubCommand

@@ -14,9 +14,8 @@ import cats.syntax.either._
 
 abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, InteractionTpe <: BaseInteraction](
     val requests: Requests,
-    interactionTransformer: DataInteractionTransformer[shapeless.Const[BaseInteraction]#λ, shapeless.Const[
-      InteractionTpe
-    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[BaseInteraction]#λ],
+    interactionTransformer: InteractionTransformer[BaseInteraction, InteractionTpe] =
+      InteractionTransformer.identity[BaseInteraction],
     acceptedComponent: ComponentType
 ) extends InteractionHandlerOps {
 
@@ -32,12 +31,14 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       invocationInfo: InteractionInvocationInfo,
       message: Message,
       interaction: RawInteraction,
+      customId: String,
       cacheSnapshot: Option[CacheSnapshot]
   ): BaseInteraction
 
   def handleRaw(
       clientId: String,
       interaction: RawInteraction,
+      customId: String,
       cacheSnapshot: Option[CacheSnapshot]
   ): Option[InteractionResponse] = {
     val isCorrectComponentType = interaction.data
@@ -64,7 +65,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
 
           Some(
             interactionTransformer
-              .filter(makeBaseInteraction(invocationInfo, message, interaction, cacheSnapshot))
+              .filter(makeBaseInteraction(invocationInfo, message, interaction, customId, cacheSnapshot))
               .map(handle(_))
               .leftMap {
                 case Some(error) =>

@@ -76,7 +76,7 @@ object InteractionsRegistrar {
             registeredComponents
               .handlerForIdentifier(data.customId)
               .orElse(GlobalRegisteredComponents.handlerForIdentifier(data.customId))
-              .flatMap(_.handleRaw(clientId, interaction, optCache))
+              .flatMap(_.handleRaw(clientId, interaction, data.customId, optCache))
               .toRight(None)
 
           case _ => Left(Some("None or invalid data sent for component execution"))
