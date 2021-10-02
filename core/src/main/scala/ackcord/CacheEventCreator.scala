@@ -369,6 +369,7 @@ object CacheEventCreator {
             state.current
               .getGuild(data.guildId)
               .map { g =>
+
                 api.GuildBanRemove(
                   g,
                   state.current.getUser(data.user.id).getOrElse(data.user),
@@ -388,6 +389,17 @@ object CacheEventCreator {
               .getGuild(data.guildId)
               .map(g => api.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state, dispatch.gatewayInfo)),
           CacheHandlers.guildEmojisUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.GuildStickersUpdate(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g => api.GuildStickerUpdate(g, data.stickers.map(_.toSticker), state, dispatch.gatewayInfo)),
+          CacheHandlers.guildStickersUpdater,
           registry,
           dispatch
         )

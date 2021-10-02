@@ -483,7 +483,7 @@ case class RawMessage(
     applicationId: Option[ApplicationId],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
-    stickers: Option[Seq[Sticker]],
+    stickers: Option[Seq[RawSticker]],
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[RawMessage],
     interaction: Option[MessageInteraction],
@@ -522,7 +522,7 @@ case class RawMessage(
           applicationId,
           messageReference,
           flags,
-          stickers,
+          stickers.map(_.map(_.toSticker)),
           stickerItems,
           referencedMessage.map(_.toMessage),
           interaction,
@@ -555,7 +555,7 @@ case class RawMessage(
           applicationId,
           messageReference,
           flags,
-          stickers,
+          stickers.map(_.map(_.toSticker)),
           stickerItems,
           referencedMessage.map(_.toMessage),
           interaction,
@@ -710,7 +710,8 @@ case class RawGuild(
     approximatePresenceCount: Option[Int],
     welcomeScreen: Option[WelcomeScreen],
     nsfwLevel: NSFWLevel,
-    stageInstances: Option[Seq[StageInstance]]
+    stageInstances: Option[Seq[StageInstance]],
+    stickers: Option[Seq[RawSticker]]
 ) {
 
   def toGatewayGuild(botUserId: Option[UserId]): Option[GatewayGuild] =
@@ -770,7 +771,8 @@ case class RawGuild(
         publicUpdatesChannelId,
         maxVideoChannelUsers,
         nsfwLevel,
-        SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id)
+        SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id),
+        SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
       )
     }
 
@@ -812,7 +814,8 @@ case class RawGuild(
       maxVideoChannelUsers,
       approximateMemberCount,
       approximatePresenceCount,
-      nsfwLevel
+      nsfwLevel,
+      SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
     )
   }
 
@@ -1144,4 +1147,62 @@ case class RawEmoji(
 ) {
 
   def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed, animated, available)
+}
+
+/**
+  * The structure of a sticker sent in a message in it's raw form.
+  * @param id
+  *   Id of the sticker.
+  * @param packId
+  *   Id of the pack the sticker is from.
+  * @param name
+  *   Name of the sticker.
+  * @param description
+  *   Description of the sticker.
+  * @param tags
+  *   A comma-separated list of tags for the sticker.
+  * @param asset
+  *   Sticker asset hash.
+  * @param `type`
+  *   Type of the sticker.
+  * @param formatType
+  *   Type of sticker format.
+  * @param available
+  *   If this guild sticker can currently be used.
+  * @param guildId
+  *   Id of the guild that owns this sticker.
+  * @param user
+  *   The user that uploaded the sticker.
+  * @param sortValue
+  *   A standard sticker's sort value in it's pack.
+  */
+case class RawSticker(
+    id: StickerId,
+    packId: Option[SnowflakeType[StickerPack]],
+    name: String,
+    description: String,
+    tags: Option[String],
+    asset: String,
+    `type`: StickerType,
+    formatType: FormatType,
+    available: Option[Boolean],
+    guildId: Option[GuildId],
+    user: Option[User],
+    sortValue: Option[Int]
+) {
+
+  def toSticker: Sticker = Sticker(
+    id,
+    packId,
+    name,
+    description,
+    tags,
+    asset,
+    `type`,
+    formatType,
+    available,
+    guildId,
+    user.map(_.id),
+    sortValue
+  )
 }

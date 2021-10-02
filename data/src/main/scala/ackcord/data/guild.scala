@@ -268,6 +268,9 @@ sealed trait Guild extends UnknownStatusGuild {
   /** The guild NSFW level. */
   def nsfwLevel: NSFWLevel
 
+  /** The stickers of the guild. */
+  def stickers: SnowflakeMap[Sticker, Sticker]
+
   /** Get the everyone role in this guild. */
   def everyoneRole: Role = roles(RoleId(id)) //The everyone role should always be present
 
@@ -329,7 +332,8 @@ case class RequestsGuild(
     maxVideoChannelUsers: Option[Int],
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
-    nsfwLevel: NSFWLevel
+    nsfwLevel: NSFWLevel,
+    stickers: SnowflakeMap[Sticker, Sticker]
 ) extends Guild {
 
   def toGatewayGuild(
@@ -390,7 +394,8 @@ case class RequestsGuild(
       publicUpdatesChannelId,
       maxVideoChannelUsers,
       nsfwLevel,
-      SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id)
+      SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id),
+      stickers
     )
   }
 }
@@ -460,7 +465,8 @@ case class GatewayGuild(
     publicUpdatesChannelId: Option[TextGuildChannelId],
     maxVideoChannelUsers: Option[Int],
     nsfwLevel: NSFWLevel,
-    stageInstances: SnowflakeMap[StageInstance, StageInstance]
+    stageInstances: SnowflakeMap[StageInstance, StageInstance],
+    stickers: SnowflakeMap[Sticker, Sticker]
 ) extends Guild {
 
   /** Get the AFK channel of this guild. */

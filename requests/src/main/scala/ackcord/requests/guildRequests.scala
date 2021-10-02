@@ -327,6 +327,19 @@ case class ModifyGuildChannelPositions(
   override def withReason(reason: String): ModifyGuildChannelPositions = copy(reason = Some(reason))
 }
 
+/**
+  * @param threads
+  *   The active threads.
+  * @param members
+  *   A thread member object for each thread the current user has joined.
+  */
+case class ListActiveThreadsResponse(threads: Seq[RawChannel], members: Seq[RawThreadMember])
+case class ListActiveGuildThreads(guildId: GuildId) extends NoParamsNiceResponseRequest[ListActiveThreadsResponse] {
+  override def route: RequestRoute = Routes.listActiveGuildThreads(guildId)
+  override def responseDecoder: Decoder[ListActiveThreadsResponse] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
+}
+
 trait GuildMemberRequest[Params] extends RESTRequest[Params, RawGuildMember, GuildMember] {
   def guildId: GuildId
 

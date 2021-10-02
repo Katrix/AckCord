@@ -81,7 +81,7 @@ class CacheTypeRegistry(
 }
 object CacheTypeRegistry {
 
-  private val noPresencesBansEmojiUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
+  private val noPresencesBansEmojiStickerUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
     classOf[PartialUser]             -> CacheHandlers.partialUserUpdater,
     classOf[Guild]                   -> CacheHandlers.guildUpdater,
     classOf[GuildMember]             -> CacheHandlers.guildMemberUpdater,
@@ -102,9 +102,10 @@ object CacheTypeRegistry {
     classOf[Presence]                -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
   )
 
-  private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(
+  private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiStickerUpdaters ++ Map(
     classOf[Ban]   -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
-    classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false)
+    classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false),
+    classOf[Sticker] -> CacheUpdater.dummy[Sticker](shouldBeIgnored = false)
   )
 
   private val allUpdaters: Map[Class[_], CacheUpdater[_]] =
@@ -129,5 +130,5 @@ object CacheTypeRegistry {
   def noPresences = new CacheTypeRegistry(noPresencesUpdaters, allDeleters)
 
   def noPresencesBansEmoji =
-    new CacheTypeRegistry(noPresencesBansEmojiUpdaters, noBanDeleters)
+    new CacheTypeRegistry(noPresencesBansEmojiStickerUpdaters, noBanDeleters)
 }

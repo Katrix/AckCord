@@ -71,8 +71,9 @@ package object gateway {
     /**
       * Allows you to receive.
       *   - [[ackcord.gateway.GatewayEvent.GuildEmojisUpdate]]
+      *   - [[ackcord.gateway.GatewayEvent.GuildStickersUpdate]]
       */
-    val GuildEmojis: GatewayIntents = GatewayIntents(1 << 3)
+    val GuildEmojisAndStickers: GatewayIntents = GatewayIntents(1 << 3)
 
     /**
       * Allows you to receive.
@@ -156,7 +157,7 @@ package object gateway {
     val AllNonPrivileged: GatewayIntents = GatewayIntents(
       Guilds,
       GuildBans,
-      GuildEmojis,
+      GuildEmojisAndStickers,
       GuildIntegrations,
       GuildWebhooks,
       GuildInvites,

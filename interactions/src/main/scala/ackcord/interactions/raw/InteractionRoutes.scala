@@ -34,7 +34,7 @@ object InteractionRoutes {
   val interactionId = new MinorParameter[InteractionId]("interactionId", _.asString)
 
   val callback: (InteractionId, String) => RequestRoute =
-    base / "interactions" / interactionId / token / "callback" toRequest POST
+    base / "interactions" / interactionId / webhookToken / "callback" toRequest POST
 
   //Commands
   val application: RouteFunction[ApplicationId]                = base / "applications" / applicationId

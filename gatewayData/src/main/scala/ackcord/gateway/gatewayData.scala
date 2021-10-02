@@ -648,6 +648,21 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
+  /**
+    * @param guildId
+    *   The guild where the update occoured.
+    * @param stickers
+    *   The new stickers.
+    */
+  case class GuildStickersUpdateData(guildId: GuildId, stickers: Seq[RawSticker])
+
+  /** Sent to the shard when the stickers of a guild have been updated. */
+  case class GuildStickersUpdate(rawData: Json, data: Later[Decoder.Result[GuildStickersUpdateData]])
+    extends GuildEvent[GuildStickersUpdateData] {
+    override def name: String                           = "GUILD_STICKERS_UPDATE"
+    override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
+  }
+
   /** @param guildId The guild where the update occurred. */
   case class GuildIntegrationsUpdateData(guildId: GuildId)
 
@@ -901,7 +916,7 @@ object GatewayEvent {
       applicationId: JsonOption[ApplicationId],
       messageReference: JsonOption[MessageReference],
       flags: JsonOption[MessageFlags],
-      stickers: JsonOption[Seq[Sticker]],
+      stickers: JsonOption[Seq[RawSticker]],
       stickerItems: JsonOption[Seq[StickerItem]],
       referencedMessage: JsonOption[RawPartialMessage],
       interaction: JsonOption[MessageInteraction],

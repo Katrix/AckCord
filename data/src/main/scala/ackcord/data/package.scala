@@ -355,10 +355,10 @@ package object data {
     val ManageEmojisAndStickers: Permission = Permission(0x40000000)
     val UseSlashCommands: Permission        = Permission(0x80000000)
     val RequestToSpeak: Permission          = Permission(0x100000000L)
-    val UseExternalStickers: Permission     = Permission(0x2000000000L)
     val ManageThreads: Permission           = Permission(0x0400000000L)
     val UsePublicThreads: Permission        = Permission(0x0800000000L)
     val UsePrivateThreads: Permission       = Permission(0x1000000000L)
+    val UseExternalStickers: Permission     = Permission(0x2000000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(

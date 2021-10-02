@@ -27,6 +27,7 @@ package ackcord.data
 import scala.collection.immutable
 
 import ackcord.CacheSnapshot
+import ackcord.data.raw.RawChannel
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
 
@@ -44,7 +45,8 @@ case class AuditLog(
     webhooks: Seq[Webhook],
     users: Seq[User],
     auditLogEntries: Seq[AuditLogEntry],
-    integrations: Seq[PartialIntegration]
+    integrations: Seq[PartialIntegration],
+    threads: Seq[RawChannel]
 )
 
 /**
@@ -123,6 +125,12 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
   case object StageInstanceCreate    extends AuditLogEvent(83)
   case object StageInstanceUpdate    extends AuditLogEvent(84)
   case object StageInstanceDelete    extends AuditLogEvent(85)
+  case object StickerCreate          extends AuditLogEvent(90)
+  case object StickerUpdate          extends AuditLogEvent(91)
+  case object StickerDelete          extends AuditLogEvent(92)
+  case object ThreadCreate           extends AuditLogEvent(110)
+  case object ThreadUpdate           extends AuditLogEvent(111)
+  case object ThreadDelete           extends AuditLogEvent(112)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 
@@ -407,4 +415,33 @@ object AuditLogChange {
   /** Privacy level of a stage instance */
   case class PrivacyLevel(oldValue: Option[StageInstancePrivacyLevel], newValue: Option[StageInstancePrivacyLevel])
       extends AuditLogChange[StageInstancePrivacyLevel]
+
+  /** Related emoji of a sticker changed */
+  case class Tags(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /** Format type of a sticker changed */
+  case class FormatType(oldValue: Option[data.FormatType], newValue: Option[data.FormatType])
+      extends AuditLogChange[data.FormatType]
+
+  /** Empty string */
+  case class Asset(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /** Availability of a sticker changed */
+  case class Available(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
+  /** Guild sticker changed */
+  case class GuildIdChange(oldValue: Option[data.GuildId], newValue: Option[data.GuildId])
+      extends AuditLogChange[data.GuildId]
+
+  /** Thread is archived/unarchived */
+  case class Archived(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
+  /** Thread is locked/unlocked */
+  case class Locked(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
+  /** Auto archive duration changed */
+  case class AutoArchiveDuration(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+
+  /** Default auto archive duration for new threads changed */
+  case class DefaultAutoArchiveDuration(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 }

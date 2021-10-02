@@ -241,6 +241,14 @@ object CacheHandlers {
 
       userUpdater.foreach(updater => users.foreach(user => updater.handle(builder, user, registry)))
 
+      userUpdater.foreach { updater =>
+        for {
+          stickers <- obj.stickers.toSeq
+          sticker  <- stickers
+          user     <- sticker.user
+        } updater.handle(builder, user, registry)
+      }
+
       guildUpdater.foreach { guildUpdater =>
         val rawChannels  = obj.channels.filter(_ => registry.hasUpdater[GuildChannel]).getOrElse(Seq.empty)
         val rawThreads   = obj.channels.filter(_ => registry.hasUpdater[ThreadGuildChannel]).getOrElse(Seq.empty)
@@ -308,7 +316,8 @@ object CacheHandlers {
           stageInstances = obj.stageInstances
             .map(seq => SnowflakeMap.withKey(seq)(_.id))
             .orElse(oldGuild.map(_.stageInstances))
-            .getOrElse(SnowflakeMap.empty)
+            .getOrElse(SnowflakeMap.empty),
+          stickers = SnowflakeMap.from(obj.stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -343,6 +352,26 @@ object CacheHandlers {
                 guild.copy(emojis = SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)))
               }
             case None => log.warn(s"Can't find guild for emojis update $obj")
+          }
+        }
+      }
+    }
+
+  val guildStickersUpdater: CacheUpdater[GuildStickersUpdateData] =
+    new CacheUpdater[GuildStickersUpdateData] {
+      override def handle(
+          builder: CacheSnapshotBuilder,
+          obj: GuildStickersUpdateData,
+          registry: CacheTypeRegistry
+      ): Unit = {
+        if (registry.hasUpdater[Sticker]) {
+          val GuildStickersUpdateData(guildId, stickers) = obj
+          builder.getGuild(guildId) match {
+            case Some(guild) =>
+              registry.updateData(builder) {
+                guild.copy(stickers = SnowflakeMap.from(stickers.map(s => s.id -> s.toSticker)))
+              }
+            case None => log.warn(s"Can't find guild for sticker update $obj")
           }
         }
       }
@@ -535,7 +564,7 @@ object CacheHandlers {
                 applicationId = obj.applicationId.orElseIfUndefined(message.applicationId),
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
                 flags = obj.flags.orElseIfUndefined(message.flags),
-                stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                stickers = obj.stickers.map(_.map(_.toSticker)).orElseIfUndefined(message.stickers),
                 stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction),
@@ -573,7 +602,7 @@ object CacheHandlers {
                 applicationId = obj.applicationId.orElseIfUndefined(message.applicationId),
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
                 flags = obj.flags.orElseIfUndefined(message.flags),
-                stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                stickers = obj.stickers.map(_.map(_.toSticker)).orElseIfUndefined(message.stickers),
                 stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction),

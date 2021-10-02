@@ -26,7 +26,7 @@ package ackcord.gateway
 import java.time.OffsetDateTime
 
 import ackcord.data._
-import ackcord.data.raw.{PartialRawGuildMember, RawChannel, RawMessageActivity}
+import ackcord.data.raw.{PartialRawGuildMember, RawChannel, RawMessageActivity, RawSticker}
 import ackcord.util._
 import cats.Later
 import cats.syntax.either._
@@ -48,6 +48,9 @@ object GatewayProtocol extends DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val guildEmojisUpdateDataCodec: Codec[GatewayEvent.GuildEmojisUpdateData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildStickersUpdateDataCodec: Codec[GatewayEvent.GuildStickersUpdateData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val guildIntegrationsUpdateDataCodec: Codec[GatewayEvent.GuildIntegrationsUpdateData] =
@@ -246,7 +249,7 @@ object GatewayProtocol extends DiscordProtocol {
       applicationId     <- c.get[JsonOption[ApplicationId]]("application_id")
       messageReference  <- c.get[JsonOption[MessageReference]]("message_reference")
       flags             <- c.get[JsonOption[MessageFlags]]("flags")
-      stickers          <- c.get[JsonOption[Seq[Sticker]]]("stickers")
+      stickers          <- c.get[JsonOption[Seq[RawSticker]]]("stickers")
       stickerItems      <- c.get[JsonOption[Seq[StickerItem]]]("sticker_items")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
       interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
@@ -386,6 +389,7 @@ object GatewayProtocol extends DiscordProtocol {
       "GUILD_BAN_ADD"                 -> createDispatch(GatewayEvent.GuildBanAdd),
       "GUILD_BAN_REMOVE"              -> createDispatch(GatewayEvent.GuildBanRemove),
       "GUILD_EMOJIS_UPDATE"           -> createDispatch(GatewayEvent.GuildEmojisUpdate),
+      "GUILD_STICKERS_UPDATE"         -> createDispatch(GatewayEvent.GuildStickersUpdate),
       "GUILD_INTEGRATIONS_UPDATE"     -> createDispatch(GatewayEvent.GuildIntegrationsUpdate),
       "GUILD_MEMBER_ADD"              -> createDispatch(GatewayEvent.GuildMemberAdd),
       "GUILD_MEMBER_REMOVE"           -> createDispatch(GatewayEvent.GuildMemberRemove),

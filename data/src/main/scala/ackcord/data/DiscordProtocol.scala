@@ -244,7 +244,10 @@ trait DiscordProtocol {
   implicit val messageReferenceCodec: Codec[MessageReference] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val stickerCodec: Codec[Sticker] =
+  implicit val rawStickerCodec: Codec[RawSticker] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val stickerPackCodec: Codec[StickerPack] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val stickerItemCodec: Codec[StickerItem] =
@@ -380,7 +383,7 @@ trait DiscordProtocol {
       applicationId      <- c.get[Option[ApplicationId]]("application_id")
       messageReference   <- c.get[Option[MessageReference]]("message_reference")
       flags              <- c.get[Option[MessageFlags]]("flags")
-      stickers           <- c.get[Option[Seq[Sticker]]]("stickers")
+      stickers           <- c.get[Option[Seq[RawSticker]]]("stickers")
       stickerItems       <- c.get[Option[Seq[StickerItem]]]("sticker_items")
       referencedMessage  <- c.get[Option[RawMessage]]("referenced_message")
       messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
@@ -575,9 +578,18 @@ trait DiscordProtocol {
       case "type"             => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
       case "enable_emoticons" => mkChange(AuditLogChange.EnableEmoticons)
       case "expire_behavior"  => mkChange(AuditLogChange.ExpireBehavior)
-      case "expire_grace_period" => mkChange(AuditLogChange.ExpireGracePeriod)
-      case "user_limit"          => mkChange(AuditLogChange.UserLimit)
-      case "privacy_level"       => mkChange(AuditLogChange.PrivacyLevel)
+      case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
+      case "user_limit"                    => mkChange(AuditLogChange.UserLimit)
+      case "privacy_level"                 => mkChange(AuditLogChange.PrivacyLevel)
+      case "tags"                          => mkChange(AuditLogChange.Tags)
+      case "format_type"                   => mkChange(AuditLogChange.FormatType)
+      case "asset"                         => mkChange(AuditLogChange.Asset)
+      case "available"                     => mkChange(AuditLogChange.Available)
+      case "guild_id"                      => mkChange(AuditLogChange.GuildIdChange)
+      case "archived"                      => mkChange(AuditLogChange.Archived)
+      case "locked"                        => mkChange(AuditLogChange.Locked)
+      case "auto_archive_duration"         => mkChange(AuditLogChange.AutoArchiveDuration)
+      case "default_auto_archive_duration" => mkChange(AuditLogChange.DefaultAutoArchiveDuration)
     }
   }
 
@@ -639,7 +651,7 @@ trait DiscordProtocol {
     (c: HCursor) =>
       for {
         name  <- c.get[String]("name")
-        value <- c.get[String]("value").map(Left(_)).orElse(c.get[Int]("value").map(Right(_)))
+        value <- c.get[String]("value").map(Left(_)).orElse(c.get[Double]("value").map(Right(_)))
       } yield ApplicationCommandOptionChoice(name, value),
     (a: ApplicationCommandOptionChoice) => Json.obj("name" := a.name, "value" := a.value.fold(_.asJson, _.asJson))
   )

@@ -125,6 +125,7 @@ object ApplicationCommandOptionType
   final val Channel: ApplicationCommandOptionType.Aux[TextGuildChannelId] = ApplicationCommandOptionTypeE.Channel
   final val Role: ApplicationCommandOptionType.Aux[RoleId]                = ApplicationCommandOptionTypeE.Role
   final val Mentionable: ApplicationCommandOptionType.Aux[UserOrRoleId]   = ApplicationCommandOptionTypeE.Mentionable
+  final val Number: ApplicationCommandOptionType.Aux[Double]              = ApplicationCommandOptionTypeE.Number
 
   def Unknown(i: Int): ApplicationCommandOptionType = ApplicationCommandOptionTypeE.Unknown(i)
 
@@ -183,6 +184,7 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
         json => decodeMention[UserOrRole](userRegex)(json).orElse(decodeMention[UserOrRole](roleRegex)(json)),
         id => s"<@$id>".asJson
       ) //Let's just hope it's a user here
+  case object Number extends ApplicationCommandOptionTypeE[Double](10, _.as[Double], _.asJson)
 
   case class Unknown(i: Int) extends ApplicationCommandOptionTypeE[Json](i, Right(_), identity)
 
@@ -194,7 +196,7 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
 
 case class ApplicationCommandOptionChoice(
     name: String,
-    value: Either[String, Int]
+    value: Either[String, Double]
 )
 
 sealed trait ApplicationInteractionData

@@ -82,4 +82,11 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
         )
       }
     }
+
+  def number(name: String, description: String): ChoiceParam[Double, Double, Id] = ChoiceParam.default(
+    ApplicationCommandOptionType.Number,
+    name,
+    description,
+    (name, num) => ApplicationCommandOptionChoice(name, Right(num))
+  )
 }

@@ -304,6 +304,17 @@ object APIMessage {
       extends GuildMessage
 
   /**
+    * Sent to the client when the stickers of a guild have been updated. If you
+    * need the old stickers, you can find them in [[cache.previous]].
+    * @param guild
+    *   The guild where the update occurred.
+    * @param stickers
+    *   The new stickers.
+    */
+  case class GuildStickerUpdate(guild: GatewayGuild, stickers: Seq[Sticker], cache: CacheState, gatewayInfo: GatewayInfo)
+    extends GuildMessage
+
+  /**
     * Sent to the client when the integrations of a guild were updated. You have
     * to fetch the integrations yourself.
     * @param guild
