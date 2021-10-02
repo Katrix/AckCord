@@ -77,6 +77,9 @@ object Ratelimiter {
               case ratelimited: RequestRatelimited => ratelimited.global
               case _                               => false
             },
+            answer.eitherData.swap.toOption.collect { case e: HttpException =>
+              e
+            },
             answer.identifier
           )
         )

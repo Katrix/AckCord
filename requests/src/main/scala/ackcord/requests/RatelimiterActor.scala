@@ -33,9 +33,12 @@ import scala.concurrent.duration._
 import ackcord.util.AckCordRequestSettings
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
+import akka.http.scaladsl.model.{StatusCodes, Uri}
 import org.slf4j.Logger
 
 class RatelimiterActor(
+    maxRequestsPerSecond: Int,
+    counter404s: Boolean,
     context: ActorContext[RatelimiterActor.Command],
     log: Logger,
     timers: TimerScheduler[RatelimiterActor.Command],
@@ -53,10 +56,16 @@ class RatelimiterActor(
 
   private var globalRatelimitTimeout = 0.toLong
   private val globalLimited          = new mutable.Queue[WantToPass[_]]
+  private var requestsLastSecond     = 0
 
-  def isGlobalRatelimited: Boolean = globalRatelimitTimeout - System.currentTimeMillis() > 0
+  private val previous404s = new mutable.HashMap[Uri, Long]()
 
-  def handleWantToPassGlobal[A](request: WantToPass[A]): Unit = {
+  context.self ! RatelimiterActor.GlobalTimeoutDone
+
+  def isGlobalRatelimited: Boolean =
+    globalRatelimitTimeout - System.currentTimeMillis() > 0 || requestsLastSecond >= maxRequestsPerSecond
+
+  def handleWantToPassGlobalRatelimited[A](request: WantToPass[A]): Unit = {
     context.watchWith(request.replyTo, GlobalTimedOut(request.replyTo))
     globalLimited.enqueue(request)
   }
@@ -129,33 +138,55 @@ class RatelimiterActor(
       Behaviors.same
 
     case GlobalTimer =>
-      globalLimited.dequeueAll(_ => true).foreach { request =>
-        context.unwatch(request.replyTo)
-        handleWantToPassNotGlobal(request)
-      }
+      requestsLastSecond = 0
+      releaseGlobalWaiting()
+
+      Behaviors.same
+
+    case GlobalTimeoutDone =>
+      requestsLastSecond = 0
+      releaseGlobalWaiting()
+      timers.startTimerAtFixedRate(GlobalTimer, GlobalTimer, 1.second)
 
       Behaviors.same
 
     case request @ WantToPass(route, identifier, _, _) =>
-      if (settings.LogRatelimitEvents) {
-        log.debug(
-          s"""|
-              |Got incoming request: ${route.uriWithMajor} $identifier
-              |RouteLimits: ${uriToBucket.get(route.uriWithoutMajor).flatMap(k => routeLimits.get(k))}
-              |Remaining requests: ${remainingRequests.get(route.uriWithMajor)}
-              |Requests waiting: ${rateLimits.get(route.uriWithMajor).fold(0)(_.size)}
-              |Global ratelimit timeout: $globalRatelimitTimeout
-              |Global requests waiting: ${globalLimited.size}
-              |Current time: ${System.currentTimeMillis()}
-              |""".stripMargin
-        )
+      if (counter404s && previous404s.contains(route.uri)) {
+        previous404s.put(route.uri, System.currentTimeMillis())
+        Behaviors.same
+      } else {
+        if (settings.LogRatelimitEvents) {
+          log.debug(
+            s"""|
+                |Got incoming request: ${route.uriWithMajor} $identifier
+                |RouteLimits: ${uriToBucket.get(route.uriWithoutMajor).flatMap(k => routeLimits.get(k))}
+                |Remaining requests: ${remainingRequests.get(route.uriWithMajor)}
+                |Requests waiting: ${rateLimits.get(route.uriWithMajor).fold(0)(_.size)}
+                |Global ratelimit timeout: $globalRatelimitTimeout
+                |Global requests waiting: ${globalLimited.size}
+                |Current time: ${System.currentTimeMillis()}
+                |""".stripMargin
+          )
+        }
+
+        if (isGlobalRatelimited) {
+          handleWantToPassGlobalRatelimited(request)
+        } else {
+          handleWantToPassNotGlobal(request)
+        }
+        Behaviors.same
       }
 
-      if (isGlobalRatelimited) {
-        handleWantToPassGlobal(request)
-      } else {
-        handleWantToPassNotGlobal(request)
+    case Clean404s =>
+      //10 seconds is a good place to start. We can change it later
+      val now = System.currentTimeMillis()
+      //TODO: Replace with filterInPlace once 2.12 isn't a concern
+      previous404s.foreach { case (uri, lastAccessed) =>
+        if (!(now - lastAccessed < 10000)) {
+          previous404s.remove(uri)
+        }
       }
+
       Behaviors.same
 
     case QueryRatelimits(route, replyTo) =>
@@ -181,6 +212,7 @@ class RatelimiterActor(
           route,
           ratelimitInfo @ RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
           isGlobal,
+          optError,
           identifier
         ) =>
       if (settings.LogRatelimitEvents) {
@@ -198,6 +230,14 @@ class RatelimiterActor(
         )
       }
 
+      if (counter404s) {
+        optError.foreach { e =>
+          if (e.statusCode == StatusCodes.NotFound) {
+            previous404s.put(e.uri, System.currentTimeMillis())
+          }
+        }
+      }
+
       if (ratelimitInfo.isValid) {
         //We don't update the remainingRequests map here as the information we get here is slightly outdated
         routeLimits.put(bucket, bucketLimit)
@@ -205,7 +245,8 @@ class RatelimiterActor(
 
         if (isGlobal) {
           globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
-          timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
+          timers.cancel(GlobalTimer)
+          timers.startSingleTimer(GlobalTimeoutDone, GlobalTimeoutDone, timeTilReset)
         } else {
           ratelimitResets.put(route.uriWithMajor, System.currentTimeMillis() + timeTilReset.toMillis)
           timers.startSingleTimer(
@@ -278,13 +319,39 @@ class RatelimiterActor(
         queue.dequeueAll(_ => true).foreach { request =>
           log.debug("\nReleasing all requests due to global")
           context.unwatch(request.replyTo)
-          handleWantToPassGlobal(request)
+          handleWantToPassGlobalRatelimited(request)
         }
       } else {
         val newRemaining = release(remainingRequests.getOrElse(uri, Int.MaxValue))
         remainingRequests.put(uri, newRemaining)
       }
     }
+  }
+
+  def releaseGlobalWaiting(): Unit = {
+    @tailrec
+    def release(releasedSoFar: Int): Int = {
+      if (releasedSoFar >= maxRequestsPerSecond || globalLimited.isEmpty) releasedSoFar
+      else {
+        val request = globalLimited.dequeue()
+        if (settings.LogRatelimitEvents) {
+          val WantToPass(route, identifier, _, _) = request
+          log.debug(
+            s"""|
+                |Releasing request: ${route.method.value} ${route.uriWithMajor} $identifier
+                |Remaining requests: $releasedSoFar
+                |Current time: ${System.currentTimeMillis()}
+                |""".stripMargin
+          )
+        }
+
+        sendResponse(request)
+        context.unwatch(request.replyTo)
+        release(releasedSoFar + 1)
+      }
+    }
+
+    requestsLastSecond = release(requestsLastSecond)
   }
 
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = { case PostStop =>
@@ -297,14 +364,24 @@ class RatelimiterActor(
 
 object RatelimiterActor {
 
-  def apply(): Behavior[Command] =
+  /**
+    * @param maxRequestsPerSecond
+    *   Max amount of requests per second before the ratelimiter will assume
+    *   it's globally ratelimited, and hold off on sending requests.
+    * @param counter404s
+    *   If the ratelimiter should keep track of previous 404s, and stop letting
+    *   URIs with the same destination pass.
+    */
+  def apply(maxRequestsPerSecond: Int = 50, counter404s: Boolean = true): Behavior[Command] =
     Behaviors
       .supervise(
         Behaviors.setup[Command] { context =>
           val settings = AckCordRequestSettings()(context.system)
           val log      = context.log
 
-          Behaviors.withTimers(timers => new RatelimiterActor(context, log, timers, settings))
+          Behaviors.withTimers(timers =>
+            new RatelimiterActor(maxRequestsPerSecond, counter404s, context, log, timers, settings)
+          )
         }
       )
       .onFailure(SupervisorStrategy.restart)
@@ -322,10 +399,13 @@ object RatelimiterActor {
       route: RequestRoute,
       ratelimitInfo: RatelimitInfo,
       isGlobal: Boolean,
+      error: Option[HttpException],
       identifier: UUID
   ) extends Command
 
   private case object GlobalTimer                                                            extends Command
+  private case object GlobalTimeoutDone                                                      extends Command
+  private case object Clean404s                                                              extends Command
   private case class ResetRatelimit(uriWithMajor: String, bucket: String, spurious: Boolean) extends Command
   private case class TimedOut[A](uriWithMajor: String, actorRef: ActorRef[A])                extends Command
   private case class GlobalTimedOut[A](actorRef: ActorRef[A])                                extends Command
