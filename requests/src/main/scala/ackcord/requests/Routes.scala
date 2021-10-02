@@ -186,8 +186,8 @@ object Routes {
 
     def toRequest[Repr <: HList, Res](
         method: HttpMethod
-    )(implicit
-        unflatten: FlattenUnflatten[A, Repr],
+    )(
+        implicit unflatten: FlattenUnflatten[A, Repr],
         toFn: shapeless.ops.function.FnFromProduct.Aux[Repr => RequestRoute, Res]
     ): Res = {
       val f = (repr: Repr) => route(unflatten.toIn(repr)).toRequest(method)
@@ -229,8 +229,8 @@ object Routes {
   case class QueryRouteFunction[A](route: A => QueryRoute) {
     def toRequest[Repr <: HList, Res](
         method: HttpMethod
-    )(implicit
-        unflatten: FlattenUnflatten[A, Repr],
+    )(
+        implicit unflatten: FlattenUnflatten[A, Repr],
         toFn: shapeless.ops.function.FnFromProduct.Aux[Repr => RequestRoute, Res]
     ): Res = {
       val f = (repr: Repr) => route(unflatten.toIn(repr)).toRequest(method)

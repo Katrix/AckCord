@@ -178,8 +178,8 @@ case class RequestSettings(
     counter404s: Boolean = true
 ) {
 
-  def toRequestsActor(token: String, ratelimitActor: ActorRef[RatelimiterActor.Command])(implicit
-      system: ActorSystem[Nothing]
+  def toRequestsActor(token: String, ratelimitActor: ActorRef[RatelimiterActor.Command])(
+      implicit system: ActorSystem[Nothing]
   ): Requests =
     new Requests(
       ackcord.requests.RequestSettings(

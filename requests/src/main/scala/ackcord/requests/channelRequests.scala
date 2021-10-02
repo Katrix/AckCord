@@ -888,7 +888,8 @@ object GetThreadsResponse {
   * order by their id.
   */
 @deprecated("Deprecated by Discord", "0.18.0")
-case class ListActiveChannelThreads(channelId: TextGuildChannelId) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+case class ListActiveChannelThreads(channelId: TextGuildChannelId)
+    extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listActiveChannelThreads(channelId)
 
   override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder

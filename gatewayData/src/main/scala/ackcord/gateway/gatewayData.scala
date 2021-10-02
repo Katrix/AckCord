@@ -658,7 +658,7 @@ object GatewayEvent {
 
   /** Sent to the shard when the stickers of a guild have been updated. */
   case class GuildStickersUpdate(rawData: Json, data: Later[Decoder.Result[GuildStickersUpdateData]])
-    extends GuildEvent[GuildStickersUpdateData] {
+      extends GuildEvent[GuildStickersUpdateData] {
     override def name: String                           = "GUILD_STICKERS_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }

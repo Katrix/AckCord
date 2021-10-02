@@ -51,7 +51,9 @@ object MenuHandler {
     InteractionTransformer
       .identity[MenuInteraction]
       .andThen(
-        InteractionTransformer.cache(c => i => BaseCacheMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, c))
+        InteractionTransformer.cache(c =>
+          i => BaseCacheMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, c)
+        )
       )
 
   val resolvedTransformer: InteractionTransformer[MenuInteraction, ResolvedMenuInteraction] =

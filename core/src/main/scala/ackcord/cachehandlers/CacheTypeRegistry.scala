@@ -103,8 +103,8 @@ object CacheTypeRegistry {
   )
 
   private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiStickerUpdaters ++ Map(
-    classOf[Ban]   -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
-    classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false),
+    classOf[Ban]     -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
+    classOf[Emoji]   -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false),
     classOf[Sticker] -> CacheUpdater.dummy[Sticker](shouldBeIgnored = false)
   )
 

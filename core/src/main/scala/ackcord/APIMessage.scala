@@ -311,8 +311,12 @@ object APIMessage {
     * @param stickers
     *   The new stickers.
     */
-  case class GuildStickerUpdate(guild: GatewayGuild, stickers: Seq[Sticker], cache: CacheState, gatewayInfo: GatewayInfo)
-    extends GuildMessage
+  case class GuildStickerUpdate(
+      guild: GatewayGuild,
+      stickers: Seq[Sticker],
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
 
   /**
     * Sent to the client when the integrations of a guild were updated. You have

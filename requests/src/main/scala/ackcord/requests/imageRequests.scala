@@ -246,5 +246,5 @@ case class GetStickerImage(
   override def desiredSize: Int = 0 //Always sent back as a constant
 
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.stickerImage(stickerId, format, None)
+  override def route: RequestRoute              = Routes.stickerImage(stickerId, format, None)
 }

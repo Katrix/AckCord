@@ -32,7 +32,9 @@ object ButtonHandler {
     InteractionTransformer
       .identity[ComponentInteraction]
       .andThen(
-        InteractionTransformer.cache(c => i => BaseCacheComponentInteraction(i.interactionInvocationInfo, i.message, i.customId, c))
+        InteractionTransformer.cache(c =>
+          i => BaseCacheComponentInteraction(i.interactionInvocationInfo, i.message, i.customId, c)
+        )
       )
 
   val resolvedTransformer: InteractionTransformer[ComponentInteraction, ResolvedComponentInteraction] =

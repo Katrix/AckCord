@@ -369,7 +369,6 @@ object CacheEventCreator {
             state.current
               .getGuild(data.guildId)
               .map { g =>
-
                 api.GuildBanRemove(
                   g,
                   state.current.getUser(data.user.id).getOrElse(data.user),
