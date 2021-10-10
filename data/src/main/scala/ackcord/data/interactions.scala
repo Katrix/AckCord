@@ -226,6 +226,7 @@ object ApplicationCommandInteractionDataResolved {
 
 case class InteractionGuildMember(
     user: User,
+    avatar: Option[String],
     nick: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
@@ -235,6 +236,7 @@ case class InteractionGuildMember(
 
 case class InteractionRawGuildMember(
     nick: Option[String],
+    avatar: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
