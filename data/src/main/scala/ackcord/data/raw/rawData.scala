@@ -1182,7 +1182,7 @@ case class RawSticker(
     id: StickerId,
     packId: Option[SnowflakeType[StickerPack]],
     name: String,
-    description: String,
+    description: Option[String],
     tags: Option[String],
     asset: String,
     `type`: StickerType,
