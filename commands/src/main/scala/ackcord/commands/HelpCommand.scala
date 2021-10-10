@@ -25,9 +25,9 @@ package ackcord.commands
 
 import java.util.concurrent.ConcurrentHashMap
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.Future
-import scala.jdk.CollectionConverters._
 
 import ackcord.data.Message
 import ackcord.requests.{CreateMessage, CreateMessageData, Requests}
