@@ -348,12 +348,6 @@ package object syntax {
       StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, autoArchiveDuration, tpe))
 
     /**
-      * Lists all the active threads in this channel. Threads are ordered in
-      * descending order by their id.
-      */
-    def listActiveThreads = ListActiveThreads(channel.id)
-
-    /**
       * Lists all the public archived threads in this channel. Threads are
       * ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
       */
@@ -1071,6 +1065,12 @@ package object syntax {
     /** Modify a guild embed for this guild. */
     def modifyWidgetSettings(embed: GuildWidgetSettings) =
       ModifyGuildWidget(guild.id, embed)
+
+    /**
+      * Lists all the active threads in this guild. Threads are ordered in
+      * descending order by their id.
+      */
+    def listActiveThreads = ListActiveGuildThreads(guild.id)
   }
 
   implicit class GatewayGuildSyntax(private val guild: GatewayGuild) extends AnyVal {

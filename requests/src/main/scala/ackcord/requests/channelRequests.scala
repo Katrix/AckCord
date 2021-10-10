@@ -232,14 +232,16 @@ case class GetChannelMessage(channelId: TextChannelId, messageId: MessageId)
 sealed trait CreateMessageFile {
   def fileName: String
   def isValid: Boolean
-  protected[requests] def toBodyPart: FormData.BodyPart
+  protected[requests] def toBodyPart: FormData.BodyPart =
+    FormData.BodyPart(fileName, toBodyPartEntity, Map("filename" -> fileName))
+  protected[requests] def toBodyPartEntity: BodyPartEntity
 }
 object CreateMessageFile {
   case class FromPath(path: Path) extends CreateMessageFile {
     override def fileName: String = path.getFileName.toString
     override def isValid: Boolean = Files.isRegularFile(path)
-    override protected[requests] def toBodyPart: FormData.BodyPart =
-      FormData.BodyPart.fromPath(fileName, ContentTypes.`application/octet-stream`, path)
+    override protected[requests] def toBodyPartEntity: BodyPartEntity =
+      HttpEntity.fromPath(ContentTypes.`application/octet-stream`, path)
   }
 
   case class SourceFile(
@@ -250,8 +252,8 @@ object CreateMessageFile {
   ) extends CreateMessageFile {
     override def isValid: Boolean = true
 
-    override protected[requests] def toBodyPart: FormData.BodyPart =
-      FormData.BodyPart(fileName, HttpEntity(contentType, contentLength, bytes), Map("filename" -> fileName))
+    override protected[requests] def toBodyPartEntity: BodyPartEntity =
+      HttpEntity(contentType, contentLength, bytes)
   }
 
   case class ByteFile(
@@ -261,12 +263,8 @@ object CreateMessageFile {
   ) extends CreateMessageFile {
     override def isValid: Boolean = true
 
-    override protected[requests] def toBodyPart: FormData.BodyPart =
-      FormData.BodyPart(
-        fileName,
-        HttpEntity(ContentTypes.`application/octet-stream`, bytes),
-        Map("filename" -> fileName)
-      )
+    override protected[requests] def toBodyPartEntity: BodyPartEntity =
+      HttpEntity(ContentTypes.`application/octet-stream`, bytes)
   }
 
   case class StringFile(
@@ -276,8 +274,8 @@ object CreateMessageFile {
   ) extends CreateMessageFile {
     override def isValid: Boolean = true
 
-    override protected[requests] def toBodyPart: FormData.BodyPart =
-      FormData.BodyPart(fileName, HttpEntity(ContentTypes.`text/plain(UTF-8)`, contents), Map("filename" -> fileName))
+    override protected[requests] def toBodyPartEntity: BodyPartEntity =
+      HttpEntity(ContentTypes.`text/plain(UTF-8)`, contents)
   }
 
 }
@@ -292,8 +290,8 @@ object CreateMessageFile {
   * @param files
   *   The files to send with this message. You can reference these files in the
   *   embed using `attachment://filename`.
-  * @param embed
-  *   An embed to send with this message.
+  * @param embeds
+  *   Embeds to send with this message.
   * @param replyTo
   *   The message to reply to
   * @param replyFailIfNotExist
@@ -308,7 +306,8 @@ case class CreateMessageData(
     allowedMentions: AllowedMention = AllowedMention.all,
     replyTo: Option[MessageId] = None,
     replyFailIfNotExist: Boolean = true,
-    components: Seq[ActionRow] = Nil
+    components: Seq[ActionRow] = Nil,
+    stickerIds: Seq[StickerId] = Nil
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -319,6 +318,7 @@ case class CreateMessageData(
   require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
   require(components.length <= 5, "Can't have more than 5 action rows on a message")
   require(nonce.forall(_.swap.forall(_.length <= 25)), "Nonce too long")
+  require(stickerIds.length <= 3, "Too many stickers")
 }
 object CreateMessageData {
 
@@ -330,7 +330,8 @@ object CreateMessageData {
       "tts"              := a.tts,
       "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
-      "components"       := a.components
+      "components"       := a.components,
+      "sticker_ids"      := a.stickerIds
     )
 
     a.replyTo.fold(base) { reply =>
@@ -809,7 +810,7 @@ case class StartThreadWithMessage(
 case class StartThreadWithoutMessageData(
     name: String,
     autoArchiveDuration: Int,
-    `type`: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
+    `type`: ChannelType.ThreadChannelType
 ) {
   require(
     Seq(60, 1440, 4320, 10080).contains(autoArchiveDuration),
@@ -886,8 +887,10 @@ object GetThreadsResponse {
   * Lists all the active threads in a channel. Threads are ordered in descending
   * order by their id.
   */
-case class ListActiveThreads(channelId: TextGuildChannelId) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
-  override def route: RequestRoute = Routes.listActiveThreads(channelId)
+@deprecated("Deprecated by Discord", "0.18.0")
+case class ListActiveChannelThreads(channelId: TextGuildChannelId)
+    extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+  override def route: RequestRoute = Routes.listActiveChannelThreads(channelId)
 
   override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
 }

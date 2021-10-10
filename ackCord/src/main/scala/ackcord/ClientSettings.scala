@@ -107,7 +107,7 @@ case class ClientSettings(
       shards: Events => Seq[Behavior[DiscordShard.Command]]
   )(implicit actorSystem: ActorSystem[Nothing]): Future[DiscordClientCore] = {
     val clientActor = actorSystem.systemActorOf(
-      DiscordClientActor(shards, cacheSettings),
+      DiscordClientActor(requestSettings.maxRequestsPerSecond, requestSettings.counter404s, shards, cacheSettings),
       "DiscordClient"
     )
 
@@ -160,6 +160,12 @@ case class ClientSettings(
   *   The overflow strategy to use when the buffer is full.
   * @param maxAllowedWait
   *   The max allowed wait time before giving up on a request.
+  * @param maxRequestsPerSecond
+  *   Max amount of requests per second before the ratelimiter will assume it's
+  *   globally ratelimited, and hold off on sending requests.
+  * @param counter404s
+  *   If the ratelimiter should keep track of previous 404s, and stop letting
+  *   URIs with the same destination pass.
   */
 case class RequestSettings(
     relativeTime: Boolean = false,
@@ -167,7 +173,9 @@ case class RequestSettings(
     bufferSize: Int = 32,
     maxRetryCount: Int = 3,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    maxAllowedWait: FiniteDuration = 2.minutes
+    maxAllowedWait: FiniteDuration = 2.minutes,
+    maxRequestsPerSecond: Int = 50,
+    counter404s: Boolean = true
 ) {
 
   def toRequestsActor(token: String, ratelimitActor: ActorRef[RatelimiterActor.Command])(

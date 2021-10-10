@@ -402,14 +402,14 @@ object InteractionTransformer {
   def identity[A]: InteractionTransformer[A, A] = (from: A) => Right(from)
 
   /** An interaction transformer which gurantees that a cache is present. */
-  def cache[I <: Interaction, O](create: CacheSnapshot => I => O): InteractionTransformer[I, O] = new InteractionTransformer[I, O] {
-    override def filterSimple(from: I): Either[Option[String], O] = {
-      from match {
-        case cacheInteraction: CacheInteraction => Right(create(cacheInteraction.cache)(from))
-        case _ => Left(Some("This action can only be used when the bot has access to a cache"))
-      }
+  def cache[I <: Interaction, O](create: CacheSnapshot => I => O): InteractionTransformer[I, O] =
+    new InteractionTransformer[I, O] {
+      override def filterSimple(from: I): Either[Option[String], O] =
+        from match {
+          case cacheInteraction: CacheInteraction => Right(create(cacheInteraction.cache)(from))
+          case _ => Left(Some("This action can only be used when the bot has access to a cache"))
+        }
     }
-  }
 
   /** A command transformer which resolves most ids from the cache. */
   def resolved[I <: CacheInteraction, O](
@@ -463,9 +463,7 @@ sealed trait InteractionResponse {
 }
 object InteractionResponse {
   sealed trait AsyncMessageable extends InteractionResponse {
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
-    ): InteractionResponse
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse
   }
 
   case object Pong                                             extends InteractionResponse
@@ -477,8 +475,8 @@ object InteractionResponse {
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    override def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
+    override def doAsync(action: AsyncMessageToken => OptFuture[_])(
+        implicit interaction: Interaction
     ): InteractionResponse = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
   case class ChannelMessage(
@@ -487,8 +485,7 @@ object InteractionResponse {
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
-    ): ChannelMessage = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: Interaction): ChannelMessage =
+      copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
 }

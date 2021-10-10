@@ -27,7 +27,7 @@ package ackcord
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
 
-import DiscordClientActor._
+import ackcord.DiscordClientActor._
 import ackcord.requests.RatelimiterActor
 import akka.Done
 import akka.actor.CoordinatedShutdown
@@ -37,6 +37,8 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.pattern.gracefulStop
 
 class DiscordClientActor(
+    maxRequestsPerSecond: Int,
+    counter404s: Boolean,
     ctx: ActorContext[DiscordClientActor.Command],
     shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
     cacheSettings: CacheSettings
@@ -57,8 +59,7 @@ class DiscordClientActor(
       cacheSettings.cacheTypeRegistry,
       cacheBufferSize = cacheSettings.cacheBufferSize,
       sendGatewayEventsBufferSize = cacheSettings.sendGatewayEventsBufferSize,
-      receiveGatewayEventsBufferSize =
-        cacheSettings.receiveGatewayEventsBufferSize
+      receiveGatewayEventsBufferSize = cacheSettings.receiveGatewayEventsBufferSize
     )
   } else {
     Events.create(
@@ -68,8 +69,7 @@ class DiscordClientActor(
       cacheSettings.cacheTypeRegistry,
       cacheBufferSize = cacheSettings.cacheBufferSize,
       sendGatewayEventsBufferSize = cacheSettings.sendGatewayEventsBufferSize,
-      receiveGatewayEventsBufferSize =
-        cacheSettings.receiveGatewayEventsBufferSize
+      receiveGatewayEventsBufferSize = cacheSettings.receiveGatewayEventsBufferSize
     )
   }
 
@@ -81,7 +81,7 @@ class DiscordClientActor(
     context.spawn(MusicManager(events), "MusicManager")
 
   val rateLimiter: ActorRef[RatelimiterActor.Command] =
-    context.spawn(RatelimiterActor(), "Ratelimiter")
+    context.spawn(RatelimiterActor(maxRequestsPerSecond, counter404s), "Ratelimiter")
 
   private val shutdown = CoordinatedShutdown(system.toClassic)
 
@@ -95,15 +95,12 @@ class DiscordClientActor(
   }
 
   private def spawnShards(): Unit =
-    shards = shardBehaviors(events).zipWithIndex.map(t =>
-      context.spawn(t._1, s"Shard${t._2}")
-    )
+    shards = shardBehaviors(events).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
 
   def login(): Unit = {
     require(shardShutdownManager == null, "Already logged in")
     spawnShards()
-    shardShutdownManager =
-      context.spawn(ShardShutdownManager(shards), "ShardShutdownManager")
+    shardShutdownManager = context.spawn(ShardShutdownManager(shards), "ShardShutdownManager")
 
     DiscordShard.startShards(shards)
   }
@@ -146,20 +143,20 @@ class DiscordClientActor(
 }
 object DiscordClientActor {
   def apply(
+      maxRequestsPerSecond: Int,
+      counter404s: Boolean,
       shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
       cacheSettings: CacheSettings
   ): Behavior[Command] = Behaviors.setup(ctx =>
-    new DiscordClientActor(ctx, shardBehaviors, cacheSettings)
+    new DiscordClientActor(maxRequestsPerSecond, counter404s, ctx, shardBehaviors, cacheSettings)
   )
 
   sealed trait Command
 
-  case object Login extends Command
-  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply])
-      extends Command
-  case class GetShards(replyTo: ActorRef[GetShardsReply]) extends Command
-  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])
-      extends Command
+  case object Login                                                          extends Command
+  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply]) extends Command
+  case class GetShards(replyTo: ActorRef[GetShardsReply])                    extends Command
+  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])        extends Command
   case class GetRatelimiterAndEvents(
       replyTo: ActorRef[GetRatelimiterAndEventsReply]
   ) extends Command

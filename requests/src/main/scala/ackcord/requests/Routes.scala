@@ -277,10 +277,13 @@ object Routes {
     new SeqQueryParameter[A](name, realPrint)
   }
 
-  val guildId: MajorParameter[GuildId]                  = new MajorParameter("guildId", _.asString)
-  val channelId: MajorParameter[ChannelId]              = new MajorParameter("channelId", _.asString)
-  val webhookId: MajorParameter[SnowflakeType[Webhook]] = new MajorParameter("webhookId", _.asString)
+  val guildId: MajorParameter[GuildId]     = new MajorParameter("guildId", _.asString)
+  val channelId: MajorParameter[ChannelId] = new MajorParameter("channelId", _.asString)
 
+  //Webhook id is only a major parameter with the token. As such we just deem the token the major part
+  val webhookToken: MajorParameter[String] = new MajorParameter("webhookToken", identity)
+
+  val webhookId: MinorParameter[SnowflakeType[Webhook]]   = new MinorParameter("webhookId", _.asString)
   val messageId: MinorParameter[MessageId]                = new MinorParameter("messageId", _.asString)
   val emoji: MinorParameter[Emoji]                        = new MinorParameter("emoji", URLEncoder.encode(_, "UTF-8"))
   val emojiId: MinorParameter[EmojiId]                    = new MinorParameter("emojiId", _.asString)
@@ -289,12 +292,14 @@ object Routes {
   val roleId: MinorParameter[RoleId]                      = new MinorParameter("roleId", _.asString)
   val integrationId: MinorParameter[IntegrationId]        = new MinorParameter("integrationId", _.asString)
   val inviteCodeParam: MinorParameter[String]             = new MinorParameter("inviteCode", identity)
-  val token: MinorParameter[String]                       = new MinorParameter("token", identity)
   val hash: MinorParameter[String]                        = new MinorParameter("hash", identity)
   val applicationId: MinorParameter[ApplicationId]        = new MinorParameter("applicationId", _.asString)
+  val achievementId: MinorParameter[String]               = new MinorParameter("achievementId", identity)
+  val assetId: MinorParameter[String]                     = new MinorParameter("assetId", identity)
   val teamId: MinorParameter[SnowflakeType[Team]]         = new MinorParameter("teamId", _.asString)
   val templateCode: MinorParameter[String]                = new MinorParameter("code", identity)
   val stageChannelId: MinorParameter[StageGuildChannelId] = new MinorParameter("stageChannelId", _.asString)
+  val stickerId: MinorParameter[StickerId]                = new MinorParameter("stickerId", _.asString)
 
   //Audit log
 
@@ -402,7 +407,8 @@ object Routes {
   val beforeTimestampQuery: QueryParameter[OffsetDateTime] = query[OffsetDateTime]("before", _.toString)
   val limitQuery: QueryParameter[Int]                      = query[Int]("limit", _.toString)
 
-  val listActiveThreads: ChannelId => RequestRoute = (channelThreads / "active").toRequest(GET)
+  val listActiveGuildThreads: GuildId => RequestRoute     = (guild / "threads" / "active").toRequest(GET)
+  val listActiveChannelThreads: ChannelId => RequestRoute = (channelThreads / "active").toRequest(GET)
   val listPublicArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
     (archivedThreads / "public" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
   val listPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
@@ -421,6 +427,19 @@ object Routes {
   val getGuildEmoji: (GuildId, EmojiId) => RequestRoute    = guildEmoji.toRequest(GET)
   val modifyGuildEmoji: (GuildId, EmojiId) => RequestRoute = guildEmoji.toRequest(PATCH)
   val deleteGuildEmoji: (GuildId, EmojiId) => RequestRoute = guildEmoji.toRequest(DELETE)
+
+  //Sticker routes
+  val getSticker: StickerId => RequestRoute = base / "stickers" / stickerId toRequest GET
+  val listNitroStickerPacks: RequestRoute   = base / "stickers-packs" toRequest GET
+
+  val guildStickers: RouteFunction[GuildId]             = guild / "stickers"
+  val guildSticker: RouteFunction[(GuildId, StickerId)] = guildStickers / stickerId
+
+  val listGuildStickers: GuildId => RequestRoute               = guildStickers.toRequest(GET)
+  val getGuildSticker: (GuildId, StickerId) => RequestRoute    = guildSticker.toRequest(GET)
+  val createGuildSticker: GuildId => RequestRoute              = guildStickers.toRequest(POST)
+  val modifyGuildSticker: (GuildId, StickerId) => RequestRoute = guildSticker.toRequest(PATCH)
+  val deleteGuildSticker: (GuildId, StickerId) => RequestRoute = guildSticker.toRequest(DELETE)
 
   //Guild routes
   val withCountQuery: QueryParameter[Boolean] = query[Boolean]("with_counts", _.toString)
@@ -580,7 +599,7 @@ object Routes {
 
   //WebHook
   val webhook: RouteFunction[SnowflakeType[Webhook]]                    = base / "webhooks" / webhookId
-  val webhookWithToken: RouteFunction[(SnowflakeType[Webhook], String)] = webhook / token
+  val webhookWithToken: RouteFunction[(SnowflakeType[Webhook], String)] = webhook / webhookToken
   val channelWebhooks: RouteFunction[ChannelId]                         = channel / "webhooks"
 
   val createWebhook: ChannelId => RequestRoute                                 = channelWebhooks.toRequest(POST)
@@ -639,13 +658,23 @@ object Routes {
     cdn / "embed" / "avatars" / discriminator ++ extension +? size toRequest GET
   val userAvatarImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "avatars" / userId / hash ++ extension +? size toRequest GET
-  val applicationIconImage: (ApplicationId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-icons" / applicationId / hash ++ extension +? size toRequest GET
+  val applicationIconImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "app-icons" / applicationId / "icon.png" ++ extension +? size toRequest GET
+  val applicationCoverImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "app-icons" / applicationId / "cover_image.png" ++ extension +? size toRequest GET
   val applicationAssetImage: (ApplicationId, String, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "app-assets" / applicationId / hash ++ extension +? size toRequest GET
+  val applicationAchievementIconImage: (ApplicationId, String, String, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "app-assets" / applicationId / "achievements" / achievementId / "icons" / hash ++ extension +? size toRequest GET
+
+  val stickerPackBannerImage: (String, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "app-assets" / "710982414301790216" / "store" / assetId ++ extension +? size toRequest GET
 
   val teamIconImage: (SnowflakeType[Team], String, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "team-icons" / teamId / hash ++ extension +? size toRequest GET
+
+  val stickerImage: (StickerId, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "stickers" / stickerId ++ extension +? size toRequest GET
 
   //OAuth
   val oAuth2: Route                                    = base / "oauth2"

@@ -143,11 +143,23 @@ case class GetUserAvatarImage(
 case class GetApplicationIconImage(
     desiredSize: Int,
     format: ImageFormat,
-    applicationId: ApplicationId,
-    iconHash: String
+    applicationId: ApplicationId
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
+  override def route: RequestRoute              = Routes.applicationIconImage(applicationId, format, Some(desiredSize))
+}
+
+/**
+  * Get the cover image of an application. Allowed formats are PNG, JPEG and
+  * WebP.
+  */
+case class GetApplicationCoverImage(
+    desiredSize: Int,
+    format: ImageFormat,
+    applicationId: ApplicationId
+) extends ImageRequest {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute              = Routes.applicationCoverImage(applicationId, format, Some(desiredSize))
 }
 
 /** Get the asset of an application. Allowed formats are PNG, JPEG and WebP. */
@@ -159,6 +171,22 @@ case class GetApplicationAssetImage(
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
   override def route: RequestRoute = Routes.applicationAssetImage(applicationId, assetId, format, Some(desiredSize))
+}
+
+/**
+  * Get the achievement icon of an application. Allowed formats are PNG, JPEG
+  * and WebP.
+  */
+case class GetAchievementIconImage(
+    desiredSize: Int,
+    format: ImageFormat,
+    applicationId: ApplicationId,
+    achievementId: String,
+    iconHash: String
+) extends ImageRequest {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute =
+    Routes.applicationAchievementIconImage(applicationId, achievementId, iconHash, format, Some(desiredSize))
 }
 
 /**
@@ -181,6 +209,18 @@ case class GetGuildWidgetImage(
 }
 
 /**
+  * Get the banner for a sticker pack. Allowed formats are PNG, JPEG and WebP.
+  */
+case class GetStickerPackBannerImage(
+    desiredSize: Int,
+    format: ImageFormat,
+    stickerPackBannerAssetId: String
+) extends ImageRequest {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute = Routes.stickerPackBannerImage(stickerPackBannerAssetId, format, Some(desiredSize))
+}
+
+/**
   * Get the icon for a team
   * @param teamId
   *   The id of the team to get the icon for
@@ -196,4 +236,15 @@ case class GetTeamIconImage(
   override def route: RequestRoute = Routes.teamIconImage(teamId, teamIcon, format, Some(desiredSize))
 
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+}
+
+/** Get a sticker image. Allowed formats are PNG and Lottie.. */
+case class GetStickerImage(
+    format: ImageFormat,
+    stickerId: StickerId
+) extends ImageRequest {
+  override def desiredSize: Int = 0 //Always sent back as a constant
+
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute              = Routes.stickerImage(stickerId, format, None)
 }

@@ -55,6 +55,10 @@ object ImageFormat {
     override def extensions: Seq[String] = Seq("gif")
     override def base64Name: String      = "image/gif"
   }
+  case object Lottie extends ImageFormat {
+    override def extensions: Seq[String] = Seq("json")
+    override def base64Name: String = throw new IllegalArgumentException("Lottie is not supported as Base64 image data")
+  }
 }
 
 class ImageData(val rawData: String) extends AnyVal
@@ -64,18 +68,6 @@ object ImageData {
     val base64Data = Base64.getEncoder.encodeToString(data)
     new ImageData(s"data:${imageType.base64Name};base64,$base64Data")
   }
-}
-
-sealed abstract class FormatType(val value: Int) extends IntEnumEntry
-object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[FormatType] {
-  override def values: immutable.IndexedSeq[FormatType] = findValues
-
-  case object PNG            extends FormatType(1)
-  case object APNG           extends FormatType(2)
-  case object LOTTIE         extends FormatType(3)
-  case class Unknown(i: Int) extends FormatType(i)
-
-  override def createUnknown(value: Int): FormatType = Unknown(value)
 }
 
 /** An enum of all the different message types. */
@@ -913,49 +905,6 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
 }
-
-/**
-  * The structure of a sticker sent in a message.
-  * @param id
-  *   id of the sticker
-  * @param packId
-  *   id of the pack the sticker is from
-  * @param name
-  *   name of the sticker
-  * @param description
-  *   description of the sticker
-  * @param tags
-  *   a comma-separated list of tags for the sticker
-  * @param asset
-  *   sticker asset hash
-  * @param formatType
-  *   type of sticker format
-  */
-case class Sticker(
-    id: StickerId,
-    packId: Option[RawSnowflake],
-    name: String,
-    description: String,
-    tags: Option[String],
-    asset: String,
-    formatType: FormatType
-)
-
-/**
-  * The structure of a sticker item (the smallest amount of data required to
-  * render a sticker)
-  * @param id
-  *   id of the sticker
-  * @param name
-  *   name of the sticker
-  * @param formatType
-  *   type of sticker format
-  */
-case class StickerItem(
-    id: StickerId,
-    name: String,
-    formatType: FormatType
-)
 
 /**
   * This is sent on the message object when the message is a response to an

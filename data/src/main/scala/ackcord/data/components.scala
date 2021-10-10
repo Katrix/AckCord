@@ -192,7 +192,11 @@ case class SelectOption(
     description: Option[String] = None,
     emoji: Option[PartialEmoji] = None,
     default: Boolean = false
-)
+) {
+  require(label.length <= 100, "Select option label too long")
+  require(value.length <= 100, "Select option value too long")
+  require(description.forall(_.length <= 100), "Select option description too long")
+}
 object SelectOption {
   def of(
       content: String,

@@ -391,6 +391,17 @@ object CacheEventCreator {
           registry,
           dispatch
         )
+      case gatewayEv.GuildStickersUpdate(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g => api.GuildStickerUpdate(g, data.stickers.map(_.toSticker), state, dispatch.gatewayInfo)),
+          CacheHandlers.guildStickersUpdater,
+          registry,
+          dispatch
+        )
       case gatewayEv.GuildIntegrationsUpdate(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,
