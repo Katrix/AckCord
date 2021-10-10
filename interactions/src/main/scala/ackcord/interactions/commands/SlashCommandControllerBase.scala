@@ -39,6 +39,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
       } yield InteractionGuildMember(
         user,
         member.nick,
+        member.avatar,
         member.roles,
         member.joinedAt,
         member.premiumSince,
@@ -74,6 +75,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
           InteractionGuildMember(
             user,
             member.nick,
+            member.avatar,
             member.roles,
             member.joinedAt,
             member.premiumSince,

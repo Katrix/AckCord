@@ -236,6 +236,7 @@ case class InteractionGuildMember(
 
 case class InteractionRawGuildMember(
     nick: Option[String],
+    avatar: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],

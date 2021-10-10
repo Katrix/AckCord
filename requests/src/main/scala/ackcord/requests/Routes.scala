@@ -467,10 +467,11 @@ object Routes {
   }
   val searchGuildMembers: GuildId => RequestRoute = guildMembers / "search" toRequest GET
 
-  val addGuildMember: (GuildId, UserId) => RequestRoute    = guildMember.toRequest(PUT)
-  val modifyGuildMember: (GuildId, UserId) => RequestRoute = guildMember.toRequest(PATCH)
-  val removeGuildMember: (GuildId, UserId) => RequestRoute = guildMember.toRequest(DELETE)
-  val modifyCurrentNick: GuildId => RequestRoute           = guildMembers / "@me" / "nick" toRequest PATCH
+  val addGuildMember: (GuildId, UserId) => RequestRoute      = guildMember.toRequest(PUT)
+  val modifyGuildMember: (GuildId, UserId) => RequestRoute   = guildMember.toRequest(PATCH)
+  val removeGuildMember: (GuildId, UserId) => RequestRoute   = guildMember.toRequest(DELETE)
+  @deprecated val modifyCurrentNick: GuildId => RequestRoute = guildMembers / "@me" / "nick" toRequest PATCH
+  val modifyCurrentMember: GuildId => RequestRoute           = guildMembers / "@me" toRequest PATCH
 
   val guildMemberRole: RouteFunction[((GuildId, UserId), RoleId)] = guildMember / "roles" / roleId
 

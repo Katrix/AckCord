@@ -507,8 +507,8 @@ case class ModifyGuildMember(
   override def toNiceResponse(response: RawGuildMember): GuildMember = response.toGuildMember(guildId)
 }
 
-case class ModifyBotUsersNickData(nick: JsonOption[String] = JsonUndefined)
-object ModifyBotUsersNickData {
+@deprecated case class ModifyBotUsersNickData(nick: JsonOption[String] = JsonUndefined)
+@deprecated object ModifyBotUsersNickData {
   implicit val encoder: Encoder[ModifyBotUsersNickData] = (a: ModifyBotUsersNickData) =>
     JsonOption.removeUndefinedToObj(
       "nick" -> a.nick.toJson
@@ -516,7 +516,7 @@ object ModifyBotUsersNickData {
 }
 
 /** Modify the clients nickname. */
-case class ModifyBotUsersNick(
+@deprecated case class ModifyBotUsersNick(
     guildId: GuildId,
     params: ModifyBotUsersNickData,
     reason: Option[String] = None
@@ -533,9 +533,26 @@ case class ModifyBotUsersNick(
 
   override def withReason(reason: String): ModifyBotUsersNick = copy(reason = Some(reason))
 }
-object ModifyBotUsersNick {
+@deprecated object ModifyBotUsersNick {
   def mk(guildId: GuildId, nick: String): ModifyBotUsersNick =
     new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(JsonSome(nick)))
+}
+
+case class ModifyCurrentMemberData(nick: JsonOption[String] = JsonUndefined)
+object ModifyCurrentMemberData {
+  implicit val encoder: Encoder[ModifyCurrentMemberData] = (a: ModifyCurrentMemberData) =>
+    JsonOption.removeUndefinedToObj(
+      "nick" -> a.nick.toJson
+    )
+}
+
+/** Modify Current Member */
+case class ModifyCurrentMember(guildId: GuildId, params: ModifyCurrentMemberData)
+    extends GuildMemberRequest[ModifyCurrentMemberData] {
+  override def route: RequestRoute = Routes.modifyCurrentUser
+
+  override def paramsEncoder: Encoder[ModifyCurrentMemberData] =
+    ModifyCurrentMemberData.encoder
 }
 
 /** Add a role to a guild member. */
