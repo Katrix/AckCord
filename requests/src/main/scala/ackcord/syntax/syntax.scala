@@ -1206,7 +1206,7 @@ package object syntax {
       *   The new nickname
       */
     def setNick(nick: Option[String]) =
-      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(JsonOption.fromOptionWithNull(nick)))
+      ModifyCurrentMember(guild.id, ModifyCurrentMemberData(JsonOption.fromOptionWithNull(nick)))
 
     /** Fetch an audit log for a this guild. */
     def fetchAuditLog(
