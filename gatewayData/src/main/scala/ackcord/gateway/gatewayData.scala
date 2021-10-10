@@ -749,6 +749,8 @@ object GatewayEvent {
     *   The user of the updated guild member.
     * @param nick
     *   Nick of the user if one was set.
+    * @param avatar
+    *   Avatar of the user if a custom one was set.
     * @param premiumSince
     *   When the user bosted the guild.
     */
@@ -757,6 +759,7 @@ object GatewayEvent {
       roles: Seq[RoleId],
       user: User,
       nick: Option[String],
+      avatar: Option[String],
       joinedAt: Option[OffsetDateTime],
       premiumSince: Option[OffsetDateTime],
       deaf: Option[Boolean],
