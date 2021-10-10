@@ -408,13 +408,14 @@ object CacheHandlers {
           obj: GuildMemberUpdateData,
           registry: CacheTypeRegistry
       ): Unit = {
-        val GuildMemberUpdateData(guildId, roles, user, nick, joinedAt, premiumSince, deaf, mute, pending) = obj
+        val GuildMemberUpdateData(guildId, roles, user, nick, avatar, joinedAt, premiumSince, deaf, mute, pending) = obj
 
         val exisitingMember = for {
           guild       <- builder.getGuild(guildId)
           guildMember <- guild.members.get(user.id)
         } yield guildMember.copy(
           nick = nick,
+          avatar = avatar,
           roleIds = roles,
           joinedAt = joinedAt,
           premiumSince = premiumSince,
@@ -425,7 +426,7 @@ object CacheHandlers {
 
         registry.updateData(builder)(
           exisitingMember.getOrElse(
-            GuildMember(user.id, guildId, nick, roles, joinedAt, None, deaf = false, mute = false, None)
+            GuildMember(user.id, guildId, nick, avatar, roles, joinedAt, None, deaf = false, mute = false, None)
           )
         )
 
