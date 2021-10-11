@@ -1163,8 +1163,6 @@ case class RawEmoji(
   *   Description of the sticker.
   * @param tags
   *   A comma-separated list of tags for the sticker.
-  * @param asset
-  *   Sticker asset hash.
   * @param `type`
   *   Type of the sticker.
   * @param formatType
@@ -1184,7 +1182,6 @@ case class RawSticker(
     name: String,
     description: Option[String],
     tags: Option[String],
-    asset: String,
     `type`: StickerType,
     formatType: FormatType,
     available: Option[Boolean],
@@ -1199,7 +1196,6 @@ case class RawSticker(
     name,
     description,
     tags,
-    asset,
     `type`,
     formatType,
     available,
