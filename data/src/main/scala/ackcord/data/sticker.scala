@@ -64,8 +64,6 @@ object StickerType extends IntEnum[StickerType] with IntCirceEnumWithUnknown[Sti
   *   Description of the sticker.
   * @param tags
   *   A comma-separated list of tags for the sticker.
-  * @param asset
-  *   Sticker asset hash.
   * @param tpe`
   *   Type of the sticker.
   * @param formatType
@@ -85,7 +83,6 @@ case class Sticker(
     name: String,
     description: Option[String],
     tags: Option[String],
-    asset: String,
     tpe: StickerType,
     formatType: FormatType,
     available: Option[Boolean],
