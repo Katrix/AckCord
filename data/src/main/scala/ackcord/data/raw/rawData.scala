@@ -27,6 +27,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import ackcord.SnowflakeMap
 import ackcord.data._
+import ackcord.util.JsonOption
 
 /**
   * A raw channel before going through the cache.
@@ -921,6 +922,10 @@ case class RawGuild(
   *   The id of this role.
   * @param name
   *   The name of this role.
+  * @param icon
+  *   Optional icon of this role.
+  * @param unicodeEmoji
+  *   Optional emoji of this role.
   * @param color
   *   The color of this role.
   * @param hoist
@@ -937,6 +942,8 @@ case class RawGuild(
 case class RawRole(
     id: RoleId,
     name: String,
+    icon: Option[String],
+    unicodeEmoji: Option[String],
     color: Int,
     hoist: Boolean,
     position: Int,
@@ -947,7 +954,20 @@ case class RawRole(
 ) {
 
   def toRole(guildId: GuildId): Role =
-    Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable, tags)
+    Role(
+      id,
+      guildId,
+      name,
+      icon,
+      unicodeEmoji,
+      color,
+      hoist,
+      position,
+      permissions,
+      managed,
+      mentionable,
+      tags
+    )
 }
 
 /**
