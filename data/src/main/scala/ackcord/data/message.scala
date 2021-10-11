@@ -774,8 +774,8 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
   *   If the field is rendered inline.
   */
 case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = None) {
-  require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
-  require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
+  require(name.length < 256, "A field name of an embed can't be more than 256 characters")
+  require(value.length < 1024, "A field value of an embed can't be more than 1024 characters")
 }
 
 /**
@@ -844,9 +844,9 @@ case class OutgoingEmbed(
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
 ) {
-  require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
-  require(description.forall(_.length <= 4096), "The description of an embed can't be longer than 2048 characters")
-  require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
+  require(title.forall(_.length < 256), "The title of an embed can't be longer than 256 characters")
+  require(description.forall(_.length < 4096), "The description of an embed can't be longer than 2048 characters")
+  require(fields.lengthCompare(25) < 0, "An embed can't have more than 25 fields")
   require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
 
   /** The total amount of characters in this embed so far. */
