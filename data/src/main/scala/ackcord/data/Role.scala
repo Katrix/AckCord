@@ -31,6 +31,10 @@ package ackcord.data
   *   The guildId this role belongs to.
   * @param name
   *   The name of this role.
+  * @param icon
+  *   Optional icon of this role.
+  * @param unicodeEmoji
+  *   Optional emoji of this role.
   * @param color
   *   The color of this role.
   * @param hoist
@@ -48,6 +52,8 @@ case class Role(
     id: RoleId,
     guildId: GuildId,
     name: String,
+    icon: Option[String],
+    unicodeEmoji: Option[String],
     color: Int,
     hoist: Boolean,
     position: Int,
