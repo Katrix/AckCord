@@ -909,7 +909,7 @@ object GatewayEvent {
       mentions: JsonOption[Seq[User]],
       mentionRoles: JsonOption[Seq[RoleId]],
       mentionChannels: JsonOption[Seq[ChannelMention]],
-      attachment: JsonOption[Seq[Attachment]],
+      attachments: JsonOption[Seq[Attachment]],
       embeds: JsonOption[Seq[ReceivedEmbed]],
       reactions: JsonOption[Seq[Reaction]],
       nonce: JsonOption[Either[Long, String]],
