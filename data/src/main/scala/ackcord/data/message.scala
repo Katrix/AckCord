@@ -315,7 +315,7 @@ sealed trait Message {
   def mentionChannels: Seq[ChannelMention]
 
   /** All the attachments of this message. */
-  def attachment: Seq[Attachment]
+  def attachments: Seq[Attachment]
 
   /** All the embeds of this message. */
   def embeds: Seq[ReceivedEmbed]
@@ -411,7 +411,7 @@ case class SparseMessage(
     mentionEveryone: Boolean,
     mentions: Seq[UserId],
     mentionChannels: Seq[ChannelMention],
-    attachment: Seq[Attachment],
+    attachments: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
     nonce: Option[String],
@@ -481,7 +481,7 @@ case class GuildGatewayMessage(
     mentions: Seq[UserId],
     mentionRoles: Seq[RoleId],
     mentionChannels: Seq[ChannelMention],
-    attachment: Seq[Attachment],
+    attachments: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
     nonce: Option[String],

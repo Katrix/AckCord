@@ -334,7 +334,7 @@ trait DiscordProtocol {
       "mention_everyone" -> a.mentionEveryone.asJson,
       "mentions"         -> a.mentions.asJson,
       "mention_roles"    -> a.mentionRoles.asJson,
-      "attachments"      -> a.attachment.asJson,
+      "attachments"      -> a.attachments.asJson,
       "embeds"           -> a.embeds.asJson,
       "reactions"        -> a.reactions.asJson,
       "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
@@ -368,7 +368,7 @@ trait DiscordProtocol {
       mentions        <- c.get[Seq[User]]("mentions")
       mentionRoles    <- c.get[Seq[RoleId]]("mention_roles")
       mentionChannels <- c.get[Option[Seq[ChannelMention]]]("mention_channels")
-      attachment      <- c.get[Seq[Attachment]]("attachments")
+      attachments     <- c.get[Seq[Attachment]]("attachments")
       embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
       nonce <-
@@ -403,7 +403,7 @@ trait DiscordProtocol {
       mentions,
       mentionRoles,
       mentionChannels,
-      attachment,
+      attachments,
       embeds,
       reactions,
       nonce,

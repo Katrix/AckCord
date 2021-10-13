@@ -183,7 +183,7 @@ object GatewayProtocol extends DiscordProtocol {
           "mentions"          -> a.mentions.toJson,
           "mention_roles"     -> a.mentionRoles.toJson,
           "mention_channels"  -> a.mentionChannels.toJson,
-          "attachments"       -> a.attachment.toJson,
+          "attachments"       -> a.attachments.toJson,
           "embeds"            -> a.embeds.toJson,
           "reactions"         -> a.reactions.toJson,
           "nonce"             -> a.nonce.map(_.fold(_.asJson, _.asJson)),
@@ -231,7 +231,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentions        <- c.get[JsonOption[Seq[User]]]("mentions")
       mentionRoles    <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
       mentionChannels <- c.get[JsonOption[Seq[ChannelMention]]]("mention_channels")
-      attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
+      attachments     <- c.get[JsonOption[Seq[Attachment]]]("attachments")
       embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
       reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
       nonce <-
@@ -268,7 +268,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentions,
       mentionRoles,
       mentionChannels,
-      attachment,
+      attachments,
       embeds,
       reactions,
       nonce,

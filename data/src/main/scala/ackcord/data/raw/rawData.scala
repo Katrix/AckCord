@@ -430,7 +430,7 @@ case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[Strin
   * @param mentionChannels
   *   Potentially channels mentioned in the message. Only used for cross posted
   *   public channels so far.
-  * @param attachment
+  * @param attachments
   *   All the attachments of this message.
   * @param embeds
   *   All the embeds of this message.
@@ -475,7 +475,7 @@ case class RawMessage(
     mentions: Seq[User],
     mentionRoles: Seq[RoleId],
     mentionChannels: Option[Seq[ChannelMention]],
-    attachment: Seq[Attachment],
+    attachments: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
     nonce: Option[Either[Long, String]],
@@ -514,7 +514,7 @@ case class RawMessage(
           mentions.map(_.id),
           mentionRoles,
           mentionChannels.getOrElse(Nil),
-          attachment,
+          attachments,
           embeds,
           reactions.getOrElse(Seq.empty),
           nonce.map(_.fold(_.toString, identity)),
@@ -547,7 +547,7 @@ case class RawMessage(
           mentionEveryone,
           mentions.map(_.id),
           mentionChannels.getOrElse(Nil),
-          attachment,
+          attachments,
           embeds,
           reactions.getOrElse(Seq.empty),
           nonce.map(_.fold(_.toString, identity)),
