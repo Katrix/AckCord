@@ -225,7 +225,7 @@ case class NewsTextGuildChannel(
     lastPinTimestamp: Option[OffsetDateTime],
     defaultAutoArchiveDuration: Option[Int]
 ) extends TextGuildChannel {
-  override def channelType: ChannelType = ChannelType.GuildText
+  override def channelType: ChannelType = ChannelType.GuildNews
 
   def rateLimitPerUser: Option[Int] = None
 }
