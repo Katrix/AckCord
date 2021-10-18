@@ -150,9 +150,13 @@ class RatelimiterActor(
 
       Behaviors.same
 
-    case request @ WantToPass(route, identifier, _, _) =>
+    case request @ WantToPass(route, identifier, replyTo, _) =>
       if (counter404s && previous404s.contains(route.uri)) {
         previous404s.put(route.uri, System.currentTimeMillis())
+        replyTo ! RatelimiterActor.FailedRequest(
+          HttpException(route.uri, route.method, StatusCodes.NotFound, Some("404 mitigation from Ratelimiter"))
+        )
+
         Behaviors.same
       } else {
         if (settings.LogRatelimitEvents) {
