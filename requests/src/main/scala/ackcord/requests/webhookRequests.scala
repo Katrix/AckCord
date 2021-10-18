@@ -214,7 +214,7 @@ case class ExecuteWebhookData(
     files.map(_.fileName).distinct.lengthCompare(files.length) == 0,
     "Please use unique filenames for all files"
   )
-  require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
+  require(content.length <= 4000, "The content of a message can't exceed 4000 characters")
   require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
   require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
 }
@@ -315,7 +315,7 @@ case class EditWebhookMessageData(
     files.forall(files => files.map(_.fileName).distinct.lengthCompare(files.length) == 0),
     "Please use unique filenames for all files"
   )
-  require(content.forall(_.length <= 2000), "The content of a message can't exceed 2000 characters")
+  require(content.forall(_.length <= 4000), "The content of a message can't exceed 4000 characters")
   require(embeds.forall(_.size <= 10), "Can't send more than 10 embeds with a webhook message")
   require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
 }
