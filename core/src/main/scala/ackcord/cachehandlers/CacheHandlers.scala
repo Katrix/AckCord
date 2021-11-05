@@ -75,6 +75,8 @@ object CacheHandlers {
                 bot = partialUser.bot,
                 system = partialUser.system,
                 mfaEnabled = partialUser.mfaEnabled,
+                banner = partialUser.banner,
+                accentColor = partialUser.accentColor,
                 locale = partialUser.locale,
                 verified = partialUser.verified,
                 email = partialUser.email,

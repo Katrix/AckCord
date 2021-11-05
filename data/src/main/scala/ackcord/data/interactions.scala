@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
 
-import ackcord.data.raw.{RawGuildMember, RawMessage}
+import ackcord.data.raw.{RawGuildMember, RawMessage, RawThreadMetadata}
 import ackcord.util.IntCirceEnumWithUnknown
 import cats.syntax.either._
 import enumeratum.values.{IntEnum, IntEnumEntry}
@@ -84,7 +84,8 @@ case class ApplicationCommand(
     name: String,
     description: String,
     options: Option[Seq[ApplicationCommandOption]],
-    defaultPermission: Option[Boolean]
+    defaultPermission: Option[Boolean],
+    version: RawSnowflake
 )
 
 case class ApplicationCommandOption(
@@ -93,7 +94,10 @@ case class ApplicationCommandOption(
     description: String,
     required: Option[Boolean],
     choices: Option[Seq[ApplicationCommandOptionChoice]],
-    options: Option[Seq[ApplicationCommandOption]]
+    options: Option[Seq[ApplicationCommandOption]],
+    channelTypes: Option[Seq[ChannelType]],
+    minValue: Option[Double],
+    maxValue: Option[Double]
 )
 
 //A dirty hack to get dependant types for params
@@ -217,7 +221,8 @@ case class ApplicationCommandInteractionDataResolved(
     users: Map[UserId, User],
     members: Map[UserId, InteractionRawGuildMember],
     roles: Map[RoleId, Role],
-    channels: Map[TextGuildChannelId, InteractionChannel]
+    channels: Map[TextGuildChannelId, InteractionChannel],
+    //messages: Map[MessageId, RawPartialMessage] //TODO: Find out what type to use here
 )
 object ApplicationCommandInteractionDataResolved {
   val empty: ApplicationCommandInteractionDataResolved =
@@ -247,7 +252,9 @@ case class InteractionChannel(
     id: TextGuildChannelId,
     name: String,
     `type`: ChannelType,
-    permissions: Permission
+    permissions: Permission,
+    threadMetadata: Option[RawThreadMetadata],
+    parentId: Option[TextGuildChannelId]
 )
 
 case class ApplicationCommandInteractionDataOption[A](
@@ -267,7 +274,8 @@ case class RawInteractionApplicationCommandCallbackData(
     embeds: Seq[OutgoingEmbed] = Nil,
     allowedMentions: Option[AllowedMention] = None,
     flags: MessageFlags = MessageFlags.None,
-    components: Option[Seq[ActionRow]] = None
+    components: Option[Seq[ActionRow]] = None,
+    attachments: Option[Seq[PartialAttachment]] = None
 )
 
 case class GuildApplicationCommandPermissions(

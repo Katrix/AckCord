@@ -14,22 +14,31 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
       ApplicationCommandOptionType.String,
       name,
       description,
+      None,
+      None,
       (name, str) => ApplicationCommandOptionChoice(name, Left(str))
     )
 
-  def int(name: String, description: String): ChoiceParam[Int, Int, Id] =
+  def int(
+      name: String,
+      description: String,
+      minValue: Option[Int] = None,
+      maxValue: Option[Int] = None
+  ): ChoiceParam[Int, Int, Id] =
     ChoiceParam.default(
       ApplicationCommandOptionType.Integer,
       name,
       description,
+      minValue.map(_.toDouble),
+      maxValue.map(_.toDouble),
       (name, i) => ApplicationCommandOptionChoice(name, Right(i))
     )
 
   def bool(name: String, description: String): ValueParam[Boolean, Boolean, Id] =
-    ValueParam.default(ApplicationCommandOptionType.Boolean, name, description)
+    ValueParam.default(ApplicationCommandOptionType.Boolean, name, description, Nil)
 
   def userUnresolved(name: String, description: String): ValueParam[UserId, UserId, Id] =
-    ValueParam.default(ApplicationCommandOptionType.User, name, description)
+    ValueParam.default(ApplicationCommandOptionType.User, name, description, Nil)
 
   def user(name: String, description: String): ValueParam[UserId, InteractionGuildMember, Id] =
     userUnresolved(name, description).mapWithResolve { (userId, resolve) =>
@@ -47,20 +56,30 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
       )
     }
 
-  def channelUnresolved(name: String, description: String): ValueParam[TextGuildChannelId, TextGuildChannelId, Id] =
-    ValueParam.default(ApplicationCommandOptionType.Channel, name, description)
+  def channelUnresolved(
+      name: String,
+      description: String,
+      channelTypes: Seq[ChannelType] = Nil
+  ): ValueParam[TextGuildChannelId, TextGuildChannelId, Id] =
+    ValueParam.default(ApplicationCommandOptionType.Channel, name, description, channelTypes)
 
-  def channel(name: String, description: String): ValueParam[TextGuildChannelId, InteractionChannel, Id] =
-    channelUnresolved(name, description).mapWithResolve((channelId, resolve) => resolve.channels.get(channelId))
+  def channel(
+      name: String,
+      description: String,
+      channelTypes: Seq[ChannelType] = Nil
+  ): ValueParam[TextGuildChannelId, InteractionChannel, Id] =
+    channelUnresolved(name, description, channelTypes).mapWithResolve((channelId, resolve) =>
+      resolve.channels.get(channelId)
+    )
 
   def roleUnresolved(name: String, description: String): ValueParam[RoleId, RoleId, Id] =
-    ValueParam.default(ApplicationCommandOptionType.Role, name, description)
+    ValueParam.default(ApplicationCommandOptionType.Role, name, description, Nil)
 
   def role(name: String, description: String): ValueParam[RoleId, Role, Id] =
     roleUnresolved(name, description).mapWithResolve((roleId, resolve) => resolve.roles.get(roleId))
 
   def mentionableUnresolved(name: String, description: String): ValueParam[UserOrRoleId, UserOrRoleId, Id] =
-    ValueParam.default(ApplicationCommandOptionType.Mentionable, name, description)
+    ValueParam.default(ApplicationCommandOptionType.Mentionable, name, description, Nil)
 
   def mentionable(
       name: String,
@@ -85,10 +104,17 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
       }
     }
 
-  def number(name: String, description: String): ChoiceParam[Double, Double, Id] = ChoiceParam.default(
+  def number(
+      name: String,
+      description: String,
+      minValue: Option[Double] = None,
+      maxValue: Option[Double] = None
+  ): ChoiceParam[Double, Double, Id] = ChoiceParam.default(
     ApplicationCommandOptionType.Number,
     name,
     description,
+    minValue,
+    maxValue,
     (name, num) => ApplicationCommandOptionChoice(name, Right(num))
   )
 }

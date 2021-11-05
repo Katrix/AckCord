@@ -76,6 +76,8 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     description: String,
     fTransformer: Param.FTransformer[F],
     choices: Map[String, A],
+    minValue: Option[Double],
+    maxValue: Option[Double],
     makeOptionChoice: (String, Orig) => ApplicationCommandOptionChoice,
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A],
     contramap: A => Orig
@@ -93,7 +95,8 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     name,
     description,
     fTransformer,
-    map = (orig, resolved) => this.map(orig, resolved).map(f)
+    map = (orig, resolved) => this.map(orig, resolved).map(f),
+    channelTypes = Nil
   )
 
   def imap[B](map: A => B)(contramap: B => A): ChoiceParam[Orig, B, F] =
@@ -110,7 +113,8 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     name,
     description,
     fTransformer,
-    map = f
+    map = f,
+    channelTypes = Nil
   )
 
   override private[commands] def optionToFa(
@@ -127,7 +131,10 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     description,
     Some(fTransformer == Param.FTransformer.Required),
     Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
-    Some(Nil)
+    Some(Nil),
+    None,
+    minValue,
+    maxValue
   )
 }
 object ChoiceParam {
@@ -135,7 +142,10 @@ object ChoiceParam {
       tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
       description: String,
-      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice
+      minValue: Option[Double],
+      maxValue: Option[Double],
+      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice,
+
   ): ChoiceParam[A, A, Id] =
     ChoiceParam(
       tpe,
@@ -143,9 +153,11 @@ object ChoiceParam {
       description,
       fTransformer = Param.FTransformer.Required,
       Map.empty,
+      minValue,
+      maxValue,
       makeOptionChoice,
       (a, _) => Some(a),
-      identity
+      identity,
     )
 }
 
@@ -154,6 +166,7 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     name: String,
     description: String,
     fTransformer: Param.FTransformer[F],
+    channelTypes: Seq[ChannelType],
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A]
 ) extends Param[Orig, A, F] {
   def required: ValueParam[Orig, A, Id]         = copy(fTransformer = Param.FTransformer.Required)
@@ -179,20 +192,25 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     description,
     Some(fTransformer == Param.FTransformer.Required),
     Some(Nil),
-    Some(Nil)
+    Some(Nil),
+    Some(channelTypes),
+    None,
+    None
   )
 }
 object ValueParam {
   private[interactions] def default[A](
       tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
-      description: String
+      description: String,
+      channelTypes: Seq[ChannelType]
   ): ValueParam[A, A, Id] =
     ValueParam(
       tpe,
       name,
       description,
       fTransformer = Param.FTransformer.Required,
+      channelTypes,
       (a, _) => Some(a)
     )
 }

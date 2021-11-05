@@ -356,9 +356,11 @@ package object data {
     val UseSlashCommands: Permission        = Permission(0x80000000)
     val RequestToSpeak: Permission          = Permission(0x100000000L)
     val ManageThreads: Permission           = Permission(0x0400000000L)
-    val UsePublicThreads: Permission        = Permission(0x0800000000L)
-    val UsePrivateThreads: Permission       = Permission(0x1000000000L)
+    val CreatePublicThreads: Permission     = Permission(0x0800000000L)
+    val CreatePrivateThreads: Permission    = Permission(0x1000000000L)
     val UseExternalStickers: Permission     = Permission(0x2000000000L)
+    val SendMessagesInThreads: Permission   = Permission(0x4000000000L)
+    val StartEmbeddedActivities: Permission = Permission(0x8000000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -476,6 +478,7 @@ package object data {
     val VerifiedBot: UserFlags               = UserFlags(1 << 16)
     val EarlyVerifiedBotDeveloper: UserFlags = UserFlags(1 << 17)
     val DiscordCertifiedModerator: UserFlags = UserFlags(1 << 18)
+    val BotHTTPInteractions: UserFlags       = UserFlags(1 << 19)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 
@@ -577,6 +580,7 @@ package object data {
     val SupressJoinNotifications: SystemChannelFlags          = SystemChannelFlags(1 << 0)
     val SupressPremiumSubscribtions: SystemChannelFlags       = SystemChannelFlags(1 << 1)
     val SupressGuildReminderNotifications: SystemChannelFlags = SystemChannelFlags(1 << 2)
+    val SupressJoinNotificationReplies: SystemChannelFlags    = SystemChannelFlags(1 << 3)
   }
   implicit class SystemChannelFlagsSyntax(private val flags: SystemChannelFlags) extends AnyVal {
 
@@ -621,13 +625,16 @@ package object data {
     /** Create a ActivityFlags from an int. */
     def fromInt(int: Int): ActivityFlags = apply(int)
 
-    val None: ActivityFlags        = ActivityFlags(0)
-    val Instance: ActivityFlags    = ActivityFlags(1 << 0)
-    val Join: ActivityFlags        = ActivityFlags(1 << 1)
-    val Spectate: ActivityFlags    = ActivityFlags(1 << 2)
-    val JoinRequest: ActivityFlags = ActivityFlags(1 << 3)
-    val Sync: ActivityFlags        = ActivityFlags(1 << 4)
-    val Play: ActivityFlags        = ActivityFlags(1 << 5)
+    val None: ActivityFlags                     = ActivityFlags(0)
+    val Instance: ActivityFlags                 = ActivityFlags(1 << 0)
+    val Join: ActivityFlags                     = ActivityFlags(1 << 1)
+    val Spectate: ActivityFlags                 = ActivityFlags(1 << 2)
+    val JoinRequest: ActivityFlags              = ActivityFlags(1 << 3)
+    val Sync: ActivityFlags                     = ActivityFlags(1 << 4)
+    val Play: ActivityFlags                     = ActivityFlags(1 << 5)
+    val PartyPrivacyFriends: ActivityFlags      = ActivityFlags(1 << 6)
+    val PartyPrivacyVoiceChannel: ActivityFlags = ActivityFlags(1 << 7)
+    val Embedded: ActivityFlags                 = ActivityFlags(1 << 8)
   }
   implicit class ActivityFlagsSyntax(private val flags: ActivityFlags) extends AnyVal {
 
@@ -679,6 +686,8 @@ package object data {
     val GatewayGuildMembersLimited: ApplicationFlags    = ApplicationFlags(1 << 15)
     val VerificationPendingGuildLimit: ApplicationFlags = ApplicationFlags(1 << 16)
     val Embedded: ApplicationFlags                      = ApplicationFlags(1 << 17)
+    val GatewayMessageContent: ApplicationFlags         = ApplicationFlags(1 << 18)
+    val GatewayMessageContentLimited: ApplicationFlags  = ApplicationFlags(1 << 19)
   }
   implicit class ApplicationFlagsSyntax(private val flags: ApplicationFlags) extends AnyVal {
 

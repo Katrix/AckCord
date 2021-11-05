@@ -28,6 +28,8 @@ import ackcord.data._
 import ackcord.interactions.commands.CommandOrGroup
 import ackcord.requests._
 import ackcord.util.{JsonOption, JsonUndefined}
+import akka.http.scaladsl.model.Multipart.FormData
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity}
 import io.circe._
 
 case class CreateCommandData(
@@ -150,6 +152,21 @@ case class CreateInteractionResponse(
     params: RawInteractionResponse
 ) extends NoResponseRequest[RawInteractionResponse] {
   override def paramsEncoder: Encoder[RawInteractionResponse] = Encoder[RawInteractionResponse]
+
+  override def requestBody: RequestEntity = {
+    /* TODO: Support files in here
+    params.data.filter(_.files.nonEmpty).fold(super.requestBody) { data =>
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
+
+      FormData(data.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+    }
+     */
+
+    super.requestBody
+  }
 
   override def route: RequestRoute = InteractionRoutes.callback(applicationId, token)
 }

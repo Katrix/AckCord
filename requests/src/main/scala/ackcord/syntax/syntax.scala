@@ -342,10 +342,11 @@ package object syntax {
     /** Start a new thread in this channel without a message. */
     def startThread(
         name: String,
-        autoArchiveDuration: Int = 1440,
-        tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
+        tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread,
+        autoArchiveDuration: Option[Int] = None,
+        invitable: Option[Boolean] = None
     ) =
-      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, autoArchiveDuration, tpe))
+      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable))
 
     /**
       * Lists all the public archived threads in this channel. Threads are
@@ -1004,8 +1005,10 @@ package object syntax {
         permissions: Option[Permission] = None,
         color: Option[Int] = None,
         hoist: Option[Boolean] = None,
+        icon: Option[ImageData] = None,
+        unicodeEmoji: Option[String] = None,
         mentionable: Option[Boolean] = None
-    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable))
+    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable))
 
     /**
       * Modify the positions of several roles
@@ -1333,6 +1336,10 @@ package object syntax {
       *   The new color of the role.
       * @param hoist
       *   If this role is shown in the right sidebar.
+      * @param icon
+      *   The role's icon image.
+      * @param unicodeEmoji
+      *   The role's unicode emoji.
       * @param mentionable
       *   If this role is mentionable.
       */
@@ -1341,9 +1348,11 @@ package object syntax {
         permissions: JsonOption[Permission] = JsonUndefined,
         color: JsonOption[Int] = JsonUndefined,
         hoist: JsonOption[Boolean] = JsonUndefined,
+        icon: JsonOption[ImageData] = JsonUndefined,
+        unicodeEmoji: JsonOption[String] = JsonUndefined,
         mentionable: JsonOption[Boolean] = JsonUndefined
     ) =
-      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable))
+      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable))
 
     /** Delete this role. */
     def delete = DeleteGuildRole(role.guildId, role.id)
@@ -1469,7 +1478,7 @@ package object syntax {
       UnpinMessage(message.channelId, message.id)
 
     /** Start a new thread from this message. */
-    def startThread(name: String, autoArchiveDuration: Int = 1440) =
+    def startThread(name: String, autoArchiveDuration: Option[Int] = None) =
       StartThreadWithMessage(
         message.channelId.asChannelId[TextGuildChannel],
         message.id,

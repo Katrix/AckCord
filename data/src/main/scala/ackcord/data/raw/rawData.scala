@@ -245,7 +245,7 @@ case class RawChannel(
           ownerId  <- ownerId
           parentId <- parentId
           metadata <- threadMetadata
-          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked) = metadata
+          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked, invitable) = metadata
         } yield {
           ThreadGuildChannel(
             SnowflakeType(id),
@@ -261,7 +261,8 @@ case class RawChannel(
             archived,
             archiveTimestamp,
             autoArchiveDuration,
-            locked.getOrElse(false),
+            locked,
+            invitable,
             member.map { raw =>
               ThreadMember(
                 SnowflakeType[ThreadGuildChannel](id),
@@ -299,7 +300,8 @@ case class RawThreadMetadata(
     archived: Boolean,
     autoArchiveDuration: Int,
     archiveTimestamp: OffsetDateTime,
-    locked: Option[Boolean]
+    locked: Boolean,
+    invitable: Option[Boolean]
 )
 
 /**
@@ -1105,12 +1107,26 @@ case class RawPresence(
   *   The users avatar hash.
   * @param bot
   *   If this user belongs to a OAuth2 application.
+  * @param system
+  *   If the user is part of Discord's urgent messaging system.
   * @param mfaEnabled
   *   If this user has two factor authentication enabled.
+  * @param banner
+  *   The user's banner image hash.
+  * @param accentColor
+  *   The user's banner color as an RGB int.
+  * @param locale
+  *   The user's chosen language.
   * @param verified
   *   If this user is verified. Requires the email OAuth scope.
   * @param email
   *   The users email. Requires the email OAuth scope.
+  * @param flags
+  *   The flags on a user's account.
+  * @param premiumType
+  *   The type of nitro the account has.
+  * @param publicFlags
+  *   The public flags on a user's account.
   */
 //Remember to edit User when editing this
 case class PartialUser(
@@ -1121,6 +1137,8 @@ case class PartialUser(
     bot: Option[Boolean],
     system: Option[Boolean],
     mfaEnabled: Option[Boolean],
+    banner: Option[String],
+    accentColor: Option[Int],
     locale: Option[String],
     verified: Option[Boolean],
     email: Option[String],

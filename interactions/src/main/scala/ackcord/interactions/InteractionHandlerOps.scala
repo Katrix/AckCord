@@ -50,7 +50,8 @@ trait InteractionHandlerOps {
       embeds: Seq[OutgoingEmbed] = Nil,
       allowedMentions: Option[AllowedMention] = None,
       flags: MessageFlags = MessageFlags.None,
-      components: Seq[ActionRow] = Nil
+      components: Seq[ActionRow] = Nil,
+      attachments: Option[Seq[PartialAttachment]] = None
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
     RawInteractionApplicationCommandCallbackData(
       tts,
@@ -58,7 +59,8 @@ trait InteractionHandlerOps {
       embeds,
       allowedMentions,
       flags,
-      if (components.isEmpty) None else Some(components)
+      if (components.isEmpty) None else Some(components),
+      attachments
     ),
     () => OptFuture.unit
   )
@@ -69,7 +71,8 @@ trait InteractionHandlerOps {
       tts: Option[Boolean] = None,
       allowedMentions: Option[AllowedMention] = None,
       flags: MessageFlags = MessageFlags.None,
-      components: Seq[ActionRow] = Nil
+      components: Seq[ActionRow] = Nil,
+      attachments: Option[Seq[PartialAttachment]] = None
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
     RawInteractionApplicationCommandCallbackData(
       tts,
@@ -77,7 +80,8 @@ trait InteractionHandlerOps {
       embeds,
       allowedMentions,
       flags,
-      if (components.isEmpty) None else Some(components)
+      if (components.isEmpty) None else Some(components),
+      attachments
     ),
     () => OptFuture.unit
   )

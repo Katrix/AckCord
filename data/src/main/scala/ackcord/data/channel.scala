@@ -263,6 +263,7 @@ case class ThreadGuildChannel(
     archiveTimestamp: OffsetDateTime,
     autoArchiveDuration: Int,
     locked: Boolean,
+    invitable: Option[Boolean],
     member: Option[ThreadMember]
 ) extends TextGuildChannel {
   def parentId: Option[TextGuildChannelId] = Some(parentChannelId)

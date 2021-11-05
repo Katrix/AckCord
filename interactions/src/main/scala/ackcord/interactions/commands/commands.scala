@@ -69,7 +69,10 @@ case class Command[InteractionObj[_], A] private (
     description,
     required = Some(false),
     Some(Nil),
-    Some(makeCommandOptions)
+    Some(makeCommandOptions),
+    None,
+    None,
+    None
   )
 
   override def handleRaw(
@@ -148,7 +151,10 @@ case class CommandGroup private (
     description,
     required = Some(false),
     Some(Nil),
-    Some(makeCommandOptions)
+    Some(makeCommandOptions),
+    None,
+    None,
+    None
   )
 
   private lazy val subCommandsByName: Map[String, CommandOrGroup] = commands.map(c => c.name -> c).toMap
