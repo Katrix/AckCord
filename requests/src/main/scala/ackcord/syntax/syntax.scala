@@ -344,9 +344,10 @@ package object syntax {
         name: String,
         tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread,
         autoArchiveDuration: Option[Int] = None,
-        invitable: Option[Boolean] = None
+        invitable: Option[Boolean] = None,
+        rateLimitPerUser: Option[Int] = None
     ) =
-      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable))
+      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable, rateLimitPerUser))
 
     /**
       * Lists all the public archived threads in this channel. Threads are
@@ -753,6 +754,8 @@ package object syntax {
       *   The new enabled features for the guild.
       * @param description
       *   The new description for the guild if it is discoverable.
+      * @param premiumProgressBarEnabled
+      *   If the boosting progress bar should be shown.
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
@@ -770,7 +773,8 @@ package object syntax {
         systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
         preferredLocale: JsonOption[String] = JsonUndefined,
         features: JsonOption[Seq[String]] = JsonUndefined,
-        description: JsonOption[String] = JsonUndefined
+        description: JsonOption[String] = JsonUndefined,
+        premiumProgressBarEnabled: JsonOption[Boolean] = JsonUndefined
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -789,7 +793,8 @@ package object syntax {
         systemChannelFlags = systemChannelFlags,
         preferredLocale = preferredLocale,
         features = features,
-        description = description
+        description = description,
+        premiumProgressBarEnabled = premiumProgressBarEnabled
       )
     )
 
@@ -1478,11 +1483,11 @@ package object syntax {
       UnpinMessage(message.channelId, message.id)
 
     /** Start a new thread from this message. */
-    def startThread(name: String, autoArchiveDuration: Option[Int] = None) =
+    def startThread(name: String, autoArchiveDuration: Option[Int] = None, rateLimitPerUser: Option[Int] = None) =
       StartThreadWithMessage(
         message.channelId.asChannelId[TextGuildChannel],
         message.id,
-        StartThreadWithMessageData(name, autoArchiveDuration)
+        StartThreadWithMessageData(name, autoArchiveDuration, rateLimitPerUser)
       )
   }
 

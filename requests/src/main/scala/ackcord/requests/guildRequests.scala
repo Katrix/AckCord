@@ -137,6 +137,8 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
   *   The new enabled features for the guild.
   * @param description
   *   The new description for the guild if it is discoverable.
+  * @param premiumProgressBarEnabled
+  *   If the boosting progress bar should be shown.
   */
 case class ModifyGuildData(
     name: JsonOption[String] = JsonUndefined,
@@ -154,7 +156,8 @@ case class ModifyGuildData(
     systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
     preferredLocale: JsonOption[String] = JsonUndefined,
     features: JsonOption[Seq[String]] = JsonUndefined,
-    description: JsonOption[String] = JsonUndefined
+    description: JsonOption[String] = JsonUndefined,
+    premiumProgressBarEnabled: JsonOption[Boolean] = JsonUndefined
 )
 object ModifyGuildData {
   implicit val encoder: Encoder[ModifyGuildData] = (a: ModifyGuildData) =>
@@ -174,7 +177,8 @@ object ModifyGuildData {
       "system_channel_flags"          -> a.systemChannelFlags.toJson,
       "preferred_locale"              -> a.preferredLocale.toJson,
       "features"                      -> a.features.toJson,
-      "description"                   -> a.description.toJson
+      "description"                   -> a.description.toJson,
+      "premium_progress_bar_enabled"  -> a.premiumProgressBarEnabled.toJson
     )
 }
 

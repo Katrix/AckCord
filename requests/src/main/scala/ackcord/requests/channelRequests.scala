@@ -783,7 +783,7 @@ case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) exten
 }
  */
 
-case class StartThreadWithMessageData(name: String, autoArchiveDuration: Option[Int] = None) {
+case class StartThreadWithMessageData(name: String, autoArchiveDuration: Option[Int] = None, rateLimitPerUser: Option[Int] = None) {
   require(
     autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
     "Auto archive duration can only be 60, 1440, 4320 or 10080"
@@ -813,7 +813,8 @@ case class StartThreadWithoutMessageData(
     name: String,
     `type`: ChannelType.ThreadChannelType,
     autoArchiveDuration: Option[Int] = None,
-    invitable: Option[Boolean] = None
+    invitable: Option[Boolean] = None,
+    rateLimitPerUser: Option[Int] = None
 ) {
   require(
     autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
