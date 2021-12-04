@@ -27,7 +27,7 @@ import java.util.Locale
 
 import ackcord.data._
 import ackcord.interactions._
-import ackcord.{CacheSnapshot, OptFuture}
+import ackcord.{CacheSnapshot, OptFuture, data}
 import akka.NotUsed
 import cats.syntax.either._
 
@@ -89,12 +89,12 @@ object CreatedApplicationCommand {
       .leftMap {
         case Some(error) =>
           InteractionResponse.ChannelMessage(
-            RawInteractionApplicationCommandCallbackData(content = Some(s"An error occurred: $error")),
+            InteractionCallbackDataMessage(content = Some(s"An error occurred: $error")),
             () => OptFuture.unit
           )
         case None =>
           InteractionResponse.ChannelMessage(
-            RawInteractionApplicationCommandCallbackData(content = Some("An error occurred")),
+            InteractionCallbackDataMessage(content = Some("An error occurred")),
             () => OptFuture.unit
           )
       }
@@ -129,6 +129,7 @@ case class SlashCommand[InteractionObj[_], A] private (
     description.get,
     required = Some(false),
     Some(Nil),
+    None,
     Some(makeCommandOptions),
     None,
     None,
@@ -143,7 +144,7 @@ case class SlashCommand[InteractionObj[_], A] private (
     val data = interaction.data.get.asInstanceOf[ApplicationCommandInteractionData]
     if (data.`type` != ApplicationCommandType.ChatInput) {
       InteractionResponse.ChannelMessage(
-        RawInteractionApplicationCommandCallbackData(content =
+        InteractionCallbackDataMessage(content =
           Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
         ),
         () => OptFuture.unit
@@ -151,18 +152,41 @@ case class SlashCommand[InteractionObj[_], A] private (
     } else {
       val optionsMap = data.options
         .getOrElse(Nil)
-        .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
+        .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _, _) =>
           name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
         }
         .toMap
 
-      val optArgs = paramList match {
-        case Right(value) =>
-          value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
-        case Left(ev) => Right(ev(NotUsed))
-      }
+      interaction.tpe match {
+        case InteractionType.ApplicationCommand =>
+          val optArgs = paramList match {
+            case Right(value) =>
+              value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
+            case Left(ev) => Right(ev(NotUsed))
+          }
 
-      CreatedApplicationCommand.handleCommon(clientId, interaction, cacheSnapshot, optArgs, filter, handle)
+          CreatedApplicationCommand.handleCommon(clientId, interaction, cacheSnapshot, optArgs, filter, handle)
+
+        case InteractionType.ApplicationCommandAutocomplete =>
+          paramList match {
+            case Right(paramList) =>
+              InteractionResponse.Autocomplete(paramList.runAutocomplete(optionsMap))
+            case Left(_) =>
+              InteractionResponse.ChannelMessage(
+                InteractionCallbackDataMessage(content =
+                  Some(s"Got an autocomplete request for command with no parameters")
+                ),
+                () => OptFuture.unit
+              )
+          }
+        case _ =>
+          InteractionResponse.ChannelMessage(
+            InteractionCallbackDataMessage(content =
+              Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
+            ),
+            () => OptFuture.unit
+          )
+      }
     }
   }
 }
@@ -181,6 +205,7 @@ case class SlashCommandGroup private (
     description.get,
     required = Some(false),
     Some(Nil),
+    None,
     Some(makeCommandOptions),
     None,
     None,
@@ -197,7 +222,7 @@ case class SlashCommandGroup private (
     val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
     if (data.`type` != ApplicationCommandType.ChatInput) {
       InteractionResponse.ChannelMessage(
-        RawInteractionApplicationCommandCallbackData(content =
+        InteractionCallbackDataMessage(content =
           Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
         ),
         () => OptFuture.unit
@@ -207,7 +232,8 @@ case class SlashCommandGroup private (
         case ApplicationCommandInteractionDataOption(
               name,
               ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
-              option
+              option,
+              _
             ) =>
           subCommandsByName(name) -> option.asInstanceOf[Option[Seq[ApplicationCommandInteractionDataOption[_]]]]
       }
@@ -221,7 +247,7 @@ case class SlashCommandGroup private (
           )
         case None =>
           InteractionResponse.ChannelMessage(
-            RawInteractionApplicationCommandCallbackData(content = Some("Encountered dead end for subcommands")),
+            InteractionCallbackDataMessage(content = Some("Encountered dead end for subcommands")),
             () => OptFuture.unit
           )
       }
@@ -250,7 +276,7 @@ case class UserCommand[InteractionObj[_]] private (
     val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
     if (data.`type` != ApplicationCommandType.User) {
       InteractionResponse.ChannelMessage(
-        RawInteractionApplicationCommandCallbackData(content =
+        InteractionCallbackDataMessage(content =
           Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
         ),
         () => OptFuture.unit
@@ -289,7 +315,7 @@ case class MessageCommand[InteractionObj[_]] private (
     val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
     if (data.`type` != ApplicationCommandType.Message) {
       InteractionResponse.ChannelMessage(
-        RawInteractionApplicationCommandCallbackData(content =
+        InteractionCallbackDataMessage(content =
           Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
         ),
         () => OptFuture.unit

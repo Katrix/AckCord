@@ -23,9 +23,11 @@
  */
 package ackcord.examplecore
 
+import scala.util.Try
+
 import ackcord.JsonSome
 import ackcord.data.raw.RawRole
-import ackcord.data.{AllowedMention, InteractionChannel, InteractionGuildMember, Role}
+import ackcord.data.{AllowedMention, InteractionChannel, InteractionGuildMember, UserId}
 import ackcord.interactions.ResolvedCommandInteraction
 import ackcord.interactions.commands._
 import ackcord.requests.Requests
@@ -62,7 +64,11 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
     SlashCommand
       .withParams(mentionable("mentionable", "The one to nudge"))
       .command("nudge", "Nudge someone") { i =>
-        sendMessage(s"Hey ${i.args.fold(_.user.mention, _.id.mention)}", allowedMentions = Some(AllowedMention(users = i.args.swap.map(_.user.id).toSeq, roles = i.args.map(_.id).toSeq)))
+        sendMessage(
+          s"Hey ${i.args.fold(_.user.mention, _.id.mention)}",
+          allowedMentions =
+            Some(AllowedMention(users = i.args.swap.map(_.user.id).toSeq, roles = i.args.map(_.id).toSeq))
+        )
       }
 
   val mentionChannel: SlashCommand[ResolvedCommandInteraction, Id[InteractionChannel]] = SlashCommand
@@ -97,4 +103,27 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
   val echoMessage: MessageCommand[ResolvedCommandInteraction] = MessageCommand.handle("echo") { i =>
     sendMessage(s"ECHO: ${i.args.content}")
   }
+
+  val simpleAutocomplete: SlashCommand[ResolvedCommandInteraction, String] = SlashCommand
+    .withParams(string("auto", "An autocomplete parameter").withAutocomplete(s => Seq(s * 2, s * 3, s * 4)))
+    .command("simple-autocomplete", "A simple autocomplete command") { i =>
+      sendMessage(s"Res: ${i.args}")
+    }
+
+  val multiParamsAutocomplete: SlashCommand[ResolvedCommandInteraction, (String, String)] = SlashCommand
+    .withParams(
+      string("auto1", "An autocomplete parameter").withAutocomplete(s => Seq(s * 2, s * 3, s * 4)) ~
+        string("auto2", "Another autocomplete parameter").withAutocomplete(s =>
+          Seq(s.substring(0, math.max(0, s.length - 1)), s.substring(0, math.max(0, s.length - 2)), s.substring(0, math.max(0, s.length - 3)))
+        )
+    )
+    .command("multi-autocomplete", "A simple autocomplete command") { i =>
+      sendMessage(s"Res: ${i.args._1} ${i.args._2}")
+    }
+
+  val intAutocomplete: SlashCommand[ResolvedCommandInteraction, Int] = SlashCommand
+    .withParams(int("auto", "An autocomplete parameter").withAutocomplete(i => Try(i.toInt).toEither.toSeq.flatMap(i => Seq(i, i * 10, i * 1000))))
+    .command("int-autocomplete", "An int autocomplete command") { i =>
+      sendMessage(s"Res: ${i.args}")
+    }
 }

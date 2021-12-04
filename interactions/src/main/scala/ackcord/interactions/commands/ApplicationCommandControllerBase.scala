@@ -26,7 +26,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
       description,
       None,
       None,
-      (name, str) => ApplicationCommandOptionChoice(name, Left(str))
+      (name, str) => ApplicationCommandOptionChoiceString(name, str)
     )
 
   def int(
@@ -39,9 +39,9 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
       ApplicationCommandOptionType.Integer,
       name,
       description,
-      minValue.map(_.toDouble),
-      maxValue.map(_.toDouble),
-      (name, i) => ApplicationCommandOptionChoice(name, Right(i))
+      minValue.map(Left(_)),
+      maxValue.map(Left(_)),
+      (name, i) => ApplicationCommandOptionChoiceInteger(name, i)
     )
 
   def bool(name: String, description: String): ValueParam[Boolean, Boolean, Id] =
@@ -51,7 +51,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
     ValueParam.default(ApplicationCommandOptionType.User, name, description, Nil)
 
   def user(name: String, description: String): ValueParam[UserId, InteractionGuildMember, Id] =
-    userUnresolved(name, description).mapWithResolve { (userId, resolve) =>
+    userUnresolved(name, description).imapWithResolve { (userId, resolve) =>
       for {
         user   <- resolve.users.get(userId)
         member <- resolve.members.get(userId)
@@ -64,7 +64,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
         member.premiumSince,
         member.pending
       )
-    }
+    }(_.user.id)
 
   def channelUnresolved(
       name: String,
@@ -78,15 +78,15 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
       description: String,
       channelTypes: Seq[ChannelType] = Nil
   ): ValueParam[TextGuildChannelId, InteractionChannel, Id] =
-    channelUnresolved(name, description, channelTypes).mapWithResolve((channelId, resolve) =>
+    channelUnresolved(name, description, channelTypes).imapWithResolve((channelId, resolve) =>
       resolve.channels.get(channelId)
-    )
+    )(_.id)
 
   def roleUnresolved(name: String, description: String): ValueParam[RoleId, RoleId, Id] =
     ValueParam.default(ApplicationCommandOptionType.Role, name, description, Nil)
 
   def role(name: String, description: String): ValueParam[RoleId, RawRole, Id] =
-    roleUnresolved(name, description).mapWithResolve((roleId, resolve) => resolve.roles.get(roleId))
+    roleUnresolved(name, description).imapWithResolve((roleId, resolve) => resolve.roles.get(roleId))(_.id)
 
   def mentionableUnresolved(name: String, description: String): ValueParam[UserOrRoleId, UserOrRoleId, Id] =
     ValueParam.default(ApplicationCommandOptionType.Mentionable, name, description, Nil)
@@ -95,7 +95,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
       name: String,
       description: String
   ): ValueParam[UserOrRoleId, Either[InteractionGuildMember, RawRole], Id] =
-    mentionableUnresolved(name, description).mapWithResolve { (id, resolve) =>
+    mentionableUnresolved(name, description).imapWithResolve { (id, resolve) =>
       resolve.roles.get(RoleId(id)).map(Right(_)).orElse {
         for {
           user   <- resolve.users.get(UserId(id))
@@ -112,7 +112,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
           )
         )
       }
-    }
+    }(_.fold(u => UserOrRoleId(u.user.id), r => UserOrRoleId(r.id)))
 
   def number(
       name: String,
@@ -123,8 +123,8 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
     ApplicationCommandOptionType.Number,
     name,
     description,
-    minValue,
-    maxValue,
-    (name, num) => ApplicationCommandOptionChoice(name, Right(num))
+    minValue.map(Right(_)),
+    maxValue.map(Right(_)),
+    (name, num) => ApplicationCommandOptionChoiceNumber(name, num)
   )
 }

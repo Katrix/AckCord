@@ -151,7 +151,10 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     baseSlashCommands.asyncTest,
     baseSlashCommands.groupTest,
     baseSlashCommands.nudgeUserCommand,
-    baseSlashCommands.echoMessage
+    baseSlashCommands.echoMessage,
+    baseSlashCommands.simpleAutocomplete,
+    baseSlashCommands.multiParamsAutocomplete,
+    baseSlashCommands.intAutocomplete,
   )
 
   val commandConnector = new CommandConnector(

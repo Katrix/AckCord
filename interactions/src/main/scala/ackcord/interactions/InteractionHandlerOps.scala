@@ -53,7 +53,7 @@ trait InteractionHandlerOps {
       components: Seq[ActionRow] = Nil,
       attachments: Option[Seq[PartialAttachment]] = None
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
-    RawInteractionApplicationCommandCallbackData(
+    InteractionCallbackDataMessage(
       tts,
       Some(content),
       embeds,
@@ -74,7 +74,7 @@ trait InteractionHandlerOps {
       components: Seq[ActionRow] = Nil,
       attachments: Option[Seq[PartialAttachment]] = None
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
-    RawInteractionApplicationCommandCallbackData(
+    InteractionCallbackDataMessage(
       tts,
       content,
       embeds,

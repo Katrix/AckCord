@@ -459,6 +459,8 @@ sealed trait InteractionResponse {
       RawInteractionResponse(InteractionResponseType.UpdateMessage, Some(data))
     case InteractionResponse.ChannelMessage(message, _) =>
       RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
+    case InteractionResponse.Autocomplete(choices) =>
+      RawInteractionResponse(InteractionResponseType.ApplicationCommandAutocompleteResult, Some(InteractionCallbackDataAutocomplete(choices)))
   }
 }
 object InteractionResponse {
@@ -470,7 +472,7 @@ object InteractionResponse {
   case class Acknowledge(andThenDo: () => OptFuture[_])        extends InteractionResponse
   case class UpdateMessageLater(andThenDo: () => OptFuture[_]) extends InteractionResponse
   case class UpdateMessage(
-      message: RawInteractionApplicationCommandCallbackData,
+      message: InteractionCallbackDataMessage,
       andThenDo: () => OptFuture[_]
   ) extends InteractionResponse
       with AsyncMessageable {
@@ -480,7 +482,7 @@ object InteractionResponse {
     ): InteractionResponse = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
   case class ChannelMessage(
-      message: RawInteractionApplicationCommandCallbackData,
+      message: InteractionCallbackDataMessage,
       andThenDo: () => OptFuture[_]
   ) extends InteractionResponse
       with AsyncMessageable {
@@ -488,4 +490,6 @@ object InteractionResponse {
     def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: Interaction): ChannelMessage =
       copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
+
+  private[interactions] case class Autocomplete(choices: Seq[ApplicationCommandOptionChoice]) extends InteractionResponse
 }

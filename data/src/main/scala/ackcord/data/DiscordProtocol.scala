@@ -628,8 +628,51 @@ trait DiscordProtocol {
   implicit val applicationCommandCodec: Codec[ApplicationCommand] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] = Codec.from(
+    (c: HCursor) =>
+      for {
+        tpe          <- c.get[ApplicationCommandOptionType]("type")
+        name         <- c.get[String]("name")
+        description  <- c.get[String]("description")
+        required     <- c.get[Option[Boolean]]("required")
+        choices      <- c.get[Option[Seq[ApplicationCommandOptionChoice]]]("choices")
+        autocomplete <- c.get[Option[Boolean]]("autocomplete")
+        options      <- c.get[Option[Seq[ApplicationCommandOption]]]("options")
+        channelTypes <- c.get[Option[Seq[ChannelType]]]("channel_types")
+        minValue <- c
+          .get[Option[Double]]("min_value")
+          .map(_.map(Right(_)))
+          .orElse(c.get[Option[Int]]("max_value").map(_.map(Left(_))))
+        maxValue <- c
+          .get[Option[Double]]("max_value")
+          .map(_.map(Right(_)))
+          .orElse(c.get[Option[Int]]("max_value").map(_.map(Left(_))))
+      } yield ApplicationCommandOption(
+        tpe,
+        name,
+        description,
+        required,
+        choices,
+        autocomplete,
+        options,
+        channelTypes,
+        minValue,
+        maxValue
+      ),
+    (a: ApplicationCommandOption) =>
+      Json.obj(
+        "type"          := a.`type`,
+        "name"          := a.name,
+        "description"   := a.description,
+        "required"      := a.required,
+        "choices"       := a.choices,
+        "autocomplete"  := a.autocomplete,
+        "options"       := a.options,
+        "channel_types" := a.channelTypes,
+        "min_value"     := a.minValue.map(_.fold(_.asJson, _.asJson)),
+        "max_value"     := a.maxValue.map(_.fold(_.asJson, _.asJson))
+      )
+  )
 
   implicit val interactionRawGuildMemberCodec: Codec[InteractionRawGuildMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -685,16 +728,37 @@ trait DiscordProtocol {
   implicit val interactionResponseCodec: Codec[RawInteractionResponse] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val interactionApplicationCommandCallbackDataCodec: Codec[RawInteractionApplicationCommandCallbackData] =
+  implicit val interactionCallbackDataCodec: Codec[InteractionCallbackData] = Codec.from(
+    (c: HCursor) => c.as[InteractionCallbackDataMessage].orElse(c.as[InteractionCallbackDataAutocomplete]),
+    {
+      case a: InteractionCallbackDataMessage      => a.asJson
+      case a: InteractionCallbackDataAutocomplete => a.asJson
+    }
+  )
+
+  implicit val interactionCallbackDataMessageCodec: Codec[InteractionCallbackDataMessage] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionCallbackDataAutocompleteCodec: Codec[InteractionCallbackDataAutocomplete] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandOptionChoiceStringCodec: Codec[ApplicationCommandOptionChoiceString] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+  implicit val applicationCommandOptionChoiceIntegerCodec: Codec[ApplicationCommandOptionChoiceInteger] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+  implicit val applicationCommandOptionChoiceNumberCodec: Codec[ApplicationCommandOptionChoiceNumber] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
 
   implicit val applicationCommandOptionChoiceCodec: Codec[ApplicationCommandOptionChoice] = Codec.from(
     (c: HCursor) =>
-      for {
-        name  <- c.get[String]("name")
-        value <- c.get[String]("value").map(Left(_)).orElse(c.get[Double]("value").map(Right(_)))
-      } yield ApplicationCommandOptionChoice(name, value),
-    (a: ApplicationCommandOptionChoice) => Json.obj("name" := a.name, "value" := a.value.fold(_.asJson, _.asJson))
+      c.as[ApplicationCommandOptionChoiceString]
+        .orElse(c.as[ApplicationCommandOptionChoiceInteger])
+        .orElse(c.as[ApplicationCommandOptionChoiceNumber]),
+    {
+      case a: ApplicationCommandOptionChoiceString  => a.asJson
+      case a: ApplicationCommandOptionChoiceInteger => a.asJson
+      case a: ApplicationCommandOptionChoiceNumber  => a.asJson
+    }
   )
 
   implicit val applicationCommandInteractionDataOptionCodec: Codec[ApplicationCommandInteractionDataOption[_]] = {
@@ -707,7 +771,8 @@ trait DiscordProtocol {
               name     <- c.get[String]("name")
               rawValue <- c.get[Option[Json]](tpe.valueJsonName)
               value    <- rawValue.traverse(tpe.decodeJson)
-            } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
+              focused  <- c.get[Option[Boolean]]("focused")
+            } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value, focused)
           }
 
         /*
@@ -719,11 +784,12 @@ trait DiscordProtocol {
         } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
          */
       },
-      { case ApplicationCommandInteractionDataOption(name, tpe, value) =>
+      { case ApplicationCommandInteractionDataOption(name, tpe, value, focused) =>
         Json.obj(
           "name"            := name,
           "type"            := (tpe: ApplicationCommandOptionType),
-          tpe.valueJsonName := value.map(tpe.encodeJson)
+          tpe.valueJsonName := value.map(tpe.encodeJson),
+          "focused"         := focused
         )
       }
     )

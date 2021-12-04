@@ -38,10 +38,11 @@ sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
 object InteractionType extends IntCirceEnumWithUnknown[InteractionType] {
   override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
 
-  case object Ping               extends InteractionType(1)
-  case object ApplicationCommand extends InteractionType(2)
-  case object MessageComponent   extends InteractionType(3)
-  case class Unknown(i: Int)     extends InteractionType(i)
+  case object Ping                           extends InteractionType(1)
+  case object ApplicationCommand             extends InteractionType(2)
+  case object MessageComponent               extends InteractionType(3)
+  case object ApplicationCommandAutocomplete extends InteractionType(4)
+  case class Unknown(i: Int)                 extends InteractionType(i)
 
   override def createUnknown(value: Int): InteractionType = Unknown(value)
 }
@@ -50,12 +51,13 @@ sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEnt
 object InteractionResponseType extends IntCirceEnumWithUnknown[InteractionResponseType] {
   override def values: immutable.IndexedSeq[InteractionResponseType] = findValues
 
-  case object Pong                             extends InteractionResponseType(1)
-  case object ChannelMessageWithSource         extends InteractionResponseType(4)
-  case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
-  case object DeferredUpdateMessage            extends InteractionResponseType(6)
-  case object UpdateMessage                    extends InteractionResponseType(7)
-  case class Unknown(i: Int)                   extends InteractionResponseType(i)
+  case object Pong                                 extends InteractionResponseType(1)
+  case object ChannelMessageWithSource             extends InteractionResponseType(4)
+  case object DeferredChannelMessageWithSource     extends InteractionResponseType(5)
+  case object DeferredUpdateMessage                extends InteractionResponseType(6)
+  case object UpdateMessage                        extends InteractionResponseType(7)
+  case object ApplicationCommandAutocompleteResult extends InteractionResponseType(8)
+  case class Unknown(i: Int)                       extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
 }
@@ -106,10 +108,11 @@ case class ApplicationCommandOption(
     description: String,
     required: Option[Boolean],
     choices: Option[Seq[ApplicationCommandOptionChoice]],
+    autocomplete: Option[Boolean],
     options: Option[Seq[ApplicationCommandOption]],
     channelTypes: Option[Seq[ChannelType]],
-    minValue: Option[Double],
-    maxValue: Option[Double]
+    minValue: Option[Either[Int, Double]],
+    maxValue: Option[Either[Int, Double]]
 )
 
 //A dirty hack to get dependant types for params
@@ -184,9 +187,8 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
   case object Integer extends ApplicationCommandOptionTypeE[Int](4, _.as[Int], _.asJson)
   case object Boolean extends ApplicationCommandOptionTypeE[scala.Boolean](5, _.as[scala.Boolean], _.asJson)
   case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention, _.mention.asJson)
-  case object Channel
-      extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention, _.mention.asJson)
-  case object Role extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention, _.mention.asJson)
+  case object Channel extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention, _.mention.asJson)
+  case object Role    extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention, _.mention.asJson)
   case object Mentionable
       extends ApplicationCommandOptionTypeE[UserOrRoleId](
         9,
@@ -203,10 +205,19 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
     c.as[Int].map(v => withValueOpt(v).getOrElse(Unknown(v)))
 }
 
-case class ApplicationCommandOptionChoice(
+sealed trait ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceString(
     name: String,
-    value: Either[String, Double]
-)
+    value: String
+) extends ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceInteger(
+    name: String,
+    value: Long
+) extends ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceNumber(
+    name: String,
+    value: Double
+) extends ApplicationCommandOptionChoice
 
 sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
@@ -280,21 +291,23 @@ case class InteractionPartialMessage(
     pinned: Boolean,
     `type`: MessageType,
     flags: MessageFlags,
-    components: Option[Seq[ActionRow]],
+    components: Option[Seq[ActionRow]]
 )
 
 case class ApplicationCommandInteractionDataOption[A](
     name: String,
     tpe: ApplicationCommandOptionType.Aux[A],
-    value: Option[A]
+    value: Option[A],
+    focused: Option[Boolean]
 )
 
 case class RawInteractionResponse(
     `type`: InteractionResponseType,
-    data: Option[RawInteractionApplicationCommandCallbackData]
+    data: Option[InteractionCallbackData]
 )
 
-case class RawInteractionApplicationCommandCallbackData(
+sealed trait InteractionCallbackData
+case class InteractionCallbackDataMessage(
     tts: Option[Boolean] = None,
     content: Option[String] = None,
     embeds: Seq[OutgoingEmbed] = Nil,
@@ -302,7 +315,10 @@ case class RawInteractionApplicationCommandCallbackData(
     flags: MessageFlags = MessageFlags.None,
     components: Option[Seq[ActionRow]] = None,
     attachments: Option[Seq[PartialAttachment]] = None
-)
+) extends InteractionCallbackData
+
+case class InteractionCallbackDataAutocomplete(choices: Seq[ApplicationCommandOptionChoice])
+    extends InteractionCallbackData
 
 case class GuildApplicationCommandPermissions(
     id: CommandId,

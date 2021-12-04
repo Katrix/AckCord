@@ -5,7 +5,7 @@ import ackcord.data.{
   ComponentType,
   Message,
   RawInteraction,
-  RawInteractionApplicationCommandCallbackData
+  InteractionCallbackDataMessage
 }
 import ackcord.interactions._
 import ackcord.requests.Requests
@@ -70,12 +70,12 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
               .leftMap {
                 case Some(error) =>
                   InteractionResponse.ChannelMessage(
-                    RawInteractionApplicationCommandCallbackData(content = Some(s"An error occurred: $error")),
+                    InteractionCallbackDataMessage(content = Some(s"An error occurred: $error")),
                     () => OptFuture.unit
                   )
                 case None =>
                   InteractionResponse.ChannelMessage(
-                    RawInteractionApplicationCommandCallbackData(content = Some("An error occurred")),
+                    InteractionCallbackDataMessage(content = Some("An error occurred")),
                     () => OptFuture.unit
                   )
               }
@@ -85,7 +85,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
         case None =>
           Some(
             InteractionResponse.ChannelMessage(
-              RawInteractionApplicationCommandCallbackData(content = Some(s"Wrong data for component execution")),
+              InteractionCallbackDataMessage(content = Some(s"Wrong data for component execution")),
               () => OptFuture.unit
             )
           )

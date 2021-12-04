@@ -47,7 +47,10 @@ sealed trait Param[Orig, A, F[_]] {
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, F[A]]
 
-  def mapWithResolve[B](f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]): Param[Orig, B, F]
+  def imapWithResolve[B](map: (A, ApplicationCommandInteractionDataResolved) => Option[B])(
+      contramap: B => A
+  ): Param[Orig, B, F]
+  def imap[B](map: A => B)(contramap: B => A): Param[Orig, B, F]
 
   def ~[B, G[_]](other: Param[_, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
 
@@ -75,47 +78,38 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     name: String,
     description: String,
     fTransformer: Param.FTransformer[F],
-    choices: Map[String, A],
-    minValue: Option[Double],
-    maxValue: Option[Double],
+    choices: Map[String, Orig],
+    autocomplete: Option[String => Seq[Orig]],
+    minValue: Option[Either[Int, Double]],
+    maxValue: Option[Either[Int, Double]],
     makeOptionChoice: (String, Orig) => ApplicationCommandOptionChoice,
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A],
     contramap: A => Orig
 ) extends Param[Orig, A, F] {
+  require(choices.nonEmpty && autocomplete.isEmpty || choices.isEmpty, "Can't use both autocomplete and static choices")
 
-  def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] = copy(choices = choices)
+  def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] =
+    copy(choices = choices.map(t => t._1 -> contramap(t._2)))
   def withChoices(choices: Seq[String])(implicit ev: String =:= A): ChoiceParam[Orig, A, F] =
     withChoices(choices.map(s => s -> ev(s)).toMap)
 
   def required: ChoiceParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
   def notRequired: ChoiceParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
 
-  def map[B](f: A => B): ValueParam[Orig, B, F] = ValueParam(
-    tpe,
-    name,
-    description,
-    fTransformer,
-    map = (orig, resolved) => this.map(orig, resolved).map(f),
-    channelTypes = Nil
-  )
+  def withAutocomplete(complete: String => Seq[A]): ChoiceParam[Orig, A, F] =
+    copy(autocomplete = Some(complete.andThen(_.map(contramap))))
+  def noAutocomplete: ChoiceParam[Orig, A, F] = copy(autocomplete = None)
 
-  def imap[B](map: A => B)(contramap: B => A): ChoiceParam[Orig, B, F] =
+  override def imapWithResolve[B](
+      map: (A, ApplicationCommandInteractionDataResolved) => Option[B]
+  )(contramap: B => A): ChoiceParam[Orig, B, F] =
     copy(
-      choices = choices.map(t => t._1 -> map(t._2)),
-      map = (orig, resolved) => this.map(orig, resolved).map(map),
+      map = (orig, resolved) => this.map(orig, resolved).flatMap(a => map(a, resolved)),
       contramap = this.contramap.compose(contramap)
     )
 
-  override def mapWithResolve[B](
-      f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]
-  ): ValueParam[Orig, B, F] = ValueParam(
-    tpe,
-    name,
-    description,
-    fTransformer,
-    map = f,
-    channelTypes = Nil
-  )
+  override def imap[B](map: A => B)(contramap: B => A): ChoiceParam[Orig, B, F] =
+    imapWithResolve((a, _) => Some(map(a)))(contramap)
 
   override private[commands] def optionToFa(
       opt: Option[Orig],
@@ -130,7 +124,8 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     name,
     description,
     Some(fTransformer == Param.FTransformer.Required),
-    Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
+    Some(choices.map(t => makeOptionChoice(t._1, t._2)).toSeq),
+    Some(autocomplete.isDefined),
     Some(Nil),
     None,
     minValue,
@@ -142,10 +137,9 @@ object ChoiceParam {
       tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
       description: String,
-      minValue: Option[Double],
-      maxValue: Option[Double],
-      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice,
-
+      minValue: Option[Either[Int, Double]],
+      maxValue: Option[Either[Int, Double]],
+      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice
   ): ChoiceParam[A, A, Id] =
     ChoiceParam(
       tpe,
@@ -153,11 +147,12 @@ object ChoiceParam {
       description,
       fTransformer = Param.FTransformer.Required,
       Map.empty,
+      None,
       minValue,
       maxValue,
       makeOptionChoice,
       (a, _) => Some(a),
-      identity,
+      identity
     )
 }
 
@@ -167,16 +162,22 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     description: String,
     fTransformer: Param.FTransformer[F],
     channelTypes: Seq[ChannelType],
-    map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A]
+    map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A],
+    contramap: A => Orig
 ) extends Param[Orig, A, F] {
-  def required: ValueParam[Orig, A, Id]         = copy(fTransformer = Param.FTransformer.Required)
-  def notRequired: ValueParam[Orig, A, Option]  = copy(fTransformer = Param.FTransformer.Optional)
-  def map[B](f: A => B): ValueParam[Orig, B, F] = copy(map = (orig, resolve) => this.map(orig, resolve).map(f))
+  def required: ValueParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
+  def notRequired: ValueParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
 
-  override def mapWithResolve[B](
-      f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]
-  ): ValueParam[Orig, B, F] =
-    copy(map = f)
+  override def imapWithResolve[B](
+      map: (A, ApplicationCommandInteractionDataResolved) => Option[B]
+  )(contramap: B => A): ValueParam[Orig, B, F] =
+    copy(
+      map = (orig, resolved) => this.map(orig, resolved).flatMap(a => map(a, resolved)),
+      contramap = this.contramap.compose(contramap)
+    )
+
+  override def imap[B](map: A => B)(contramap: B => A): ValueParam[Orig, B, F] =
+    imapWithResolve((a, _) => Some(map(a)))(contramap)
 
   override private[commands] def optionToFa(
       opt: Option[Orig],
@@ -192,6 +193,7 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     description,
     Some(fTransformer == Param.FTransformer.Required),
     Some(Nil),
+    None,
     Some(Nil),
     Some(channelTypes),
     None,
@@ -211,7 +213,8 @@ object ValueParam {
       description,
       fTransformer = Param.FTransformer.Required,
       channelTypes,
-      (a, _) => Some(a)
+      (a, _) => Some(a),
+      identity
     )
 }
 
@@ -235,10 +238,33 @@ sealed trait ParamList[A] {
     }
   }
 
+  protected def constructAutocomplete[Orig, A1, F[_]](
+      param: Param[Orig, A1, F],
+      dataOption: Option[ApplicationCommandInteractionDataOption[_]]
+  ): Seq[ApplicationCommandOptionChoice] = {
+    val res = for {
+      choiceParam <- param match {
+        case param: ChoiceParam[Orig, A1, F] => Some(param)
+        case _                               => None
+      }
+      completeFunction <- choiceParam.autocomplete
+      option           <- dataOption
+      if option.focused.contains(true)
+    } yield completeFunction(option.value.fold("")(_.toString)).map(orig =>
+      choiceParam.makeOptionChoice(orig.toString, orig)
+    )
+
+    res.toSeq.flatten
+  }
+
   def constructValues(
       options: Map[String, ApplicationCommandInteractionDataOption[_]],
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, A]
+
+  def runAutocomplete(
+      options: Map[String, ApplicationCommandInteractionDataOption[_]]
+  ): Seq[ApplicationCommandOptionChoice]
 
   def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
     @tailrec
@@ -260,6 +286,11 @@ object ParamList {
         resolved: ApplicationCommandInteractionDataResolved
     ): Either[String, F[A]] =
       constructParam(leaf, options.get(leaf.name.toLowerCase(Locale.ROOT)), resolved)
+
+    override def runAutocomplete(
+        options: Map[String, ApplicationCommandInteractionDataOption[_]]
+    ): Seq[ApplicationCommandOptionChoice] =
+      constructAutocomplete(leaf, options.get(leaf.name.toLowerCase(Locale.ROOT)))
   }
 
   case class ParamListBranch[T, B, G[_]](left: ParamList[T], right: Param[_, B, G]) extends ParamList[T ~ G[B]] {
@@ -271,5 +302,10 @@ object ParamList {
         left  <- left.constructValues(options, resolved)
         right <- constructParam(right, options.get(right.name.toLowerCase(Locale.ROOT)), resolved)
       } yield (left, right)
+
+    override def runAutocomplete(
+        options: Map[String, ApplicationCommandInteractionDataOption[_]]
+    ): Seq[ApplicationCommandOptionChoice] =
+      left.runAutocomplete(options) ++ constructAutocomplete(right, options.get(right.name.toLowerCase(Locale.ROOT)))
   }
 }

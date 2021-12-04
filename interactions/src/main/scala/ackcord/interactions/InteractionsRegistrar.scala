@@ -60,7 +60,7 @@ object InteractionsRegistrar {
   ) =
     interaction.tpe match {
       case InteractionType.Ping => Right(InteractionResponse.Pong)
-      case InteractionType.ApplicationCommand =>
+      case InteractionType.ApplicationCommand | InteractionType.ApplicationCommandAutocomplete =>
         interaction.data match {
           case Some(data: ApplicationCommandInteractionData) =>
             commandsByName
@@ -69,7 +69,7 @@ object InteractionsRegistrar {
               .map(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
-          case _ => Left(Some("None or invalid data sent for command execution"))
+          case _ => Left(Some("None or invalid data sent for command execution or autocomplete"))
         }
       case InteractionType.MessageComponent =>
         interaction.data match {
