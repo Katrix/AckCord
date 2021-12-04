@@ -29,8 +29,8 @@ import scala.collection.immutable
 
 import ackcord.data.raw.{RawGuildMember, RawMessage, RawRole, RawThreadMetadata}
 import ackcord.util.IntCirceEnumWithUnknown
-import enumeratum.values.{IntEnum, IntEnumEntry}
 import cats.syntax.either._
+import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe._
 import io.circe.syntax._
 

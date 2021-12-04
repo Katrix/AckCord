@@ -3,9 +3,9 @@ package ackcord.interactions.components
 import ackcord.data.{
   ApplicationComponentInteractionData,
   ComponentType,
+  InteractionCallbackDataMessage,
   Message,
-  RawInteraction,
-  InteractionCallbackDataMessage
+  RawInteraction
 }
 import ackcord.interactions._
 import ackcord.requests.Requests
@@ -51,7 +51,9 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       val invocationInfo = InteractionInvocationInfo(
         interaction.id,
         interaction.guildId,
-        interaction.channelId.getOrElse(throw new IllegalArgumentException("Got an interaction without a channel for a component handler")),
+        interaction.channelId.getOrElse(
+          throw new IllegalArgumentException("Got an interaction without a channel for a component handler")
+        ),
         interaction.member.map(_.user).orElse(interaction.user).get,
         interaction.member,
         interaction.memberPermission,

@@ -460,7 +460,10 @@ sealed trait InteractionResponse {
     case InteractionResponse.ChannelMessage(message, _) =>
       RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
     case InteractionResponse.Autocomplete(choices) =>
-      RawInteractionResponse(InteractionResponseType.ApplicationCommandAutocompleteResult, Some(InteractionCallbackDataAutocomplete(choices)))
+      RawInteractionResponse(
+        InteractionResponseType.ApplicationCommandAutocompleteResult,
+        Some(InteractionCallbackDataAutocomplete(choices))
+      )
   }
 }
 object InteractionResponse {
@@ -491,5 +494,6 @@ object InteractionResponse {
       copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
 
-  private[interactions] case class Autocomplete(choices: Seq[ApplicationCommandOptionChoice]) extends InteractionResponse
+  private[interactions] case class Autocomplete(choices: Seq[ApplicationCommandOptionChoice])
+      extends InteractionResponse
 }

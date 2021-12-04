@@ -16,10 +16,14 @@ class UserCommandBuilder[Interaction[_]](
       nextTransformer: DataInteractionTransformer[Interaction, To2]
   ): UserCommandBuilder[To2] = withTransformer(this.transformer.andThen(nextTransformer))
 
-  override def withExtra(extra: Map[String, String]): UserCommandBuilder[Interaction] = new UserCommandBuilder(defaultPermission, transformer, extra)
+  override def withExtra(extra: Map[String, String]): UserCommandBuilder[Interaction] =
+    new UserCommandBuilder(defaultPermission, transformer, extra)
 
-  override def defaultPermission(permission: Boolean): UserCommandBuilder[Interaction] = new UserCommandBuilder(permission, transformer, extra)
+  override def defaultPermission(permission: Boolean): UserCommandBuilder[Interaction] =
+    new UserCommandBuilder(permission, transformer, extra)
 
-  def handle(name: String)(handler: Interaction[(User, Option[InteractionRawGuildMember])] => InteractionResponse): UserCommand[Interaction] =
+  def handle(name: String)(
+      handler: Interaction[(User, Option[InteractionRawGuildMember])] => InteractionResponse
+  ): UserCommand[Interaction] =
     UserCommand(name, defaultPermission, extra, transformer, handler)
 }

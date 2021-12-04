@@ -422,14 +422,14 @@ object GatewayProtocol extends DiscordProtocol {
       "GUILD_SCHEDULED_EVENT_CREATE" -> createDispatch(GatewayEvent.GuildScheduledEventCreate),
       "GUILD_SCHEDULED_EVENT_UPDATE" -> createDispatch(GatewayEvent.GuildScheduledEventUpdate),
       "GUILD_SCHEDULED_EVENT_DELETE" -> createDispatch(GatewayEvent.GuildScheduledEventDelete),
-      ignored("GUILD_SCHEDULED_EVENT_USER_ADD"), //TODO: Remove when no longer experimental
+      ignored("GUILD_SCHEDULED_EVENT_USER_ADD"),    //TODO: Remove when no longer experimental
       ignored("GUILD_SCHEDULED_EVENT_USER_REMOVE"), //TODO: Remove when no longer experimental
-      "INTEGRATION_CREATE"           -> createDispatch(GatewayEvent.IntegrationCreate),
-      "INTEGRATION_UPDATE"           -> createDispatch(GatewayEvent.IntegrationUpdate),
-      "INTEGRATION_DELETE"           -> createDispatch(GatewayEvent.IntegrationDelete),
-      "STAGE_INSTANCE_CREATE"        -> createDispatch(GatewayEvent.StageInstanceCreate),
-      "STAGE_INSTANCE_UPDATE"        -> createDispatch(GatewayEvent.StageInstanceUpdate),
-      "STAGE_INSTANCE_DELETE"        -> createDispatch(GatewayEvent.StageInstanceDelete),
+      "INTEGRATION_CREATE"    -> createDispatch(GatewayEvent.IntegrationCreate),
+      "INTEGRATION_UPDATE"    -> createDispatch(GatewayEvent.IntegrationUpdate),
+      "INTEGRATION_DELETE"    -> createDispatch(GatewayEvent.IntegrationDelete),
+      "STAGE_INSTANCE_CREATE" -> createDispatch(GatewayEvent.StageInstanceCreate),
+      "STAGE_INSTANCE_UPDATE" -> createDispatch(GatewayEvent.StageInstanceUpdate),
+      "STAGE_INSTANCE_DELETE" -> createDispatch(GatewayEvent.StageInstanceDelete),
       ignored("GUILD_JOIN_REQUEST_DELETE"),
       ignored("GUILD_APPLICATION_COMMAND_COUNTS_UPDATE")
     )

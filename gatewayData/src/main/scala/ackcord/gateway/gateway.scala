@@ -156,11 +156,12 @@ package object gateway {
 
     /**
       * Allows you to receive.
-      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventCreate]]
-      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventUpdate]]
-      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventDelete]]
-      * - GUILD_SCHEDULED_EVENT_USER_ADD (Unimplemented because experimental)
-      * - GUILD_SCHEDULED_EVENT_USER_REMOVE (Unimplemented because experimental)
+      *   - [[ackcord.gateway.GatewayEvent.GuildScheduledEventCreate]]
+      *   - [[ackcord.gateway.GatewayEvent.GuildScheduledEventUpdate]]
+      *   - [[ackcord.gateway.GatewayEvent.GuildScheduledEventDelete]]
+      *   - GUILD_SCHEDULED_EVENT_USER_ADD (Unimplemented because experimental)
+      *   - GUILD_SCHEDULED_EVENT_USER_REMOVE (Unimplemented because
+      *     experimental)
       */
     val GuildScheduledEvents: GatewayIntents = GatewayIntents(1 << 16)
 

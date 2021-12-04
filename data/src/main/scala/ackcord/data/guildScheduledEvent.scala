@@ -11,21 +11,37 @@ import enumeratum.values.IntEnumEntry
 /**
   * A scheduled event within a guild.
   *
-  * @param id The id of the event
-  * @param guildId The id of the guild the event takes place in.
-  * @param channelId The id of the channel the event takes place in, if it takes place in a channel.
-  * @param creatorId The creator id of the event.
-  * @param name Name of the event.
-  * @param description Description of the event.
-  * @param scheduledStartTime Time the event will start.
-  * @param scheduledEndTime Time the event will end.
-  * @param privacyLevel Privacy level of the event.
-  * @param status Status of the event.
-  * @param entityType The type of the event.
-  * @param entityId Id of an entity associated with the event.
-  * @param entityMetadata Additional metadata.
-  * @param creator The creator of the event.
-  * @param userCount Number of users subscribed to the event.
+  * @param id
+  *   The id of the event
+  * @param guildId
+  *   The id of the guild the event takes place in.
+  * @param channelId
+  *   The id of the channel the event takes place in, if it takes place in a
+  *   channel.
+  * @param creatorId
+  *   The creator id of the event.
+  * @param name
+  *   Name of the event.
+  * @param description
+  *   Description of the event.
+  * @param scheduledStartTime
+  *   Time the event will start.
+  * @param scheduledEndTime
+  *   Time the event will end.
+  * @param privacyLevel
+  *   Privacy level of the event.
+  * @param status
+  *   Status of the event.
+  * @param entityType
+  *   The type of the event.
+  * @param entityId
+  *   Id of an entity associated with the event.
+  * @param entityMetadata
+  *   Additional metadata.
+  * @param creator
+  *   The creator of the event.
+  * @param userCount
+  *   Number of users subscribed to the event.
   */
 case class GuildScheduledEvent(
     id: SnowflakeType[GuildScheduledEvent],

@@ -36,7 +36,6 @@ import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.interactions.InteractionsRegistrar
 import ackcord.requests.{BotAuthentication => _, Requests => _, _}
 import ackcord.util.{APIGuildRouter, GuildRouter}
-import akka.{Done, NotUsed}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
@@ -46,6 +45,7 @@ import akka.stream.scaladsl.{Keep, RunnableGraph}
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
 import akka.util.Timeout
+import akka.{Done, NotUsed}
 import cats.arrow.FunctionK
 import org.slf4j.Logger
 
@@ -154,7 +154,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     baseSlashCommands.echoMessage,
     baseSlashCommands.simpleAutocomplete,
     baseSlashCommands.multiParamsAutocomplete,
-    baseSlashCommands.intAutocomplete,
+    baseSlashCommands.intAutocomplete
   )
 
   val commandConnector = new CommandConnector(

@@ -88,8 +88,8 @@ case class JsonSome[+A](value: A) extends JsonOption[A] {
   override def map[B](f: A => B): JsonOption[B]                 = JsonSome(f(value))
   override def flatMap[B](f: A => JsonOption[B]): JsonOption[B] = f(value)
 
-  override def filterToUndefined(f: A => Boolean): JsonOption[A] = if(f(value)) this else JsonUndefined
-  override def filterToNull(f: A => Boolean): JsonOption[A] = if(f(value)) this else JsonNull
+  override def filterToUndefined(f: A => Boolean): JsonOption[A] = if (f(value)) this else JsonUndefined
+  override def filterToNull(f: A => Boolean): JsonOption[A]      = if (f(value)) this else JsonNull
 
   override def toJson(implicit encoder: Encoder[A @uncheckedVariance]): JsonOption[Json] = JsonSome(encoder(value))
 
@@ -120,7 +120,7 @@ case object JsonNull extends JsonOption[Nothing] {
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
   override def filterToUndefined(f: Nothing => Boolean): JsonOption[Nothing] = this
-  override def filterToNull(f: Nothing => Boolean): JsonOption[Nothing] = this
+  override def filterToNull(f: Nothing => Boolean): JsonOption[Nothing]      = this
 
   override def toJson(implicit encoder: Encoder[Nothing]): JsonOption[Json] = this
 
@@ -151,7 +151,7 @@ case object JsonUndefined extends JsonOption[Nothing] {
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
   override def filterToUndefined(f: Nothing => Boolean): JsonOption[Nothing] = this
-  override def filterToNull(f: Nothing => Boolean): JsonOption[Nothing] = this
+  override def filterToNull(f: Nothing => Boolean): JsonOption[Nothing]      = this
 
   override def toJson(implicit encoder: Encoder[Nothing]): JsonOption[Json] = this
 

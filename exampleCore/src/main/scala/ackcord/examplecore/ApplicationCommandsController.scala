@@ -114,7 +114,11 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
     .withParams(
       string("auto1", "An autocomplete parameter").withAutocomplete(s => Seq(s * 2, s * 3, s * 4)) ~
         string("auto2", "Another autocomplete parameter").withAutocomplete(s =>
-          Seq(s.substring(0, math.max(0, s.length - 1)), s.substring(0, math.max(0, s.length - 2)), s.substring(0, math.max(0, s.length - 3)))
+          Seq(
+            s.substring(0, math.max(0, s.length - 1)),
+            s.substring(0, math.max(0, s.length - 2)),
+            s.substring(0, math.max(0, s.length - 3))
+          )
         )
     )
     .command("multi-autocomplete", "A simple autocomplete command") { i =>
@@ -122,7 +126,11 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
     }
 
   val intAutocomplete: SlashCommand[ResolvedCommandInteraction, Int] = SlashCommand
-    .withParams(int("auto", "An autocomplete parameter").withAutocomplete(i => Try(i.toInt).toEither.toSeq.flatMap(i => Seq(i, i * 10, i * 1000))))
+    .withParams(
+      int("auto", "An autocomplete parameter").withAutocomplete(i =>
+        Try(i.toInt).toEither.toSeq.flatMap(i => Seq(i, i * 10, i * 1000))
+      )
+    )
     .command("int-autocomplete", "An int autocomplete command") { i =>
       sendMessage(s"Res: ${i.args}")
     }

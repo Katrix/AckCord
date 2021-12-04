@@ -8,7 +8,9 @@ abstract class CommandBuilder[Interaction[_], Args] {
   def transformer: DataInteractionTransformer[CommandInteraction, Interaction]
   def extra: Map[String, String]
 
-  def withTransformer[NewTo[_]](transformer: DataInteractionTransformer[CommandInteraction, NewTo]): CommandBuilder[NewTo, Args]
+  def withTransformer[NewTo[_]](
+      transformer: DataInteractionTransformer[CommandInteraction, NewTo]
+  ): CommandBuilder[NewTo, Args]
 
   def andThen[To2[_]](nextTransformer: DataInteractionTransformer[Interaction, To2]): CommandBuilder[To2, Args]
 

@@ -434,7 +434,14 @@ object Routes {
   val deleteGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
     guildScheduledEvent.toRequest(DELETE)
 
-  val getGuildScheduledEventUsers: (GuildId, SnowflakeType[GuildScheduledEvent], Option[Int], Option[Boolean], Option[UserId], Option[UserId]) => RequestRoute =
+  val getGuildScheduledEventUsers: (
+      GuildId,
+      SnowflakeType[GuildScheduledEvent],
+      Option[Int],
+      Option[Boolean],
+      Option[UserId],
+      Option[UserId]
+  ) => RequestRoute =
     (guildScheduledEvent / "users") +?
       query[Int]("limit", _.toString) +?
       query[Boolean]("with_member", _.toString) +?

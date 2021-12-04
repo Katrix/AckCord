@@ -16,8 +16,10 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
   @deprecated("Prefer SlashCommand", since = "0.18")
   def Command: SlashCommandBuilder[BaseInteraction, NotUsed] = SlashCommand
 
-  def UserCommand: UserCommandBuilder[BaseInteraction]       = new UserCommandBuilder(true, defaultInteractionTransformer, Map.empty)
-  def MessageCommand: MessageCommandBuilder[BaseInteraction] = new MessageCommandBuilder(true, defaultInteractionTransformer, Map.empty)
+  def UserCommand: UserCommandBuilder[BaseInteraction] =
+    new UserCommandBuilder(true, defaultInteractionTransformer, Map.empty)
+  def MessageCommand: MessageCommandBuilder[BaseInteraction] =
+    new MessageCommandBuilder(true, defaultInteractionTransformer, Map.empty)
 
   def string(name: String, description: String): ChoiceParam[String, String, Id] =
     ChoiceParam.default(

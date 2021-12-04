@@ -783,7 +783,11 @@ case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) exten
 }
  */
 
-case class StartThreadWithMessageData(name: String, autoArchiveDuration: Option[Int] = None, rateLimitPerUser: Option[Int] = None) {
+case class StartThreadWithMessageData(
+    name: String,
+    autoArchiveDuration: Option[Int] = None,
+    rateLimitPerUser: Option[Int] = None
+) {
   require(
     autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
     "Auto archive duration can only be 60, 1440, 4320 or 10080"
@@ -863,11 +867,13 @@ case class RemoveThreadMember(channelId: ThreadGuildChannelId, userId: UserId) e
 }
 
 /** Returns a [[ThreadMember]] for a specified user in a thread. */
-case class GetThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsRequest[RawThreadMember, ThreadMember] {
+case class GetThreadMember(channelId: ThreadGuildChannelId, userId: UserId)
+    extends NoParamsRequest[RawThreadMember, ThreadMember] {
   override def route: RequestRoute = Routes.getThreadMember(channelId, userId)
 
   override def responseDecoder: Decoder[RawThreadMember] = Decoder[RawThreadMember]
-  override def toNiceResponse(raw: RawThreadMember): ThreadMember = ThreadMember(raw.id.get, raw.userId.get, raw.joinTimestamp, raw.flags)
+  override def toNiceResponse(raw: RawThreadMember): ThreadMember =
+    ThreadMember(raw.id.get, raw.userId.get, raw.joinTimestamp, raw.flags)
 }
 
 /**

@@ -161,7 +161,10 @@ case class SlashCommand[InteractionObj[_], A] private (
         case InteractionType.ApplicationCommand =>
           val optArgs = paramList match {
             case Right(value) =>
-              value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
+              value.constructValues(
+                optionsMap,
+                data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty)
+              )
             case Left(ev) => Right(ev(NotUsed))
           }
 

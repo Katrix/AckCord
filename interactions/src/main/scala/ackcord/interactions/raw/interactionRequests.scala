@@ -36,7 +36,7 @@ case class CreateCommandData(
     description: Option[String],
     options: Seq[ApplicationCommandOption],
     defaultPermission: Boolean = true,
-    `type`: Option[ApplicationCommandType],
+    `type`: Option[ApplicationCommandType]
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
   require(description.forall(_.length <= 100), "Command description too short. Maximum length is 100")
@@ -140,8 +140,11 @@ case class DeleteGuildApplicationCommand(applicationId: ApplicationId, guildId: 
     extends NoParamsResponseRequest {
   override def route: RequestRoute = InteractionRoutes.deleteGuildCommand(applicationId, guildId, commandId)
 }
-case class BulkOverwriteGuildApplicationCommands(applicationId: ApplicationId, guildId: GuildId, params: Seq[CreateCommandData])
-    extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
+case class BulkOverwriteGuildApplicationCommands(
+    applicationId: ApplicationId,
+    guildId: GuildId,
+    params: Seq[CreateCommandData]
+) extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
   override def route: RequestRoute = InteractionRoutes.putGuildCommands(applicationId, guildId)
   override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]

@@ -65,7 +65,7 @@ object InteractionsRegistrar {
           case Some(data: ApplicationCommandInteractionData) =>
             commandsByName
               .get(data.name.toLowerCase(Locale.ROOT))
-              .flatMap(_.collectFirst { case cmd if cmd.commandType == data.`type` => cmd})
+              .flatMap(_.collectFirst { case cmd if cmd.commandType == data.`type` => cmd })
               .map(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
