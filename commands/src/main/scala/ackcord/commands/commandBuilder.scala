@@ -327,7 +327,7 @@ object CommandBuilder {
       selfFlow: Flow[CommandMessage[A], Either[Option[CommandError], M[A]], NotUsed]
   ): Flow[CommandMessage[A], CommandError, Mat] = {
 
-    Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
+    Flow.fromGraph(GraphDSL.createGraph(sinkBlock) { implicit b => block =>
       import GraphDSL.Implicits._
       val selfFlowShape = b.add(selfFlow)
 

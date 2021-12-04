@@ -1,12 +1,12 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion     = "2.6.15"
-lazy val akkaHttpVersion = "10.2.5"
+lazy val akkaVersion     = "2.6.17"
+lazy val akkaHttpVersion = "10.2.7"
 lazy val circeVersion    = "0.13.0"
 lazy val ackCordVersion  = "0.18.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
-  scalaVersion       := "2.13.6",
+  scalaVersion       := "2.13.7",
   crossScalaVersions := Seq("2.12.12", scalaVersion.value),
   organization       := "net.katsstuff",
   scalacOptions ++= Seq(
@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
       Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
     else Nil
   ),
-  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
   publishTo := sonatypePublishToBundle.value
 )
 
@@ -162,7 +162,7 @@ lazy val core = project
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.2.9"     % Test
+      "org.scalatest"     %% "scalatest"    % "3.2.10"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -202,7 +202,7 @@ lazy val exampleCore = project
     version                                    := "1.0",
     Compile / mainClass                        := Some("ackcord.examplecore.Example"),
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
-    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.5"
+    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.7"
   )
   .dependsOn(core, lavaplayerCore, commands, interactions)
 
@@ -212,7 +212,7 @@ lazy val example = project
     noPublishSettings,
     name                                   := "example",
     version                                := "1.0",
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.5"
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.7"
   )
   .dependsOn(ackCord)
 

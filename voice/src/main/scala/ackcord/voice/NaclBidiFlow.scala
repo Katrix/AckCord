@@ -167,7 +167,7 @@ object NaclBidiFlow {
       userId: UserId,
       secretKeys: Source[Option[ByteString], Mat]
   ): BidiFlow[ByteString, ByteString, ByteString, AudioAPIMessage.ReceivedData, Mat] = {
-    val graph = GraphDSL.create(secretKeys) { implicit b => keys =>
+    val graph = GraphDSL.createGraph(secretKeys) { implicit b => keys =>
       import GraphDSL.Implicits._
 
       val naclBidiFlow = b.add(new NaclBidiFlow(ssrc, serverId, userId))

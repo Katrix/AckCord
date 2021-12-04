@@ -77,7 +77,7 @@ object VoiceUDPFlow {
       .viaMat(new IPDiscoveryFlow(() => valvePromise.success(())))(Keep.right)
 
     BidiFlow
-      .fromGraph(GraphDSL.create(ipDiscoveryFlow) { implicit b => ipDiscovery =>
+      .fromGraph(GraphDSL.createGraph(ipDiscoveryFlow) { implicit b => ipDiscovery =>
         import GraphDSL.Implicits._
 
         val voiceIn = b.add(Flow[ByteString])

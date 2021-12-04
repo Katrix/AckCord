@@ -65,7 +65,7 @@ object ActionFunction {
       flow1: Flow[I, Either[E, M], Mat1],
       flow2: Flow[M, Either[E, O], Mat2]
   )(combine: (Mat1, Mat2) => Mat3): Flow[I, Either[E, O], Mat3] = {
-    Flow.fromGraph(GraphDSL.create(flow1, flow2)(combine) { implicit b => (selfFlow, thatFlow) =>
+    Flow.fromGraph(GraphDSL.createGraph(flow1, flow2)(combine) { implicit b => (selfFlow, thatFlow) =>
       import GraphDSL.Implicits._
 
       val selfPartition = b.add(
