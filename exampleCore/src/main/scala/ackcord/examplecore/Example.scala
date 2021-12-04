@@ -144,10 +144,13 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   val allCommands = Seq(
     baseSlashCommands.ping,
     baseSlashCommands.echo,
+    baseSlashCommands.nudgeUser,
+    baseSlashCommands.nudgeRole,
     baseSlashCommands.nudge,
+    baseSlashCommands.mentionChannel,
     baseSlashCommands.asyncTest,
     baseSlashCommands.groupTest,
-    baseSlashCommands.nudgeUser,
+    baseSlashCommands.nudgeUserCommand,
     baseSlashCommands.echoMessage
   )
 

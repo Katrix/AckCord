@@ -1,6 +1,7 @@
 package ackcord.interactions.commands
 
 import ackcord.data._
+import ackcord.data.raw.RawRole
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionHandlerOps}
 import akka.NotUsed
 import cats.Id
@@ -84,7 +85,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
   def roleUnresolved(name: String, description: String): ValueParam[RoleId, RoleId, Id] =
     ValueParam.default(ApplicationCommandOptionType.Role, name, description, Nil)
 
-  def role(name: String, description: String): ValueParam[RoleId, Role, Id] =
+  def role(name: String, description: String): ValueParam[RoleId, RawRole, Id] =
     roleUnresolved(name, description).mapWithResolve((roleId, resolve) => resolve.roles.get(roleId))
 
   def mentionableUnresolved(name: String, description: String): ValueParam[UserOrRoleId, UserOrRoleId, Id] =
@@ -93,7 +94,7 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
   def mentionable(
       name: String,
       description: String
-  ): ValueParam[UserOrRoleId, Either[InteractionGuildMember, Role], Id] =
+  ): ValueParam[UserOrRoleId, Either[InteractionGuildMember, RawRole], Id] =
     mentionableUnresolved(name, description).mapWithResolve { (id, resolve) =>
       resolve.roles.get(RoleId(id)).map(Right(_)).orElse {
         for {

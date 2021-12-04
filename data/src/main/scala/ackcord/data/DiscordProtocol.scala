@@ -649,7 +649,7 @@ trait DiscordProtocol {
         for {
           users    <- resolvedField[UserId, User](c, "users")
           members  <- resolvedField[UserId, InteractionRawGuildMember](c, "members")
-          roles    <- resolvedField[RoleId, Role](c, "roles")
+          roles    <- resolvedField[RoleId, RawRole](c, "roles")
           channels <- resolvedField[TextGuildChannelId, InteractionChannel](c, "channels")
           messages <- resolvedField[MessageId, InteractionPartialMessage](c, "messages")
         } yield ApplicationCommandInteractionDataResolved(users, members, roles, channels, messages),

@@ -26,9 +26,8 @@ package ackcord.data
 import java.time.OffsetDateTime
 
 import scala.collection.immutable
-import scala.util.matching.Regex
 
-import ackcord.data.raw.{RawGuildMember, RawMessage, RawThreadMetadata}
+import ackcord.data.raw.{RawGuildMember, RawMessage, RawRole, RawThreadMetadata}
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import cats.syntax.either._
@@ -161,17 +160,10 @@ sealed abstract private class ApplicationCommandOptionTypeE[A](
 private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandOptionTypeE[_]] {
   override def values: immutable.IndexedSeq[ApplicationCommandOptionTypeE[_]] = findValues
 
-  private val userRegex: Regex    = """<@!?(\d+)>""".r
-  private val channelRegex: Regex = """<#(\d+)>""".r
-  private val roleRegex: Regex    = """<@&(\d+)>""".r
-
   import DiscordProtocol._
 
-  private def decodeMention[A](regex: Regex)(json: Json): Decoder.Result[SnowflakeType[A]] =
-    json.as[java.lang.String].flatMap {
-      case regex(id) => Right(SnowflakeType(id))
-      case _         => Left(DecodingFailure("Not a valid mention", Nil))
-    }
+  private def decodeMention[A](json: Json): Decoder.Result[SnowflakeType[A]] =
+    json.as[java.lang.String].map(SnowflakeType(_))
 
   case object SubCommand
       extends ApplicationCommandOptionTypeE[Seq[ApplicationCommandInteractionDataOption[_]]](
@@ -191,14 +183,14 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
   case object String  extends ApplicationCommandOptionTypeE[java.lang.String](3, _.as[java.lang.String], _.asJson)
   case object Integer extends ApplicationCommandOptionTypeE[Int](4, _.as[Int], _.asJson)
   case object Boolean extends ApplicationCommandOptionTypeE[scala.Boolean](5, _.as[scala.Boolean], _.asJson)
-  case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention(userRegex), _.mention.asJson)
+  case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention, _.mention.asJson)
   case object Channel
-      extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention(channelRegex), _.mention.asJson)
-  case object Role extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention(roleRegex), _.mention.asJson)
+      extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention, _.mention.asJson)
+  case object Role extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention, _.mention.asJson)
   case object Mentionable
       extends ApplicationCommandOptionTypeE[UserOrRoleId](
         9,
-        json => decodeMention[UserOrRole](userRegex)(json).orElse(decodeMention[UserOrRole](roleRegex)(json)),
+        json => decodeMention[UserOrRole](json).orElse(decodeMention[UserOrRole](json)),
         id => s"<@$id>".asJson
       ) //Let's just hope it's a user here
   case object Number extends ApplicationCommandOptionTypeE[Double](10, _.as[Double], _.asJson)
@@ -235,7 +227,7 @@ case class ApplicationUnknownInteractionData(data: Json) extends ApplicationInte
 case class ApplicationCommandInteractionDataResolved(
     users: Map[UserId, User],
     members: Map[UserId, InteractionRawGuildMember],
-    roles: Map[RoleId, Role],
+    roles: Map[RoleId, RawRole],
     channels: Map[TextGuildChannelId, InteractionChannel],
     messages: Map[MessageId, InteractionPartialMessage]
 )

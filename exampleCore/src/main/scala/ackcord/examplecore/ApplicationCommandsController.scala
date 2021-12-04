@@ -24,29 +24,52 @@
 package ackcord.examplecore
 
 import ackcord.JsonSome
-import ackcord.data.{AllowedMention, InteractionGuildMember}
+import ackcord.data.raw.RawRole
+import ackcord.data.{AllowedMention, InteractionChannel, InteractionGuildMember, Role}
 import ackcord.interactions.ResolvedCommandInteraction
-import ackcord.interactions.commands.{CacheApplicationCommandController, MessageCommand, SlashCommand, SlashCommandGroup, UserCommand}
+import ackcord.interactions.commands._
 import ackcord.requests.Requests
 import akka.NotUsed
+import cats.Id
 
 class ApplicationCommandsController(requests: Requests) extends CacheApplicationCommandController(requests) {
 
-  val ping: SlashCommand[ResolvedCommandInteraction, NotUsed] = SlashCommand.command("ping", "Check if the bot is alive") { _ =>
-    sendMessage("Pong")
-  }
+  val ping: SlashCommand[ResolvedCommandInteraction, NotUsed] =
+    SlashCommand.command("ping", "Check if the bot is alive") { _ =>
+      sendMessage("Pong")
+    }
 
   val echo: SlashCommand[ResolvedCommandInteraction, String] =
     SlashCommand
       .withParams(string("message", "The message to send back"))
       .command("echo", "Echoes a message you send")(i => sendMessage(s"ECHO: ${i.args}"))
 
-  val nudge: SlashCommand[ResolvedCommandInteraction, InteractionGuildMember] =
+  val nudgeUser: SlashCommand[ResolvedCommandInteraction, InteractionGuildMember] =
     SlashCommand
       .withParams(user("user", "The user to nudge"))
-      .command("nudge", "Nudge someone") { i =>
+      .command("nudge-user", "Nudge someone") { i =>
         sendMessage(s"Hey ${i.args.user.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args.user.id))))
       }
+
+  val nudgeRole: SlashCommand[ResolvedCommandInteraction, RawRole] =
+    SlashCommand
+      .withParams(role("role", "The role to nudge"))
+      .command("nudge-role", "Nudge someone") { i =>
+        sendMessage(s"Hey ${i.args.id.mention}", allowedMentions = Some(AllowedMention(roles = Seq(i.args.id))))
+      }
+
+  val nudge: SlashCommand[ResolvedCommandInteraction, Either[InteractionGuildMember, RawRole]] =
+    SlashCommand
+      .withParams(mentionable("mentionable", "The one to nudge"))
+      .command("nudge", "Nudge someone") { i =>
+        sendMessage(s"Hey ${i.args.fold(_.user.mention, _.id.mention)}", allowedMentions = Some(AllowedMention(users = i.args.swap.map(_.user.id).toSeq, roles = i.args.map(_.id).toSeq)))
+      }
+
+  val mentionChannel: SlashCommand[ResolvedCommandInteraction, Id[InteractionChannel]] = SlashCommand
+    .withParams(channel("channel", "The channel to mention"))
+    .command("mention-channel", "Mention a channel") { i =>
+      sendMessage(s"Channel: ${i.args.id.mention}")
+    }
 
   val asyncTest: SlashCommand[ResolvedCommandInteraction, NotUsed] =
     SlashCommand.command("async", "An async test command") { implicit i =>
@@ -67,7 +90,7 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
     SlashCommand.command("bar", "Sends bar")(_ => sendMessage("Bar"))
   )
 
-  val nudgeUser: UserCommand[ResolvedCommandInteraction] = UserCommand.handle("nudge") { i =>
+  val nudgeUserCommand: UserCommand[ResolvedCommandInteraction] = UserCommand.handle("nudge") { i =>
     sendMessage(s"Hey ${i.args._1.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args._1.id))))
   }
 
