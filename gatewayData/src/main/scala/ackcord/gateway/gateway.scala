@@ -154,6 +154,16 @@ package object gateway {
       */
     val DirectMessageTyping: GatewayIntents = GatewayIntents(1 << 14)
 
+    /**
+      * Allows you to receive.
+      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventCreate]]
+      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventUpdate]]
+      * - [[ackcord.gateway.GatewayEvent.GuildScheduledEventDelete]]
+      * - GUILD_SCHEDULED_EVENT_USER_ADD (Unimplemented because experimental)
+      * - GUILD_SCHEDULED_EVENT_USER_REMOVE (Unimplemented because experimental)
+      */
+    val GuildScheduledEvents: GatewayIntents = GatewayIntents(1 << 16)
+
     val AllNonPrivileged: GatewayIntents = GatewayIntents(
       Guilds,
       GuildBans,

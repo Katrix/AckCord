@@ -28,8 +28,7 @@ import ackcord.data._
 import ackcord.interactions.commands.CommandOrGroup
 import ackcord.requests._
 import ackcord.util.{JsonOption, JsonUndefined}
-import akka.http.scaladsl.model.Multipart.FormData
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity}
+import akka.http.scaladsl.model.RequestEntity
 import io.circe._
 
 case class CreateCommandData(

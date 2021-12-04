@@ -515,13 +515,12 @@ object GatewayEvent {
     override def name: String = "THREAD_MEMBER_UPDATE"
   }
 
-
   //TODO: Check for guild members object in addedMembers
   case class ThreadMembersUpdateData(
       id: ThreadGuildChannelId,
       guildId: GuildId,
       memberCount: Int,
-      addedMembers: Option[Seq[RawThreadMember /*ThreadMembersUpdateDataAddedMember*/]],
+      addedMembers: Option[Seq[RawThreadMember /*ThreadMembersUpdateDataAddedMember*/ ]],
       removedMemberIds: Option[Seq[UserId]]
   )
 
@@ -846,6 +845,22 @@ object GatewayEvent {
     override def name: String = "GUILD_ROLE_DELETE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
+  }
+
+  case class GuildScheduledEventCreate(rawData: Json, data: Later[Decoder.Result[GuildScheduledEvent]])
+      extends GuildEvent[GuildScheduledEvent] {
+    override def name: String                   = "GUILD_SCHEDULED_EVENT_CREATE"
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+  }
+  case class GuildScheduledEventUpdate(rawData: Json, data: Later[Decoder.Result[GuildScheduledEvent]])
+      extends GuildEvent[GuildScheduledEvent] {
+    override def name: String                   = "GUILD_SCHEDULED_EVENT_UPDATE"
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+  }
+  case class GuildScheduledEventDelete(rawData: Json, data: Later[Decoder.Result[GuildScheduledEvent]])
+      extends GuildEvent[GuildScheduledEvent] {
+    override def name: String                   = "GUILD_SCHEDULED_EVENT_DELETE"
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
   }
 
   case class InviteCreateData(

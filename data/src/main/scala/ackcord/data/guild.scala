@@ -333,7 +333,8 @@ case class RequestsGuild(
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
     nsfwLevel: NSFWLevel,
-    stickers: SnowflakeMap[Sticker, Sticker]
+    stickers: SnowflakeMap[Sticker, Sticker],
+    premiumProgressBarEnabled: Boolean
 ) extends Guild {
 
   def toGatewayGuild(
@@ -346,6 +347,7 @@ case class RequestsGuild(
       rawThreads: Seq[RawChannel],
       presences: Seq[RawPresence],
       stageInstances: Option[Seq[StageInstance]],
+      guildScheduledEvents: Option[Seq[GuildScheduledEvent]],
       botUserId: Option[UserId]
   ): GatewayGuild = {
     val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
@@ -395,7 +397,9 @@ case class RequestsGuild(
       maxVideoChannelUsers,
       nsfwLevel,
       SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id),
-      stickers
+      stickers,
+      SnowflakeMap.withKey(guildScheduledEvents.toSeq.flatten)(_.id),
+      premiumProgressBarEnabled
     )
   }
 }
@@ -466,7 +470,9 @@ case class GatewayGuild(
     maxVideoChannelUsers: Option[Int],
     nsfwLevel: NSFWLevel,
     stageInstances: SnowflakeMap[StageInstance, StageInstance],
-    stickers: SnowflakeMap[Sticker, Sticker]
+    stickers: SnowflakeMap[Sticker, Sticker],
+    guildScheduledEvents: SnowflakeMap[GuildScheduledEvent, GuildScheduledEvent],
+    premiumProgressBarEnabled: Boolean
 ) extends Guild {
 
   /** Get the AFK channel of this guild. */

@@ -319,7 +319,12 @@ object CacheHandlers {
             .map(seq => SnowflakeMap.withKey(seq)(_.id))
             .orElse(oldGuild.map(_.stageInstances))
             .getOrElse(SnowflakeMap.empty),
-          stickers = SnowflakeMap.from(obj.stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
+          stickers = SnowflakeMap.from(obj.stickers.toSeq.flatten.map(s => s.id -> s.toSticker)),
+          guildScheduledEvents = obj.guildScheduledEvents
+            .map(SnowflakeMap.withKey(_)(_.id))
+            .orElse(oldGuild.map(_.guildScheduledEvents))
+            .getOrElse(SnowflakeMap.empty),
+          premiumProgressBarEnabled = obj.premiumProgressBarEnabled
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -504,6 +509,17 @@ object CacheHandlers {
         }
       }
     }
+  }
+
+  val guildScheduledEventUpdater: CacheUpdater[GuildScheduledEvent] = new CacheUpdater[GuildScheduledEvent] {
+    override def handle(builder: CacheSnapshotBuilder, obj: GuildScheduledEvent, registry: CacheTypeRegistry): Unit =
+      builder.getGuild(obj.guildId) match {
+        case Some(guild) =>
+          registry.updateData(builder)(
+            guild.copy(guildScheduledEvents = guild.guildScheduledEvents.updated(obj.id, obj))
+          )
+        case None => log.warn(s"No guild found for scheduled event update $obj")
+      }
   }
 
   val rawMessageUpdater: CacheUpdater[RawMessage] = new CacheUpdater[RawMessage] {
@@ -855,6 +871,14 @@ object CacheHandlers {
         }
       }
     }
+
+  val guildScheduledEventDeleter: CacheDeleter[GuildScheduledEvent] = new CacheDeleter[GuildScheduledEvent] {
+    override def handle(builder: CacheSnapshotBuilder, obj: GuildScheduledEvent, registry: CacheTypeRegistry): Unit =
+      builder.getGuild(obj.guildId) match {
+        case Some(guild) => registry.updateData(builder)(guild.guildScheduledEvents - obj.id)
+        case None        => log.warn(s"Couldn't get guild for scheduled event delete $obj")
+      }
+  }
 
   val rawMessageDeleter: CacheDeleter[MessageDeleteData] =
     new CacheDeleter[MessageDeleteData] {

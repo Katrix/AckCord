@@ -347,7 +347,10 @@ package object syntax {
         invitable: Option[Boolean] = None,
         rateLimitPerUser: Option[Int] = None
     ) =
-      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable, rateLimitPerUser))
+      StartThreadWithoutMessage(
+        channel.id,
+        StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable, rateLimitPerUser)
+      )
 
     /**
       * Lists all the public archived threads in this channel. Threads are
@@ -1357,7 +1360,11 @@ package object syntax {
         unicodeEmoji: JsonOption[String] = JsonUndefined,
         mentionable: JsonOption[Boolean] = JsonUndefined
     ) =
-      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable))
+      ModifyGuildRole(
+        role.guildId,
+        role.id,
+        ModifyGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable)
+      )
 
     /** Delete this role. */
     def delete = DeleteGuildRole(role.guildId, role.id)
@@ -1647,9 +1654,18 @@ package object syntax {
       * @param withCounts
       *   If the returned invite object should return approximate counts for
       *   members and people online.
+      * @param withExpiration
+      *   If the invite should contain the expiration date.
+      * @param guildScheduledEventId
+      *   The guild scheduled event to include in the invite.
       */
-    def fetchInvite(inviteCode: String, withCounts: Boolean = false) =
-      GetInvite(inviteCode, withCounts)
+    def fetchInvite(
+        inviteCode: String,
+        withCounts: Boolean = false,
+        withExpiration: Boolean = false,
+        guildScheduledEventId: Option[SnowflakeType[GuildScheduledEvent]] = None
+    ) =
+      GetInvite(inviteCode, withCounts, withExpiration, guildScheduledEventId)
 
     /** Fetch a list of voice regions that can be used when creating a guild. */
     def fetchVoiceRegions: ListVoiceRegions.type = ListVoiceRegions

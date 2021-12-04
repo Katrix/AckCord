@@ -27,7 +27,6 @@ import java.time.{Instant, OffsetDateTime}
 
 import ackcord.SnowflakeMap
 import ackcord.data._
-import ackcord.util.JsonOption
 
 /**
   * A raw channel before going through the cache.
@@ -716,7 +715,9 @@ case class RawGuild(
     welcomeScreen: Option[WelcomeScreen],
     nsfwLevel: NSFWLevel,
     stageInstances: Option[Seq[StageInstance]],
-    stickers: Option[Seq[RawSticker]]
+    stickers: Option[Seq[RawSticker]],
+    guildScheduledEvents: Option[Seq[GuildScheduledEvent]],
+    premiumProgressBarEnabled: Boolean
 ) {
 
   def toGatewayGuild(botUserId: Option[UserId]): Option[GatewayGuild] =
@@ -777,7 +778,9 @@ case class RawGuild(
         maxVideoChannelUsers,
         nsfwLevel,
         SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id),
-        SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
+        SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker)),
+        SnowflakeMap.withKey(guildScheduledEvents.toSeq.flatten)(_.id),
+        premiumProgressBarEnabled
       )
     }
 
@@ -820,7 +823,8 @@ case class RawGuild(
       approximateMemberCount,
       approximatePresenceCount,
       nsfwLevel,
-      SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker))
+      SnowflakeMap.from(stickers.toSeq.flatten.map(s => s.id -> s.toSticker)),
+      premiumProgressBarEnabled
     )
   }
 

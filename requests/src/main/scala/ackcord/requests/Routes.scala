@@ -300,6 +300,8 @@ object Routes {
   val templateCode: MinorParameter[String]                = new MinorParameter("code", identity)
   val stageChannelId: MinorParameter[StageGuildChannelId] = new MinorParameter("stageChannelId", _.asString)
   val stickerId: MinorParameter[StickerId]                = new MinorParameter("stickerId", _.asString)
+  val guildScheduledEventId: MinorParameter[SnowflakeType[GuildScheduledEvent]] =
+    new MinorParameter("guildScheduledEvent", _.asString)
 
   //Audit log
 
@@ -417,6 +419,27 @@ object Routes {
   val listJoinedPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
     (channel / "users" / "@me" / "threads" / "archived" / "private" +? beforeTimestampQuery +? limitQuery)
       .toRequest(GET)
+
+  //Guild scheduled events routes
+  val guildScheduledEvents: RouteFunction[GuildId] = guild / "scheduled-events"
+  val guildScheduledEvent: RouteFunction[(GuildId, SnowflakeType[GuildScheduledEvent])] =
+    guild / "scheduled-events" / guildScheduledEventId
+  val listScheduledEventsForGuild: (GuildId, Option[Boolean]) => RequestRoute =
+    (guildScheduledEvents +? query[Boolean]("with_user_count", _.toString)).toRequest(GET)
+  val createGuildScheduledEvent: GuildId => RequestRoute = guildScheduledEvents.toRequest(GET)
+  val getGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(GET)
+  val modifyGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(PATCH)
+  val deleteGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(DELETE)
+
+  val getGuildScheduledEventUsers: (GuildId, SnowflakeType[GuildScheduledEvent], Option[Int], Option[Boolean], Option[UserId], Option[UserId]) => RequestRoute =
+    (guildScheduledEvent / "users") +?
+      query[Int]("limit", _.toString) +?
+      query[Boolean]("with_member", _.toString) +?
+      query[UserId]("before", _.asString) +?
+      query[UserId]("after", _.asString) toRequest GET
 
   //Emoji routes
 
@@ -555,10 +578,12 @@ object Routes {
   //Invites
   val invites: Route                    = base / "invites"
   val inviteCode: RouteFunction[String] = invites / inviteCodeParam
-  val getInvite: (InviteCode, Option[Boolean], Option[Boolean]) => RequestRoute = {
+  val getInvite
+      : (InviteCode, Option[Boolean], Option[Boolean], Option[SnowflakeType[GuildScheduledEvent]]) => RequestRoute = {
     val withParams = inviteCode +?
       query[Boolean]("with_counts", _.toString) +?
-      query[Boolean]("with_expiration", _.toString)
+      query[Boolean]("with_expiration", _.toString) +?
+      query[SnowflakeType[GuildScheduledEvent]]("guild_scheduled_event_id", _.asString)
 
     withParams.toRequest(GET)
   }

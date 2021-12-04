@@ -36,6 +36,12 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   *
   * @param auditLogEntries
   *   The entries of the log
+  * @param guildScheduledEvents
+  *   The guild scheduled events found in the log
+  * @param integrations
+  *   The integrations found in the log
+  * @param threads
+  *   The threads found in the log
   * @param users
   *   The users found in the log
   * @param webhooks
@@ -43,6 +49,7 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   */
 case class AuditLog(
     auditLogEntries: Seq[AuditLogEntry],
+    guildScheduledEvents: Seq[GuildScheduledEvent],
     integrations: Seq[PartialIntegration],
     threads: Seq[RawChannel],
     users: Seq[User],
@@ -87,50 +94,53 @@ case class PartialIntegration(
 /** A type of change that an entry can represent */
 sealed abstract class AuditLogEvent(val value: Int) extends IntEnumEntry
 object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown[AuditLogEvent] {
-  case object GuildUpdate            extends AuditLogEvent(1)
-  case object ChannelCreate          extends AuditLogEvent(10)
-  case object ChannelUpdate          extends AuditLogEvent(11)
-  case object ChannelDelete          extends AuditLogEvent(12)
-  case object ChannelOverwriteCreate extends AuditLogEvent(13)
-  case object ChannelOverwriteUpdate extends AuditLogEvent(14)
-  case object ChannelOverwriteDelete extends AuditLogEvent(15)
-  case object MemberKick             extends AuditLogEvent(20)
-  case object MemberPrune            extends AuditLogEvent(21)
-  case object MemberBanAdd           extends AuditLogEvent(22)
-  case object MemberBanRemove        extends AuditLogEvent(23)
-  case object MemberUpdate           extends AuditLogEvent(24)
-  case object MemberRoleUpdate       extends AuditLogEvent(25)
-  case object MemberMove             extends AuditLogEvent(26)
-  case object MemberDisconnect       extends AuditLogEvent(27)
-  case object BotAdd                 extends AuditLogEvent(28)
-  case object RoleCreate             extends AuditLogEvent(30)
-  case object RoleUpdate             extends AuditLogEvent(31)
-  case object RoleDelete             extends AuditLogEvent(32)
-  case object InviteCreate           extends AuditLogEvent(40)
-  case object InviteUpdate           extends AuditLogEvent(41)
-  case object InviteDelete           extends AuditLogEvent(42)
-  case object WebhookCreate          extends AuditLogEvent(50)
-  case object WebhookUpdate          extends AuditLogEvent(51)
-  case object WebhookDelete          extends AuditLogEvent(52)
-  case object EmojiCreate            extends AuditLogEvent(60)
-  case object EmojiUpdate            extends AuditLogEvent(61)
-  case object EmojiDelete            extends AuditLogEvent(62)
-  case object MessageDelete          extends AuditLogEvent(72)
-  case object MessageBulkDelete      extends AuditLogEvent(73)
-  case object MessagePin             extends AuditLogEvent(74)
-  case object MessageUnpin           extends AuditLogEvent(75)
-  case object IntegrationCreate      extends AuditLogEvent(80)
-  case object IntegrationUpdate      extends AuditLogEvent(81)
-  case object IntegrationDelete      extends AuditLogEvent(82)
-  case object StageInstanceCreate    extends AuditLogEvent(83)
-  case object StageInstanceUpdate    extends AuditLogEvent(84)
-  case object StageInstanceDelete    extends AuditLogEvent(85)
-  case object StickerCreate          extends AuditLogEvent(90)
-  case object StickerUpdate          extends AuditLogEvent(91)
-  case object StickerDelete          extends AuditLogEvent(92)
-  case object ThreadCreate           extends AuditLogEvent(110)
-  case object ThreadUpdate           extends AuditLogEvent(111)
-  case object ThreadDelete           extends AuditLogEvent(112)
+  case object GuildUpdate               extends AuditLogEvent(1)
+  case object ChannelCreate             extends AuditLogEvent(10)
+  case object ChannelUpdate             extends AuditLogEvent(11)
+  case object ChannelDelete             extends AuditLogEvent(12)
+  case object ChannelOverwriteCreate    extends AuditLogEvent(13)
+  case object ChannelOverwriteUpdate    extends AuditLogEvent(14)
+  case object ChannelOverwriteDelete    extends AuditLogEvent(15)
+  case object MemberKick                extends AuditLogEvent(20)
+  case object MemberPrune               extends AuditLogEvent(21)
+  case object MemberBanAdd              extends AuditLogEvent(22)
+  case object MemberBanRemove           extends AuditLogEvent(23)
+  case object MemberUpdate              extends AuditLogEvent(24)
+  case object MemberRoleUpdate          extends AuditLogEvent(25)
+  case object MemberMove                extends AuditLogEvent(26)
+  case object MemberDisconnect          extends AuditLogEvent(27)
+  case object BotAdd                    extends AuditLogEvent(28)
+  case object RoleCreate                extends AuditLogEvent(30)
+  case object RoleUpdate                extends AuditLogEvent(31)
+  case object RoleDelete                extends AuditLogEvent(32)
+  case object InviteCreate              extends AuditLogEvent(40)
+  case object InviteUpdate              extends AuditLogEvent(41)
+  case object InviteDelete              extends AuditLogEvent(42)
+  case object WebhookCreate             extends AuditLogEvent(50)
+  case object WebhookUpdate             extends AuditLogEvent(51)
+  case object WebhookDelete             extends AuditLogEvent(52)
+  case object EmojiCreate               extends AuditLogEvent(60)
+  case object EmojiUpdate               extends AuditLogEvent(61)
+  case object EmojiDelete               extends AuditLogEvent(62)
+  case object MessageDelete             extends AuditLogEvent(72)
+  case object MessageBulkDelete         extends AuditLogEvent(73)
+  case object MessagePin                extends AuditLogEvent(74)
+  case object MessageUnpin              extends AuditLogEvent(75)
+  case object IntegrationCreate         extends AuditLogEvent(80)
+  case object IntegrationUpdate         extends AuditLogEvent(81)
+  case object IntegrationDelete         extends AuditLogEvent(82)
+  case object StageInstanceCreate       extends AuditLogEvent(83)
+  case object StageInstanceUpdate       extends AuditLogEvent(84)
+  case object StageInstanceDelete       extends AuditLogEvent(85)
+  case object StickerCreate             extends AuditLogEvent(90)
+  case object StickerUpdate             extends AuditLogEvent(91)
+  case object StickerDelete             extends AuditLogEvent(92)
+  case object GuildScheduledEventCreate extends AuditLogEvent(100)
+  case object GuildScheduledEventUpdate extends AuditLogEvent(101)
+  case object GuildScheduledEventDelete extends AuditLogEvent(102)
+  case object ThreadCreate              extends AuditLogEvent(110)
+  case object ThreadUpdate              extends AuditLogEvent(111)
+  case object ThreadDelete              extends AuditLogEvent(112)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 
@@ -231,15 +241,15 @@ object AuditLogChange {
   /** Voice channel bitrate changed */
   case class Bitrate(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 
-  /** Invite channelId changed */
-  case class InviteChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
-    extends AuditLogChange[GuildChannelId] {
+  /** Invite or guild scheduled event channelId changed */
+  case class ChannelIdChanged(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
+      extends AuditLogChange[GuildChannelId] {
 
-    def oldChannel(implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      oldValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel => ch }
+    def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
+      oldValue.flatMap(c.getGuildChannel)
 
-    def newChannel[F[_]](implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      newValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel => ch }
+    def newChannel[F[_]](implicit c: CacheSnapshot): Option[GuildChannel] =
+      newValue.flatMap(c.getGuildChannel)
   }
 
   /** Invite code changed */
@@ -271,6 +281,12 @@ object AuditLogChange {
 
   /** Integration emoticons enabled/disabled changed */
   case class EnableEmoticons(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
+  /** The entity type of a guild scheduled event changed */
+  case class EntityType(
+      oldValue: Option[GuildScheduledEventEntityType],
+      newValue: Option[GuildScheduledEventEntityType]
+  ) extends AuditLogChange[GuildScheduledEventEntityType]
 
   /** Integration expire behavior changed */
   case class ExpireBehavior(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
@@ -308,6 +324,9 @@ object AuditLogChange {
     def newInvited(implicit c: CacheSnapshot): Option[User] =
       newValue.flatMap(c.getUser)
   }
+
+  /** Change in the location of a guild scheduled event */
+  case class Location(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
   /** Thread is locked/unlocked */
   case class Locked(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
@@ -386,6 +405,10 @@ object AuditLogChange {
   /** Splash hash changed */
   case class SplashHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
+  /** The status of an guild scheduled event changed */
+  case class Status(oldValue: Option[GuildScheduledEventStatus], newValue: Option[GuildScheduledEventStatus])
+      extends AuditLogChange[GuildScheduledEventStatus]
+
   /** System channelId changed */
   case class SystemChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
       extends AuditLogChange[TextGuildChannelId] {
@@ -430,7 +453,7 @@ object AuditLogChange {
 
   /** Widget channelId changed */
   case class WidgetChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
-    extends AuditLogChange[GuildChannelId] {
+      extends AuditLogChange[GuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
       oldValue.flatMap(c.getGuildChannel)

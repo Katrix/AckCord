@@ -1015,10 +1015,17 @@ case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseReque
   *   and people online.
   * @param withExpiration
   *   If the invite should contain the expiration date.
+  * @param guildScheduledEventId
+  *   The guild scheduled event to include in the invite.
   */
-case class GetInvite(inviteCode: String, withCounts: Boolean = false, withExpiration: Boolean = false)
-    extends NoParamsNiceResponseRequest[Invite] {
-  override def route: RequestRoute              = Routes.getInvite(inviteCode, Some(withCounts), Some(withExpiration))
+case class GetInvite(
+    inviteCode: String,
+    withCounts: Boolean = false,
+    withExpiration: Boolean = false,
+    guildScheduledEventId: Option[SnowflakeType[GuildScheduledEvent]] = None
+) extends NoParamsNiceResponseRequest[Invite] {
+  override def route: RequestRoute =
+    Routes.getInvite(inviteCode, Some(withCounts), Some(withExpiration), guildScheduledEventId)
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 }
 

@@ -541,7 +541,7 @@ trait DiscordProtocol {
       case "available"                     => mkChange(AuditLogChange.Available)
       case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
       case "bitrate"                       => mkChange(AuditLogChange.Bitrate)
-      case "channel_id"                    => mkChange(AuditLogChange.InviteChannelId)
+      case "channel_id"                    => mkChange(AuditLogChange.ChannelIdChanged)
       case "code"                          => mkChange(AuditLogChange.Code)
       case "color"                         => mkChange(AuditLogChange.Color)
       case "deaf"                          => mkChange(AuditLogChange.Deaf)
@@ -560,6 +560,7 @@ trait DiscordProtocol {
       case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
       case "id"                            => mkChange(AuditLogChange.Id)
       case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
+      case "location"                      => mkChange(AuditLogChange.Location)
       case "locked"                        => mkChange(AuditLogChange.Locked)
       case "max_age"                       => mkChange(AuditLogChange.MaxAge)
       case "max_uses"                      => mkChange(AuditLogChange.MaxUses)
@@ -581,6 +582,7 @@ trait DiscordProtocol {
       case "region"                        => mkChange(AuditLogChange.Region)
       case "rules_channel_id"              => mkChange(AuditLogChange.RulesChannelId)
       case "splash_hash"                   => mkChange(AuditLogChange.SplashHash)
+      case "status"                        => mkChange(AuditLogChange.Status)
       case "system_channel_id"             => mkChange(AuditLogChange.SystemChannelId)
       case "tags"                          => mkChange(AuditLogChange.Tags)
       case "temporary"                     => mkChange(AuditLogChange.Temporary)
@@ -745,5 +747,14 @@ trait DiscordProtocol {
 
   implicit val guildApplicationCommandPermissionsCodec: Codec[GuildApplicationCommandPermissions] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildScheduledEventCodec: Codec[GuildScheduledEvent] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+
+  implicit val guildScheduledEventEntityMetadataCodec: Codec[GuildScheduledEventEntityMetadata] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+
+  implicit val guildScheduledEventUserCodec: Codec[GuildScheduledEventUser] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
 }
 object DiscordProtocol extends DiscordProtocol

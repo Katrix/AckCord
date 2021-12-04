@@ -536,6 +536,39 @@ object CacheEventCreator {
           registry,
           dispatch
         )
+      case gatewayEv.GuildScheduledEventCreate(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g => api.GuildScheduledEventCreate(g, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.guildScheduledEventUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.GuildScheduledEventUpdate(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g => api.GuildScheduledEventUpdate(g, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.guildScheduledEventUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.GuildScheduledEventDelete(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g => api.GuildScheduledEventDelete(g, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.guildScheduledEventDeleter,
+          registry,
+          dispatch
+        )
       case gatewayEv.InviteCreate(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,
