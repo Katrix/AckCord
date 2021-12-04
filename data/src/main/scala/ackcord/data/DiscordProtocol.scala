@@ -29,6 +29,7 @@ import scala.util.Try
 
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
+import ackcord.util.{JsonOption, JsonSome}
 import cats.instances.either._
 import cats.instances.option._
 import cats.syntax.all._
@@ -328,24 +329,34 @@ trait DiscordProtocol {
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
-      "id"               -> a.id.asJson,
-      "channel_id"       -> a.channelId.asJson,
-      "content"          -> a.content.asJson,
-      "timestamp"        -> a.timestamp.asJson,
-      "edited_timestamp" -> a.editedTimestamp.asJson,
-      "tts"              -> a.tts.asJson,
-      "mention_everyone" -> a.mentionEveryone.asJson,
-      "mentions"         -> a.mentions.asJson,
-      "mention_roles"    -> a.mentionRoles.asJson,
-      "attachments"      -> a.attachments.asJson,
-      "embeds"           -> a.embeds.asJson,
-      "reactions"        -> a.reactions.asJson,
-      "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
-      "pinned"           -> a.pinned.asJson,
-      "type"             -> a.`type`.asJson,
-      "activity"         -> a.activity.asJson,
-      "application"      -> a.application.asJson,
-      "components"       -> a.components.asJson
+      "id"                 -> a.id.asJson,
+      "channel_id"         -> a.channelId.asJson,
+      "guild_id"           -> a.guildId.asJson,
+      "member"             -> a.member.asJson,
+      "content"            -> a.content.asJson,
+      "timestamp"          -> a.timestamp.asJson,
+      "edited_timestamp"   -> a.editedTimestamp.asJson,
+      "tts"                -> a.tts.asJson,
+      "mention_everyone"   -> a.mentionEveryone.asJson,
+      "mentions"           -> a.mentions.asJson,
+      "mention_roles"      -> a.mentionRoles.asJson,
+      "attachments"        -> a.attachments.asJson,
+      "embeds"             -> a.embeds.asJson,
+      "reactions"          -> a.reactions.asJson,
+      "nonce"              -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
+      "pinned"             -> a.pinned.asJson,
+      "type"               -> a.`type`.asJson,
+      "activity"           -> a.activity.asJson,
+      "application"        -> a.application.asJson,
+      "application_id"     -> a.applicationId.asJson,
+      "message_reference"  -> a.messageReference.asJson,
+      "flags"              -> a.flags.asJson,
+      "stickers"           -> a.stickers.asJson,
+      "sticker_items"      -> a.stickerItems.asJson,
+      "referenced_message" -> a.referencedMessage.asJson,
+      "interaction"        -> a.interaction.asJson,
+      "components"         -> a.components.asJson,
+      "thread"             -> a.thread.asJson
     )
 
     a.author match {
@@ -587,16 +598,16 @@ trait DiscordProtocol {
       case "tags"                          => mkChange(AuditLogChange.Tags)
       case "temporary"                     => mkChange(AuditLogChange.Temporary)
       case "topic"                         => mkChange(AuditLogChange.Topic)
-      case "type"             => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
-      case "unicode_emoji"                 => mkChange(AuditLogChange.UnicodeEmoji)
-      case "user_limit"                    => mkChange(AuditLogChange.UserLimit)
-      case "uses"                          => mkChange(AuditLogChange.Uses)
-      case "vanity_url_code"               => mkChange(AuditLogChange.VanityUrlCode)
-      case "verification_level"            => mkChange(AuditLogChange.VerificationLevel)
-      case "widget_channel_id"             => mkChange(AuditLogChange.WidgetChannelId)
-      case "widget_enabled"                => mkChange(AuditLogChange.WidgetEnabled)
-      case "$add"                          => mkChange(AuditLogChange.$Add)
-      case "$remove"                       => mkChange(AuditLogChange.$Remove)
+      case "type"            => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
+      case "unicode_emoji"   => mkChange(AuditLogChange.UnicodeEmoji)
+      case "user_limit"      => mkChange(AuditLogChange.UserLimit)
+      case "uses"            => mkChange(AuditLogChange.Uses)
+      case "vanity_url_code" => mkChange(AuditLogChange.VanityUrlCode)
+      case "verification_level" => mkChange(AuditLogChange.VerificationLevel)
+      case "widget_channel_id"  => mkChange(AuditLogChange.WidgetChannelId)
+      case "widget_enabled"     => mkChange(AuditLogChange.WidgetEnabled)
+      case "$add"               => mkChange(AuditLogChange.$Add)
+      case "$remove"            => mkChange(AuditLogChange.$Remove)
     }
   }
 
@@ -626,8 +637,32 @@ trait DiscordProtocol {
   implicit val interactionChannelCodec: Codec[InteractionChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val applicationCommandInteractionDataResolvedCodec: Codec[ApplicationCommandInteractionDataResolved] =
+  implicit val interactionPartialMessageCodec: Codec[InteractionPartialMessage] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandInteractionDataResolvedCodec: Codec[ApplicationCommandInteractionDataResolved] = {
+    def resolvedField[K: KeyDecoder, V: Decoder](c: HCursor, field: String) =
+      c.downField(field).success.map(_.as[Map[K, V]]).getOrElse(Right(Map.empty[K, V]))
+
+    Codec.from(
+      (c: HCursor) =>
+        for {
+          users    <- resolvedField[UserId, User](c, "users")
+          members  <- resolvedField[UserId, InteractionRawGuildMember](c, "members")
+          roles    <- resolvedField[RoleId, Role](c, "roles")
+          channels <- resolvedField[TextGuildChannelId, InteractionChannel](c, "channels")
+          messages <- resolvedField[MessageId, InteractionPartialMessage](c, "messages")
+        } yield ApplicationCommandInteractionDataResolved(users, members, roles, channels, messages),
+      (a: ApplicationCommandInteractionDataResolved) =>
+        JsonOption.removeUndefinedToObj(
+          "users"    -> JsonSome(a.users).filterToUndefined(_.nonEmpty).toJson,
+          "members"  -> JsonSome(a.members).filterToUndefined(_.nonEmpty).toJson,
+          "roles"    -> JsonSome(a.roles).filterToUndefined(_.nonEmpty).toJson,
+          "channels" -> JsonSome(a.channels).filterToUndefined(_.nonEmpty).toJson,
+          "messages" -> JsonSome(a.messages).filterToUndefined(_.nonEmpty).toJson
+        )
+    )
+  }
 
   implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -637,10 +672,9 @@ trait DiscordProtocol {
 
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
-      (c: HCursor) =>
-        c.as[ApplicationComponentInteractionData]
-          .orElse(c.as[ApplicationCommandInteractionData])
-          .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
+      (c: HCursor) => /*c.as[ApplicationComponentInteractionData]
+          .orElse(*/ c.as[ApplicationCommandInteractionData] /*)
+          .orElse(c.as[Json].map(ApplicationUnknownInteractionData))*/,
       {
         case a: ApplicationCommandInteractionData    => a.asJson
         case a: ApplicationComponentInteractionData  => a.asJson
@@ -703,13 +737,13 @@ trait DiscordProtocol {
         tpe           <- c.get[InteractionType]("type")
         data          <- c.get[Option[ApplicationInteractionData]]("data")
         guildId       <- c.get[Option[GuildId]]("guild_id")
-        channelId     <- c.get[TextChannelId]("channel_id")
+        channelId     <- c.get[Option[TextChannelId]]("channel_id")
         member        <- c.get[Option[RawGuildMember]]("member")
         permissions   <- c.downField("member").get[Option[Permission]]("permissions")
         user          <- c.get[Option[User]]("user")
         token         <- c.get[String]("token")
+        version       <- c.get[Int]("version")
         message       <- c.get[Option[RawMessage]]("message")
-        version       <- c.get[Option[Int]]("version")
       } yield RawInteraction(
         id,
         applicationId,
@@ -721,8 +755,8 @@ trait DiscordProtocol {
         permissions,
         user,
         token,
-        message,
-        version
+        version,
+        message
       ),
     (a: RawInteraction) =>
       Json.obj(

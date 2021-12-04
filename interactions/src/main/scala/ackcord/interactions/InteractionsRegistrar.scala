@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import ackcord.interactions.commands.CommandOrGroup
+import ackcord.interactions.commands.CreatedApplicationCommand
 import ackcord.interactions.components.{GlobalRegisteredComponents, RegisteredComponents}
 import ackcord.interactions.raw._
 import ackcord.requests.{Requests, SupervisionStreams}
@@ -53,7 +53,7 @@ object InteractionsRegistrar {
 
   private def handleInteraction(
       clientId: String,
-      commandsByName: Map[String, Seq[CommandOrGroup]],
+      commandsByName: Map[String, Seq[CreatedApplicationCommand]],
       registeredComponents: RegisteredComponents,
       interaction: RawInteraction,
       optCache: Option[CacheSnapshot]
@@ -65,7 +65,8 @@ object InteractionsRegistrar {
           case Some(data: ApplicationCommandInteractionData) =>
             commandsByName
               .get(data.name.toLowerCase(Locale.ROOT))
-              .map(_.head.handleRaw(clientId, interaction, optCache))
+              .flatMap(_.collectFirst { case cmd if cmd.commandType == data.`type` => cmd})
+              .map(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
           case _ => Left(Some("None or invalid data sent for command execution"))
@@ -95,7 +96,7 @@ object InteractionsRegistrar {
     }
 
   def webFlow(
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   )(
       clientId: String,
       publicKey: String,
@@ -181,7 +182,7 @@ object InteractionsRegistrar {
   }
 
   def gatewayInteractions[Mat](
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   )(
       clientId: String,
       requests: Requests,
@@ -217,19 +218,19 @@ object InteractionsRegistrar {
       guildId: GuildId,
       requests: Requests,
       replaceAll: Boolean,
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
     if (replaceAll) {
       requests.singleFutureSuccess(
-        BulkReplaceGuildCommand(applicationId, guildId, commands.map(CreateCommandData.fromCommand))
+        BulkOverwriteGuildApplicationCommands(applicationId, guildId, commands.map(CreateCommandData.fromCommand))
       )
     } else {
       requests.manyFutureSuccess(
         commands.toVector.map(command =>
-          CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
+          CreateGuildApplicationCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
         )
       )
     }
@@ -239,18 +240,20 @@ object InteractionsRegistrar {
       applicationId: ApplicationId,
       requests: Requests,
       replaceAll: Boolean,
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
     if (replaceAll) {
       requests.singleFutureSuccess(
-        BulkReplaceGlobalCommands(applicationId, commands.map(CreateCommandData.fromCommand))
+        BulkOverwriteGlobalApplicationCommands(applicationId, commands.map(CreateCommandData.fromCommand))
       )
     } else {
       requests.manyFutureSuccess(
-        commands.toVector.map(command => CreateGlobalCommand(applicationId, CreateCommandData.fromCommand(command)))
+        commands.toVector.map(command =>
+          CreateGlobalApplicationCommand(applicationId, CreateCommandData.fromCommand(command))
+        )
       )
     }
   }
@@ -259,18 +262,18 @@ object InteractionsRegistrar {
       applicationId: ApplicationId,
       guildId: GuildId,
       requests: Requests,
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   ): Future[Seq[ApplicationCommand]] = {
     import requests.system
     import requests.system.executionContext
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+    requests.singleFutureSuccess(GetGlobalApplicationCommands(applicationId)).flatMap { globalCommands =>
       Source(
         globalCommands
           .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
-          .map(gc => (DeleteGuildCommand(applicationId, guildId, gc.id), gc))
+          .map(gc => (DeleteGuildApplicationCommand(applicationId, guildId, gc.id), gc))
           .toVector
       ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
     }
@@ -279,18 +282,18 @@ object InteractionsRegistrar {
   def removeUnknownGlobalCommands(
       applicationId: ApplicationId,
       requests: Requests,
-      commands: CommandOrGroup*
+      commands: CreatedApplicationCommand*
   ): Future[Seq[ApplicationCommand]] = {
     import requests.system
     import requests.system.executionContext
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+    requests.singleFutureSuccess(GetGlobalApplicationCommands(applicationId)).flatMap { globalCommands =>
       Source(
         globalCommands
           .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
-          .map(gc => (DeleteGlobalCommand(applicationId, gc.id), gc))
+          .map(gc => (DeleteGlobalApplicationCommand(applicationId, gc.id), gc))
           .toVector
       ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
     }

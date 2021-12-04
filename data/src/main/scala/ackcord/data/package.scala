@@ -353,7 +353,7 @@ package object data {
     val ManageRoles: Permission             = Permission(0x0010000000L)
     val ManageWebhooks: Permission          = Permission(0x0020000000L)
     val ManageEmojisAndStickers: Permission = Permission(0x0040000000L)
-    val UseSlashCommands: Permission        = Permission(0x0080000000L)
+    val UseApplicationCommands: Permission  = Permission(0x0080000000L)
     val RequestToSpeak: Permission          = Permission(0x0100000000L)
     val ManageEvents: Permission            = Permission(0x0200000000L)
     val ManageThreads: Permission           = Permission(0x0400000000L)
@@ -396,7 +396,7 @@ package object data {
       ManageRoles,
       ManageWebhooks,
       ManageEmojisAndStickers,
-      UseSlashCommands,
+      UseApplicationCommands,
       RequestToSpeak,
       UseExternalStickers
     )

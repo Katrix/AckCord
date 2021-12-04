@@ -31,14 +31,13 @@ import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
 import cats.syntax.either._
 
-sealed trait CommandOrGroup {
+sealed trait CreatedApplicationCommand {
   def name: String
-  def description: String
+  def description: Option[String]
   def defaultPermission: Boolean
 
   def extra: Map[String, String]
 
-  def toCommandOption: ApplicationCommandOption
   def makeCommandOptions: Seq[ApplicationCommandOption]
 
   def handleRaw(
@@ -46,55 +45,19 @@ sealed trait CommandOrGroup {
       rawInteraction: RawInteraction,
       cacheSnapshot: Option[CacheSnapshot]
   ): InteractionResponse
+
+  def commandType: ApplicationCommandType
 }
-case class Command[InteractionObj[_], A] private (
-    name: String,
-    description: String,
-    defaultPermission: Boolean,
-    extra: Map[String, String],
-    paramList: Either[NotUsed =:= A, ParamList[A]],
-    filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
-    handle: InteractionObj[A] => InteractionResponse
-) extends CommandOrGroup {
-
-  override def makeCommandOptions: Seq[ApplicationCommandOption] = {
-    val normalList                          = paramList.map(_.map(identity)).getOrElse(Nil)
-    val (requiredParams, notRequiredParams) = normalList.partition(_.isRequired)
-    (requiredParams ++ notRequiredParams).map(_.toCommandOption)
-  }
-
-  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    ApplicationCommandOptionType.SubCommand,
-    name,
-    description,
-    required = Some(false),
-    Some(Nil),
-    Some(makeCommandOptions),
-    None,
-    None,
-    None
-  )
-
-  override def handleRaw(
+object CreatedApplicationCommand {
+  private[commands] def handleCommon[A, InteractionObj[_]](
       clientId: String,
       interaction: RawInteraction,
-      cacheSnapshot: Option[CacheSnapshot]
-  ): InteractionResponse = {
+      cacheSnapshot: Option[CacheSnapshot],
+      optArgs: Either[String, A],
+      filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
+      handle: InteractionObj[A] => InteractionResponse
+  ) = {
     val data = interaction.data.get.asInstanceOf[ApplicationCommandInteractionData]
-
-    val optionsMap = data.options
-      .getOrElse(Nil)
-      .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
-        name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
-      }
-      .toMap
-
-    val optArgs = paramList match {
-      case Right(value) =>
-        value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
-      case Left(ev) => Right(ev(NotUsed))
-    }
-
     optArgs
       .leftMap(Some(_))
       .flatMap { args =>
@@ -102,7 +65,9 @@ case class Command[InteractionObj[_], A] private (
           InteractionInvocationInfo(
             interaction.id,
             interaction.guildId,
-            interaction.channelId,
+            interaction.channelId.getOrElse(
+              throw new IllegalArgumentException("Got an interaction without a channel for a command")
+            ),
             interaction.member.map(_.user).orElse(interaction.user).get,
             interaction.member,
             interaction.memberPermission,
@@ -136,19 +101,32 @@ case class Command[InteractionObj[_], A] private (
       .merge
   }
 }
-case class CommandGroup private (
+
+sealed trait SlashCommandOrGroup extends CreatedApplicationCommand {
+  def toCommandOption: ApplicationCommandOption
+  override def commandType: ApplicationCommandType = ApplicationCommandType.ChatInput
+}
+
+case class SlashCommand[InteractionObj[_], A] private (
     name: String,
-    description: String,
+    description: Option[String],
     defaultPermission: Boolean,
     extra: Map[String, String],
-    commands: Seq[CommandOrGroup]
-) extends CommandOrGroup {
-  override def makeCommandOptions: Seq[ApplicationCommandOption] = commands.map(_.toCommandOption)
+    paramList: Either[NotUsed =:= A, ParamList[A]],
+    filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
+    handle: InteractionObj[A] => InteractionResponse
+) extends SlashCommandOrGroup {
+
+  override def makeCommandOptions: Seq[ApplicationCommandOption] = {
+    val normalList                          = paramList.map(_.map(identity)).getOrElse(Nil)
+    val (requiredParams, notRequiredParams) = normalList.partition(_.isRequired)
+    (requiredParams ++ notRequiredParams).map(_.toCommandOption)
+  }
 
   override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    ApplicationCommandOptionType.SubCommandGroup,
+    ApplicationCommandOptionType.SubCommand,
     name,
-    description,
+    description.get,
     required = Some(false),
     Some(Nil),
     Some(makeCommandOptions),
@@ -157,7 +135,59 @@ case class CommandGroup private (
     None
   )
 
-  private lazy val subCommandsByName: Map[String, CommandOrGroup] = commands.map(c => c.name -> c).toMap
+  override def handleRaw(
+      clientId: String,
+      interaction: RawInteraction,
+      cacheSnapshot: Option[CacheSnapshot]
+  ): InteractionResponse = {
+    val data = interaction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    if (data.`type` != ApplicationCommandType.ChatInput) {
+      InteractionResponse.ChannelMessage(
+        RawInteractionApplicationCommandCallbackData(content =
+          Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
+        ),
+        () => OptFuture.unit
+      )
+    } else {
+      val optionsMap = data.options
+        .getOrElse(Nil)
+        .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
+          name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
+        }
+        .toMap
+
+      val optArgs = paramList match {
+        case Right(value) =>
+          value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
+        case Left(ev) => Right(ev(NotUsed))
+      }
+
+      CreatedApplicationCommand.handleCommon(clientId, interaction, cacheSnapshot, optArgs, filter, handle)
+    }
+  }
+}
+case class SlashCommandGroup private (
+    name: String,
+    description: Option[String],
+    defaultPermission: Boolean,
+    extra: Map[String, String],
+    commands: Seq[SlashCommandOrGroup]
+) extends SlashCommandOrGroup {
+  override def makeCommandOptions: Seq[ApplicationCommandOption] = commands.map(_.toCommandOption)
+
+  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
+    ApplicationCommandOptionType.SubCommandGroup,
+    name,
+    description.get,
+    required = Some(false),
+    Some(Nil),
+    Some(makeCommandOptions),
+    None,
+    None,
+    None
+  )
+
+  private lazy val subCommandsByName: Map[String, CreatedApplicationCommand] = commands.map(c => c.name -> c).toMap
 
   override def handleRaw(
       clientId: String,
@@ -165,29 +195,113 @@ case class CommandGroup private (
       cacheSnapshot: Option[CacheSnapshot]
   ): InteractionResponse = {
     val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    if (data.`type` != ApplicationCommandType.ChatInput) {
+      InteractionResponse.ChannelMessage(
+        RawInteractionApplicationCommandCallbackData(content =
+          Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
+        ),
+        () => OptFuture.unit
+      )
+    } else {
+      val subcommandExecution = data.options.getOrElse(Nil).collectFirst {
+        case ApplicationCommandInteractionDataOption(
+              name,
+              ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
+              option
+            ) =>
+          subCommandsByName(name) -> option.asInstanceOf[Option[Seq[ApplicationCommandInteractionDataOption[_]]]]
+      }
 
-    val subcommandExecution = data.options.getOrElse(Nil).collectFirst {
-      case ApplicationCommandInteractionDataOption(
-            name,
-            ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
-            option
-          ) =>
-        subCommandsByName(name) -> option.asInstanceOf[Option[Seq[ApplicationCommandInteractionDataOption[_]]]]
+      subcommandExecution match {
+        case Some((subcommand, option)) =>
+          subcommand.handleRaw(
+            clientId,
+            rawInteraction.copy(data = Some(data.copy(options = option))),
+            cacheSnapshot
+          )
+        case None =>
+          InteractionResponse.ChannelMessage(
+            RawInteractionApplicationCommandCallbackData(content = Some("Encountered dead end for subcommands")),
+            () => OptFuture.unit
+          )
+      }
     }
+  }
+}
 
-    subcommandExecution match {
-      case Some((subcommand, option)) =>
-        subcommand.handleRaw(
-          clientId,
-          rawInteraction.copy(data = Some(data.copy(options = option))),
-          cacheSnapshot
-        )
-      case None =>
-        InteractionResponse.ChannelMessage(
-          RawInteractionApplicationCommandCallbackData(content = Some("Encountered dead end for subcommands")),
-          () => OptFuture.unit
-        )
+case class UserCommand[InteractionObj[_]] private (
+    name: String,
+    defaultPermission: Boolean,
+    extra: Map[String, String],
+    filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
+    handle: InteractionObj[(User, Option[InteractionRawGuildMember])] => InteractionResponse
+) extends CreatedApplicationCommand {
+  override def description: Option[String] = None
+
+  override def makeCommandOptions: Seq[ApplicationCommandOption] = Nil
+
+  override def commandType: ApplicationCommandType = ApplicationCommandType.User
+
+  override def handleRaw(
+      clientId: String,
+      rawInteraction: RawInteraction,
+      cacheSnapshot: Option[CacheSnapshot]
+  ): InteractionResponse = {
+    val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    if (data.`type` != ApplicationCommandType.User) {
+      InteractionResponse.ChannelMessage(
+        RawInteractionApplicationCommandCallbackData(content =
+          Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
+        ),
+        () => OptFuture.unit
+      )
+    } else {
+      val resolved = data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty)
+      val optArgs =
+        data.targetId
+          .map(UserId(_))
+          .toRight("Did not received target_id for user command")
+          .flatMap(userId => resolved.users.get(userId).toRight("Did not received resolved target user"))
+          .map(user => user -> resolved.members.get(user.id))
+      CreatedApplicationCommand.handleCommon(clientId, rawInteraction, cacheSnapshot, optArgs, filter, handle)
     }
+  }
+}
 
+case class MessageCommand[InteractionObj[_]] private (
+    name: String,
+    defaultPermission: Boolean,
+    extra: Map[String, String],
+    filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
+    handle: InteractionObj[InteractionPartialMessage] => InteractionResponse
+) extends CreatedApplicationCommand {
+  override def description: Option[String] = None
+
+  override def makeCommandOptions: Seq[ApplicationCommandOption] = Nil
+
+  override def commandType: ApplicationCommandType = ApplicationCommandType.Message
+
+  override def handleRaw(
+      clientId: String,
+      rawInteraction: RawInteraction,
+      cacheSnapshot: Option[CacheSnapshot]
+  ): InteractionResponse = {
+    val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    if (data.`type` != ApplicationCommandType.Message) {
+      InteractionResponse.ChannelMessage(
+        RawInteractionApplicationCommandCallbackData(content =
+          Some(s"Encountered unexpected interaction type ${data.`type`} for slash command")
+        ),
+        () => OptFuture.unit
+      )
+    } else {
+      val resolved = data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty)
+      val optArgs =
+        data.targetId
+          .map(MessageId(_))
+          .toRight("Did not received target_id for user command")
+          .flatMap(messageId => resolved.messages.get(messageId).toRight("Did not received resolved target message"))
+      CreatedApplicationCommand.handleCommon(clientId, rawInteraction, cacheSnapshot, optArgs, filter, handle)
+    }
   }
 }

@@ -25,18 +25,14 @@ package ackcord.interactions.commands
 
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
 import ackcord.requests.Requests
-import akka.NotUsed
 
-class StatelessSlashCommandController(val requests: Requests)
-    extends SlashCommandControllerBase[StatelessCommandInteraction] {
+class StatelessApplicationCommandController(val requests: Requests)
+    extends ApplicationCommandControllerBase[StatelessCommandInteraction] {
 
-  override val Command: CommandBuilder[StatelessCommandInteraction, NotUsed] = new CommandBuilder(
-    true,
+  override val defaultInteractionTransformer
+      : DataInteractionTransformer[CommandInteraction, StatelessCommandInteraction] =
     new DataInteractionTransformer[CommandInteraction, StatelessCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], StatelessCommandInteraction[A]] =
         Right(StatelessCommandInteraction(from.commandInvocationInfo))
-    },
-    Left(implicitly),
-    Map.empty
-  )
+    }
 }

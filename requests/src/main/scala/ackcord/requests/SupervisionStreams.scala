@@ -25,8 +25,7 @@
 package ackcord.requests
 
 import akka.actor.typed.ActorSystem
-import akka.stream.javadsl.RunnableGraph
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{Flow, RunnableGraph, Sink, Source}
 import akka.stream.{ActorAttributes, Attributes, Supervision}
 
 object SupervisionStreams {

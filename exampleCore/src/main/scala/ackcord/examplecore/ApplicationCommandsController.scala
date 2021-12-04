@@ -26,35 +26,35 @@ package ackcord.examplecore
 import ackcord.JsonSome
 import ackcord.data.{AllowedMention, InteractionGuildMember}
 import ackcord.interactions.ResolvedCommandInteraction
-import ackcord.interactions.commands.{CacheSlashCommandController, Command, CommandGroup}
+import ackcord.interactions.commands.{CacheApplicationCommandController, MessageCommand, SlashCommand, SlashCommandGroup, UserCommand}
 import ackcord.requests.Requests
 import akka.NotUsed
 
-class SlashCommandsController(requests: Requests) extends CacheSlashCommandController(requests) {
+class ApplicationCommandsController(requests: Requests) extends CacheApplicationCommandController(requests) {
 
-  val ping: Command[ResolvedCommandInteraction, NotUsed] = Command.command("ping", "Check if the bot is alive") { _ =>
+  val ping: SlashCommand[ResolvedCommandInteraction, NotUsed] = SlashCommand.command("ping", "Check if the bot is alive") { _ =>
     sendMessage("Pong")
   }
 
-  val echo: Command[ResolvedCommandInteraction, String] =
-    Command
+  val echo: SlashCommand[ResolvedCommandInteraction, String] =
+    SlashCommand
       .withParams(string("message", "The message to send back"))
       .command("echo", "Echoes a message you send")(i => sendMessage(s"ECHO: ${i.args}"))
 
-  val nudge: Command[ResolvedCommandInteraction, InteractionGuildMember] =
-    Command
+  val nudge: SlashCommand[ResolvedCommandInteraction, InteractionGuildMember] =
+    SlashCommand
       .withParams(user("user", "The user to nudge"))
       .command("nudge", "Nudge someone") { i =>
         sendMessage(s"Hey ${i.args.user.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args.user.id))))
       }
 
-  val asyncTest: Command[ResolvedCommandInteraction, NotUsed] =
-    Command.command("async", "An async test command") { implicit i =>
+  val asyncTest: SlashCommand[ResolvedCommandInteraction, NotUsed] =
+    SlashCommand.command("async", "An async test command") { implicit i =>
       async(implicit token => sendAsyncMessage("Async message"))
     }
 
-  val asyncEditTest: Command[ResolvedCommandInteraction, (String, String)] =
-    Command
+  val asyncEditTest: SlashCommand[ResolvedCommandInteraction, (String, String)] =
+    SlashCommand
       .withParams(string("par1", "The first parameter") ~ string("par2", "The second parameter"))
       .command("asyncEdit", "An async edit test command") { implicit i =>
         sendMessage("An instant message").doAsync { implicit token =>
@@ -62,8 +62,16 @@ class SlashCommandsController(requests: Requests) extends CacheSlashCommandContr
         }
       }
 
-  val groupTest: CommandGroup = Command.group("group", "Group test")(
-    Command.command("foo", "Sends foo")(_ => sendMessage("Foo")),
-    Command.command("bar", "Sends bar")(_ => sendMessage("Bar"))
+  val groupTest: SlashCommandGroup = SlashCommand.group("group", "Group test")(
+    SlashCommand.command("foo", "Sends foo")(_ => sendMessage("Foo")),
+    SlashCommand.command("bar", "Sends bar")(_ => sendMessage("Bar"))
   )
+
+  val nudgeUser: UserCommand[ResolvedCommandInteraction] = UserCommand.handle("nudge") { i =>
+    sendMessage(s"Hey ${i.args._1.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args._1.id))))
+  }
+
+  val echoMessage: MessageCommand[ResolvedCommandInteraction] = MessageCommand.handle("echo") { i =>
+    sendMessage(s"ECHO: ${i.args.content}")
+  }
 }

@@ -51,7 +51,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       val invocationInfo = InteractionInvocationInfo(
         interaction.id,
         interaction.guildId,
-        interaction.channelId,
+        interaction.channelId.getOrElse(throw new IllegalArgumentException("Got an interaction without a channel for a component handler")),
         interaction.member.map(_.user).orElse(interaction.user).get,
         interaction.member,
         interaction.memberPermission,

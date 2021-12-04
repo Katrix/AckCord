@@ -1,13 +1,22 @@
 package ackcord.interactions.commands
 
 import ackcord.data._
-import ackcord.interactions.{CommandInteraction, InteractionHandlerOps}
+import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionHandlerOps}
 import akka.NotUsed
 import cats.Id
 
-trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] extends InteractionHandlerOps {
+trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] extends InteractionHandlerOps {
 
-  def Command: CommandBuilder[BaseInteraction, NotUsed]
+  def defaultInteractionTransformer: DataInteractionTransformer[CommandInteraction, BaseInteraction]
+
+  def SlashCommand: SlashCommandBuilder[BaseInteraction, NotUsed] =
+    new SlashCommandBuilder(true, defaultInteractionTransformer, Left(implicitly), Map.empty)
+
+  @deprecated("Prefer SlashCommand", since = "0.18")
+  def Command: SlashCommandBuilder[BaseInteraction, NotUsed] = SlashCommand
+
+  def UserCommand: UserCommandBuilder[BaseInteraction]       = new UserCommandBuilder(true, defaultInteractionTransformer, Map.empty)
+  def MessageCommand: MessageCommandBuilder[BaseInteraction] = new MessageCommandBuilder(true, defaultInteractionTransformer, Map.empty)
 
   def string(name: String, description: String): ChoiceParam[String, String, Id] =
     ChoiceParam.default(

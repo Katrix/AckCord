@@ -30,13 +30,13 @@ import scala.util.matching.Regex
 
 import ackcord.data.raw.{RawGuildMember, RawMessage, RawThreadMetadata}
 import ackcord.util.IntCirceEnumWithUnknown
-import cats.syntax.either._
 import enumeratum.values.{IntEnum, IntEnumEntry}
+import cats.syntax.either._
 import io.circe._
 import io.circe.syntax._
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
-object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
+object InteractionType extends IntCirceEnumWithUnknown[InteractionType] {
   override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
 
   case object Ping               extends InteractionType(1)
@@ -48,10 +48,8 @@ object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnk
 }
 
 sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEntry
-object InteractionResponseType
-    extends IntEnum[InteractionResponseType]
-    with IntCirceEnumWithUnknown[InteractionResponseType] {
-  override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
+object InteractionResponseType extends IntCirceEnumWithUnknown[InteractionResponseType] {
+  override def values: immutable.IndexedSeq[InteractionResponseType] = findValues
 
   case object Pong                             extends InteractionResponseType(1)
   case object ChannelMessageWithSource         extends InteractionResponseType(4)
@@ -69,24 +67,39 @@ case class RawInteraction(
     tpe: InteractionType,
     data: Option[ApplicationInteractionData],
     guildId: Option[GuildId],
-    channelId: TextChannelId,
+    channelId: Option[TextChannelId],
     member: Option[RawGuildMember],
     memberPermission: Option[Permission],
     user: Option[User],
     token: String,
-    message: Option[RawMessage],
-    version: Option[Int]
+    version: Int,
+    message: Option[RawMessage]
 )
 
 case class ApplicationCommand(
     id: CommandId,
+    `type`: ApplicationCommandType,
     applicationId: ApplicationId,
+    guildId: Option[String],
     name: String,
     description: String,
     options: Option[Seq[ApplicationCommandOption]],
     defaultPermission: Option[Boolean],
     version: RawSnowflake
 )
+
+sealed abstract class ApplicationCommandType(val value: Int) extends IntEnumEntry
+object ApplicationCommandType extends IntCirceEnumWithUnknown[ApplicationCommandType] {
+  override def values: immutable.IndexedSeq[ApplicationCommandType] = findValues
+
+  case object ChatInput extends ApplicationCommandType(1)
+  case object User      extends ApplicationCommandType(2)
+  case object Message   extends ApplicationCommandType(3)
+
+  case class Unknown(i: Int) extends ApplicationCommandType(i)
+
+  override def createUnknown(value: Int): ApplicationCommandType = Unknown(value)
+}
 
 case class ApplicationCommandOption(
     `type`: ApplicationCommandOptionType,
@@ -207,8 +220,10 @@ sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
+    `type`: ApplicationCommandType,
     resolved: Option[ApplicationCommandInteractionDataResolved],
-    options: Option[Seq[ApplicationCommandInteractionDataOption[_]]]
+    options: Option[Seq[ApplicationCommandInteractionDataOption[_]]],
+    targetId: Option[RawSnowflake]
 ) extends ApplicationInteractionData
 case class ApplicationComponentInteractionData(
     componentType: ComponentType,
@@ -222,11 +237,11 @@ case class ApplicationCommandInteractionDataResolved(
     members: Map[UserId, InteractionRawGuildMember],
     roles: Map[RoleId, Role],
     channels: Map[TextGuildChannelId, InteractionChannel],
-    //messages: Map[MessageId, RawPartialMessage] //TODO: Find out what type to use here
+    messages: Map[MessageId, InteractionPartialMessage]
 )
 object ApplicationCommandInteractionDataResolved {
   val empty: ApplicationCommandInteractionDataResolved =
-    ApplicationCommandInteractionDataResolved(Map.empty, Map.empty, Map.empty, Map.empty)
+    ApplicationCommandInteractionDataResolved(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 }
 
 case class InteractionGuildMember(
@@ -255,6 +270,25 @@ case class InteractionChannel(
     permissions: Permission,
     threadMetadata: Option[RawThreadMetadata],
     parentId: Option[TextGuildChannelId]
+)
+
+case class InteractionPartialMessage(
+    id: MessageId,
+    channelId: TextChannelId,
+    author: User,
+    content: String,
+    timestamp: OffsetDateTime,
+    editedTimestamp: Option[OffsetDateTime],
+    tts: Boolean,
+    mentionEveryone: Boolean,
+    mentions: Seq[User],
+    mentionRoles: Seq[RoleId],
+    attachments: Seq[Attachment],
+    embeds: Seq[ReceivedEmbed],
+    pinned: Boolean,
+    `type`: MessageType,
+    flags: MessageFlags,
+    components: Option[Seq[ActionRow]],
 )
 
 case class ApplicationCommandInteractionDataOption[A](
