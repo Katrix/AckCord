@@ -715,9 +715,9 @@ trait DiscordProtocol {
 
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
-      (c: HCursor) => /*c.as[ApplicationComponentInteractionData]
-          .orElse(*/ c.as[ApplicationCommandInteractionData] /*)
-          .orElse(c.as[Json].map(ApplicationUnknownInteractionData))*/,
+      (c: HCursor) => c.as[ApplicationComponentInteractionData]
+          .orElse(c.as[ApplicationCommandInteractionData])
+          .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
       {
         case a: ApplicationCommandInteractionData    => a.asJson
         case a: ApplicationComponentInteractionData  => a.asJson
