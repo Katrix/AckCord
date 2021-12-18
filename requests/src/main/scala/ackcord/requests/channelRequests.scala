@@ -88,6 +88,7 @@ case class ModifyChannelData(
     videoQualityMode: JsonOption[VideoQualityMode] = JsonUndefined,
     archived: JsonOption[Boolean] = JsonUndefined,
     locked: JsonOption[Boolean] = JsonUndefined,
+    invitable: JsonOption[Boolean] = JsonUndefined,
     autoArchiveDuration: JsonOption[Int] = JsonUndefined
 ) {
   require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
@@ -119,6 +120,7 @@ object ModifyChannelData {
       "video_quality_mode"    -> a.videoQualityMode.toJson,
       "archived"              -> a.archived.toJson,
       "locked"                -> a.locked.toJson,
+      "invitable"             -> a.invitable.toJson,
       "auto_archive_duration" -> a.autoArchiveDuration.toJson
     )
   }
@@ -232,8 +234,8 @@ case class GetChannelMessage(channelId: TextChannelId, messageId: MessageId)
 sealed trait CreateMessageFile {
   def fileName: String
   def isValid: Boolean
-  protected[requests] def toBodyPart: FormData.BodyPart =
-    FormData.BodyPart(fileName, toBodyPartEntity, Map("filename" -> fileName))
+  protected[requests] def toBodyPart(n: Int): FormData.BodyPart =
+    FormData.BodyPart(fileName, toBodyPartEntity, Map("filename" -> fileName, "name" -> s"files[$n]"))
   protected[requests] def toBodyPartEntity: BodyPartEntity
 }
 object CreateMessageFile {
@@ -356,7 +358,7 @@ case class CreateMessage(channelId: TextChannelId, params: CreateMessageData)
         HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
       )
 
-      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+      FormData(params.files.zipWithIndex.map(t => t._1.toBodyPart(t._2)) :+ jsonPart: _*).toEntity()
     } else {
       super.requestBody
     }
@@ -484,7 +486,7 @@ case class EditMessageData(
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     flags: JsonOption[MessageFlags] = JsonUndefined,
     components: JsonOption[Seq[ActionRow]] = JsonUndefined,
-    attachments: JsonOption[Seq[Attachment]] = JsonUndefined
+    attachments: JsonOption[Seq[PartialAttachment]] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
   require(embeds.forall(_.size <= 10), "Can't send more than 10 embeds with a webhook message")
@@ -518,7 +520,7 @@ case class EditMessage(
         HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
       )
 
-      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+      FormData(params.files.zipWithIndex.map(t => t._1.toBodyPart(t._2)) :+ jsonPart: _*).toEntity()
     } else {
       super.requestBody
     }
@@ -781,9 +783,13 @@ case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) exten
 }
  */
 
-case class StartThreadWithMessageData(name: String, autoArchiveDuration: Int) {
+case class StartThreadWithMessageData(
+    name: String,
+    autoArchiveDuration: Option[Int] = None,
+    rateLimitPerUser: Option[Int] = None
+) {
   require(
-    Seq(60, 1440, 4320, 10080).contains(autoArchiveDuration),
+    autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
     "Auto archive duration can only be 60, 1440, 4320 or 10080"
   )
 }
@@ -809,11 +815,13 @@ case class StartThreadWithMessage(
 
 case class StartThreadWithoutMessageData(
     name: String,
-    autoArchiveDuration: Int,
-    `type`: ChannelType.ThreadChannelType
+    `type`: ChannelType.ThreadChannelType,
+    autoArchiveDuration: Option[Int] = None,
+    invitable: Option[Boolean] = None,
+    rateLimitPerUser: Option[Int] = None
 ) {
   require(
-    Seq(60, 1440, 4320, 10080).contains(autoArchiveDuration),
+    autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
     "Auto archive duration can only be 60, 1440, 4320 or 10080"
   )
 }
@@ -856,6 +864,16 @@ case class LeaveThread(channelId: ThreadGuildChannelId) extends NoParamsResponse
 /** Removes the specified user from a thread. */
 case class RemoveThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.removeThreadMember(channelId, userId)
+}
+
+/** Returns a [[ThreadMember]] for a specified user in a thread. */
+case class GetThreadMember(channelId: ThreadGuildChannelId, userId: UserId)
+    extends NoParamsRequest[RawThreadMember, ThreadMember] {
+  override def route: RequestRoute = Routes.getThreadMember(channelId, userId)
+
+  override def responseDecoder: Decoder[RawThreadMember] = Decoder[RawThreadMember]
+  override def toNiceResponse(raw: RawThreadMember): ThreadMember =
+    ThreadMember(raw.id.get, raw.userId.get, raw.joinTimestamp, raw.flags)
 }
 
 /**

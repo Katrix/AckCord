@@ -83,8 +83,6 @@ case class VoiceState(
   *   An example host name
   * @param samplePort
   *   An example host port
-  * @param vip
-  *   If this is a VIP only server
   * @param optimal
   *   If this is the server closest to the client
   * @param deprecated
@@ -97,7 +95,6 @@ case class VoiceRegion(
     name: String,
     sampleHostname: String,
     samplePort: Int,
-    vip: Boolean,
     optimal: Boolean,
     deprecated: Boolean,
     custom: Boolean

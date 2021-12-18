@@ -111,7 +111,7 @@ class CommandConnector(
 
     CommandRegistration.withRegistration(
       Source.fromGraph(
-        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) { implicit b => thatFlow =>
+        GraphDSL.createGraph(SupervisionStreams.logAndContinue(command.flow)) { implicit b => thatFlow =>
           import GraphDSL.Implicits._
 
           val selfSource = b.add(commandMessageSource)

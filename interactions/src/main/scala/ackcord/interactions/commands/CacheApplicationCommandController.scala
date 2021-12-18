@@ -29,13 +29,13 @@ import ackcord.requests.Requests
 import akka.NotUsed
 import cats.~>
 
-class CacheSlashCommandController(val requests: Requests)
-    extends SlashCommandControllerBase[ResolvedCommandInteraction] {
+class CacheApplicationCommandController(val requests: Requests)
+    extends ApplicationCommandControllerBase[ResolvedCommandInteraction] {
 
   implicit def findCache[A](implicit message: CacheInteraction): CacheSnapshot = message.cache
 
-  override val Command: CommandBuilder[ResolvedCommandInteraction, NotUsed] = new CommandBuilder(
-    true,
+  override val defaultInteractionTransformer
+      : DataInteractionTransformer[CommandInteraction, ResolvedCommandInteraction] =
     new DataInteractionTransformer[CommandInteraction, CacheCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], CacheCommandInteraction[A]] =
         from.optCache match {
@@ -53,12 +53,9 @@ class CacheSlashCommandController(val requests: Requests)
           )
         }
       )
-    ),
-    Left(implicitly),
-    Map.empty
-  )
+    )
 
-  val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] = Command.andThen(
+  val GuildCommand: SlashCommandBuilder[GuildCommandInteraction, NotUsed] = SlashCommand.andThen(
     DataInteractionTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
       Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
         BaseGuildCommandInteraction(i.commandInvocationInfo, channel, guild, guildMember, memberPermissions, i.cache)
@@ -66,7 +63,7 @@ class CacheSlashCommandController(val requests: Requests)
     )
   )
 
-  val GuildVoiceCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
+  val GuildVoiceCommand: SlashCommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
     DataInteractionTransformer.inVoiceChannel(voiceChannel =>
       Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
         BaseVoiceChannelCommandInteraction(

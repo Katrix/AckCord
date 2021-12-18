@@ -26,9 +26,8 @@ package ackcord.data
 import java.time.OffsetDateTime
 
 import scala.collection.immutable
-import scala.util.matching.Regex
 
-import ackcord.data.raw.{RawGuildMember, RawMessage}
+import ackcord.data.raw.{RawGuildMember, RawMessage, RawRole, RawThreadMetadata}
 import ackcord.util.IntCirceEnumWithUnknown
 import cats.syntax.either._
 import enumeratum.values.{IntEnum, IntEnumEntry}
@@ -36,29 +35,29 @@ import io.circe._
 import io.circe.syntax._
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
-object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
+object InteractionType extends IntCirceEnumWithUnknown[InteractionType] {
   override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
 
-  case object Ping               extends InteractionType(1)
-  case object ApplicationCommand extends InteractionType(2)
-  case object MessageComponent   extends InteractionType(3)
-  case class Unknown(i: Int)     extends InteractionType(i)
+  case object Ping                           extends InteractionType(1)
+  case object ApplicationCommand             extends InteractionType(2)
+  case object MessageComponent               extends InteractionType(3)
+  case object ApplicationCommandAutocomplete extends InteractionType(4)
+  case class Unknown(i: Int)                 extends InteractionType(i)
 
   override def createUnknown(value: Int): InteractionType = Unknown(value)
 }
 
 sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEntry
-object InteractionResponseType
-    extends IntEnum[InteractionResponseType]
-    with IntCirceEnumWithUnknown[InteractionResponseType] {
-  override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
+object InteractionResponseType extends IntCirceEnumWithUnknown[InteractionResponseType] {
+  override def values: immutable.IndexedSeq[InteractionResponseType] = findValues
 
-  case object Pong                             extends InteractionResponseType(1)
-  case object ChannelMessageWithSource         extends InteractionResponseType(4)
-  case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
-  case object DeferredUpdateMessage            extends InteractionResponseType(6)
-  case object UpdateMessage                    extends InteractionResponseType(7)
-  case class Unknown(i: Int)                   extends InteractionResponseType(i)
+  case object Pong                                 extends InteractionResponseType(1)
+  case object ChannelMessageWithSource             extends InteractionResponseType(4)
+  case object DeferredChannelMessageWithSource     extends InteractionResponseType(5)
+  case object DeferredUpdateMessage                extends InteractionResponseType(6)
+  case object UpdateMessage                        extends InteractionResponseType(7)
+  case object ApplicationCommandAutocompleteResult extends InteractionResponseType(8)
+  case class Unknown(i: Int)                       extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
 }
@@ -69,23 +68,39 @@ case class RawInteraction(
     tpe: InteractionType,
     data: Option[ApplicationInteractionData],
     guildId: Option[GuildId],
-    channelId: TextChannelId,
+    channelId: Option[TextChannelId],
     member: Option[RawGuildMember],
     memberPermission: Option[Permission],
     user: Option[User],
     token: String,
-    message: Option[RawMessage],
-    version: Option[Int]
+    version: Int,
+    message: Option[RawMessage]
 )
 
 case class ApplicationCommand(
     id: CommandId,
+    `type`: ApplicationCommandType,
     applicationId: ApplicationId,
+    guildId: Option[String],
     name: String,
     description: String,
     options: Option[Seq[ApplicationCommandOption]],
-    defaultPermission: Option[Boolean]
+    defaultPermission: Option[Boolean],
+    version: RawSnowflake
 )
+
+sealed abstract class ApplicationCommandType(val value: Int) extends IntEnumEntry
+object ApplicationCommandType extends IntCirceEnumWithUnknown[ApplicationCommandType] {
+  override def values: immutable.IndexedSeq[ApplicationCommandType] = findValues
+
+  case object ChatInput extends ApplicationCommandType(1)
+  case object User      extends ApplicationCommandType(2)
+  case object Message   extends ApplicationCommandType(3)
+
+  case class Unknown(i: Int) extends ApplicationCommandType(i)
+
+  override def createUnknown(value: Int): ApplicationCommandType = Unknown(value)
+}
 
 case class ApplicationCommandOption(
     `type`: ApplicationCommandOptionType,
@@ -93,7 +108,11 @@ case class ApplicationCommandOption(
     description: String,
     required: Option[Boolean],
     choices: Option[Seq[ApplicationCommandOptionChoice]],
-    options: Option[Seq[ApplicationCommandOption]]
+    autocomplete: Option[Boolean],
+    options: Option[Seq[ApplicationCommandOption]],
+    channelTypes: Option[Seq[ChannelType]],
+    minValue: Option[Either[Int, Double]],
+    maxValue: Option[Either[Int, Double]]
 )
 
 //A dirty hack to get dependant types for params
@@ -144,17 +163,10 @@ sealed abstract private class ApplicationCommandOptionTypeE[A](
 private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandOptionTypeE[_]] {
   override def values: immutable.IndexedSeq[ApplicationCommandOptionTypeE[_]] = findValues
 
-  private val userRegex: Regex    = """<@!?(\d+)>""".r
-  private val channelRegex: Regex = """<#(\d+)>""".r
-  private val roleRegex: Regex    = """<@&(\d+)>""".r
-
   import DiscordProtocol._
 
-  private def decodeMention[A](regex: Regex)(json: Json): Decoder.Result[SnowflakeType[A]] =
-    json.as[java.lang.String].flatMap {
-      case regex(id) => Right(SnowflakeType(id))
-      case _         => Left(DecodingFailure("Not a valid mention", Nil))
-    }
+  private def decodeMention[A](json: Json): Decoder.Result[SnowflakeType[A]] =
+    json.as[java.lang.String].map(SnowflakeType(_))
 
   case object SubCommand
       extends ApplicationCommandOptionTypeE[Seq[ApplicationCommandInteractionDataOption[_]]](
@@ -174,14 +186,13 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
   case object String  extends ApplicationCommandOptionTypeE[java.lang.String](3, _.as[java.lang.String], _.asJson)
   case object Integer extends ApplicationCommandOptionTypeE[Int](4, _.as[Int], _.asJson)
   case object Boolean extends ApplicationCommandOptionTypeE[scala.Boolean](5, _.as[scala.Boolean], _.asJson)
-  case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention(userRegex), _.mention.asJson)
-  case object Channel
-      extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention(channelRegex), _.mention.asJson)
-  case object Role extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention(roleRegex), _.mention.asJson)
+  case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention, _.mention.asJson)
+  case object Channel extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention, _.mention.asJson)
+  case object Role    extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention, _.mention.asJson)
   case object Mentionable
       extends ApplicationCommandOptionTypeE[UserOrRoleId](
         9,
-        json => decodeMention[UserOrRole](userRegex)(json).orElse(decodeMention[UserOrRole](roleRegex)(json)),
+        json => decodeMention[UserOrRole](json).orElse(decodeMention[UserOrRole](json)),
         id => s"<@$id>".asJson
       ) //Let's just hope it's a user here
   case object Number extends ApplicationCommandOptionTypeE[Double](10, _.as[Double], _.asJson)
@@ -194,17 +205,28 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
     c.as[Int].map(v => withValueOpt(v).getOrElse(Unknown(v)))
 }
 
-case class ApplicationCommandOptionChoice(
+sealed trait ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceString(
     name: String,
-    value: Either[String, Double]
-)
+    value: String
+) extends ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceInteger(
+    name: String,
+    value: Long
+) extends ApplicationCommandOptionChoice
+case class ApplicationCommandOptionChoiceNumber(
+    name: String,
+    value: Double
+) extends ApplicationCommandOptionChoice
 
 sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
+    `type`: ApplicationCommandType,
     resolved: Option[ApplicationCommandInteractionDataResolved],
-    options: Option[Seq[ApplicationCommandInteractionDataOption[_]]]
+    options: Option[Seq[ApplicationCommandInteractionDataOption[_]]],
+    targetId: Option[RawSnowflake]
 ) extends ApplicationInteractionData
 case class ApplicationComponentInteractionData(
     componentType: ComponentType,
@@ -216,12 +238,13 @@ case class ApplicationUnknownInteractionData(data: Json) extends ApplicationInte
 case class ApplicationCommandInteractionDataResolved(
     users: Map[UserId, User],
     members: Map[UserId, InteractionRawGuildMember],
-    roles: Map[RoleId, Role],
-    channels: Map[TextGuildChannelId, InteractionChannel]
+    roles: Map[RoleId, RawRole],
+    channels: Map[TextGuildChannelId, InteractionChannel],
+    messages: Map[MessageId, InteractionPartialMessage]
 )
 object ApplicationCommandInteractionDataResolved {
   val empty: ApplicationCommandInteractionDataResolved =
-    ApplicationCommandInteractionDataResolved(Map.empty, Map.empty, Map.empty, Map.empty)
+    ApplicationCommandInteractionDataResolved(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 }
 
 case class InteractionGuildMember(
@@ -247,28 +270,55 @@ case class InteractionChannel(
     id: TextGuildChannelId,
     name: String,
     `type`: ChannelType,
-    permissions: Permission
+    permissions: Permission,
+    threadMetadata: Option[RawThreadMetadata],
+    parentId: Option[TextGuildChannelId]
+)
+
+case class InteractionPartialMessage(
+    id: MessageId,
+    channelId: TextChannelId,
+    author: User,
+    content: String,
+    timestamp: OffsetDateTime,
+    editedTimestamp: Option[OffsetDateTime],
+    tts: Boolean,
+    mentionEveryone: Boolean,
+    mentions: Seq[User],
+    mentionRoles: Seq[RoleId],
+    attachments: Seq[Attachment],
+    embeds: Seq[ReceivedEmbed],
+    pinned: Boolean,
+    `type`: MessageType,
+    flags: MessageFlags,
+    components: Option[Seq[ActionRow]]
 )
 
 case class ApplicationCommandInteractionDataOption[A](
     name: String,
     tpe: ApplicationCommandOptionType.Aux[A],
-    value: Option[A]
+    value: Option[A],
+    focused: Option[Boolean]
 )
 
 case class RawInteractionResponse(
     `type`: InteractionResponseType,
-    data: Option[RawInteractionApplicationCommandCallbackData]
+    data: Option[InteractionCallbackData]
 )
 
-case class RawInteractionApplicationCommandCallbackData(
+sealed trait InteractionCallbackData
+case class InteractionCallbackDataMessage(
     tts: Option[Boolean] = None,
     content: Option[String] = None,
     embeds: Seq[OutgoingEmbed] = Nil,
     allowedMentions: Option[AllowedMention] = None,
     flags: MessageFlags = MessageFlags.None,
-    components: Option[Seq[ActionRow]] = None
-)
+    components: Option[Seq[ActionRow]] = None,
+    attachments: Option[Seq[PartialAttachment]] = None
+) extends InteractionCallbackData
+
+case class InteractionCallbackDataAutocomplete(choices: Seq[ApplicationCommandOptionChoice])
+    extends InteractionCallbackData
 
 case class GuildApplicationCommandPermissions(
     id: CommandId,

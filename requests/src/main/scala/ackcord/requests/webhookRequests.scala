@@ -207,7 +207,8 @@ case class ExecuteWebhookData(
     files: Seq[CreateMessageFile] = Seq.empty,
     embeds: Seq[OutgoingEmbed] = Nil,
     allowedMentions: Option[AllowedMention] = None,
-    components: Option[Seq[ActionRow]] = None
+    components: Option[Seq[ActionRow]] = None,
+    attachments: Option[Seq[PartialAttachment]] = None
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -229,7 +230,8 @@ object ExecuteWebhookData {
       "tts"              := a.tts,
       "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
-      "components"       := a.components
+      "components"       := a.components,
+      "attachments"      := a.attachments
     )
 }
 
@@ -249,7 +251,7 @@ case class ExecuteWebhook(
         HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
       )
 
-      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+      FormData(params.files.zipWithIndex.map(t => t._1.toBodyPart(t._2)) :+ jsonPart: _*).toEntity()
     } else {
       super.requestBody
     }
@@ -308,7 +310,7 @@ case class EditWebhookMessageData(
     files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
     components: JsonOption[Seq[ActionRow]] = JsonUndefined,
-    attachments: JsonOption[Seq[Attachment]] = JsonUndefined
+    attachments: JsonOption[Seq[PartialAttachment]] = JsonUndefined
 ) {
   files.foreach(_.foreach(file => require(file.isValid)))
   require(
@@ -350,7 +352,7 @@ case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String,
         HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
       )
 
-      FormData(params.files.toList.flatMap(_.map(_.toBodyPart)) :+ jsonPart: _*).toEntity()
+      FormData(params.files.toList.flatMap(_.zipWithIndex.map(t => t._1.toBodyPart(t._2))) :+ jsonPart: _*).toEntity()
     } else {
       super.requestBody
     }
@@ -363,9 +365,13 @@ case class DeleteOriginalWebhookMessage(id: SnowflakeType[Webhook], token: Strin
   override def route: RequestRoute = Routes.deleteOriginalWebhookMessage(id, token)
 }
 
-case class GetWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId)
-    extends NoParamsRequest[RawMessage, Message] {
-  override def route: RequestRoute = Routes.getWebhookMessage(id, token, messageId)
+case class GetWebhookMessage(
+    id: SnowflakeType[Webhook],
+    token: String,
+    messageId: MessageId,
+    threadId: Option[ThreadGuildChannelId] = None
+) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.getWebhookMessage(id, token, messageId, threadId)
 
   override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
   override def toNiceResponse(response: RawMessage): Message = response.toMessage
@@ -375,15 +381,20 @@ case class EditWebhookMessage(
     id: SnowflakeType[Webhook],
     token: String,
     messageId: MessageId,
-    params: EditWebhookMessageData
+    params: EditWebhookMessageData,
+    threadId: Option[ThreadGuildChannelId] = None
 ) extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
-  override def route: RequestRoute                            = Routes.editWebhookMessage(id, token, messageId)
+  override def route: RequestRoute = Routes.editWebhookMessage(id, token, messageId, threadId)
   override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
 
   override def responseDecoder: Decoder[Json] = Decoder[Json]
 }
 
-case class DeleteWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId)
-    extends NoParamsResponseRequest {
-  override def route: RequestRoute = Routes.deleteWebhookMessage(id, token, messageId)
+case class DeleteWebhookMessage(
+    id: SnowflakeType[Webhook],
+    token: String,
+    messageId: MessageId,
+    threadId: Option[ThreadGuildChannelId] = None
+) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.deleteWebhookMessage(id, token, messageId, threadId)
 }

@@ -300,6 +300,8 @@ object Routes {
   val templateCode: MinorParameter[String]                = new MinorParameter("code", identity)
   val stageChannelId: MinorParameter[StageGuildChannelId] = new MinorParameter("stageChannelId", _.asString)
   val stickerId: MinorParameter[StickerId]                = new MinorParameter("stickerId", _.asString)
+  val guildScheduledEventId: MinorParameter[SnowflakeType[GuildScheduledEvent]] =
+    new MinorParameter("guildScheduledEvent", _.asString)
 
   //Audit log
 
@@ -401,6 +403,7 @@ object Routes {
   val addThreadMember: (ChannelId, UserId) => RequestRoute    = threadMemberUser.toRequest(PUT)
   val leaveThread: ChannelId => RequestRoute                  = threadMemberMe.toRequest(DELETE)
   val removeThreadMember: (ChannelId, UserId) => RequestRoute = threadMemberUser.toRequest(DELETE)
+  val getThreadMember: (ChannelId, UserId) => RequestRoute    = threadMemberUser.toRequest(GET)
   val listThreadMembers: ChannelId => RequestRoute            = threadMembers.toRequest(GET)
 
   val archivedThreads: RouteFunction[ChannelId]            = channelThreads / "archived"
@@ -416,6 +419,34 @@ object Routes {
   val listJoinedPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
     (channel / "users" / "@me" / "threads" / "archived" / "private" +? beforeTimestampQuery +? limitQuery)
       .toRequest(GET)
+
+  //Guild scheduled events routes
+  val guildScheduledEvents: RouteFunction[GuildId] = guild / "scheduled-events"
+  val guildScheduledEvent: RouteFunction[(GuildId, SnowflakeType[GuildScheduledEvent])] =
+    guild / "scheduled-events" / guildScheduledEventId
+  val listScheduledEventsForGuild: (GuildId, Option[Boolean]) => RequestRoute =
+    (guildScheduledEvents +? query[Boolean]("with_user_count", _.toString)).toRequest(GET)
+  val createGuildScheduledEvent: GuildId => RequestRoute = guildScheduledEvents.toRequest(GET)
+  val getGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(GET)
+  val modifyGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(PATCH)
+  val deleteGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
+    guildScheduledEvent.toRequest(DELETE)
+
+  val getGuildScheduledEventUsers: (
+      GuildId,
+      SnowflakeType[GuildScheduledEvent],
+      Option[Int],
+      Option[Boolean],
+      Option[UserId],
+      Option[UserId]
+  ) => RequestRoute =
+    (guildScheduledEvent / "users") +?
+      query[Int]("limit", _.toString) +?
+      query[Boolean]("with_member", _.toString) +?
+      query[UserId]("before", _.asString) +?
+      query[UserId]("after", _.asString) toRequest GET
 
   //Emoji routes
 
@@ -554,10 +585,12 @@ object Routes {
   //Invites
   val invites: Route                    = base / "invites"
   val inviteCode: RouteFunction[String] = invites / inviteCodeParam
-  val getInvite: (InviteCode, Option[Boolean], Option[Boolean]) => RequestRoute = {
+  val getInvite
+      : (InviteCode, Option[Boolean], Option[Boolean], Option[SnowflakeType[GuildScheduledEvent]]) => RequestRoute = {
     val withParams = inviteCode +?
       query[Boolean]("with_counts", _.toString) +?
-      query[Boolean]("with_expiration", _.toString)
+      query[Boolean]("with_expiration", _.toString) +?
+      query[SnowflakeType[GuildScheduledEvent]]("guild_scheduled_event_id", _.asString)
 
     withParams.toRequest(GET)
   }
@@ -623,9 +656,11 @@ object Routes {
   val executeGithubWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute =
     webhookWithToken / "github" +? waitQuery toRequest POST
 
-  val messagesWebhook: RouteFunction[(SnowflakeType[Webhook], String)]             = webhookWithToken / "messages"
-  val originalWebhookMessage: RouteFunction[(SnowflakeType[Webhook], String)]      = messagesWebhook / "@original"
-  val webhookMessage: RouteFunction[((SnowflakeType[Webhook], String), MessageId)] = messagesWebhook / messageId
+  val messagesWebhook: RouteFunction[(SnowflakeType[Webhook], String)]        = webhookWithToken / "messages"
+  val originalWebhookMessage: RouteFunction[(SnowflakeType[Webhook], String)] = messagesWebhook / "@original"
+  val webhookMessage
+      : QueryRouteFunction[(((SnowflakeType[Webhook], String), MessageId), Option[ThreadGuildChannelId])] =
+    messagesWebhook / messageId +? threadIdQuery
 
   val postFollowupMessage: (SnowflakeType[Webhook], String) => RequestRoute = webhookWithToken.toRequest(POST)
 
@@ -635,9 +670,11 @@ object Routes {
     originalWebhookMessage.toRequest(PATCH)
   val deleteOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute =
     originalWebhookMessage.toRequest(PATCH)
-  val getWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute  = webhookMessage.toRequest(GET)
-  val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = webhookMessage.toRequest(PATCH)
-  val deleteWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute =
+  val getWebhookMessage: (SnowflakeType[Webhook], String, MessageId, Option[ThreadGuildChannelId]) => RequestRoute =
+    webhookMessage.toRequest(GET)
+  val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId, Option[ThreadGuildChannelId]) => RequestRoute =
+    webhookMessage.toRequest(PATCH)
+  val deleteWebhookMessage: (SnowflakeType[Webhook], String, MessageId, Option[ThreadGuildChannelId]) => RequestRoute =
     webhookMessage.toRequest(DELETE)
 
   val size: QueryParameter[Int]               = new QueryParameter("size", _.toString)
@@ -655,10 +692,14 @@ object Routes {
     cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
   val guildBannerImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "banners" / guildId / hash ++ extension +? size toRequest GET
+  val userBannerImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "banners" / userId / hash ++ extension +? size toRequest GET
   val defaultUserAvatarImage: (Int, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "embed" / "avatars" / discriminator ++ extension +? size toRequest GET
   val userAvatarImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "avatars" / userId / hash ++ extension +? size toRequest GET
+  val userGuildAvatarImage: (GuildId, UserId, String, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "guilds" / guildId / "users" / userId / "avatars" / hash ++ extension +? size toRequest GET
   val applicationIconImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "app-icons" / applicationId / "icon.png" ++ extension +? size toRequest GET
   val applicationCoverImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
@@ -676,6 +717,9 @@ object Routes {
 
   val stickerImage: (StickerId, ImageFormat, Option[Int]) => RequestRoute =
     cdn / "stickers" / stickerId ++ extension +? size toRequest GET
+
+  val roleIconImage: (RoleId, String, ImageFormat, Option[Int]) => RequestRoute =
+    cdn / "role-icons" / roleId / hash ++ extension +? size toRequest GET
 
   //OAuth
   val oAuth2: Route                                    = base / "oauth2"

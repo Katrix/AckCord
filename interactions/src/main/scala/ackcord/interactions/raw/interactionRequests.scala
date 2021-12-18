@@ -25,32 +25,34 @@ package ackcord.interactions.raw
 
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import ackcord.interactions.commands.CommandOrGroup
+import ackcord.interactions.commands.CreatedApplicationCommand
 import ackcord.requests._
 import ackcord.util.{JsonOption, JsonUndefined}
+import akka.http.scaladsl.model.RequestEntity
 import io.circe._
 
 case class CreateCommandData(
     name: String,
-    description: String,
+    description: Option[String],
     options: Seq[ApplicationCommandOption],
-    defaultPermission: Boolean = true
+    defaultPermission: Boolean = true,
+    `type`: Option[ApplicationCommandType]
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  require(description.nonEmpty, "Command description too short. Minimum length is 1")
-  require(description.length <= 100, "Command description too short. Maximum length is 100")
+  require(description.forall(_.length <= 100), "Command description too short. Maximum length is 100")
   require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
 
 }
 object CreateCommandData {
   implicit val encoder: Encoder[CreateCommandData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
-  def fromCommand(command: CommandOrGroup): CreateCommandData =
+  def fromCommand(command: CreatedApplicationCommand): CreateCommandData =
     CreateCommandData(
       command.name,
       command.description,
       command.makeCommandOptions,
-      command.defaultPermission
+      command.defaultPermission,
+      Some(command.commandType)
     )
 }
 
@@ -75,61 +77,56 @@ object PatchCommandData {
     )
 }
 
-case class CreateGlobalCommand(applicationId: ApplicationId, params: CreateCommandData)
+case class GetGlobalApplicationCommands(applicationId: ApplicationId)
+    extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
+  override def route: RequestRoute                               = InteractionRoutes.getCommands(applicationId)
+  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
+}
+case class CreateGlobalApplicationCommand(applicationId: ApplicationId, params: CreateCommandData)
     extends NoNiceResponseRequest[CreateCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.postCommand(applicationId)
   override def paramsEncoder: Encoder[CreateCommandData]    = CreateCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class GetGlobalCommands(applicationId: ApplicationId)
-    extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
-  override def route: RequestRoute                               = InteractionRoutes.getCommands(applicationId)
-  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
-}
-case class GetGlobalCommand(applicationId: ApplicationId, commandId: CommandId)
+case class GetGlobalApplicationCommand(applicationId: ApplicationId, commandId: CommandId)
     extends NoParamsNiceResponseRequest[ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.getCommand(applicationId, commandId)
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class BulkReplaceGlobalCommands(applicationId: ApplicationId, params: Seq[CreateCommandData])
-    extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
-  override def route: RequestRoute                               = InteractionRoutes.putCommands(applicationId)
-  override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
-  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
-}
-case class PatchGlobalCommand(applicationId: ApplicationId, commandId: CommandId, params: PatchCommandData)
+case class EditGlobalApplicationCommand(applicationId: ApplicationId, commandId: CommandId, params: PatchCommandData)
     extends NoNiceResponseRequest[PatchCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.patchCommand(applicationId, commandId)
   override def paramsEncoder: Encoder[PatchCommandData]     = PatchCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class DeleteGlobalCommand(applicationId: ApplicationId, commandId: CommandId) extends NoParamsResponseRequest {
+case class DeleteGlobalApplicationCommand(applicationId: ApplicationId, commandId: CommandId)
+    extends NoParamsResponseRequest {
   override def route: RequestRoute = InteractionRoutes.deleteCommand(applicationId, commandId)
 }
+case class BulkOverwriteGlobalApplicationCommands(applicationId: ApplicationId, params: Seq[CreateCommandData])
+    extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
+  override def route: RequestRoute                               = InteractionRoutes.putCommands(applicationId)
+  override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
+  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
+}
 
-case class GetGuildCommands(applicationId: ApplicationId, guildId: GuildId)
+case class GetGuildApplicationCommands(applicationId: ApplicationId, guildId: GuildId)
     extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
   override def route: RequestRoute = InteractionRoutes.getGuildCommands(applicationId, guildId)
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
-case class GetGuildCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
-    extends NoParamsNiceResponseRequest[ApplicationCommand] {
-  override def route: RequestRoute = InteractionRoutes.getGuildCommand(applicationId, guildId, commandId)
-  override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
-}
-case class CreateGuildCommand(applicationId: ApplicationId, guildId: GuildId, params: CreateCommandData)
+case class CreateGuildApplicationCommand(applicationId: ApplicationId, guildId: GuildId, params: CreateCommandData)
     extends NoNiceResponseRequest[CreateCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.postGuildCommand(applicationId, guildId)
   override def paramsEncoder: Encoder[CreateCommandData]    = CreateCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class BulkReplaceGuildCommand(applicationId: ApplicationId, guildId: GuildId, params: Seq[CreateCommandData])
-    extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
-  override def route: RequestRoute = InteractionRoutes.putGuildCommands(applicationId, guildId)
-  override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
-  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
+case class GetGuildApplicationCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
+    extends NoParamsNiceResponseRequest[ApplicationCommand] {
+  override def route: RequestRoute = InteractionRoutes.getGuildCommand(applicationId, guildId, commandId)
+  override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class PatchGuildCommand(
+case class EditGuildApplicationCommand(
     applicationId: ApplicationId,
     guildId: GuildId,
     commandId: CommandId,
@@ -139,9 +136,18 @@ case class PatchGuildCommand(
   override def paramsEncoder: Encoder[PatchCommandData]     = PatchCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class DeleteGuildCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
+case class DeleteGuildApplicationCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
     extends NoParamsResponseRequest {
   override def route: RequestRoute = InteractionRoutes.deleteGuildCommand(applicationId, guildId, commandId)
+}
+case class BulkOverwriteGuildApplicationCommands(
+    applicationId: ApplicationId,
+    guildId: GuildId,
+    params: Seq[CreateCommandData]
+) extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
+  override def route: RequestRoute = InteractionRoutes.putGuildCommands(applicationId, guildId)
+  override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
+  override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
 
 case class CreateInteractionResponse(
@@ -151,10 +157,24 @@ case class CreateInteractionResponse(
 ) extends NoResponseRequest[RawInteractionResponse] {
   override def paramsEncoder: Encoder[RawInteractionResponse] = Encoder[RawInteractionResponse]
 
+  override def requestBody: RequestEntity =
+    /* TODO: Support files in here
+    params.data.filter(_.files.nonEmpty).fold(super.requestBody) { data =>
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
+
+      FormData(data.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+    }
+     */
+
+    super.requestBody
+
   override def route: RequestRoute = InteractionRoutes.callback(applicationId, token)
 }
 
-case class GetGuildCommandPermissions(applicationId: ApplicationId, guildId: GuildId)
+case class GetGuildApplicationCommandPermissions(applicationId: ApplicationId, guildId: GuildId)
     extends NoParamsNiceResponseRequest[Seq[GuildApplicationCommandPermissions]] {
   override def route: RequestRoute = InteractionRoutes.getGuildCommandPermissions(applicationId, guildId)
 
@@ -162,7 +182,7 @@ case class GetGuildCommandPermissions(applicationId: ApplicationId, guildId: Gui
     Decoder[Seq[GuildApplicationCommandPermissions]]
 }
 
-case class GetCommandPermissions(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
+case class GetApplicationCommandPermissions(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
     extends NoParamsNiceResponseRequest[GuildApplicationCommandPermissions] {
   override def route: RequestRoute = InteractionRoutes.getCommandPermissions(applicationId, guildId, commandId)
 
@@ -174,7 +194,7 @@ case class EditCommandPermissionsData(permissions: Seq[ApplicationCommandPermiss
   require(permissions.length <= 10, "At most 10 overrides can be used for a command")
 }
 
-case class EditCommandPermissions(
+case class EditApplicationCommandPermissions(
     applicationId: ApplicationId,
     guildId: GuildId,
     commandId: CommandId,
@@ -192,7 +212,7 @@ case class BatchEditCommandPermissionsData(id: CommandId, permissions: Seq[Appli
   require(permissions.length <= 10, "At most 10 overrides can be used for a command")
 }
 
-case class BatchEditCommandPermissions(
+case class BatchEditApplicationCommandPermissions(
     applicationId: ApplicationId,
     guildId: GuildId,
     params: Seq[BatchEditCommandPermissionsData]

@@ -64,7 +64,8 @@ case class Invite(
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int],
     expiresAt: Option[OffsetDateTime],
-    stageInstance: Option[InviteStageInstance]
+    stageInstance: Option[InviteStageInstance],
+    guildScheduledInvite: Option[GuildScheduledEvent]
 )
 
 /**

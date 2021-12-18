@@ -436,6 +436,48 @@ object APIMessage {
       extends GuildMessage
 
   /**
+    * Sent to the client when a guild scheduled event has been created.
+    * @param guild
+    *   The guild of the scheduled event.
+    * @param scheduledEvent
+    *   The scheduled event itself.
+    */
+  case class GuildScheduledEventCreate(
+      guild: GatewayGuild,
+      scheduledEvent: GuildScheduledEvent,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent to the client when a guild scheduled event has been updated.
+    * @param guild
+    *   The guild of the scheduled event.
+    * @param scheduledEvent
+    *   The scheduled event itself.
+    */
+  case class GuildScheduledEventUpdate(
+      guild: GatewayGuild,
+      scheduledEvent: GuildScheduledEvent,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent to the client when a guild scheduled event has been deleted.
+    * @param guild
+    *   The guild of the scheduled event.
+    * @param scheduledEvent
+    *   The scheduled event itself.
+    */
+  case class GuildScheduledEventDelete(
+      guild: GatewayGuild,
+      scheduledEvent: GuildScheduledEvent,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
     * Sent when an invite is created.
     * @param guild
     *   The guild the invite is for.

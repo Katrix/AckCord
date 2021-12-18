@@ -96,13 +96,16 @@ object CacheStreams {
     classOf[GatewayEvent.MessageDeleteBulk]
   )
 
+  private val erroredDispatches = collection.concurrent.TrieMap[Object, Unit]()
+
   /** A flow that creates [[APIMessage]]s from update events. */
   def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
         case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
           val event = sendEvent(state)
-          if (event.isEmpty) {
+
+          if (event.isEmpty && erroredDispatches.putIfAbsent(d, ()).isEmpty) {
             if (expectedFailedApiMessageCreation.contains(d.event.getClass)) {
               logger.debug(s"Failed to create API message for ${d.event.getClass}")
             } else {
@@ -125,6 +128,8 @@ object CacheStreams {
       UserId("0"),
       "Placeholder",
       "0000",
+      None,
+      None,
       None,
       None,
       None,

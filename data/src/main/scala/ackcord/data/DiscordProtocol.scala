@@ -29,6 +29,7 @@ import scala.util.Try
 
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
+import ackcord.util.{JsonOption, JsonSome}
 import cats.instances.either._
 import cats.instances.option._
 import cats.syntax.all._
@@ -184,6 +185,9 @@ trait DiscordProtocol {
   implicit val attachementCodec: Codec[Attachment] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val partialAttachmentCodec: Codec[PartialAttachment] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val embedFieldCodec: Codec[EmbedField] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -325,24 +329,34 @@ trait DiscordProtocol {
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
-      "id"               -> a.id.asJson,
-      "channel_id"       -> a.channelId.asJson,
-      "content"          -> a.content.asJson,
-      "timestamp"        -> a.timestamp.asJson,
-      "edited_timestamp" -> a.editedTimestamp.asJson,
-      "tts"              -> a.tts.asJson,
-      "mention_everyone" -> a.mentionEveryone.asJson,
-      "mentions"         -> a.mentions.asJson,
-      "mention_roles"    -> a.mentionRoles.asJson,
-      "attachments"      -> a.attachments.asJson,
-      "embeds"           -> a.embeds.asJson,
-      "reactions"        -> a.reactions.asJson,
-      "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
-      "pinned"           -> a.pinned.asJson,
-      "type"             -> a.`type`.asJson,
-      "activity"         -> a.activity.asJson,
-      "application"      -> a.application.asJson,
-      "components"       -> a.components.asJson
+      "id"                 -> a.id.asJson,
+      "channel_id"         -> a.channelId.asJson,
+      "guild_id"           -> a.guildId.asJson,
+      "member"             -> a.member.asJson,
+      "content"            -> a.content.asJson,
+      "timestamp"          -> a.timestamp.asJson,
+      "edited_timestamp"   -> a.editedTimestamp.asJson,
+      "tts"                -> a.tts.asJson,
+      "mention_everyone"   -> a.mentionEveryone.asJson,
+      "mentions"           -> a.mentions.asJson,
+      "mention_roles"      -> a.mentionRoles.asJson,
+      "attachments"        -> a.attachments.asJson,
+      "embeds"             -> a.embeds.asJson,
+      "reactions"          -> a.reactions.asJson,
+      "nonce"              -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
+      "pinned"             -> a.pinned.asJson,
+      "type"               -> a.`type`.asJson,
+      "activity"           -> a.activity.asJson,
+      "application"        -> a.application.asJson,
+      "application_id"     -> a.applicationId.asJson,
+      "message_reference"  -> a.messageReference.asJson,
+      "flags"              -> a.flags.asJson,
+      "stickers"           -> a.stickers.asJson,
+      "sticker_items"      -> a.stickerItems.asJson,
+      "referenced_message" -> a.referencedMessage.asJson,
+      "interaction"        -> a.interaction.asJson,
+      "components"         -> a.components.asJson,
+      "thread"             -> a.thread.asJson
     )
 
     a.author match {
@@ -528,68 +542,72 @@ trait DiscordProtocol {
       } yield create(oldVal, newVal)
 
     c.get[String]("key").flatMap {
-      case "name"                          => mkChange(AuditLogChange.Name)
-      case "description"                   => mkChange(AuditLogChange.Description)
-      case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
-      case "splash_hash"                   => mkChange(AuditLogChange.SplashHash)
-      case "owner_id"                      => mkChange(AuditLogChange.OwnerId)
-      case "region"                        => mkChange(AuditLogChange.Region)
-      case "preferred_locale"              => mkChange(AuditLogChange.PreferredLocale)
       case "afk_channel_id"                => mkChange(AuditLogChange.AfkChannelId)
       case "afk_timeout"                   => mkChange(AuditLogChange.AfkTimeout)
-      case "rules_channel_id"              => mkChange(AuditLogChange.RulesChannelId)
-      case "public_updates_channel_id"     => mkChange(AuditLogChange.PublicUpdatesChannelId)
-      case "mfa_level"                     => mkChange(AuditLogChange.MfaLevel)
-      case "verification_level"            => mkChange(AuditLogChange.VerificationLevel)
-      case "explicit_content_filter"       => mkChange(AuditLogChange.ExplicitContentFilter)
-      case "default_message_notifications" => mkChange(AuditLogChange.DefaultMessageNotification)
-      case "vanity_url_code"               => mkChange(AuditLogChange.VanityUrlCode)
-      case "$add"                          => mkChange(AuditLogChange.$Add)
-      case "$remove"                       => mkChange(AuditLogChange.$Remove)
-      case "prune_delete_days"             => mkChange(AuditLogChange.PruneDeleteDays)
-      case "widget_enabled"                => mkChange(AuditLogChange.WidgetEnabled)
-      case "widget_channel_id"             => mkChange(AuditLogChange.WidgetChannelId)
-      case "system_channel_id"             => mkChange(AuditLogChange.SystemChannelId)
-      case "position"                      => mkChange(AuditLogChange.Position)
-      case "topic"                         => mkChange(AuditLogChange.Topic)
-      case "bitrate"                       => mkChange(AuditLogChange.Bitrate)
-      case "permission_overwrites"         => mkChange(AuditLogChange.PermissionOverwrites)
-      case "nsfw"                          => mkChange(AuditLogChange.NSFW)
-      case "application_id"                => mkChange(AuditLogChange.ApplicationId)
-      case "rate_limit_per_user"           => mkChange(AuditLogChange.RateLimitPerUser)
-      case "permissions"                   => mkChange(AuditLogChange.Permissions)
-      case "color"                         => mkChange(AuditLogChange.Color)
-      case "hoist"                         => mkChange(AuditLogChange.Hoist)
-      case "mentionable"                   => mkChange(AuditLogChange.Mentionable)
       case "allow"                         => mkChange(AuditLogChange.Allow)
-      case "deny"                          => mkChange(AuditLogChange.Deny)
-      case "code"                          => mkChange(AuditLogChange.Code)
-      case "channel_id"                    => mkChange(AuditLogChange.InviteChannelId)
-      case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
-      case "max_uses"                      => mkChange(AuditLogChange.MaxUses)
-      case "uses"                          => mkChange(AuditLogChange.Uses)
-      case "max_age"                       => mkChange(AuditLogChange.MaxAge)
-      case "temporary"                     => mkChange(AuditLogChange.Temporary)
-      case "deaf"                          => mkChange(AuditLogChange.Deaf)
-      case "mute"                          => mkChange(AuditLogChange.Mute)
-      case "nick"                          => mkChange(AuditLogChange.Nick)
-      case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
-      case "id"                            => mkChange(AuditLogChange.Id)
-      case "type"             => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
-      case "enable_emoticons" => mkChange(AuditLogChange.EnableEmoticons)
-      case "expire_behavior"  => mkChange(AuditLogChange.ExpireBehavior)
-      case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
-      case "user_limit"                    => mkChange(AuditLogChange.UserLimit)
-      case "privacy_level"                 => mkChange(AuditLogChange.PrivacyLevel)
-      case "tags"                          => mkChange(AuditLogChange.Tags)
-      case "format_type"                   => mkChange(AuditLogChange.FormatType)
-      case "asset"                         => mkChange(AuditLogChange.Asset)
-      case "available"                     => mkChange(AuditLogChange.Available)
-      case "guild_id"                      => mkChange(AuditLogChange.GuildIdChange)
+      case "application_id"                => mkChange(AuditLogChange.ApplicationId)
       case "archived"                      => mkChange(AuditLogChange.Archived)
-      case "locked"                        => mkChange(AuditLogChange.Locked)
+      case "asset"                         => mkChange(AuditLogChange.Asset)
       case "auto_archive_duration"         => mkChange(AuditLogChange.AutoArchiveDuration)
+      case "available"                     => mkChange(AuditLogChange.Available)
+      case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
+      case "bitrate"                       => mkChange(AuditLogChange.Bitrate)
+      case "channel_id"                    => mkChange(AuditLogChange.ChannelIdChanged)
+      case "code"                          => mkChange(AuditLogChange.Code)
+      case "color"                         => mkChange(AuditLogChange.Color)
+      case "deaf"                          => mkChange(AuditLogChange.Deaf)
       case "default_auto_archive_duration" => mkChange(AuditLogChange.DefaultAutoArchiveDuration)
+      case "default_message_notifications" => mkChange(AuditLogChange.DefaultMessageNotification)
+      case "deny"                          => mkChange(AuditLogChange.Deny)
+      case "description"                   => mkChange(AuditLogChange.Description)
+      case "discovery_splash_hash"         => mkChange(AuditLogChange.DiscoverySplashHash)
+      case "enable_emoticons"              => mkChange(AuditLogChange.EnableEmoticons)
+      case "expire_behavior"               => mkChange(AuditLogChange.ExpireBehavior)
+      case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
+      case "explicit_content_filter"       => mkChange(AuditLogChange.ExplicitContentFilter)
+      case "format_type"                   => mkChange(AuditLogChange.FormatType)
+      case "guild_id"                      => mkChange(AuditLogChange.GuildIdChange)
+      case "hoist"                         => mkChange(AuditLogChange.Hoist)
+      case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
+      case "id"                            => mkChange(AuditLogChange.Id)
+      case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
+      case "location"                      => mkChange(AuditLogChange.Location)
+      case "locked"                        => mkChange(AuditLogChange.Locked)
+      case "max_age"                       => mkChange(AuditLogChange.MaxAge)
+      case "max_uses"                      => mkChange(AuditLogChange.MaxUses)
+      case "mentionable"                   => mkChange(AuditLogChange.Mentionable)
+      case "mfa_level"                     => mkChange(AuditLogChange.MfaLevel)
+      case "mute"                          => mkChange(AuditLogChange.Mute)
+      case "name"                          => mkChange(AuditLogChange.Name)
+      case "nick"                          => mkChange(AuditLogChange.Nick)
+      case "nsfw"                          => mkChange(AuditLogChange.NSFW)
+      case "owner_id"                      => mkChange(AuditLogChange.OwnerId)
+      case "permission_overwrites"         => mkChange(AuditLogChange.PermissionOverwrites)
+      case "permissions"                   => mkChange(AuditLogChange.Permissions)
+      case "position"                      => mkChange(AuditLogChange.Position)
+      case "preferred_locale"              => mkChange(AuditLogChange.PreferredLocale)
+      case "privacy_level"                 => mkChange(AuditLogChange.PrivacyLevel)
+      case "prune_delete_days"             => mkChange(AuditLogChange.PruneDeleteDays)
+      case "public_updates_channel_id"     => mkChange(AuditLogChange.PublicUpdatesChannelId)
+      case "rate_limit_per_user"           => mkChange(AuditLogChange.RateLimitPerUser)
+      case "region"                        => mkChange(AuditLogChange.Region)
+      case "rules_channel_id"              => mkChange(AuditLogChange.RulesChannelId)
+      case "splash_hash"                   => mkChange(AuditLogChange.SplashHash)
+      case "status"                        => mkChange(AuditLogChange.Status)
+      case "system_channel_id"             => mkChange(AuditLogChange.SystemChannelId)
+      case "tags"                          => mkChange(AuditLogChange.Tags)
+      case "temporary"                     => mkChange(AuditLogChange.Temporary)
+      case "topic"                         => mkChange(AuditLogChange.Topic)
+      case "type"            => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
+      case "unicode_emoji"   => mkChange(AuditLogChange.UnicodeEmoji)
+      case "user_limit"      => mkChange(AuditLogChange.UserLimit)
+      case "uses"            => mkChange(AuditLogChange.Uses)
+      case "vanity_url_code" => mkChange(AuditLogChange.VanityUrlCode)
+      case "verification_level" => mkChange(AuditLogChange.VerificationLevel)
+      case "widget_channel_id"  => mkChange(AuditLogChange.WidgetChannelId)
+      case "widget_enabled"     => mkChange(AuditLogChange.WidgetEnabled)
+      case "$add"               => mkChange(AuditLogChange.$Add)
+      case "$remove"            => mkChange(AuditLogChange.$Remove)
     }
   }
 
@@ -610,8 +628,51 @@ trait DiscordProtocol {
   implicit val applicationCommandCodec: Codec[ApplicationCommand] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] = Codec.from(
+    (c: HCursor) =>
+      for {
+        tpe          <- c.get[ApplicationCommandOptionType]("type")
+        name         <- c.get[String]("name")
+        description  <- c.get[String]("description")
+        required     <- c.get[Option[Boolean]]("required")
+        choices      <- c.get[Option[Seq[ApplicationCommandOptionChoice]]]("choices")
+        autocomplete <- c.get[Option[Boolean]]("autocomplete")
+        options      <- c.get[Option[Seq[ApplicationCommandOption]]]("options")
+        channelTypes <- c.get[Option[Seq[ChannelType]]]("channel_types")
+        minValue <- c
+          .get[Option[Double]]("min_value")
+          .map(_.map(Right(_)))
+          .orElse(c.get[Option[Int]]("max_value").map(_.map(Left(_))))
+        maxValue <- c
+          .get[Option[Double]]("max_value")
+          .map(_.map(Right(_)))
+          .orElse(c.get[Option[Int]]("max_value").map(_.map(Left(_))))
+      } yield ApplicationCommandOption(
+        tpe,
+        name,
+        description,
+        required,
+        choices,
+        autocomplete,
+        options,
+        channelTypes,
+        minValue,
+        maxValue
+      ),
+    (a: ApplicationCommandOption) =>
+      Json.obj(
+        "type"          := a.`type`,
+        "name"          := a.name,
+        "description"   := a.description,
+        "required"      := a.required,
+        "choices"       := a.choices,
+        "autocomplete"  := a.autocomplete,
+        "options"       := a.options,
+        "channel_types" := a.channelTypes,
+        "min_value"     := a.minValue.map(_.fold(_.asJson, _.asJson)),
+        "max_value"     := a.maxValue.map(_.fold(_.asJson, _.asJson))
+      )
+  )
 
   implicit val interactionRawGuildMemberCodec: Codec[InteractionRawGuildMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -619,8 +680,32 @@ trait DiscordProtocol {
   implicit val interactionChannelCodec: Codec[InteractionChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val applicationCommandInteractionDataResolvedCodec: Codec[ApplicationCommandInteractionDataResolved] =
+  implicit val interactionPartialMessageCodec: Codec[InteractionPartialMessage] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandInteractionDataResolvedCodec: Codec[ApplicationCommandInteractionDataResolved] = {
+    def resolvedField[K: KeyDecoder, V: Decoder](c: HCursor, field: String) =
+      c.downField(field).success.map(_.as[Map[K, V]]).getOrElse(Right(Map.empty[K, V]))
+
+    Codec.from(
+      (c: HCursor) =>
+        for {
+          users    <- resolvedField[UserId, User](c, "users")
+          members  <- resolvedField[UserId, InteractionRawGuildMember](c, "members")
+          roles    <- resolvedField[RoleId, RawRole](c, "roles")
+          channels <- resolvedField[TextGuildChannelId, InteractionChannel](c, "channels")
+          messages <- resolvedField[MessageId, InteractionPartialMessage](c, "messages")
+        } yield ApplicationCommandInteractionDataResolved(users, members, roles, channels, messages),
+      (a: ApplicationCommandInteractionDataResolved) =>
+        JsonOption.removeUndefinedToObj(
+          "users"    -> JsonSome(a.users).filterToUndefined(_.nonEmpty).toJson,
+          "members"  -> JsonSome(a.members).filterToUndefined(_.nonEmpty).toJson,
+          "roles"    -> JsonSome(a.roles).filterToUndefined(_.nonEmpty).toJson,
+          "channels" -> JsonSome(a.channels).filterToUndefined(_.nonEmpty).toJson,
+          "messages" -> JsonSome(a.messages).filterToUndefined(_.nonEmpty).toJson
+        )
+    )
+  }
 
   implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -630,8 +715,7 @@ trait DiscordProtocol {
 
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
-      (c: HCursor) =>
-        c.as[ApplicationComponentInteractionData]
+      (c: HCursor) => c.as[ApplicationComponentInteractionData]
           .orElse(c.as[ApplicationCommandInteractionData])
           .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
       {
@@ -644,16 +728,37 @@ trait DiscordProtocol {
   implicit val interactionResponseCodec: Codec[RawInteractionResponse] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val interactionApplicationCommandCallbackDataCodec: Codec[RawInteractionApplicationCommandCallbackData] =
+  implicit val interactionCallbackDataCodec: Codec[InteractionCallbackData] = Codec.from(
+    (c: HCursor) => c.as[InteractionCallbackDataMessage].orElse(c.as[InteractionCallbackDataAutocomplete]),
+    {
+      case a: InteractionCallbackDataMessage      => a.asJson
+      case a: InteractionCallbackDataAutocomplete => a.asJson
+    }
+  )
+
+  implicit val interactionCallbackDataMessageCodec: Codec[InteractionCallbackDataMessage] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionCallbackDataAutocompleteCodec: Codec[InteractionCallbackDataAutocomplete] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandOptionChoiceStringCodec: Codec[ApplicationCommandOptionChoiceString] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+  implicit val applicationCommandOptionChoiceIntegerCodec: Codec[ApplicationCommandOptionChoiceInteger] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+  implicit val applicationCommandOptionChoiceNumberCodec: Codec[ApplicationCommandOptionChoiceNumber] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
 
   implicit val applicationCommandOptionChoiceCodec: Codec[ApplicationCommandOptionChoice] = Codec.from(
     (c: HCursor) =>
-      for {
-        name  <- c.get[String]("name")
-        value <- c.get[String]("value").map(Left(_)).orElse(c.get[Double]("value").map(Right(_)))
-      } yield ApplicationCommandOptionChoice(name, value),
-    (a: ApplicationCommandOptionChoice) => Json.obj("name" := a.name, "value" := a.value.fold(_.asJson, _.asJson))
+      c.as[ApplicationCommandOptionChoiceString]
+        .orElse(c.as[ApplicationCommandOptionChoiceInteger])
+        .orElse(c.as[ApplicationCommandOptionChoiceNumber]),
+    {
+      case a: ApplicationCommandOptionChoiceString  => a.asJson
+      case a: ApplicationCommandOptionChoiceInteger => a.asJson
+      case a: ApplicationCommandOptionChoiceNumber  => a.asJson
+    }
   )
 
   implicit val applicationCommandInteractionDataOptionCodec: Codec[ApplicationCommandInteractionDataOption[_]] = {
@@ -666,7 +771,8 @@ trait DiscordProtocol {
               name     <- c.get[String]("name")
               rawValue <- c.get[Option[Json]](tpe.valueJsonName)
               value    <- rawValue.traverse(tpe.decodeJson)
-            } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
+              focused  <- c.get[Option[Boolean]]("focused")
+            } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value, focused)
           }
 
         /*
@@ -678,11 +784,12 @@ trait DiscordProtocol {
         } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
          */
       },
-      { case ApplicationCommandInteractionDataOption(name, tpe, value) =>
+      { case ApplicationCommandInteractionDataOption(name, tpe, value, focused) =>
         Json.obj(
           "name"            := name,
           "type"            := (tpe: ApplicationCommandOptionType),
-          tpe.valueJsonName := value.map(tpe.encodeJson)
+          tpe.valueJsonName := value.map(tpe.encodeJson),
+          "focused"         := focused
         )
       }
     )
@@ -696,13 +803,13 @@ trait DiscordProtocol {
         tpe           <- c.get[InteractionType]("type")
         data          <- c.get[Option[ApplicationInteractionData]]("data")
         guildId       <- c.get[Option[GuildId]]("guild_id")
-        channelId     <- c.get[TextChannelId]("channel_id")
+        channelId     <- c.get[Option[TextChannelId]]("channel_id")
         member        <- c.get[Option[RawGuildMember]]("member")
         permissions   <- c.downField("member").get[Option[Permission]]("permissions")
         user          <- c.get[Option[User]]("user")
         token         <- c.get[String]("token")
+        version       <- c.get[Int]("version")
         message       <- c.get[Option[RawMessage]]("message")
-        version       <- c.get[Option[Int]]("version")
       } yield RawInteraction(
         id,
         applicationId,
@@ -714,8 +821,8 @@ trait DiscordProtocol {
         permissions,
         user,
         token,
-        message,
-        version
+        version,
+        message
       ),
     (a: RawInteraction) =>
       Json.obj(
@@ -740,5 +847,14 @@ trait DiscordProtocol {
 
   implicit val guildApplicationCommandPermissionsCodec: Codec[GuildApplicationCommandPermissions] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildScheduledEventCodec: Codec[GuildScheduledEvent] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+
+  implicit val guildScheduledEventEntityMetadataCodec: Codec[GuildScheduledEventEntityMetadata] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
+
+  implicit val guildScheduledEventUserCodec: Codec[GuildScheduledEventUser] =
+    derivation.deriveCodec(derivation.renaming.snakeCase)
 }
 object DiscordProtocol extends DiscordProtocol

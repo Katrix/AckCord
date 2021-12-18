@@ -137,6 +137,8 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
   *   The new enabled features for the guild.
   * @param description
   *   The new description for the guild if it is discoverable.
+  * @param premiumProgressBarEnabled
+  *   If the boosting progress bar should be shown.
   */
 case class ModifyGuildData(
     name: JsonOption[String] = JsonUndefined,
@@ -154,7 +156,8 @@ case class ModifyGuildData(
     systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
     preferredLocale: JsonOption[String] = JsonUndefined,
     features: JsonOption[Seq[String]] = JsonUndefined,
-    description: JsonOption[String] = JsonUndefined
+    description: JsonOption[String] = JsonUndefined,
+    premiumProgressBarEnabled: JsonOption[Boolean] = JsonUndefined
 )
 object ModifyGuildData {
   implicit val encoder: Encoder[ModifyGuildData] = (a: ModifyGuildData) =>
@@ -174,7 +177,8 @@ object ModifyGuildData {
       "system_channel_flags"          -> a.systemChannelFlags.toJson,
       "preferred_locale"              -> a.preferredLocale.toJson,
       "features"                      -> a.features.toJson,
-      "description"                   -> a.description.toJson
+      "description"                   -> a.description.toJson,
+      "premium_progress_bar_enabled"  -> a.premiumProgressBarEnabled.toJson
     )
 }
 
@@ -547,12 +551,17 @@ object ModifyCurrentMemberData {
 }
 
 /** Modify Current Member */
-case class ModifyCurrentMember(guildId: GuildId, params: ModifyCurrentMemberData)
-    extends GuildMemberRequest[ModifyCurrentMemberData] {
+case class ModifyCurrentMember(guildId: GuildId, params: ModifyCurrentMemberData, reason: Option[String] = None)
+    extends ReasonRequest[ModifyCurrentMember, ModifyCurrentMemberData, RawGuildMember, GuildMember] {
   override def route: RequestRoute = Routes.modifyCurrentUser
 
   override def paramsEncoder: Encoder[ModifyCurrentMemberData] =
     ModifyCurrentMemberData.encoder
+
+  override def responseDecoder: Decoder[RawGuildMember]              = Decoder[RawGuildMember]
+  override def toNiceResponse(response: RawGuildMember): GuildMember = response.toGuildMember(guildId)
+
+  override def withReason(reason: String): ModifyCurrentMember = copy(reason = Some(reason))
 }
 
 /** Add a role to a guild member. */
@@ -686,6 +695,10 @@ case class GetGuildRoles(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawR
   *   The color of the role.
   * @param hoist
   *   If this role is shown in the right sidebar.
+  * @param icon
+  *   The role's icon image.
+  * @param unicodeEmoji
+  *   The role's unicode emoji.
   * @param mentionable
   *   If this role is mentionable.
   */
@@ -694,6 +707,8 @@ case class CreateGuildRoleData(
     permissions: Option[Permission] = None,
     color: Option[Int] = None,
     hoist: Option[Boolean] = None,
+    icon: Option[ImageData] = None,
+    unicodeEmoji: Option[String] = None,
     mentionable: Option[Boolean] = None
 )
 
@@ -758,6 +773,10 @@ case class ModifyGuildRolePositions(
   *   The new color of the role.
   * @param hoist
   *   If this role is shown in the right sidebar.
+  * @param icon
+  *   The role's icon image.
+  * @param unicodeEmoji
+  *   The role's unicode emoji.
   * @param mentionable
   *   If this role is mentionable.
   */
@@ -766,16 +785,20 @@ case class ModifyGuildRoleData(
     permissions: JsonOption[Permission] = JsonUndefined,
     color: JsonOption[Int] = JsonUndefined,
     hoist: JsonOption[Boolean] = JsonUndefined,
+    icon: JsonOption[ImageData] = JsonUndefined,
+    unicodeEmoji: JsonOption[String] = JsonUndefined,
     mentionable: JsonOption[Boolean] = JsonUndefined
 )
 object ModifyGuildRoleData {
   implicit val encoder: Encoder[ModifyGuildRoleData] = (a: ModifyGuildRoleData) =>
     JsonOption.removeUndefinedToObj(
-      "name"        -> a.name.toJson,
-      "permissions" -> a.permissions.toJson,
-      "color"       -> a.color.toJson,
-      "hoist"       -> a.hoist.toJson,
-      "mentionable" -> a.mentionable.toJson
+      "name"          -> a.name.toJson,
+      "permissions"   -> a.permissions.toJson,
+      "color"         -> a.color.toJson,
+      "hoist"         -> a.hoist.toJson,
+      "icon"          -> a.icon.toJson,
+      "unicode_emoji" -> a.unicodeEmoji.toJson,
+      "mentionable"   -> a.mentionable.toJson
     )
 }
 
@@ -992,10 +1015,17 @@ case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseReque
   *   and people online.
   * @param withExpiration
   *   If the invite should contain the expiration date.
+  * @param guildScheduledEventId
+  *   The guild scheduled event to include in the invite.
   */
-case class GetInvite(inviteCode: String, withCounts: Boolean = false, withExpiration: Boolean = false)
-    extends NoParamsNiceResponseRequest[Invite] {
-  override def route: RequestRoute              = Routes.getInvite(inviteCode, Some(withCounts), Some(withExpiration))
+case class GetInvite(
+    inviteCode: String,
+    withCounts: Boolean = false,
+    withExpiration: Boolean = false,
+    guildScheduledEventId: Option[SnowflakeType[GuildScheduledEvent]] = None
+) extends NoParamsNiceResponseRequest[Invite] {
+  override def route: RequestRoute =
+    Routes.getInvite(inviteCode, Some(withCounts), Some(withExpiration), guildScheduledEventId)
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 }
 

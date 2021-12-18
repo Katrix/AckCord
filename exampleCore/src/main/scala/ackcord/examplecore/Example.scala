@@ -30,23 +30,22 @@ import scala.util.control.NonFatal
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
-import ackcord.data.{ApplicationId, GuildId}
+import ackcord.data.GuildId
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.interactions.InteractionsRegistrar
-import ackcord.interactions.raw.GetGuildCommands
-import ackcord.requests.{BotAuthentication, Ratelimiter, RatelimiterActor, RequestSettings, Requests}
+import ackcord.requests.{BotAuthentication => _, Requests => _, _}
 import ackcord.util.{APIGuildRouter, GuildRouter}
-import akka.Done
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl._
 import akka.actor.typed.scaladsl.adapter._
-import akka.stream.scaladsl.Keep
+import akka.stream.scaladsl.{Keep, RunnableGraph}
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
 import akka.util.Timeout
+import akka.{Done, NotUsed}
 import cats.arrow.FunctionK
 import org.slf4j.Logger
 
@@ -141,41 +140,22 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
   val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
 
-  val baseSlashCommands = new SlashCommandsController(requests)
-
-  val registerCommands = true
-  if (registerCommands) {
-    requests
-      .singleFuture(GetGuildCommands(ApplicationId("288367502130413568"), GuildId("269988507378909186")))
-      .onComplete(println)
-
-    /*
-    CommandRegistrar
-      .createGuildCommands(
-        RawSnowflake("288367502130413568"),
-        GuildId("269988507378909186"),
-        requests,
-        baseSlashCommands.groupTest,
-        baseSlashCommands.subcommand,
-        baseSlashCommands.subcommandWithArg
-      )
-      .onComplete(println)
-     */
-  }
-
-  {
-    events.interactions
-      .to(
-        InteractionsRegistrar.gatewayInteractions(
-          baseSlashCommands.ping,
-          baseSlashCommands.echo,
-          baseSlashCommands.nudge,
-          baseSlashCommands.asyncTest,
-          baseSlashCommands.groupTest
-        )("288367502130413568", requests)
-      )
-      .run()
-  }
+  val baseSlashCommands = new ApplicationCommandsController(requests)
+  val allCommands = Seq(
+    baseSlashCommands.ping,
+    baseSlashCommands.echo,
+    baseSlashCommands.nudgeUser,
+    baseSlashCommands.nudgeRole,
+    baseSlashCommands.nudge,
+    baseSlashCommands.mentionChannel,
+    baseSlashCommands.asyncTest,
+    baseSlashCommands.groupTest,
+    baseSlashCommands.nudgeUserCommand,
+    baseSlashCommands.echoMessage,
+    baseSlashCommands.simpleAutocomplete,
+    baseSlashCommands.multiParamsAutocomplete,
+    baseSlashCommands.intAutocomplete
+  )
 
   val commandConnector = new CommandConnector(
     events.subscribeAPI
@@ -222,6 +202,27 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     .to(ActorSink.actorRef(guildRouterMusic, GuildRouter.Shutdown, _ => GuildRouter.Shutdown))
     .run()
   shard ! DiscordShard.StartShard
+
+  events.subscribeAPI.collectType[APIMessage.Ready].runForeach { msg =>
+    InteractionsRegistrar
+      .createGuildCommands(
+        msg.applicationId,
+        GuildId("269988507378909186"),
+        requests,
+        replaceAll = true,
+        allCommands: _*
+      )
+      .onComplete(println)
+
+    InteractionsRegistrar.createGlobalCommands(msg.applicationId, requests, replaceAll = true).onComplete(println)
+
+    SupervisionStreams
+      .logAndContinue(
+        events.interactions
+          .to(InteractionsRegistrar.gatewayInteractions(allCommands: _*)(msg.applicationId.asString, requests))
+      )
+      .run()
+  }
 
   private var shutdownCount              = 0
   private var isShuttingDown             = false

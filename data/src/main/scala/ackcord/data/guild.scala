@@ -333,7 +333,8 @@ case class RequestsGuild(
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
     nsfwLevel: NSFWLevel,
-    stickers: SnowflakeMap[Sticker, Sticker]
+    stickers: SnowflakeMap[Sticker, Sticker],
+    premiumProgressBarEnabled: Boolean
 ) extends Guild {
 
   def toGatewayGuild(
@@ -346,6 +347,7 @@ case class RequestsGuild(
       rawThreads: Seq[RawChannel],
       presences: Seq[RawPresence],
       stageInstances: Option[Seq[StageInstance]],
+      guildScheduledEvents: Option[Seq[GuildScheduledEvent]],
       botUserId: Option[UserId]
   ): GatewayGuild = {
     val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
@@ -395,7 +397,9 @@ case class RequestsGuild(
       maxVideoChannelUsers,
       nsfwLevel,
       SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id),
-      stickers
+      stickers,
+      SnowflakeMap.withKey(guildScheduledEvents.toSeq.flatten)(_.id),
+      premiumProgressBarEnabled
     )
   }
 }
@@ -466,7 +470,9 @@ case class GatewayGuild(
     maxVideoChannelUsers: Option[Int],
     nsfwLevel: NSFWLevel,
     stageInstances: SnowflakeMap[StageInstance, StageInstance],
-    stickers: SnowflakeMap[Sticker, Sticker]
+    stickers: SnowflakeMap[Sticker, Sticker],
+    guildScheduledEvents: SnowflakeMap[GuildScheduledEvent, GuildScheduledEvent],
+    premiumProgressBarEnabled: Boolean
 ) extends Guild {
 
   /** Get the AFK channel of this guild. */
@@ -547,19 +553,20 @@ object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnk
   case object Featureable                   extends GuildFeature("FEATURABLE")
   case object InviteSplash                  extends GuildFeature("INVITE_SPLASH")
   case object MemberVerificationGateEnabled extends GuildFeature("MEMBER_VERIFICATION_GATE_ENABLED")
+  case object MonetizationEnabled           extends GuildFeature("MONETIZATION_ENABLED")
+  case object MoreStickers                  extends GuildFeature("MORE_STICKERS")
   case object News                          extends GuildFeature("NEWS")
   case object Partnered                     extends GuildFeature("PARTNERED")
   case object PreviewEnabled                extends GuildFeature("PREVIEW_ENABLED")
+  case object PrivateThreads                extends GuildFeature("PRIVATE_THREADS")
+  case object RoleIcons                     extends GuildFeature("ROLE_ICONS")
+  case object SevenDayThreadArchive         extends GuildFeature("SEVEN_DAY_THREAD_ARCHIVE")
+  case object ThreeDayThreadArchive         extends GuildFeature("THREE_DAY_THREAD_ARCHIVE")
+  case object TicketedEventsEnabled         extends GuildFeature("WELCOME_SCREEN_ENABLED")
   case object VanityUrl                     extends GuildFeature("VANITY_URL")
   case object Verified                      extends GuildFeature("VERIFIED")
   case object VipRegions                    extends GuildFeature("VIP_REGIONS")
   case object WelcomeScreenEnabled          extends GuildFeature("TICKETED_EVENTS_ENABLED")
-  case object TicketedEventsEnabled         extends GuildFeature("WELCOME_SCREEN_ENABLED")
-  case object MonetizationEnabled           extends GuildFeature("MONETIZATION_ENABLED")
-  case object MoreStickers                  extends GuildFeature("MORE_STICKERS")
-  case object ThreeDayThreadArchive         extends GuildFeature("THREE_DAY_THREAD_ARCHIVE")
-  case object SevenDayThreadArchive         extends GuildFeature("SEVEN_DAY_THREAD_ARCHIVE")
-  case object PrivateThreads                extends GuildFeature("PRIVATE_THREADS")
 
   case class Unknown(str: String) extends GuildFeature(str)
 

@@ -89,7 +89,7 @@ object MockedGatewayHandler {
 
     val gatewayLifecycle = new GatewayHandlerGraphStage(parameters.settings, state.resume)
 
-    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) {
+    val graph = GraphDSL.createGraph(msgFlow, gatewayLifecycle)(Keep.both) {
       implicit builder => (network, gatewayLifecycle) =>
         import GraphDSL.Implicits._
 

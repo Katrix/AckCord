@@ -94,7 +94,7 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[Mes
   case object GuildDiscoveryGracePeriodFinalWarning   extends MessageType(17)
   case object ThreadCreated                           extends MessageType(18)
   case object Reply                                   extends MessageType(19)
-  case object ApplicationCommand                      extends MessageType(20)
+  case object ChatInputCommand                        extends MessageType(20)
   case object ThreadStarterMessage                    extends MessageType(21)
   case object GuildInviteReminder                     extends MessageType(22)
   case object ContextMenuCommand                      extends MessageType(23)
@@ -165,6 +165,10 @@ case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, discrimin
   *   If the user is part of Discord's urgent messaging system.
   * @param mfaEnabled
   *   If this user has two factor authentication enabled.
+  * @param banner
+  *   The user's banner image hash.
+  * @param accentColor
+  *   The user's banner color as an RGB int.
   * @param locale
   *   The user's chosen language.
   * @param verified
@@ -187,6 +191,8 @@ case class User(
     bot: Option[Boolean],
     system: Option[Boolean],
     mfaEnabled: Option[Boolean],
+    banner: Option[String],
+    accentColor: Option[Int],
     locale: Option[String],
     verified: Option[Boolean],
     email: Option[String],
@@ -647,10 +653,10 @@ case class ReceivedEmbed(
     timestamp = timestamp,
     color = color,
     footer = footer.map(_.toOutgoing),
-    image = image.flatMap(_.toOutgoing),
+    image = image.map(_.toOutgoing),
     video = video.flatMap(_.toOutgoing),
-    thumbnail = thumbnail.flatMap(_.toOutgoing),
-    author = author.flatMap(_.toOutgoing),
+    thumbnail = thumbnail.map(_.toOutgoing),
+    author = author.map(_.toOutgoing),
     fields = fields.getOrElse(Seq.empty)
   )
 }
@@ -682,13 +688,13 @@ object EmbedType extends StringEnum[EmbedType] with StringCirceEnumWithUnknown[E
   *   The width of the thumbnail.
   */
 case class ReceivedEmbedThumbnail(
-    url: Option[String],
+    url: String,
     proxyUrl: Option[String],
     height: Option[Int],
     width: Option[Int]
 ) {
 
-  def toOutgoing: Option[OutgoingEmbedThumbnail] = url.map(OutgoingEmbedThumbnail)
+  def toOutgoing: OutgoingEmbedThumbnail = OutgoingEmbedThumbnail(url)
 }
 
 /**
@@ -717,8 +723,8 @@ case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], hei
   * @param width
   *   The width of the image.
   */
-case class ReceivedEmbedImage(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
-  def toOutgoing: Option[OutgoingEmbedImage] = url.map(OutgoingEmbedImage)
+case class ReceivedEmbedImage(url: String, proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+  def toOutgoing: OutgoingEmbedImage = OutgoingEmbedImage(url)
 }
 
 /**
@@ -742,13 +748,13 @@ case class ReceivedEmbedProvider(name: Option[String], url: Option[String])
   *   A proxy url for the icon.
   */
 case class ReceivedEmbedAuthor(
-    name: Option[String],
+    name: String,
     url: Option[String],
     iconUrl: Option[String],
     proxyIconUrl: Option[String]
 ) {
 
-  def toOutgoing: Option[OutgoingEmbedAuthor] = name.map(n => OutgoingEmbedAuthor(n, url, iconUrl))
+  def toOutgoing: OutgoingEmbedAuthor = OutgoingEmbedAuthor(name, url, iconUrl)
 }
 
 /**
@@ -784,6 +790,8 @@ case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = N
   *   The id of the attachment
   * @param filename
   *   The filename of the attachment
+  * @param description
+  *   Description of the attachment
   * @param contentType
   *   The attachment's media type
   * @param size
@@ -800,12 +808,48 @@ case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = N
 case class Attachment(
     id: SnowflakeType[Attachment],
     filename: String,
+    description: Option[String],
     contentType: Option[String],
     size: Int,
     url: String,
     proxyUrl: String,
     height: Option[Int],
-    width: Option[Int]
+    width: Option[Int],
+    ephemeral: Option[Boolean]
+)
+
+/**
+  * An partial attachment for an outgoing message
+  * @param id
+  *   The id of the attachment
+  * @param filename
+  *   The filename of the attachment
+  * @param description
+  *   Description of the attachment
+  * @param contentType
+  *   The attachment's media type
+  * @param size
+  *   The file size in bytes
+  * @param url
+  *   The url of the attachment
+  * @param proxyUrl
+  *   The proxyUrl of the attachment
+  * @param height
+  *   The height of the attachment if it's an image
+  * @param width
+  *   The width of the attachment if it's an image
+  */
+case class PartialAttachment(
+    id: SnowflakeType[Attachment],
+    filename: Option[String],
+    description: Option[String],
+    contentType: Option[String],
+    size: Option[Int],
+    url: Option[String],
+    proxyUrl: Option[String],
+    height: Option[Int],
+    width: Option[Int],
+    ephemeral: Option[Boolean]
 )
 
 /**

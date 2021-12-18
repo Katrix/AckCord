@@ -342,10 +342,15 @@ package object syntax {
     /** Start a new thread in this channel without a message. */
     def startThread(
         name: String,
-        autoArchiveDuration: Int = 1440,
-        tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
+        tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread,
+        autoArchiveDuration: Option[Int] = None,
+        invitable: Option[Boolean] = None,
+        rateLimitPerUser: Option[Int] = None
     ) =
-      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, autoArchiveDuration, tpe))
+      StartThreadWithoutMessage(
+        channel.id,
+        StartThreadWithoutMessageData(name, tpe, autoArchiveDuration, invitable, rateLimitPerUser)
+      )
 
     /**
       * Lists all the public archived threads in this channel. Threads are
@@ -752,6 +757,8 @@ package object syntax {
       *   The new enabled features for the guild.
       * @param description
       *   The new description for the guild if it is discoverable.
+      * @param premiumProgressBarEnabled
+      *   If the boosting progress bar should be shown.
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
@@ -769,7 +776,8 @@ package object syntax {
         systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
         preferredLocale: JsonOption[String] = JsonUndefined,
         features: JsonOption[Seq[String]] = JsonUndefined,
-        description: JsonOption[String] = JsonUndefined
+        description: JsonOption[String] = JsonUndefined,
+        premiumProgressBarEnabled: JsonOption[Boolean] = JsonUndefined
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -788,7 +796,8 @@ package object syntax {
         systemChannelFlags = systemChannelFlags,
         preferredLocale = preferredLocale,
         features = features,
-        description = description
+        description = description,
+        premiumProgressBarEnabled = premiumProgressBarEnabled
       )
     )
 
@@ -1004,8 +1013,10 @@ package object syntax {
         permissions: Option[Permission] = None,
         color: Option[Int] = None,
         hoist: Option[Boolean] = None,
+        icon: Option[ImageData] = None,
+        unicodeEmoji: Option[String] = None,
         mentionable: Option[Boolean] = None
-    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable))
+    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable))
 
     /**
       * Modify the positions of several roles
@@ -1333,6 +1344,10 @@ package object syntax {
       *   The new color of the role.
       * @param hoist
       *   If this role is shown in the right sidebar.
+      * @param icon
+      *   The role's icon image.
+      * @param unicodeEmoji
+      *   The role's unicode emoji.
       * @param mentionable
       *   If this role is mentionable.
       */
@@ -1341,9 +1356,15 @@ package object syntax {
         permissions: JsonOption[Permission] = JsonUndefined,
         color: JsonOption[Int] = JsonUndefined,
         hoist: JsonOption[Boolean] = JsonUndefined,
+        icon: JsonOption[ImageData] = JsonUndefined,
+        unicodeEmoji: JsonOption[String] = JsonUndefined,
         mentionable: JsonOption[Boolean] = JsonUndefined
     ) =
-      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable))
+      ModifyGuildRole(
+        role.guildId,
+        role.id,
+        ModifyGuildRoleData(name, permissions, color, hoist, icon, unicodeEmoji, mentionable)
+      )
 
     /** Delete this role. */
     def delete = DeleteGuildRole(role.guildId, role.id)
@@ -1469,11 +1490,11 @@ package object syntax {
       UnpinMessage(message.channelId, message.id)
 
     /** Start a new thread from this message. */
-    def startThread(name: String, autoArchiveDuration: Int = 1440) =
+    def startThread(name: String, autoArchiveDuration: Option[Int] = None, rateLimitPerUser: Option[Int] = None) =
       StartThreadWithMessage(
         message.channelId.asChannelId[TextGuildChannel],
         message.id,
-        StartThreadWithMessageData(name, autoArchiveDuration)
+        StartThreadWithMessageData(name, autoArchiveDuration, rateLimitPerUser)
       )
   }
 
@@ -1633,9 +1654,18 @@ package object syntax {
       * @param withCounts
       *   If the returned invite object should return approximate counts for
       *   members and people online.
+      * @param withExpiration
+      *   If the invite should contain the expiration date.
+      * @param guildScheduledEventId
+      *   The guild scheduled event to include in the invite.
       */
-    def fetchInvite(inviteCode: String, withCounts: Boolean = false) =
-      GetInvite(inviteCode, withCounts)
+    def fetchInvite(
+        inviteCode: String,
+        withCounts: Boolean = false,
+        withExpiration: Boolean = false,
+        guildScheduledEventId: Option[SnowflakeType[GuildScheduledEvent]] = None
+    ) =
+      GetInvite(inviteCode, withCounts, withExpiration, guildScheduledEventId)
 
     /** Fetch a list of voice regions that can be used when creating a guild. */
     def fetchVoiceRegions: ListVoiceRegions.type = ListVoiceRegions

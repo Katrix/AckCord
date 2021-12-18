@@ -232,7 +232,7 @@ object GatewayHandlerGraphStage {
 
     val gatewayLifecycle = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
 
-    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) {
+    val graph = GraphDSL.createGraph(msgFlow, gatewayLifecycle)(Keep.both) {
       implicit builder => (network, gatewayLifecycle) =>
         import GraphDSL.Implicits._
 

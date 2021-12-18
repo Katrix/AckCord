@@ -322,43 +322,46 @@ package object data {
     /** Create a permission from an int. */
     def fromBigInt(bigInt: BigInt): Permission = apply(bigInt)
 
-    val CreateInstantInvite: Permission     = Permission(0x00000001)
-    val KickMembers: Permission             = Permission(0x00000002)
-    val BanMembers: Permission              = Permission(0x00000004)
-    val Administrator: Permission           = Permission(0x00000008)
-    val ManageChannels: Permission          = Permission(0x00000010)
-    val ManageGuild: Permission             = Permission(0x00000020)
-    val AddReactions: Permission            = Permission(0x00000040)
-    val ViewAuditLog: Permission            = Permission(0x00000080)
-    val ViewChannel: Permission             = Permission(0x00000400)
-    val SendMessages: Permission            = Permission(0x00000800)
-    val SendTtsMessages: Permission         = Permission(0x00001000)
-    val ManageMessages: Permission          = Permission(0x00002000)
-    val EmbedLinks: Permission              = Permission(0x00004000)
-    val AttachFiles: Permission             = Permission(0x00008000)
-    val ReadMessageHistory: Permission      = Permission(0x00010000)
-    val MentionEveryone: Permission         = Permission(0x00020000)
-    val UseExternalEmojis: Permission       = Permission(0x00040000)
-    val ViewGuildInsights: Permission       = Permission(0x00080000)
-    val Connect: Permission                 = Permission(0x00100000)
-    val Speak: Permission                   = Permission(0x00200000)
-    val MuteMembers: Permission             = Permission(0x00400000)
-    val DeafenMembers: Permission           = Permission(0x00800000)
-    val MoveMembers: Permission             = Permission(0x01000000)
-    val UseVad: Permission                  = Permission(0x02000000)
-    val PrioritySpeaker: Permission         = Permission(0x00000100)
-    val Stream: Permission                  = Permission(0x00000200)
-    val ChangeNickname: Permission          = Permission(0x04000000)
-    val ManageNicknames: Permission         = Permission(0x08000000)
-    val ManageRoles: Permission             = Permission(0x10000000)
-    val ManageWebhooks: Permission          = Permission(0x20000000)
-    val ManageEmojisAndStickers: Permission = Permission(0x40000000)
-    val UseSlashCommands: Permission        = Permission(0x80000000)
-    val RequestToSpeak: Permission          = Permission(0x100000000L)
+    val CreateInstantInvite: Permission     = Permission(0x0000000001L)
+    val KickMembers: Permission             = Permission(0x0000000002L)
+    val BanMembers: Permission              = Permission(0x0000000004L)
+    val Administrator: Permission           = Permission(0x0000000008L)
+    val ManageChannels: Permission          = Permission(0x0000000010L)
+    val ManageGuild: Permission             = Permission(0x0000000020L)
+    val AddReactions: Permission            = Permission(0x0000000040L)
+    val ViewAuditLog: Permission            = Permission(0x0000000080L)
+    val PrioritySpeaker: Permission         = Permission(0x0000000100L)
+    val Stream: Permission                  = Permission(0x0000000200L)
+    val ViewChannel: Permission             = Permission(0x0000000400L)
+    val SendMessages: Permission            = Permission(0x0000000800L)
+    val SendTtsMessages: Permission         = Permission(0x0000001000L)
+    val ManageMessages: Permission          = Permission(0x0000002000L)
+    val EmbedLinks: Permission              = Permission(0x0000004000L)
+    val AttachFiles: Permission             = Permission(0x0000008000L)
+    val ReadMessageHistory: Permission      = Permission(0x0000010000L)
+    val MentionEveryone: Permission         = Permission(0x0000020000L)
+    val UseExternalEmojis: Permission       = Permission(0x0000040000L)
+    val ViewGuildInsights: Permission       = Permission(0x0000080000L)
+    val Connect: Permission                 = Permission(0x0000100000L)
+    val Speak: Permission                   = Permission(0x0000200000L)
+    val MuteMembers: Permission             = Permission(0x0000400000L)
+    val DeafenMembers: Permission           = Permission(0x0000800000L)
+    val MoveMembers: Permission             = Permission(0x0001000000L)
+    val UseVad: Permission                  = Permission(0x0002000000L)
+    val ChangeNickname: Permission          = Permission(0x0004000000L)
+    val ManageNicknames: Permission         = Permission(0x0008000000L)
+    val ManageRoles: Permission             = Permission(0x0010000000L)
+    val ManageWebhooks: Permission          = Permission(0x0020000000L)
+    val ManageEmojisAndStickers: Permission = Permission(0x0040000000L)
+    val UseApplicationCommands: Permission  = Permission(0x0080000000L)
+    val RequestToSpeak: Permission          = Permission(0x0100000000L)
+    val ManageEvents: Permission            = Permission(0x0200000000L)
     val ManageThreads: Permission           = Permission(0x0400000000L)
-    val UsePublicThreads: Permission        = Permission(0x0800000000L)
-    val UsePrivateThreads: Permission       = Permission(0x1000000000L)
+    val CreatePublicThreads: Permission     = Permission(0x0800000000L)
+    val CreatePrivateThreads: Permission    = Permission(0x1000000000L)
     val UseExternalStickers: Permission     = Permission(0x2000000000L)
+    val SendMessagesInThreads: Permission   = Permission(0x4000000000L)
+    val StartEmbeddedActivities: Permission = Permission(0x8000000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -393,7 +396,7 @@ package object data {
       ManageRoles,
       ManageWebhooks,
       ManageEmojisAndStickers,
-      UseSlashCommands,
+      UseApplicationCommands,
       RequestToSpeak,
       UseExternalStickers
     )
@@ -476,6 +479,7 @@ package object data {
     val VerifiedBot: UserFlags               = UserFlags(1 << 16)
     val EarlyVerifiedBotDeveloper: UserFlags = UserFlags(1 << 17)
     val DiscordCertifiedModerator: UserFlags = UserFlags(1 << 18)
+    val BotHTTPInteractions: UserFlags       = UserFlags(1 << 19)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 
@@ -577,6 +581,7 @@ package object data {
     val SupressJoinNotifications: SystemChannelFlags          = SystemChannelFlags(1 << 0)
     val SupressPremiumSubscribtions: SystemChannelFlags       = SystemChannelFlags(1 << 1)
     val SupressGuildReminderNotifications: SystemChannelFlags = SystemChannelFlags(1 << 2)
+    val SupressJoinNotificationReplies: SystemChannelFlags    = SystemChannelFlags(1 << 3)
   }
   implicit class SystemChannelFlagsSyntax(private val flags: SystemChannelFlags) extends AnyVal {
 
@@ -621,13 +626,16 @@ package object data {
     /** Create a ActivityFlags from an int. */
     def fromInt(int: Int): ActivityFlags = apply(int)
 
-    val None: ActivityFlags        = ActivityFlags(0)
-    val Instance: ActivityFlags    = ActivityFlags(1 << 0)
-    val Join: ActivityFlags        = ActivityFlags(1 << 1)
-    val Spectate: ActivityFlags    = ActivityFlags(1 << 2)
-    val JoinRequest: ActivityFlags = ActivityFlags(1 << 3)
-    val Sync: ActivityFlags        = ActivityFlags(1 << 4)
-    val Play: ActivityFlags        = ActivityFlags(1 << 5)
+    val None: ActivityFlags                     = ActivityFlags(0)
+    val Instance: ActivityFlags                 = ActivityFlags(1 << 0)
+    val Join: ActivityFlags                     = ActivityFlags(1 << 1)
+    val Spectate: ActivityFlags                 = ActivityFlags(1 << 2)
+    val JoinRequest: ActivityFlags              = ActivityFlags(1 << 3)
+    val Sync: ActivityFlags                     = ActivityFlags(1 << 4)
+    val Play: ActivityFlags                     = ActivityFlags(1 << 5)
+    val PartyPrivacyFriends: ActivityFlags      = ActivityFlags(1 << 6)
+    val PartyPrivacyVoiceChannel: ActivityFlags = ActivityFlags(1 << 7)
+    val Embedded: ActivityFlags                 = ActivityFlags(1 << 8)
   }
   implicit class ActivityFlagsSyntax(private val flags: ActivityFlags) extends AnyVal {
 
@@ -679,6 +687,8 @@ package object data {
     val GatewayGuildMembersLimited: ApplicationFlags    = ApplicationFlags(1 << 15)
     val VerificationPendingGuildLimit: ApplicationFlags = ApplicationFlags(1 << 16)
     val Embedded: ApplicationFlags                      = ApplicationFlags(1 << 17)
+    val GatewayMessageContent: ApplicationFlags         = ApplicationFlags(1 << 18)
+    val GatewayMessageContentLimited: ApplicationFlags  = ApplicationFlags(1 << 19)
   }
   implicit class ApplicationFlagsSyntax(private val flags: ApplicationFlags) extends AnyVal {
 

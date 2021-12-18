@@ -3,9 +3,9 @@ package ackcord.interactions.components
 import ackcord.data.{
   ApplicationComponentInteractionData,
   ComponentType,
+  InteractionCallbackDataMessage,
   Message,
-  RawInteraction,
-  RawInteractionApplicationCommandCallbackData
+  RawInteraction
 }
 import ackcord.interactions._
 import ackcord.requests.Requests
@@ -51,7 +51,9 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       val invocationInfo = InteractionInvocationInfo(
         interaction.id,
         interaction.guildId,
-        interaction.channelId,
+        interaction.channelId.getOrElse(
+          throw new IllegalArgumentException("Got an interaction without a channel for a component handler")
+        ),
         interaction.member.map(_.user).orElse(interaction.user).get,
         interaction.member,
         interaction.memberPermission,
@@ -70,12 +72,12 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
               .leftMap {
                 case Some(error) =>
                   InteractionResponse.ChannelMessage(
-                    RawInteractionApplicationCommandCallbackData(content = Some(s"An error occurred: $error")),
+                    InteractionCallbackDataMessage(content = Some(s"An error occurred: $error")),
                     () => OptFuture.unit
                   )
                 case None =>
                   InteractionResponse.ChannelMessage(
-                    RawInteractionApplicationCommandCallbackData(content = Some("An error occurred")),
+                    InteractionCallbackDataMessage(content = Some("An error occurred")),
                     () => OptFuture.unit
                   )
               }
@@ -85,7 +87,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
         case None =>
           Some(
             InteractionResponse.ChannelMessage(
-              RawInteractionApplicationCommandCallbackData(content = Some(s"Wrong data for component execution")),
+              InteractionCallbackDataMessage(content = Some(s"Wrong data for component execution")),
               () => OptFuture.unit
             )
           )
