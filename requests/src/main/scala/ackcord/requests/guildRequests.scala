@@ -466,16 +466,18 @@ case class ModifyGuildMemberData(
     roles: JsonOption[Seq[RoleId]] = JsonUndefined,
     mute: JsonOption[Boolean] = JsonUndefined,
     deaf: JsonOption[Boolean] = JsonUndefined,
-    channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined
+    channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+    communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined
 )
 object ModifyGuildMemberData {
   implicit val encoder: Encoder[ModifyGuildMemberData] = (a: ModifyGuildMemberData) =>
     JsonOption.removeUndefinedToObj(
-      "nick"       -> a.nick.toJson,
-      "roles"      -> a.roles.toJson,
-      "mute"       -> a.mute.toJson,
-      "deaf"       -> a.deaf.toJson,
-      "channel_id" -> a.channelId.toJson
+      "nick"                         -> a.nick.toJson,
+      "roles"                        -> a.roles.toJson,
+      "mute"                         -> a.mute.toJson,
+      "deaf"                         -> a.deaf.toJson,
+      "channel_id"                   -> a.channelId.toJson,
+      "communication_disabled_until" -> a.communicationDisabledUntil.toJson
     )
 }
 
@@ -499,7 +501,8 @@ case class ModifyGuildMember(
       ifDefined(params.roles, Permission.ManageRoles),
       ifDefined(params.mute, Permission.MuteMembers),
       ifDefined(params.deaf, Permission.DeafenMembers),
-      ifDefined(params.channelId, Permission.MoveMembers)
+      ifDefined(params.channelId, Permission.MoveMembers),
+      ifDefined(params.communicationDisabledUntil, Permission.ModerateMembers)
     )
   }
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =

@@ -362,6 +362,7 @@ package object data {
     val UseExternalStickers: Permission     = Permission(0x2000000000L)
     val SendMessagesInThreads: Permission   = Permission(0x4000000000L)
     val StartEmbeddedActivities: Permission = Permission(0x8000000000L)
+    val ModerateMembers: Permission         = Permission(0x10000000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -398,7 +399,10 @@ package object data {
       ManageEmojisAndStickers,
       UseApplicationCommands,
       RequestToSpeak,
-      UseExternalStickers
+      UseExternalStickers,
+      SendMessagesInThreads,
+      StartEmbeddedActivities,
+      ModerateMembers
     )
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {

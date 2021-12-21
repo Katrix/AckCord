@@ -604,7 +604,8 @@ case class GuildMember(
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
-    pending: Option[Boolean]
+    pending: Option[Boolean],
+    communicationDisabledUntil: Option[OffsetDateTime]
 ) extends GetUser
     with GetGuild {
 

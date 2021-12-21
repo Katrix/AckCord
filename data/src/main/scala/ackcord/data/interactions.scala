@@ -254,7 +254,8 @@ case class InteractionGuildMember(
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
-    pending: Option[Boolean]
+    pending: Option[Boolean],
+    communicationDisabledUntil: Option[OffsetDateTime]
 )
 
 case class InteractionRawGuildMember(
@@ -263,7 +264,8 @@ case class InteractionRawGuildMember(
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
-    pending: Option[Boolean]
+    pending: Option[Boolean],
+    communicationDisabledUntil: Option[OffsetDateTime]
 )
 
 case class InteractionChannel(

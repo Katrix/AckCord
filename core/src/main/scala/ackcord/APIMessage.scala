@@ -382,6 +382,7 @@ object APIMessage {
       deaf: Boolean,
       mute: Boolean,
       pending: Boolean,
+      communicationDisabledUntil: Option[OffsetDateTime],
       cache: CacheState,
       gatewayInfo: GatewayInfo
   ) extends GuildMessage

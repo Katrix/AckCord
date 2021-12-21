@@ -415,7 +415,19 @@ object CacheHandlers {
           obj: GuildMemberUpdateData,
           registry: CacheTypeRegistry
       ): Unit = {
-        val GuildMemberUpdateData(guildId, roles, user, nick, avatar, joinedAt, premiumSince, deaf, mute, pending) = obj
+        val GuildMemberUpdateData(
+          guildId,
+          roles,
+          user,
+          nick,
+          avatar,
+          joinedAt,
+          premiumSince,
+          deaf,
+          mute,
+          pending,
+          communicationDisabledUntil
+        ) = obj
 
         val exisitingMember = for {
           guild       <- builder.getGuild(guildId)
@@ -428,12 +440,25 @@ object CacheHandlers {
           premiumSince = premiumSince,
           deaf = deaf.getOrElse(false),
           mute = mute.getOrElse(false),
-          pending = pending
+          pending = pending,
+          communicationDisabledUntil = communicationDisabledUntil
         )
 
         registry.updateData(builder)(
           exisitingMember.getOrElse(
-            GuildMember(user.id, guildId, nick, avatar, roles, joinedAt, None, deaf = false, mute = false, None)
+            GuildMember(
+              user.id,
+              guildId,
+              nick,
+              avatar,
+              roles,
+              joinedAt,
+              None,
+              deaf = false,
+              mute = false,
+              None,
+              communicationDisabledUntil
+            )
           )
         )
 
