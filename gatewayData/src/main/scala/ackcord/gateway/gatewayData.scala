@@ -688,10 +688,11 @@ object GatewayEvent {
       premiumSince: Option[OffsetDateTime],
       deaf: Boolean,
       mute: Boolean,
-      pending: Option[Boolean]
+      pending: Option[Boolean],
+      communicationDisabledUntil: Option[OffsetDateTime]
   ) {
     def toRawGuildMember: RawGuildMember =
-      RawGuildMember(user, avatar, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
+      RawGuildMember(user, avatar, nick, roles, joinedAt, premiumSince, deaf, mute, pending, communicationDisabledUntil)
   }
 
   object RawGuildMemberWithGuild {
@@ -706,7 +707,8 @@ object GatewayEvent {
         m.premiumSince,
         m.deaf,
         m.mute,
-        m.pending
+        m.pending,
+        m.communicationDisabledUntil
       )
   }
 
@@ -765,7 +767,8 @@ object GatewayEvent {
       premiumSince: Option[OffsetDateTime],
       deaf: Option[Boolean],
       mute: Option[Boolean],
-      pending: Option[Boolean]
+      pending: Option[Boolean],
+      communicationDisabledUntil: Option[OffsetDateTime]
   )
 
   /** Sent to the shard when a guild member is updated. */

@@ -458,6 +458,7 @@ object CacheEventCreator {
                   data.deaf.getOrElse(false),
                   data.mute.getOrElse(false),
                   data.pending.getOrElse(false),
+                  data.communicationDisabledUntil,
                   state,
                   dispatch.gatewayInfo
                 )

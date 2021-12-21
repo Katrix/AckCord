@@ -64,7 +64,8 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
         member.roles,
         member.joinedAt,
         member.premiumSince,
-        member.pending
+        member.pending,
+        member.communicationDisabledUntil
       )
     }(_.user.id)
 
@@ -110,7 +111,8 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
             member.roles,
             member.joinedAt,
             member.premiumSince,
-            member.pending
+            member.pending,
+            member.communicationDisabledUntil
           )
         )
       }

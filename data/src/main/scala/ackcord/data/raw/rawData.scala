@@ -346,11 +346,24 @@ case class PartialRawGuildMember(
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
-    pending: Option[Boolean]
+    pending: Option[Boolean],
+    communicationDisabledUntil: Option[OffsetDateTime]
 ) {
 
   def toGuildMember(userId: UserId, guildId: GuildId): GuildMember =
-    GuildMember(userId, guildId, nick, avatar, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(
+      userId,
+      guildId,
+      nick,
+      avatar,
+      roles,
+      joinedAt,
+      premiumSince,
+      deaf,
+      mute,
+      pending,
+      communicationDisabledUntil
+    )
 }
 
 //Remember to edit RawGuildMemberWithGuild when editing this
@@ -383,12 +396,25 @@ case class RawGuildMember(
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
-    pending: Option[Boolean]
+    pending: Option[Boolean],
+    communicationDisabledUntil: Option[OffsetDateTime]
 ) {
 
   /** Convert this to a normal guild member. */
   def toGuildMember(guildId: GuildId): GuildMember =
-    GuildMember(user.id, guildId, nick, avatar, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(
+      user.id,
+      guildId,
+      nick,
+      avatar,
+      roles,
+      joinedAt,
+      premiumSince,
+      deaf,
+      mute,
+      pending,
+      communicationDisabledUntil
+    )
 }
 
 /**
