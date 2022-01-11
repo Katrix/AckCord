@@ -36,7 +36,7 @@ import ackcord.{CacheSnapshot, OptFuture, RequestPermissionException}
   */
 class RequestsHelper(requests: Requests) {
   import requests.system.executionContext
-  implicit val properties: Requests.RequestProperties = Requests.RequestProperties.retry
+  implicit val properties: Requests.RequestProperties = Requests.RequestProperties.retryOrdered
 
   private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): OptFuture[Unit] =
     if (requests.forall(_.hasPermissions)) OptFuture.unit
