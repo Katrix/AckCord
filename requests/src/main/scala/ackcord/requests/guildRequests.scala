@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined, Verifier}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import akka.NotUsed
 import io.circe._
@@ -72,7 +72,7 @@ case class CreateGuildData(
     systemChannelId: Option[TextGuildChannelId],
     systemChannelFlags: Option[SystemChannelFlags]
 ) {
-  require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
+  Verifier.requireLength(name, "Guild name", min = 2, max = 100)
 }
 
 /** Create a new guild. Can only be used by bots in less than 10 guilds. */
@@ -246,8 +246,8 @@ case class CreateGuildChannelData(
     parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
     nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
-  require(name.nonEmpty && name.length <= 100, "A channel name has to be between 2 and 100 characters")
-  require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
+  Verifier.requireLength(name, "Channel name", min = 2, max = 100)
+  Verifier.requireRange(rateLimitPerUser, "Rate limit per user", max = 21600)
 }
 object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
@@ -848,7 +848,7 @@ case class DeleteGuildRole(
   *   Roles that should be ignored when checking for inactive users.
   */
 case class GuildPruneCountData(days: Int, includeRoles: Seq[RoleId]) {
-  require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
+  Verifier.requireRange(days, "Days", max = 30)
 }
 
 /** @param pruned The number of members that would be removed. */
@@ -886,7 +886,7 @@ case class BeginGuildPruneData(
     includeRoles: Seq[RoleId],
     reason: Option[String] = None
 ) {
-  require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
+  Verifier.requireRange(days, "Days", max = 30)
 }
 
 /** @param pruned The number of members that were removed. */

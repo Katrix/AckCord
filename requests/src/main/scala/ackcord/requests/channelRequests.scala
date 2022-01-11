@@ -30,7 +30,7 @@ import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined, Verifier}
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model._
@@ -91,11 +91,11 @@ case class ModifyChannelData(
     invitable: JsonOption[Boolean] = JsonUndefined,
     autoArchiveDuration: JsonOption[Int] = JsonUndefined
 ) {
-  require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
-  require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
-  require(bitrate.forall(b => b >= 8000 && b <= 128000), "Bitrate must be between 8000 and 128000 bits")
-  require(userLimit.forall(b => b >= 0 && b <= 99), "User limit must be between 0 and 99 users")
-  require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
+  Verifier.requireLength(name, "Name", min = 2, max = 100)
+  Verifier.requireLength(topic, "Topic", max = 1024)
+  Verifier.requireRange(bitrate, "Bitrate", min = 8000, max = 100)
+  Verifier.requireRange(userLimit, "User limit", min = 2, max = 128000)
+  Verifier.requireRange(rateLimitPerUser, "Rate limit per user", max = 21600)
   require(tpe.forall(Seq(ChannelType.GuildNews, ChannelType.GuildText).contains))
   require(
     autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
@@ -178,7 +178,7 @@ case class GetChannelMessagesData(
     limit: Option[Int] = None
 ) {
   require(Seq(around, before, after).count(_.isDefined) <= 1, "The around, before, after fields are mutually exclusive")
-  require(limit.forall(c => c >= 1 && c <= 100), "Count must be between 1 and 100")
+  Verifier.requireRange(limit, "Limit", min = 1, max = 100)
 
   def toMap: Map[String, String] =
     Map(
@@ -316,11 +316,11 @@ case class CreateMessageData(
     files.map(_.fileName).distinct.lengthCompare(files.length) == 0,
     "Please use unique filenames for all files"
   )
-  require(content.length <= 4000, "The content of a message can't exceed 4000 characters")
-  require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
-  require(components.length <= 5, "Can't have more than 5 action rows on a message")
-  require(nonce.forall(_.swap.forall(_.length <= 25)), "Nonce too long")
-  require(stickerIds.length <= 3, "Too many stickers")
+  Verifier.requireLength(content, "Content", max = 4000)
+  Verifier.requireLength(embeds, "Embeds", max = 10)
+  Verifier.requireLength(components, "Components", max = 5)
+  Verifier.requireLength(nonce.flatMap(_.left.toOption), "Nonce", max = 25)
+  Verifier.requireLength(stickerIds, "StickerIds", max = 3)
 }
 object CreateMessageData {
 
@@ -488,9 +488,9 @@ case class EditMessageData(
     components: JsonOption[Seq[ActionRow]] = JsonUndefined,
     attachments: JsonOption[Seq[PartialAttachment]] = JsonUndefined
 ) {
-  require(content.forall(_.length < 2000))
-  require(embeds.forall(_.size <= 10), "Can't send more than 10 embeds with a webhook message")
-  require(components.forall(_.length <= 5), "Can't have more than 5 action rows on a message")
+  Verifier.requireLength(content, "Content", max = 2000)
+  Verifier.requireLength(embeds, "Embeds", max = 10)
+  Verifier.requireLength(components, "Components", max = 5)
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
@@ -571,10 +571,7 @@ case class DeleteMessage(
 
 /** @param messages All the messages to delete. */
 case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
-  require(
-    messages.lengthCompare(2) >= 0 && messages.lengthCompare(100) <= 0,
-    "Can only delete between 2 and 100 messages at a time"
-  )
+  Verifier.requireLength(messages, "Message ids", min = 2, max = 100)
 }
 
 /**

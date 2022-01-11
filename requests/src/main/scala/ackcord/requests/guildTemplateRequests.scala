@@ -27,7 +27,7 @@ import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data.raw.RawGuild
 import ackcord.data.{GuildId, GuildTemplate, ImageData, Permission}
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined, Verifier}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, derivation}
 
@@ -74,9 +74,8 @@ case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseReque
   *   Description of the template
   */
 case class CreateGuildTemplateData(name: String, description: JsonOption[String] = JsonUndefined) {
-  require(name.nonEmpty, "Name must not be empty")
-  require(name.length <= 100, "Name too long. Max length is 100 characters")
-  require(description.forall(_.length <= 120), "Description too long. Max length is 120 characters")
+  Verifier.requireLength(name, "Name", min = 1, max = 100)
+  Verifier.requireLength(description, "Description", max = 120)
 }
 
 /** Create a guild template for the guild. */
@@ -113,9 +112,8 @@ case class ModifyGuildTemplateData(
     name: JsonOption[String] = JsonUndefined,
     description: JsonOption[String] = JsonUndefined
 ) {
-  require(name.forall(_.nonEmpty), "Name must not be empty")
-  require(name.forall(_.length <= 100), "Name too long. Max length is 100 characters")
-  require(description.forall(_.length <= 120), "Description too long. Max length is 120 characters")
+  Verifier.requireLength(name, "Name", min = 1, max = 100)
+  Verifier.requireLength(description, "Description", max = 120)
 }
 
 /** Modify the info around a guild template. */

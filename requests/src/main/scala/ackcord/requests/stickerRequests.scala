@@ -3,7 +3,7 @@ package ackcord.requests
 import ackcord.data.DiscordProtocol._
 import ackcord.data.raw.RawSticker
 import ackcord.data.{GuildId, Sticker, StickerId, StickerPack}
-import ackcord.util.JsonOption
+import ackcord.util.{JsonOption, Verifier}
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.{HttpEntity, RequestEntity}
 import io.circe.{Decoder, Encoder, derivation}
@@ -42,12 +42,12 @@ case class CreateGuildStickerData(
     tags: String,
     file: CreateMessageFile
 ) {
-  require(name.length >= 2 && name.length <= 30, "Invalid length for sticker name")
+  Verifier.requireLength(name, "Sticker name", min = 2, max = 30)
   require(
     description.isEmpty || (description.length >= 2 && description.length <= 100),
     "Invalid length for sticker description"
   )
-  require(tags.length >= 2 && tags.length <= 30, "Invalid length for sticker tags")
+  Verifier.requireLength(tags, "Sticker tags", min = 2, max = 30)
 }
 
 case class CreateGuildSticker(guildId: GuildId, sticker: CreateGuildStickerData, reason: Option[String] = None)
@@ -73,12 +73,12 @@ case class ModifyGuildStickerData(
     description: JsonOption[String],
     tags: JsonOption[String]
 ) {
-  require(name.forall(n => n.length >= 2 && n.length <= 30), "Invalid length for sticker name")
+  Verifier.requireLength(name, "Sticker name", min = 2, max = 30)
   require(
     description.forall(d => d.isEmpty || (d.length >= 2 && d.length <= 100)),
     "Invalid length for sticker description"
   )
-  require(tags.forall(t => t.length >= 2 && t.length <= 30), "Invalid length for sticker tags")
+  Verifier.requireLength(tags, "Sticker tags", min = 2, max = 30)
 }
 object ModifyGuildStickerData {
   implicit val encoder: Encoder[ModifyGuildStickerData] = (a: ModifyGuildStickerData) =>

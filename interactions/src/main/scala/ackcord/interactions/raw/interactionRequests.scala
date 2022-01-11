@@ -27,7 +27,7 @@ import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.interactions.commands.CreatedApplicationCommand
 import ackcord.requests._
-import ackcord.util.{JsonOption, JsonUndefined}
+import ackcord.util.{JsonOption, JsonUndefined, Verifier}
 import akka.http.scaladsl.model.RequestEntity
 import io.circe._
 
@@ -39,7 +39,7 @@ case class CreateCommandData(
     `type`: Option[ApplicationCommandType]
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  require(description.forall(_.length <= 100), "Command description too short. Maximum length is 100")
+  Verifier.requireLength(description, "Command description", max = 100)
   require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
 
 }
@@ -63,8 +63,7 @@ case class PatchCommandData(
     defaultPermission: JsonOption[Boolean] = JsonUndefined
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  require(description.nonEmpty, "Command description too short. Minimum length is 1")
-  require(description.forall(_.length <= 100), "Command description too short. Maximum length is 100")
+  Verifier.requireLength(description, "Command description", min = 1, max = 100)
   require(name.forall(_.matches("""^[\w-]{1,32}$""")), "Name is invalid")
 }
 object PatchCommandData {
@@ -191,7 +190,7 @@ case class GetApplicationCommandPermissions(applicationId: ApplicationId, guildI
 }
 
 case class EditCommandPermissionsData(permissions: Seq[ApplicationCommandPermissions]) {
-  require(permissions.length <= 10, "At most 10 overrides can be used for a command")
+  Verifier.requireLength(permissions, "Command permission overrides", max = 10)
 }
 
 case class EditApplicationCommandPermissions(
@@ -209,7 +208,7 @@ case class EditApplicationCommandPermissions(
 }
 
 case class BatchEditCommandPermissionsData(id: CommandId, permissions: Seq[ApplicationCommandPermissions]) {
-  require(permissions.length <= 10, "At most 10 overrides can be used for a command")
+  Verifier.requireLength(permissions, "Command permission overrides", max = 10)
 }
 
 case class BatchEditApplicationCommandPermissions(

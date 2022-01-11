@@ -29,7 +29,7 @@ import scala.util.Try
 
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome}
+import ackcord.util.{JsonOption, JsonSome, Verifier}
 import cats.instances.either._
 import cats.instances.option._
 import cats.syntax.all._
@@ -273,8 +273,8 @@ trait DiscordProtocol {
 
   implicit val buttonDecoder: Decoder[Button] = (c: HCursor) => {
     c.as[RawButton].map { button =>
-      val buttonValid = (button.label.isDefined || button.emoji.isDefined) && button.label
-        .forall(_.length <= 80) && button.customId.forall(_.length <= 100)
+      val buttonValid = (button.label.isDefined || button.emoji.isDefined) &&
+        button.label.forall(Verifier.stringLength(_) <= 80) && button.customId.forall(Verifier.stringLength(_) <= 100)
 
       if (buttonValid) {
         val asTextButton = button.customId

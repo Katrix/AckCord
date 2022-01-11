@@ -28,7 +28,7 @@ import scala.util.{Failure, Success}
 
 import ackcord.CacheSnapshot
 import ackcord.data._
-import ackcord.util.AckCordRequestSettings
+import ackcord.util.{AckCordRequestSettings, Verifier}
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
@@ -116,7 +116,7 @@ trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceRespons
   def reason: Option[String]
 
   override def extraHeaders: Seq[HttpHeader] = {
-    require(reason.forall(_.length <= 512), "The reason to put in an audit log entry can't be more than 512 characters")
+    Verifier.requireLength(reason, "Audit log request reason", max = 512)
     reason.fold[Seq[HttpHeader]](Nil)(str => Seq(`X-Audit-Log-Reason`(str)))
   }
 }
