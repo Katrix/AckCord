@@ -683,43 +683,43 @@ object Routes {
 
   //Images
   val emojiImage: (EmojiId, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "emojis" / emojiId ++ extension +? size toRequest GET
+    cdn / "emojis" / emojiId ++ "." ++ extension +? size toRequest GET
   val guildIconImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "icons" / guildId / hash ++ extension +? size toRequest GET
+    cdn / "icons" / guildId / hash ++ "." ++ extension +? size toRequest GET
   val guildSplashImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
+    cdn / "splashes" / guildId / hash ++ "." ++ extension +? size toRequest GET
   val discoverySplashImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
+    cdn / "splashes" / guildId / hash ++ "." ++ extension +? size toRequest GET
   val guildBannerImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "banners" / guildId / hash ++ extension +? size toRequest GET
+    cdn / "banners" / guildId / hash ++ "." ++ extension +? size toRequest GET
   val userBannerImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "banners" / userId / hash ++ extension +? size toRequest GET
+    cdn / "banners" / userId / hash ++ "." ++ extension +? size toRequest GET
   val defaultUserAvatarImage: (Int, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "embed" / "avatars" / discriminator ++ extension +? size toRequest GET
+    cdn / "embed" / "avatars" / discriminator ++ "." ++ extension +? size toRequest GET
   val userAvatarImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "avatars" / userId / hash ++ extension +? size toRequest GET
+    cdn / "avatars" / userId / hash ++ "." ++ extension +? size toRequest GET
   val userGuildAvatarImage: (GuildId, UserId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "guilds" / guildId / "users" / userId / "avatars" / hash ++ extension +? size toRequest GET
+    cdn / "guilds" / guildId / "users" / userId / "avatars" / hash ++ "." ++ extension +? size toRequest GET
   val applicationIconImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-icons" / applicationId / "icon.png" ++ extension +? size toRequest GET
+    cdn / "app-icons" / applicationId / "icon.png" ++ "." ++ extension +? size toRequest GET
   val applicationCoverImage: (ApplicationId, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-icons" / applicationId / "cover_image.png" ++ extension +? size toRequest GET
+    cdn / "app-icons" / applicationId / "cover_image.png" ++ "." ++ extension +? size toRequest GET
   val applicationAssetImage: (ApplicationId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-assets" / applicationId / hash ++ extension +? size toRequest GET
+    cdn / "app-assets" / applicationId / hash ++ "." ++ extension +? size toRequest GET
   val applicationAchievementIconImage: (ApplicationId, String, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-assets" / applicationId / "achievements" / achievementId / "icons" / hash ++ extension +? size toRequest GET
+    cdn / "app-assets" / applicationId / "achievements" / achievementId / "icons" / hash ++ "." ++ extension +? size toRequest GET
 
   val stickerPackBannerImage: (String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "app-assets" / "710982414301790216" / "store" / assetId ++ extension +? size toRequest GET
+    cdn / "app-assets" / "710982414301790216" / "store" / assetId ++ "." ++ extension +? size toRequest GET
 
   val teamIconImage: (SnowflakeType[Team], String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "team-icons" / teamId / hash ++ extension +? size toRequest GET
+    cdn / "team-icons" / teamId / hash ++ "." ++ extension +? size toRequest GET
 
   val stickerImage: (StickerId, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "stickers" / stickerId ++ extension +? size toRequest GET
+    cdn / "stickers" / stickerId ++ "." ++ extension +? size toRequest GET
 
   val roleIconImage: (RoleId, String, ImageFormat, Option[Int]) => RequestRoute =
-    cdn / "role-icons" / roleId / hash ++ extension +? size toRequest GET
+    cdn / "role-icons" / roleId / hash ++ "." ++ extension +? size toRequest GET
 
   //OAuth
   val oAuth2: Route                                    = base / "oauth2"
