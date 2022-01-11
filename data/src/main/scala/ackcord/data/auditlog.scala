@@ -315,6 +315,9 @@ object AuditLogChange {
   /** Id of changed object */
   case class Id(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake]) extends AuditLogChange[RawSnowflake]
 
+  /** If a thread is invitable. */
+  case class Invitable(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
   /** Inviter userId changed */
   case class InviterId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
 

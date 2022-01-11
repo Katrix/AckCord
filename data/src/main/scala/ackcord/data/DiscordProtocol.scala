@@ -570,6 +570,7 @@ trait DiscordProtocol {
       case "hoist"                         => mkChange(AuditLogChange.Hoist)
       case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
       case "id"                            => mkChange(AuditLogChange.Id)
+      case "invitable"                     => mkChange(AuditLogChange.Invitable)
       case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
       case "location"                      => mkChange(AuditLogChange.Location)
       case "locked"                        => mkChange(AuditLogChange.Locked)
