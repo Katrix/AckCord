@@ -6,9 +6,7 @@ import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, Int
 import akka.NotUsed
 import cats.Id
 
-/**
-  * Base class for application commands controllers.
-  */
+/** Base class for application commands controllers. */
 trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] extends InteractionHandlerOps {
 
   /** The interaction transformer to start off with. */

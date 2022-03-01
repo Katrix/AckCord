@@ -3,9 +3,7 @@ package ackcord.interactions.commands
 import ackcord.data.InteractionPartialMessage
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 
-/**
-  * A builder for message commands.
-  */
+/** A builder for message commands. */
 class MessageCommandBuilder[Interaction[_]](
     val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],

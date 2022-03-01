@@ -2,9 +2,7 @@ package ackcord.interactions.commands
 
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer}
 
-/**
-  * A builder of some sort of command.
-  */
+/** A builder of some sort of command. */
 abstract class CommandBuilder[Interaction[_], Args] {
 
   def defaultPermission: Boolean

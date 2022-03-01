@@ -27,8 +27,10 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
 ) extends InteractionHandlerOps {
 
   /**
-    * Respond with a promise that you'll handle the interaction later. Stops showing the loading icon.
-    * @param handle The handler for later.
+    * Respond with a promise that you'll handle the interaction later. Stops
+    * showing the loading icon.
+    * @param handle
+    *   The handler for later.
     */
   def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
     InteractionResponse.UpdateMessageLater(() => handle(AsyncToken.fromInteraction(interaction)))
@@ -39,8 +41,10 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
 
   /**
     * Handle the interaction here.
-    * @param interaction The interaction to handle.
-    * @return A response to the interaction.
+    * @param interaction
+    *   The interaction to handle.
+    * @return
+    *   A response to the interaction.
     */
   def handle(implicit interaction: InteractionTpe): InteractionResponse
 

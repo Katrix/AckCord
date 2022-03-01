@@ -3,9 +3,7 @@ package ackcord.interactions.commands
 import ackcord.data.{InteractionRawGuildMember, User}
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 
-/**
-  * A builder for user commands.
-  */
+/** A builder for user commands. */
 class UserCommandBuilder[Interaction[_]](
     val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],

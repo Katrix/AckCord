@@ -356,9 +356,7 @@ sealed trait ParamList[A] {
       options: Map[String, ApplicationCommandInteractionDataOption[_]]
   ): Seq[ApplicationCommandOptionChoice]
 
-  /**
-    * Fold this parameter list.
-    */
+  /** Fold this parameter list. */
   def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
     @tailrec
     def inner(list: ParamList[_], b: B): B = list match {
