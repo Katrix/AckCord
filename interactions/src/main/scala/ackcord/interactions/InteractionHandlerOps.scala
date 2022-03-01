@@ -33,25 +33,49 @@ import ackcord.util.{JsonOption, JsonUndefined}
 import akka.NotUsed
 import io.circe.Json
 
+/** Exposes an DSL of sorts for creating responses to an interaction. */
 trait InteractionHandlerOps {
   def requests: Requests
 
   implicit def executionContext: ExecutionContext = requests.system.executionContext
 
+  /**
+    * Specify that the response to this interaction will be done async.
+    * @param handle
+    *   The action to do async.
+    */
   def async(handle: AsyncToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse =
     InteractionResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
 
-  def acknowledge: InteractionResponse =
-    InteractionResponse.Acknowledge(() => OptFuture.unit)
+  //TODO: Determine of this should be exposed or not
+  //def acknowledge: InteractionResponse =
+  //  InteractionResponse.Acknowledge(() => OptFuture.unit)
 
+  /**
+    * Send a message as response to the interaction with text content as the
+    * primary thing.
+    * @param content
+    *   The content of the message.
+    * @param tts
+    *   If the message will be tts.
+    * @param embeds
+    *   The embeds of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param flags
+    *   The flags of the message.
+    * @param components
+    *   The components of the message. // * @param attachments The attachments
+    *   of the message. Not currently implemented.
+    */
   def sendMessage(
       content: String,
       tts: Option[Boolean] = None,
       embeds: Seq[OutgoingEmbed] = Nil,
       allowedMentions: Option[AllowedMention] = None,
       flags: MessageFlags = MessageFlags.None,
-      components: Seq[ActionRow] = Nil,
-      attachments: Option[Seq[PartialAttachment]] = None
+      components: Seq[ActionRow] = Nil
+      //attachments: Option[Seq[PartialAttachment]] = None
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
     InteractionCallbackDataMessage(
       tts,
@@ -60,11 +84,28 @@ trait InteractionHandlerOps {
       allowedMentions,
       flags,
       if (components.isEmpty) None else Some(components),
-      attachments
+      attachments = None
     ),
     () => OptFuture.unit
   )
 
+  /**
+    * Send a message as response to the interaction with embeds as the primary
+    * thing.
+    * @param content
+    *   The content of the message.
+    * @param tts
+    *   If the message will be tts.
+    * @param embeds
+    *   The embeds of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param flags
+    *   The flags of the message.
+    * @param components
+    *   The components of the message. // * @param attachments The attachments
+    *   of the message. Not currently implemented.
+    */
   def sendEmbed(
       embeds: Seq[OutgoingEmbed],
       content: Option[String] = None,
@@ -89,6 +130,22 @@ trait InteractionHandlerOps {
   private def interactionRequest[Response](request: Request[Response]): OptFuture[Response] =
     OptFuture.fromFuture(requests.singleFutureSuccess(request))
 
+  /**
+    * Send an async message as part of the interaction with text content as the
+    * primary thing.
+    * @param content
+    *   The content of the message.
+    * @param tts
+    *   If the message will be tts.
+    * @param files
+    *   The files to send with the message.
+    * @param embeds
+    *   The embeds of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param components
+    *   The components of the message.
+    */
   def sendAsyncMessage(
       content: String,
       tts: Option[Boolean] = None,
@@ -114,6 +171,22 @@ trait InteractionHandlerOps {
       )
     ).map(_.get)
 
+  /**
+    * Send an async message as part of the interaction with embeds as the
+    * primary thing.
+    * @param content
+    *   The content of the message.
+    * @param tts
+    *   If the message will be tts.
+    * @param files
+    *   The files to send with the message.
+    * @param embeds
+    *   The embeds of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param components
+    *   The components of the message.
+    */
   def sendAsyncEmbed(
       embeds: Seq[OutgoingEmbed],
       content: String = "",
@@ -139,10 +212,24 @@ trait InteractionHandlerOps {
       )
     ).map(_.get)
 
+  /** Get the original message sent as a response to the interaction. */
   def getOriginalMessage()(implicit async: AsyncMessageToken): OptFuture[Message] = interactionRequest(
     GetOriginalWebhookMessage(async.webhookId, async.webhookToken)
   ).map(_.toMessage)
 
+  /**
+    * Edits the original message sent as a response to the interaction.
+    * @param content
+    *   The content of the message.
+    * @param embeds
+    *   The embeds of the message.
+    * @param files
+    *   The files of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param components
+    *   The components of the message.
+    */
   def editOriginalMessage(
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
@@ -164,10 +251,26 @@ trait InteractionHandlerOps {
       )
     )
 
+  /** Delete the original message sent as a response to the interaction. */
   def deleteOriginalMessage(implicit async: AsyncMessageToken): OptFuture[NotUsed] = interactionRequest(
     DeleteOriginalWebhookMessage(async.webhookId, async.webhookToken)
   )
 
+  /**
+    * Edits a previous message sent as a part of the interaction.
+    * @param messageId
+    *   The message to edit.
+    * @param content
+    *   The content of the message.
+    * @param embeds
+    *   The embeds of the message.
+    * @param files
+    *   The files of the message.
+    * @param allowedMentions
+    *   The allowed mentions of the message.
+    * @param components
+    *   The components of the message.
+    */
   def editPreviousMessage(
       messageId: MessageId,
       content: JsonOption[String] = JsonUndefined,
@@ -191,6 +294,11 @@ trait InteractionHandlerOps {
       )
     )
 
+  /**
+    * Get a previous message sent as a part of the interaction.
+    * @param messageId
+    *   The message to get.
+    */
   def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] =
     interactionRequest(
       GetWebhookMessage(async.webhookId, async.webhookToken, messageId)

@@ -36,8 +36,21 @@ import cats.instances.either._
 import cats.instances.option._
 import cats.syntax.all._
 
+/**
+  * A parameter that can be used in a slash command.
+  * @tparam Orig
+  *   The type the parameter originally has.
+  * @tparam A
+  *   The type the parameter has after a bit of processing.
+  * @tparam F
+  *   The context of the parameter, either Id or Option currently.
+  */
 sealed trait Param[Orig, A, F[_]] {
+
+  /** Type of the parameter. */
   def tpe: ApplicationCommandOptionType.Aux[Orig]
+
+  /** Name of the parameter. */
   def name: String
 
   private[commands] def fTransformer: Param.FTransformer[F]
@@ -47,13 +60,18 @@ sealed trait Param[Orig, A, F[_]] {
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, F[A]]
 
+  /** imap the parameter with the resolved data. */
   def imapWithResolve[B](map: (A, ApplicationCommandInteractionDataResolved) => Option[B])(
       contramap: B => A
   ): Param[Orig, B, F]
+
+  /** imap the parameter. */
   def imap[B](map: A => B)(contramap: B => A): Param[Orig, B, F]
 
+  /** Chain this parameter together with another. */
   def ~[B, G[_]](other: Param[_, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
 
+  /** Convert this parameter to an [[ApplicationCommandOption]] */
   def toCommandOption: ApplicationCommandOption
 }
 object Param {
@@ -73,6 +91,31 @@ object Param {
   }
 }
 
+/**
+  * A parameter that allows multiple choices for the user.
+  * @param tpe
+  *   Type of the parameter.
+  * @param name
+  *   Name of the parameter.
+  * @param description
+  *   Description of the parameter.
+  * @param choices
+  *   The choices of the parameter. Can't be specified at the same time as
+  *   autocomplete.
+  * @param autocomplete
+  *   An function to return autocomplete options to the user as they type. Can't
+  *   be used at the same time as choices.
+  * @param minValue
+  *   The minimum value of the parameter.
+  * @param maxValue
+  *   The maximum value of the parameter.
+  * @tparam Orig
+  *   The type the parameter originally has.
+  * @tparam A
+  *   The type the parameter has after a bit of processing.
+  * @tparam F
+  *   The context of the parameter, either Id or Option currently.
+  */
 case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     tpe: ApplicationCommandOptionType.Aux[Orig],
     name: String,
@@ -88,14 +131,30 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
 ) extends Param[Orig, A, F] {
   require(choices.nonEmpty && autocomplete.isEmpty || choices.isEmpty, "Can't use both autocomplete and static choices")
 
+  /**
+    * Sets the choices for the parameter. Can't be set at the same time as
+    * autocomplete.
+    */
   def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] =
     copy(choices = choices.map(t => t._1 -> contramap(t._2)))
+
+  /**
+    * Sets the choices for the parameter. Can't be set at the same time as
+    * autocomplete.
+    */
   def withChoices(choices: Seq[String])(implicit ev: String =:= A): ChoiceParam[Orig, A, F] =
     withChoices(choices.map(s => s -> ev(s)).toMap)
 
-  def required: ChoiceParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
+  /** Sets the parameter as required. */
+  def required: ChoiceParam[Orig, A, Id] = copy(fTransformer = Param.FTransformer.Required)
+
+  /** Sets the parameter as optional. */
   def notRequired: ChoiceParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
 
+  /**
+    * Sets the autocomplete to use for the parameter. Can't be set at the same
+    * time as choices.
+    */
   def withAutocomplete(complete: String => Seq[A]): ChoiceParam[Orig, A, F] =
     copy(autocomplete = Some(complete.andThen(_.map(contramap))))
   def noAutocomplete: ChoiceParam[Orig, A, F] = copy(autocomplete = None)
@@ -156,6 +215,23 @@ object ChoiceParam {
     )
 }
 
+/**
+  * A parameter with a normal value..
+  * @param tpe
+  *   Type of the parameter.
+  * @param name
+  *   Name of the parameter.
+  * @param description
+  *   Description of the parameter.
+  * @param channelTypes
+  *   The channel types to accept, if this is a channel parameter.
+  * @tparam Orig
+  *   The type the parameter originally has.
+  * @tparam A
+  *   The type the parameter has after a bit of processing.
+  * @tparam F
+  *   The context of the parameter, either Id or Option currently.
+  */
 case class ValueParam[Orig, A, F[_]] private[interactions] (
     tpe: ApplicationCommandOptionType.Aux[Orig],
     name: String,
@@ -165,7 +241,11 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A],
     contramap: A => Orig
 ) extends Param[Orig, A, F] {
-  def required: ValueParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
+
+  /** Sets the parameter as required. */
+  def required: ValueParam[Orig, A, Id] = copy(fTransformer = Param.FTransformer.Required)
+
+  /** Sets the parameter as optional. */
   def notRequired: ValueParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
 
   override def imapWithResolve[B](
@@ -219,8 +299,16 @@ object ValueParam {
 }
 
 sealed trait ParamList[A] {
+
+  /**
+    * Adds the given parameter to the end of this parameter list.
+    * @param param
+    *   The parameter to add.
+    */
   def ~[B, G[_]](param: Param[_, B, G]): ParamList[A ~ G[B]] = ParamList.ParamListBranch(this, param)
-  def map[B](f: Param[_, _, Any] => B): List[B]              = foldRight(Nil: List[B])(f(_) :: _)
+
+  /** Map all the parameters in this parameter list. */
+  def map[B](f: Param[_, _, Any] => B): List[B] = foldRight(Nil: List[B])(f(_) :: _)
 
   protected def constructParam[Orig, A1, F[_]](
       param: Param[Orig, A1, F],
@@ -257,15 +345,20 @@ sealed trait ParamList[A] {
     res.toSeq.flatten
   }
 
+  /** Construct values from the specified interaction data. */
   def constructValues(
       options: Map[String, ApplicationCommandInteractionDataOption[_]],
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, A]
 
+  /** Runs autocomplete with the specified interaction data. */
   def runAutocomplete(
       options: Map[String, ApplicationCommandInteractionDataOption[_]]
   ): Seq[ApplicationCommandOptionChoice]
 
+  /**
+    * Fold this parameter list.
+    */
   def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
     @tailrec
     def inner(list: ParamList[_], b: B): B = list match {

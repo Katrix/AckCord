@@ -5,6 +5,13 @@ import ackcord.data.{ComponentType, Message, RawInteraction}
 import ackcord.interactions._
 import ackcord.requests.Requests
 
+/**
+  * Base class for all button handlers. For more comfort, use
+  * [[AutoButtonHandler]] to automatically register the handler when you create
+  * an instance of it it.
+  * @param interactionTransformer
+  *   A transformer to do base processing of the interaction before handling it.
+  */
 abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
     requests: Requests,
     interactionTransformer: InteractionTransformer[ComponentInteraction, InteractionTpe] =
@@ -28,6 +35,9 @@ abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
 }
 object ButtonHandler {
 
+  /**
+    * An [[InteractionTransformer]] adding cache information to the interaction.
+    */
   val cacheTransformer: InteractionTransformer[ComponentInteraction, CacheComponentInteraction] =
     InteractionTransformer
       .identity[ComponentInteraction]
@@ -37,6 +47,10 @@ object ButtonHandler {
         )
       )
 
+  /**
+    * An [[InteractionTransformer]] adding resolved data structures to the
+    * interaction.
+    */
   val resolvedTransformer: InteractionTransformer[ComponentInteraction, ResolvedComponentInteraction] =
     cacheTransformer.andThen(
       InteractionTransformer.resolved((t, g) =>
@@ -44,6 +58,10 @@ object ButtonHandler {
       )
     )
 
+  /**
+    * An [[InteractionTransformer]] adding the guild of the component to the
+    * interaction.
+    */
   val guildTransformer: InteractionTransformer[ComponentInteraction, GuildComponentInteraction] =
     resolvedTransformer.andThen(
       InteractionTransformer.onlyInGuild((g, m, p, t) =>
@@ -51,6 +69,10 @@ object ButtonHandler {
       )
     )
 
+  /**
+    * An [[InteractionTransformer]] adding the voice channel of the user using
+    * the component to the interaction.
+    */
   val voiceChannelTransformer: InteractionTransformer[ComponentInteraction, VoiceChannelComponentInteraction] =
     guildTransformer.andThen(
       InteractionTransformer.inVoiceChannel(v =>

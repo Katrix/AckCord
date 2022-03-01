@@ -23,13 +23,10 @@
  */
 package ackcord.interactions
 
-import java.nio.charset.StandardCharsets
 import java.util.Locale
 
-import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
-import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.interactions.commands.CreatedApplicationCommand
 import ackcord.interactions.components.{GlobalRegisteredComponents, RegisteredComponents}
@@ -37,19 +34,10 @@ import ackcord.interactions.raw._
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.`Content-Type`
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import akka.util.ByteString
 import cats.syntax.all._
-import com.iwebpp.crypto.TweetNaclFast
-import io.circe.syntax._
-import org.slf4j.LoggerFactory
 
 object InteractionsRegistrar {
-
-  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private def handleInteraction(
       clientId: String,
@@ -183,7 +171,19 @@ object InteractionsRegistrar {
   }
    */
 
-  def gatewayInteractions[Mat](
+  /**
+    * Wire up the gateway to interaction handling.
+    * @param commands
+    *   The application commands to handle.
+    * @param clientId
+    *   The client id.
+    * @param requests
+    *   An requests instance.
+    * @param registeredButtons
+    *   Where to check for component interaction handlers. Defaults to the
+    *   global one.
+    */
+  def gatewayInteractions(
       commands: CreatedApplicationCommand*
   )(
       clientId: String,
@@ -215,6 +215,21 @@ object InteractionsRegistrar {
     )
   }
 
+  /**
+    * Create or overwrite guild application commands.
+    * @param applicationId
+    *   The id of the application to handle the commands for.
+    * @param guildId
+    *   The guild to add or replace the guild application commands for.
+    * @param requests
+    *   An requests instance.
+    * @param replaceAll
+    *   If all existing commands should be removed in favor of these new ones.
+    * @param commands
+    *   The commands to add or replace.
+    * @return
+    *   The created commands.
+    */
   def createGuildCommands(
       applicationId: ApplicationId,
       guildId: GuildId,
@@ -238,6 +253,19 @@ object InteractionsRegistrar {
     }
   }
 
+  /**
+    * Create or overwrite global application commands.
+    * @param applicationId
+    *   The id of the application to handle the commands for.
+    * @param requests
+    *   An requests instance.
+    * @param replaceAll
+    *   If all existing commands should be removed in favor of these new ones.
+    * @param commands
+    *   The commands to add or replace.
+    * @return
+    *   The created commands.
+    */
   def createGlobalCommands(
       applicationId: ApplicationId,
       requests: Requests,
@@ -260,6 +288,22 @@ object InteractionsRegistrar {
     }
   }
 
+  /**
+    * Given a bunch of application commands, removes registered guild
+    * application commands with names not matching the names found in the passed
+    * in commands.
+    *
+    * @param applicationId
+    *   The id of the application to handle the commands for.
+    * @param guildId
+    *   The guild to remove the guild application commands from.
+    * @param requests
+    *   An requests instance.
+    * @param commands
+    *   The commands to validate against.
+    * @return
+    *   The removed commands.
+    */
   def removeUnknownGuildCommands(
       applicationId: ApplicationId,
       guildId: GuildId,
@@ -281,6 +325,20 @@ object InteractionsRegistrar {
     }
   }
 
+  /**
+    * Given a bunch of application commands, removes registered global
+    * application commands with names not matching the names found in the passed
+    * in commands.
+    *
+    * @param applicationId
+    *   The id of the application to handle the commands for.
+    * @param requests
+    *   An requests instance.
+    * @param commands
+    *   The commands to validate against.
+    * @return
+    *   The removed commands.
+    */
   def removeUnknownGlobalCommands(
       applicationId: ApplicationId,
       requests: Requests,

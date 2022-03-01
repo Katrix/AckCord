@@ -351,8 +351,7 @@ object APIMessage {
 
   /**
     * Sent to the client when a guild member is updated. The fields seen here
-    * are all the fields that can change. Looking at the users
-    * [[ackcord.data.GuildMember]] for changes is pointless.
+    * are all the fields that can change.
     * @param guild
     *   The guild of the guild member.
     * @param roles

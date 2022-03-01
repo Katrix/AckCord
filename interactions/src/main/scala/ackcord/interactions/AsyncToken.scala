@@ -25,6 +25,10 @@ package ackcord.interactions
 
 import ackcord.data.{SnowflakeType, Webhook}
 
+/**
+  * A type allowing providing evidence that an interaction response is being
+  * done async.
+  */
 sealed trait AsyncToken {
   def webhookId: SnowflakeType[Webhook]
   def webhookToken: String

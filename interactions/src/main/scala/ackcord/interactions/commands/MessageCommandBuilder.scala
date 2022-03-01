@@ -3,6 +3,9 @@ package ackcord.interactions.commands
 import ackcord.data.InteractionPartialMessage
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 
+/**
+  * A builder for message commands.
+  */
 class MessageCommandBuilder[Interaction[_]](
     val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],
@@ -22,6 +25,13 @@ class MessageCommandBuilder[Interaction[_]](
   override def defaultPermission(permission: Boolean): MessageCommandBuilder[Interaction] =
     new MessageCommandBuilder(permission, transformer, extra)
 
+  /**
+    * Create a new message command.
+    * @param name
+    *   The name of the command.
+    * @param handler
+    *   The handler for the command.
+    */
   def handle(name: String)(
       handler: Interaction[InteractionPartialMessage] => InteractionResponse
   ): MessageCommand[Interaction] =

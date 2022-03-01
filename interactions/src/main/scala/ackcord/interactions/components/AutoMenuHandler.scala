@@ -3,14 +3,24 @@ package ackcord.interactions.components
 import ackcord.interactions.{InteractionTransformer, MenuInteraction}
 import ackcord.requests.Requests
 
+/**
+  * An [[MenuHandler]] that registers itself when an instance of it is created.
+  * @param identifiers The identifiers of the menus this handler handles.
+  * @param interactionTransformer
+  *   A transformer to do base processing of the interaction before handling it.
+  * @param registeredComponents Where to register this handler to.
+  */
 abstract class AutoMenuHandler[Interaction <: MenuInteraction](
-    identifier: String,
+    identifiers: Seq[String],
     requests: Requests,
     interactionTransformer: InteractionTransformer[MenuInteraction, Interaction] =
       InteractionTransformer.identity[MenuInteraction],
-    registeredButtons: RegisteredComponents = GlobalRegisteredComponents
+    registeredComponents: RegisteredComponents = GlobalRegisteredComponents
 ) extends MenuHandler(requests, interactionTransformer) {
-  registeredButtons.addHandler(identifier, this)
+  identifiers.foreach(registeredComponents.addHandler(_, this))
 
-  def unregisterButtonHandler(): Unit = registeredButtons.removeHandler(this)
+  /**
+    * Unregister this handler.
+    */
+  def unregisterMenuHandler(): Unit = registeredComponents.removeHandler(this)
 }

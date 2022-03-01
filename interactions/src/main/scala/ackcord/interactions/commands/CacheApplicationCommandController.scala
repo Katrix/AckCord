@@ -29,6 +29,10 @@ import ackcord.requests.Requests
 import akka.NotUsed
 import cats.~>
 
+/**
+  * An application command controller that adds cache info the the interactions.
+  * Requires using the gateway to respond to interactions.
+  */
 class CacheApplicationCommandController(val requests: Requests)
     extends ApplicationCommandControllerBase[ResolvedCommandInteraction] {
 
@@ -55,6 +59,10 @@ class CacheApplicationCommandController(val requests: Requests)
       )
     )
 
+  /**
+    * A slash command builder that ensures that the interaction happens in a
+    * guild, and exposes info about this guild.
+    */
   val GuildCommand: SlashCommandBuilder[GuildCommandInteraction, NotUsed] = SlashCommand.andThen(
     DataInteractionTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
       Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
@@ -63,6 +71,10 @@ class CacheApplicationCommandController(val requests: Requests)
     )
   )
 
+  /**
+    * A slash command builder that ensures that the user executing the
+    * interaction is in a voice channel.
+    */
   val GuildVoiceCommand: SlashCommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
     DataInteractionTransformer.inVoiceChannel(voiceChannel =>
       Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>

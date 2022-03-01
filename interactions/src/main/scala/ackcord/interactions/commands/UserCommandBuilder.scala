@@ -3,6 +3,9 @@ package ackcord.interactions.commands
 import ackcord.data.{InteractionRawGuildMember, User}
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 
+/**
+  * A builder for user commands.
+  */
 class UserCommandBuilder[Interaction[_]](
     val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],
@@ -22,6 +25,13 @@ class UserCommandBuilder[Interaction[_]](
   override def defaultPermission(permission: Boolean): UserCommandBuilder[Interaction] =
     new UserCommandBuilder(permission, transformer, extra)
 
+  /**
+    * Create a new user command.
+    * @param name
+    *   The name of the command.
+    * @param handler
+    *   The handler for the command.
+    */
   def handle(name: String)(
       handler: Interaction[(User, Option[InteractionRawGuildMember])] => InteractionResponse
   ): UserCommand[Interaction] =

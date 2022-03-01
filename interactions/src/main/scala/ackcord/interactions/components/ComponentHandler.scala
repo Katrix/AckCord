@@ -12,6 +12,13 @@ import ackcord.requests.Requests
 import ackcord.{CacheSnapshot, OptFuture}
 import cats.syntax.either._
 
+/**
+  * A type handling some sort of component interaction.
+  * @param interactionTransformer
+  *   A transformer to do base processing of the interaction before handling it.
+  * @param acceptedComponent
+  *   The accepted component types this component handler handles.
+  */
 abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, InteractionTpe <: BaseInteraction](
     val requests: Requests,
     interactionTransformer: InteractionTransformer[BaseInteraction, InteractionTpe] =
@@ -19,12 +26,22 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
     acceptedComponent: ComponentType
 ) extends InteractionHandlerOps {
 
+  /**
+    * Respond with a promise that you'll handle the interaction later. Stops showing the loading icon.
+    * @param handle The handler for later.
+    */
   def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
     InteractionResponse.UpdateMessageLater(() => handle(AsyncToken.fromInteraction(interaction)))
 
-  def acknowledgeLoading: InteractionResponse =
-    InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
+  //TODO: Determine of this should be exposed or not
+  //def acknowledgeLoading: InteractionResponse =
+  //  InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
 
+  /**
+    * Handle the interaction here.
+    * @param interaction The interaction to handle.
+    * @return A response to the interaction.
+    */
   def handle(implicit interaction: InteractionTpe): InteractionResponse
 
   protected def makeBaseInteraction(

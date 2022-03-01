@@ -26,6 +26,7 @@ package ackcord.interactions.commands
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 import akka.NotUsed
 
+/** A slash command builder. */
 class SlashCommandBuilder[Interaction[_], A](
     val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],
@@ -33,36 +34,59 @@ class SlashCommandBuilder[Interaction[_], A](
     val extra: Map[String, String]
 ) extends CommandBuilder[Interaction, A] {
 
-  def withTransformer[NewTo[_]](
+  override def withTransformer[NewTo[_]](
       transformer: DataInteractionTransformer[CommandInteraction, NewTo]
   ): SlashCommandBuilder[NewTo, A] =
     new SlashCommandBuilder(defaultPermission, transformer, implParamList, extra)
 
-  def andThen[To2[_]](nextTransformer: DataInteractionTransformer[Interaction, To2]): SlashCommandBuilder[To2, A] =
+  override def andThen[To2[_]](
+      nextTransformer: DataInteractionTransformer[Interaction, To2]
+  ): SlashCommandBuilder[To2, A] =
     withTransformer(this.transformer.andThen(nextTransformer))
 
+  /** The parameter list of this command. */
   def paramList: Option[ParamList[A]] = implParamList.toOption
 
+  /** Sets the parameters to use for this command. */
   def withParams[NewA](paramList: ParamList[NewA]): SlashCommandBuilder[Interaction, NewA] = {
     require(paramList.foldRight(0)((_, acc) => acc + 1) <= 25, "Too many parameters. The maximum is 25")
     new SlashCommandBuilder(defaultPermission, transformer, Right(paramList), extra)
   }
 
+  /** Removes the parameters of the command builder. */
   def withNoParams: SlashCommandBuilder[Interaction, NotUsed] =
     new SlashCommandBuilder(defaultPermission, transformer, Left(implicitly), extra)
 
-  def withExtra(extra: Map[String, String]): SlashCommandBuilder[Interaction, A] =
+  override def withExtra(extra: Map[String, String]): SlashCommandBuilder[Interaction, A] =
     new SlashCommandBuilder(defaultPermission, transformer, implParamList, extra)
 
   //Only effective top level
-  def defaultPermission(permission: Boolean): SlashCommandBuilder[Interaction, A] =
+  override def defaultPermission(permission: Boolean): SlashCommandBuilder[Interaction, A] =
     new SlashCommandBuilder(permission, transformer, implParamList, extra)
 
+  /**
+    * Create a slash command group.
+    * @param name
+    *   Name of the group
+    * @param description
+    *   Description of the group.
+    * @param subcommands
+    *   Subcommands of the group.
+    */
   def group(name: String, description: String)(subcommands: SlashCommandOrGroup*): SlashCommandGroup = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     SlashCommandGroup(name, Some(description), defaultPermission, extra, subcommands)
   }
 
+  /**
+    * Create a slash command.
+    * @param name
+    *   Name of the slash command.
+    * @param description
+    *   Description of the slash command.
+    * @param handle
+    *   A handler for the slash command.
+    */
   def command(name: String, description: String)(
       handle: Interaction[A] => InteractionResponse
   ): SlashCommand[Interaction, A] = {
@@ -70,6 +94,7 @@ class SlashCommandBuilder[Interaction[_], A](
     SlashCommand(name, Some(description), defaultPermission, extra, implParamList, transformer, handle)
   }
 
+  /** Sets the name and description of the created slash command. */
   def named(name: String, description: String): NamedSlashCommandBuilder[Interaction, A] = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     new NamedSlashCommandBuilder(name, description, defaultPermission, transformer, implParamList, extra)
@@ -110,6 +135,11 @@ class NamedSlashCommandBuilder[Interaction[_], A](
   override def defaultPermission(permission: Boolean): NamedSlashCommandBuilder[Interaction, A] =
     new NamedSlashCommandBuilder(name, description, permission, transformer, implParamList, extra)
 
+  /**
+    * Create a slash command.
+    * @param handler
+    *   A handler for the slash command.
+    */
   def handle(handler: Interaction[A] => InteractionResponse): SlashCommand[Interaction, A] =
     SlashCommand(name, Some(description), defaultPermission, extra, implParamList, transformer, handler)
 }
