@@ -216,8 +216,8 @@ case class ExecuteWebhookData(
     "Please use unique filenames for all files"
   )
   Verifier.requireLength(content, "Content", max = 4000)
-  Verifier.requireLength(embeds, "Embeds", max = 10)
-  Verifier.requireLength(components, "Components", max = 5)
+  Verifier.requireLengthS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthOS(components, "Components", max = 5)
 }
 object ExecuteWebhookData {
 
@@ -317,9 +317,9 @@ case class EditWebhookMessageData(
     files.forall(files => files.map(_.fileName).distinct.lengthCompare(files.length) == 0),
     "Please use unique filenames for all files"
   )
-  Verifier.requireLength(content, "Content", max = 4000)
-  Verifier.requireLength(embeds, "Embeds", max = 10)
-  Verifier.requireLength(components, "Components", max = 5)
+  Verifier.requireLengthJO(content, "Content", max = 4000)
+  Verifier.requireLengthJOS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthJOS(components, "Components", max = 5)
 }
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>

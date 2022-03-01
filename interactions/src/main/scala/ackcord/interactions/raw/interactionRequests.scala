@@ -39,7 +39,7 @@ case class CreateCommandData(
     `type`: Option[ApplicationCommandType]
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  Verifier.requireLength(description, "Command description", max = 100)
+  Verifier.requireLengthO(description, "Command description", max = 100)
   require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
 
 }
@@ -63,7 +63,7 @@ case class PatchCommandData(
     defaultPermission: JsonOption[Boolean] = JsonUndefined
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  Verifier.requireLength(description, "Command description", min = 1, max = 100)
+  Verifier.requireLengthJO(description, "Command description", min = 1, max = 100)
   require(name.forall(_.matches("""^[\w-]{1,32}$""")), "Name is invalid")
 }
 object PatchCommandData {
@@ -190,7 +190,7 @@ case class GetApplicationCommandPermissions(applicationId: ApplicationId, guildI
 }
 
 case class EditCommandPermissionsData(permissions: Seq[ApplicationCommandPermissions]) {
-  Verifier.requireLength(permissions, "Command permission overrides", max = 10)
+  Verifier.requireLengthS(permissions, "Command permission overrides", max = 10)
 }
 
 case class EditApplicationCommandPermissions(
@@ -208,7 +208,7 @@ case class EditApplicationCommandPermissions(
 }
 
 case class BatchEditCommandPermissionsData(id: CommandId, permissions: Seq[ApplicationCommandPermissions]) {
-  Verifier.requireLength(permissions, "Command permission overrides", max = 10)
+  Verifier.requireLengthS(permissions, "Command permission overrides", max = 10)
 }
 
 case class BatchEditApplicationCommandPermissions(

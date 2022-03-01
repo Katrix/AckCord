@@ -116,7 +116,7 @@ trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceRespons
   def reason: Option[String]
 
   override def extraHeaders: Seq[HttpHeader] = {
-    Verifier.requireLength(reason, "Audit log request reason", max = 512)
+    Verifier.requireLengthO(reason, "Audit log request reason", max = 512)
     reason.fold[Seq[HttpHeader]](Nil)(str => Seq(`X-Audit-Log-Reason`(str)))
   }
 }

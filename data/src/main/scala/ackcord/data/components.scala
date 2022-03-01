@@ -108,7 +108,7 @@ case class TextButton(
     emoji: Option[PartialEmoji] = None,
     disabled: Option[Boolean] = None
 ) extends Button {
-  Verifier.requireLength(label, "Label", max = 80)
+  Verifier.requireLengthO(label, "Label", max = 80)
   Verifier.requireLength(identifier, "Identifier", max = 100)
   require(label.isDefined || emoji.isDefined, "Label or emoji must be defined")
 
@@ -133,7 +133,7 @@ case class LinkButton(
     urlLink: String,
     disabled: Option[Boolean] = None
 ) extends Button {
-  Verifier.requireLength(label, "Label", max = 80)
+  Verifier.requireLengthO(label, "Label", max = 80)
   require(label.isDefined || emoji.isDefined, "Label or emoji must be defined")
   Verifier.requireLength(urlLink, "Url", max = 512)
 
@@ -177,8 +177,8 @@ case class SelectMenu(
     disabled: Boolean = false
 ) extends ActionRowContent {
   Verifier.requireLength(customId, "Custom id", max = 100)
-  Verifier.requireLength(options, "Options", max = 25)
-  Verifier.requireLength(placeholder, "Placeholder", max = 100)
+  Verifier.requireLengthS(options, "Options", max = 25)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
   Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
@@ -194,7 +194,7 @@ case class SelectOption(
 ) {
   Verifier.requireLength(label, "Select option label", max = 100)
   Verifier.requireLength(value, "Select option value", max = 100)
-  Verifier.requireLength(description, "Select option description", max = 100)
+  Verifier.requireLengthO(description, "Select option description", max = 100)
 }
 object SelectOption {
   def of(

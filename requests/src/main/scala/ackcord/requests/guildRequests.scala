@@ -247,7 +247,7 @@ case class CreateGuildChannelData(
     nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
   Verifier.requireLength(name, "Channel name", min = 2, max = 100)
-  Verifier.requireRange(rateLimitPerUser, "Rate limit per user", max = 21600)
+  Verifier.requireRangeJO(rateLimitPerUser, "Rate limit per user", max = 21600)
 }
 object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>

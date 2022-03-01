@@ -91,11 +91,11 @@ case class ModifyChannelData(
     invitable: JsonOption[Boolean] = JsonUndefined,
     autoArchiveDuration: JsonOption[Int] = JsonUndefined
 ) {
-  Verifier.requireLength(name, "Name", min = 2, max = 100)
-  Verifier.requireLength(topic, "Topic", max = 1024)
-  Verifier.requireRange(bitrate, "Bitrate", min = 8000, max = 100)
-  Verifier.requireRange(userLimit, "User limit", min = 2, max = 128000)
-  Verifier.requireRange(rateLimitPerUser, "Rate limit per user", max = 21600)
+  Verifier.requireLengthJO(name, "Name", min = 2, max = 100)
+  Verifier.requireLengthJO(topic, "Topic", max = 1024)
+  Verifier.requireRangeJO(bitrate, "Bitrate", min = 8000, max = 100)
+  Verifier.requireRangeJO(userLimit, "User limit", min = 2, max = 128000)
+  Verifier.requireRangeJO(rateLimitPerUser, "Rate limit per user", max = 21600)
   require(tpe.forall(Seq(ChannelType.GuildNews, ChannelType.GuildText).contains))
   require(
     autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
@@ -178,7 +178,7 @@ case class GetChannelMessagesData(
     limit: Option[Int] = None
 ) {
   require(Seq(around, before, after).count(_.isDefined) <= 1, "The around, before, after fields are mutually exclusive")
-  Verifier.requireRange(limit, "Limit", min = 1, max = 100)
+  Verifier.requireRangeO(limit, "Limit", min = 1, max = 100)
 
   def toMap: Map[String, String] =
     Map(
@@ -317,10 +317,10 @@ case class CreateMessageData(
     "Please use unique filenames for all files"
   )
   Verifier.requireLength(content, "Content", max = 4000)
-  Verifier.requireLength(embeds, "Embeds", max = 10)
-  Verifier.requireLength(components, "Components", max = 5)
-  Verifier.requireLength(nonce.flatMap(_.left.toOption), "Nonce", max = 25)
-  Verifier.requireLength(stickerIds, "StickerIds", max = 3)
+  Verifier.requireLengthS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthS(components, "Components", max = 5)
+  Verifier.requireLengthO(nonce.flatMap(_.left.toOption), "Nonce", max = 25)
+  Verifier.requireLengthS(stickerIds, "StickerIds", max = 3)
 }
 object CreateMessageData {
 
@@ -488,9 +488,9 @@ case class EditMessageData(
     components: JsonOption[Seq[ActionRow]] = JsonUndefined,
     attachments: JsonOption[Seq[PartialAttachment]] = JsonUndefined
 ) {
-  Verifier.requireLength(content, "Content", max = 2000)
-  Verifier.requireLength(embeds, "Embeds", max = 10)
-  Verifier.requireLength(components, "Components", max = 5)
+  Verifier.requireLengthJO(content, "Content", max = 2000)
+  Verifier.requireLengthJOS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthJOS(components, "Components", max = 5)
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
@@ -571,7 +571,7 @@ case class DeleteMessage(
 
 /** @param messages All the messages to delete. */
 case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
-  Verifier.requireLength(messages, "Message ids", min = 2, max = 100)
+  Verifier.requireLengthS(messages, "Message ids", min = 2, max = 100)
 }
 
 /**

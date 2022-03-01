@@ -888,9 +888,9 @@ case class OutgoingEmbed(
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
 ) {
-  Verifier.requireLength(title, "Embed title", max = 256)
-  Verifier.requireLength(title, "Embed description", max = 4096)
-  Verifier.requireLength(fields, "Embed fields", max = 25)
+  Verifier.requireLengthO(title, "Embed title", max = 256)
+  Verifier.requireLengthO(title, "Embed description", max = 4096)
+  Verifier.requireLengthS(fields, "Embed fields", max = 25)
   require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
 
   /** The total amount of characters in this embed so far. */

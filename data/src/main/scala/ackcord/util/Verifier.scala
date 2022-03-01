@@ -29,7 +29,7 @@ object Verifier {
     * @param max
     *   The maximum length.
     */
-  def requireLength(value: Option[String], name: String, min: Int = -1, max: Int = -1): Unit = {
+  def requireLengthO(value: Option[String], name: String, min: Int = -1, max: Int = -1): Unit = {
     if (min > 0) require(value.forall(stringLength(_) >= min), s"$name must be $min chars or more")
     if (max > 0) require(value.forall(stringLength(_) <= max), s"$name must be $max chars or less")
   }
@@ -45,8 +45,8 @@ object Verifier {
     * @param max
     *   The maximum length.
     */
-  def requireLength(value: JsonOption[String], name: String, min: Int = -1, max: Int = -1): Unit =
-    requireLength(value.toOption, name, min, max)
+  def requireLengthJO(value: JsonOption[String], name: String, min: Int = -1, max: Int = -1): Unit =
+    requireLengthO(value.toOption, name, min, max)
 
   /**
     * Verifies the length of a sequence.
@@ -59,7 +59,7 @@ object Verifier {
     * @param max
     *   The maximum length.
     */
-  def requireLength(seq: Seq[_], name: String, min: Int = -1, max: Int = -1): Unit = {
+  def requireLengthS(seq: Seq[_], name: String, min: Int = -1, max: Int = -1): Unit = {
     if (min > 0) require(seq.length >= min, s"$name must be of length $min or more")
     if (max > 0) require(seq.length <= max, s"$name must be of length $max or less")
   }
@@ -75,7 +75,7 @@ object Verifier {
     * @param max
     *   The maximum length.
     */
-  def requireLength(seq: Option[Seq[_]], name: String, min: Int = -1, max: Int = -1)(
+  def requireLengthOS(seq: Option[Seq[_]], name: String, min: Int = -1, max: Int = -1)(
       implicit dummyImplicit: DummyImplicit
   ): Unit = {
     if (min > 0) require(seq.forall(_.length >= min), s"$name must be of length $min or more")
@@ -93,10 +93,10 @@ object Verifier {
     * @param max
     *   The maximum length.
     */
-  def requireLength(seq: JsonOption[Seq[_]], name: String, min: Int = -1, max: Int = -1)(
+  def requireLengthJOS(seq: JsonOption[Seq[_]], name: String, min: Int = -1, max: Int = -1)(
       implicit dummyImplicit: DummyImplicit
   ): Unit =
-    requireLength(seq.toOption, name, min, max)
+    requireLengthOS(seq.toOption, name, min, max)
 
   /** Gets the length of a string in code points */
   def stringLength(s: String): Int = s.codePointCount(0, s.length - 1)
@@ -128,7 +128,7 @@ object Verifier {
     * @param max
     *   The maximum value.
     */
-  def requireRange(i: Option[Int], name: String, min: Int = -1, max: Int = -1): Unit = {
+  def requireRangeO(i: Option[Int], name: String, min: Int = -1, max: Int = -1): Unit = {
     if (min > 0) require(i.forall(_ >= min), s"$name must be $min or more")
     if (max > 0) require(i.forall(_ <= max), s"$name must be $max or less")
   }
@@ -144,6 +144,6 @@ object Verifier {
     * @param max
     *   The maximum value.
     */
-  def requireRange(i: JsonOption[Int], name: String, min: Int = -1, max: Int = -1): Unit =
-    requireRange(i.toOption, name, min, max)
+  def requireRangeJO(i: JsonOption[Int], name: String, min: Int = -1, max: Int = -1): Unit =
+    requireRangeO(i.toOption, name, min, max)
 }

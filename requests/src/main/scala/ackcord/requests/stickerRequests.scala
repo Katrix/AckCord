@@ -73,12 +73,12 @@ case class ModifyGuildStickerData(
     description: JsonOption[String],
     tags: JsonOption[String]
 ) {
-  Verifier.requireLength(name, "Sticker name", min = 2, max = 30)
+  Verifier.requireLengthJO(name, "Sticker name", min = 2, max = 30)
   require(
     description.forall(d => d.isEmpty || (d.length >= 2 && d.length <= 100)),
     "Invalid length for sticker description"
   )
-  Verifier.requireLength(tags, "Sticker tags", min = 2, max = 30)
+  Verifier.requireLengthJO(tags, "Sticker tags", min = 2, max = 30)
 }
 object ModifyGuildStickerData {
   implicit val encoder: Encoder[ModifyGuildStickerData] = (a: ModifyGuildStickerData) =>

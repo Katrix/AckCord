@@ -75,7 +75,7 @@ case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseReque
   */
 case class CreateGuildTemplateData(name: String, description: JsonOption[String] = JsonUndefined) {
   Verifier.requireLength(name, "Name", min = 1, max = 100)
-  Verifier.requireLength(description, "Description", max = 120)
+  Verifier.requireLengthJO(description, "Description", max = 120)
 }
 
 /** Create a guild template for the guild. */
@@ -112,8 +112,8 @@ case class ModifyGuildTemplateData(
     name: JsonOption[String] = JsonUndefined,
     description: JsonOption[String] = JsonUndefined
 ) {
-  Verifier.requireLength(name, "Name", min = 1, max = 100)
-  Verifier.requireLength(description, "Description", max = 120)
+  Verifier.requireLengthJO(name, "Name", min = 1, max = 100)
+  Verifier.requireLengthJO(description, "Description", max = 120)
 }
 
 /** Modify the info around a guild template. */
