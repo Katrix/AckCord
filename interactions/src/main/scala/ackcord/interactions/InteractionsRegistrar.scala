@@ -86,7 +86,7 @@ object InteractionsRegistrar {
       case InteractionType.Unknown(i) => Left(Some(s"Unknown interaction type $i"))
     }
 
-  def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
+  private def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
       case InteractionResponse.Acknowledge(andThenDo)        => () => andThenDo().map(_ => ())
       case InteractionResponse.UpdateMessageLater(andThenDo) => () => andThenDo().map(_ => ())
@@ -95,6 +95,7 @@ object InteractionsRegistrar {
       case _                                                 => () => OptFuture.unit
     }
 
+  /*
   def webFlow(
       commands: CreatedApplicationCommand*
   )(
@@ -180,6 +181,7 @@ object InteractionsRegistrar {
         }
     )
   }
+   */
 
   def gatewayInteractions[Mat](
       commands: CreatedApplicationCommand*
