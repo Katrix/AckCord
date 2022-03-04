@@ -208,7 +208,8 @@ case class ExecuteWebhookData(
     embeds: Seq[OutgoingEmbed] = Nil,
     allowedMentions: Option[AllowedMention] = None,
     components: Option[Seq[ActionRow]] = None,
-    attachments: Option[Seq[PartialAttachment]] = None
+    attachments: Option[Seq[PartialAttachment]] = None,
+    flags: Option[MessageFlags] = None
 ) {
   files.foreach(file => require(file.isValid))
   require(
