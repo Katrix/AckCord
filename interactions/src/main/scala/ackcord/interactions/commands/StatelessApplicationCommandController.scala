@@ -26,6 +26,10 @@ package ackcord.interactions.commands
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
 import ackcord.requests.Requests
 
+/**
+  * An application command controller that does not require extra state in the
+  * form of a gateway connection.
+  */
 class StatelessApplicationCommandController(val requests: Requests)
     extends ApplicationCommandControllerBase[StatelessCommandInteraction] {
 

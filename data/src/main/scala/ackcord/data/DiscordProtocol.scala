@@ -29,7 +29,7 @@ import scala.util.Try
 
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome}
+import ackcord.util.{JsonOption, JsonSome, Verifier}
 import cats.instances.either._
 import cats.instances.option._
 import cats.syntax.all._
@@ -273,8 +273,8 @@ trait DiscordProtocol {
 
   implicit val buttonDecoder: Decoder[Button] = (c: HCursor) => {
     c.as[RawButton].map { button =>
-      val buttonValid = (button.label.isDefined || button.emoji.isDefined) && button.label
-        .forall(_.length <= 80) && button.customId.forall(_.length <= 100)
+      val buttonValid = (button.label.isDefined || button.emoji.isDefined) &&
+        button.label.forall(Verifier.stringLength(_) <= 80) && button.customId.forall(Verifier.stringLength(_) <= 100)
 
       if (buttonValid) {
         val asTextButton = button.customId
@@ -570,6 +570,7 @@ trait DiscordProtocol {
       case "hoist"                         => mkChange(AuditLogChange.Hoist)
       case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
       case "id"                            => mkChange(AuditLogChange.Id)
+      case "invitable"                     => mkChange(AuditLogChange.Invitable)
       case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
       case "location"                      => mkChange(AuditLogChange.Location)
       case "locked"                        => mkChange(AuditLogChange.Locked)
@@ -715,7 +716,8 @@ trait DiscordProtocol {
 
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
-      (c: HCursor) => c.as[ApplicationComponentInteractionData]
+      (c: HCursor) =>
+        c.as[ApplicationComponentInteractionData]
           .orElse(c.as[ApplicationCommandInteractionData])
           .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
       {

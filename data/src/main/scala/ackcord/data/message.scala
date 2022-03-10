@@ -30,7 +30,7 @@ import scala.collection.immutable
 import scala.util.Try
 
 import ackcord.CacheSnapshot
-import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
+import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown, Verifier}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
 
 sealed trait ImageFormat {
@@ -780,8 +780,8 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
   *   If the field is rendered inline.
   */
 case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = None) {
-  require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
-  require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
+  Verifier.requireLength(name, "Embed field name", max = 256)
+  Verifier.requireLength(value, "Embed field value", max = 1024)
 }
 
 /**
@@ -888,18 +888,18 @@ case class OutgoingEmbed(
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
 ) {
-  require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
-  require(description.forall(_.length <= 4096), "The description of an embed can't be longer than 2048 characters")
-  require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
+  Verifier.requireLengthO(title, "Embed title", max = 256)
+  Verifier.requireLengthO(title, "Embed description", max = 4096)
+  Verifier.requireLengthS(fields, "Embed fields", max = 25)
   require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
 
   /** The total amount of characters in this embed so far. */
   def totalCharAmount: Int = {
-    val fromTitle       = title.fold(0)(_.length)
-    val fromDescription = description.fold(0)(_.length)
-    val fromFooter      = footer.fold(0)(_.text.length)
-    val fromAuthor      = author.fold(0)(_.name.length)
-    val fromFields      = fields.map(f => f.name.length + f.value.length).sum
+    val fromTitle       = title.fold(0)(Verifier.stringLength)
+    val fromDescription = description.fold(0)(Verifier.stringLength)
+    val fromFooter      = footer.fold(0)(f => Verifier.stringLength(f.text))
+    val fromAuthor      = author.fold(0)(a => Verifier.stringLength(a.name))
+    val fromFields      = fields.map(f => Verifier.stringLength(f.name) + Verifier.stringLength(f.value)).sum
 
     fromTitle + fromDescription + fromFooter + fromAuthor + fromFields
   }
@@ -936,7 +936,7 @@ case class OutgoingEmbedVideo(url: String)
   *   The icon to show besides the author.
   */
 case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None) {
-  require(name.length <= 256, "The author name of an embed can't have more than 256 characters")
+  Verifier.requireLength(name, "Embed author name", max = 256)
 }
 
 /**
@@ -947,7 +947,7 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
   *   The icon url of the footer.
   */
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
-  require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
+  Verifier.requireLength(text, "Embed footer text", max = 2048)
 }
 
 /**

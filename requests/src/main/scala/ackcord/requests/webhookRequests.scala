@@ -29,7 +29,7 @@ import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw.RawMessage
-import ackcord.util.{JsonOption, JsonUndefined}
+import ackcord.util.{JsonOption, JsonUndefined, Verifier}
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, ResponseEntity}
@@ -43,7 +43,7 @@ import io.circe.syntax._
   *   The avatar data of the webhook
   */
 case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
-  require(name.length >= 2 && name.length <= 32, "Webhook name must be between 2 and 32 characters")
+  Verifier.requireLength(name, "Webhook name", min = 2, max = 32)
 }
 
 /** Create a new webhook in a channel. */
@@ -216,9 +216,9 @@ case class ExecuteWebhookData(
     files.map(_.fileName).distinct.lengthCompare(files.length) == 0,
     "Please use unique filenames for all files"
   )
-  require(content.length <= 4000, "The content of a message can't exceed 4000 characters")
-  require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
-  require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
+  Verifier.requireLength(content, "Content", max = 4000)
+  Verifier.requireLengthS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthOS(components, "Components", max = 5)
 }
 object ExecuteWebhookData {
 
@@ -318,9 +318,9 @@ case class EditWebhookMessageData(
     files.forall(files => files.map(_.fileName).distinct.lengthCompare(files.length) == 0),
     "Please use unique filenames for all files"
   )
-  require(content.forall(_.length <= 4000), "The content of a message can't exceed 4000 characters")
-  require(embeds.forall(_.size <= 10), "Can't send more than 10 embeds with a webhook message")
-  require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
+  Verifier.requireLengthJO(content, "Content", max = 4000)
+  Verifier.requireLengthJOS(embeds, "Embeds", max = 10)
+  Verifier.requireLengthJOS(components, "Components", max = 5)
 }
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>

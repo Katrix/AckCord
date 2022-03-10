@@ -4,7 +4,7 @@ import java.util.UUID
 
 import scala.collection.immutable
 
-import ackcord.util.IntCirceEnumWithUnknown
+import ackcord.util.{IntCirceEnumWithUnknown, Verifier}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 
 sealed trait Component {
@@ -108,8 +108,8 @@ case class TextButton(
     emoji: Option[PartialEmoji] = None,
     disabled: Option[Boolean] = None
 ) extends Button {
-  require(label.forall(_.length <= 80), "Label must be 80 chars or less")
-  require(identifier.length <= 100, "Identifier must be 100 chars or less")
+  Verifier.requireLengthO(label, "Label", max = 80)
+  Verifier.requireLength(identifier, "Identifier", max = 100)
   require(label.isDefined || emoji.isDefined, "Label or emoji must be defined")
 
   override def url: Option[String] = None
@@ -133,9 +133,9 @@ case class LinkButton(
     urlLink: String,
     disabled: Option[Boolean] = None
 ) extends Button {
-  require(label.forall(_.length <= 80), "Label must be 80 chars or less")
+  Verifier.requireLengthO(label, "Label", max = 80)
   require(label.isDefined || emoji.isDefined, "Label or emoji must be defined")
-  require(urlLink.length <= 512, "Url length must be 512 chars or less")
+  Verifier.requireLength(urlLink, "Url", max = 512)
 
   override def customId: Option[String] = None
 
@@ -176,12 +176,11 @@ case class SelectMenu(
     maxValues: Int = 1,
     disabled: Boolean = false
 ) extends ActionRowContent {
-  require(customId.length <= 100, "Custom id too long")
-  require(options.length <= 25, "Too many options")
-  require(placeholder.forall(_.length <= 100), "Placeholder too long")
-  require(minValues >= 0, "Min values negative")
-  require(minValues <= 25, "Too high min values")
-  require(maxValues <= 25, "Too high max values")
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  Verifier.requireLengthS(options, "Options", max = 25)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
+  Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
+  Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
   override def tpe: ComponentType = ComponentType.SelectMenu
 }
@@ -193,9 +192,9 @@ case class SelectOption(
     emoji: Option[PartialEmoji] = None,
     default: Boolean = false
 ) {
-  require(label.length <= 100, "Select option label too long")
-  require(value.length <= 100, "Select option value too long")
-  require(description.forall(_.length <= 100), "Select option description too long")
+  Verifier.requireLength(label, "Select option label", max = 100)
+  Verifier.requireLength(value, "Select option value", max = 100)
+  Verifier.requireLengthO(description, "Select option description", max = 100)
 }
 object SelectOption {
   def of(

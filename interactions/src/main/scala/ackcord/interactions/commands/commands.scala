@@ -27,25 +27,38 @@ import java.util.Locale
 
 import ackcord.data._
 import ackcord.interactions._
-import ackcord.{CacheSnapshot, OptFuture, data}
+import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
 import cats.syntax.either._
 
+/** An application command created in AckCord. */
 sealed trait CreatedApplicationCommand {
+
+  /** Name of the application command. */
   def name: String
+
+  /** Description of the application command. */
   def description: Option[String]
+
   def defaultPermission: Boolean
 
+  /** Extra info associated with the command. */
   def extra: Map[String, String]
 
+  /**
+    * Convert the parameters of this command into [[ApplicationCommandOption]]
+    * s.
+    */
   def makeCommandOptions: Seq[ApplicationCommandOption]
 
+  /** Handle an interaction with the application command. */
   def handleRaw(
       clientId: String,
       rawInteraction: RawInteraction,
       cacheSnapshot: Option[CacheSnapshot]
   ): InteractionResponse
 
+  /** The application command type. */
   def commandType: ApplicationCommandType
 }
 object CreatedApplicationCommand {
@@ -103,7 +116,10 @@ object CreatedApplicationCommand {
 }
 
 sealed trait SlashCommandOrGroup extends CreatedApplicationCommand {
+
+  /** Convert this command to an [[ApplicationCommandOption]]. */
   def toCommandOption: ApplicationCommandOption
+
   override def commandType: ApplicationCommandType = ApplicationCommandType.ChatInput
 }
 

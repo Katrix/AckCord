@@ -304,6 +304,7 @@ object DataInteractionTransformer {
       }
     }
 
+  /** Ensures that the executor of the interaction is in a voice channel. */
   def inVoiceChannel[I[A] <: GuildInteraction, O[_]](
       create: VoiceGuildChannel => I ~> O
   ): DataInteractionTransformer[I, O] = new DataInteractionTransformer[I, O] {
@@ -429,6 +430,7 @@ object InteractionTransformer {
       DataInteractionTransformer.onlyInGuild[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
+  /** Ensures that the executor of the interaction is in a voice channel. */
   def inVoiceChannel[I <: GuildInteraction, O](
       create: VoiceGuildChannel => I => O
   ): InteractionTransformer[I, O] =
@@ -468,6 +470,8 @@ sealed trait InteractionResponse {
 }
 object InteractionResponse {
   sealed trait AsyncMessageable extends InteractionResponse {
+
+    /** Do something extra async after sending the response. */
     def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse
   }
 
