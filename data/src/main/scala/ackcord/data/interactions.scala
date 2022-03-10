@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 import scala.collection.immutable
 
 import ackcord.data.raw.{RawGuildMember, RawMessage, RawRole, RawThreadMetadata}
-import ackcord.util.IntCirceEnumWithUnknown
+import ackcord.util.{IntCirceEnumWithUnknown, Verifier}
 import cats.syntax.either._
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe._
@@ -57,6 +57,7 @@ object InteractionResponseType extends IntCirceEnumWithUnknown[InteractionRespon
   case object DeferredUpdateMessage                extends InteractionResponseType(6)
   case object UpdateMessage                        extends InteractionResponseType(7)
   case object ApplicationCommandAutocompleteResult extends InteractionResponseType(8)
+  case object Modal                                extends InteractionResponseType(9)
   case class Unknown(i: Int)                       extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
@@ -318,6 +319,18 @@ case class InteractionCallbackDataMessage(
     components: Option[Seq[ActionRow]] = None,
     attachments: Option[Seq[PartialAttachment]] = None
 ) extends InteractionCallbackData
+
+case class InteractionCallbackDataModal(
+    customId: String,
+    title: String,
+    components: Option[Seq[ActionRow]] = None
+) extends InteractionCallbackData {
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  require(
+    components.isDefined && (components.get.nonEmpty && components.get.length <= 5),
+    "You can only specify 1-5 (inclusive) components."
+  )
+}
 
 case class InteractionCallbackDataAutocomplete(choices: Seq[ApplicationCommandOptionChoice])
     extends InteractionCallbackData

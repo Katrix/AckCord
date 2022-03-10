@@ -461,6 +461,8 @@ sealed trait InteractionResponse {
       RawInteractionResponse(InteractionResponseType.UpdateMessage, Some(data))
     case InteractionResponse.ChannelMessage(message, _) =>
       RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
+    case InteractionResponse.ModalMessage(message) =>
+      RawInteractionResponse(InteractionResponseType.Modal, Some(message))
     case InteractionResponse.Autocomplete(choices) =>
       RawInteractionResponse(
         InteractionResponseType.ApplicationCommandAutocompleteResult,
@@ -497,6 +499,8 @@ object InteractionResponse {
     def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: Interaction): ChannelMessage =
       copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
+
+  case class ModalMessage(message: InteractionCallbackDataModal) extends InteractionResponse
 
   private[interactions] case class Autocomplete(choices: Seq[ApplicationCommandOptionChoice])
       extends InteractionResponse
