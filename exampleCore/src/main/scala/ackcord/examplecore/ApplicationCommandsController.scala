@@ -27,9 +27,10 @@ import scala.util.Try
 
 import ackcord.JsonSome
 import ackcord.data.raw.RawRole
-import ackcord.data.{AllowedMention, InteractionChannel, InteractionGuildMember, UserId}
-import ackcord.interactions.ResolvedCommandInteraction
+import ackcord.data.{ActionRow, AllowedMention, Button, InteractionChannel, InteractionGuildMember, UserId}
 import ackcord.interactions.commands._
+import ackcord.interactions.components._
+import ackcord.interactions.{ComponentInteraction, InteractionResponse, ResolvedCommandInteraction}
 import ackcord.requests.Requests
 import akka.NotUsed
 import cats.Id
@@ -40,6 +41,32 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
     SlashCommand.command("ping", "Check if the bot is alive") { _ =>
       sendMessage("Pong")
     }
+
+  val yesOrNo: SlashCommand[ResolvedCommandInteraction, NotUsed] =
+    SlashCommand
+      .command("yesorno", "Yes or No?") { implicit i =>
+        async { implicit t =>
+          sendAsyncMessage(
+            "Yes or No?",
+            components = Seq(
+              ActionRow.of(
+                Button
+                  .text("Yes", "Yes")
+                  .onClick(new AutoButtonHandler[ComponentInteraction](_, requests) {
+                    def handle(implicit interaction: ComponentInteraction): InteractionResponse =
+                      sendMessage("Yes indeed.")
+                  }),
+                Button
+                  .text("No", "No")
+                  .onClick(new AutoButtonHandler[ComponentInteraction](_, requests) {
+                    def handle(implicit interaction: ComponentInteraction): InteractionResponse =
+                      sendMessage("No indeed.")
+                  })
+              )
+            )
+          )
+        }
+      }
 
   val echo: SlashCommand[ResolvedCommandInteraction, String] =
     SlashCommand
