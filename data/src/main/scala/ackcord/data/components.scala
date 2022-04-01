@@ -19,8 +19,8 @@ case class ActionRow private (
   override def tpe: ComponentType = ComponentType.ActionRow
 
   def mapButtons(f: Button => Button): ActionRow = copy(components = components.map {
-    case button: Button     => f(button)
-    case menu: StringSelect => menu
+    case button: Button             => f(button)
+    case menu: InteractiveComponent => menu
   })
 
   def updateButton(identifier: String, f: TextButton => Button): ActionRow = copy(components = components.map {
