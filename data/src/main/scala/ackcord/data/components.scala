@@ -197,7 +197,7 @@ case class UserSelect(
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
   Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
-  override def tpe: ComponentType = ComponentType.ChannelSelect
+  override def tpe: ComponentType = ComponentType.UserSelect
 }
 
 case class RoleSelect(
@@ -212,7 +212,7 @@ case class RoleSelect(
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
   Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
-  override def tpe: ComponentType = ComponentType.ChannelSelect
+  override def tpe: ComponentType = ComponentType.RoleSelect
 }
 
 case class MentionableSelect(
@@ -227,7 +227,7 @@ case class MentionableSelect(
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
   Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
-  override def tpe: ComponentType = ComponentType.ChannelSelect
+  override def tpe: ComponentType = ComponentType.MentionableSelect
 }
 
 case class ChannelSelect(
