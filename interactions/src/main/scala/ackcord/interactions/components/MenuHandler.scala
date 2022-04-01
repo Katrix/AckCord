@@ -18,7 +18,7 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
 ) extends ComponentHandler[MenuInteraction, InteractionTpe](
       requests,
       interactionTransformer,
-      ComponentType.SelectMenu
+      ComponentType.StringSelect
     ) {
 
   override protected def makeBaseInteraction(

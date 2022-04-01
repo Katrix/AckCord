@@ -2,7 +2,7 @@ package ackcord.example
 
 import ackcord.Requests
 import ackcord.commands.{CommandController, NamedDescribedCommand, UserCommandMessage}
-import ackcord.data.{ActionRow, Button, SelectMenu, SelectOption}
+import ackcord.data.{ActionRow, Button, SelectOption, StringSelect}
 import ackcord.interactions.components._
 import ackcord.interactions.{ComponentInteraction, InteractionResponse, MenuInteraction}
 import ackcord.syntax._
@@ -38,7 +38,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
   val singleSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeSingleSelect") { _ =>
     Seq(
       ActionRow.of(
-        SelectMenu(
+        StringSelect(
           Seq(
             SelectOption.of("Foo", Some("1. option")),
             SelectOption("Bar", "bar", Some("2. option")),
@@ -56,7 +56,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
   val multiSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeMultiSelect") { _ =>
     Seq(
       ActionRow.of(
-        SelectMenu(
+        StringSelect(
           Seq(
             SelectOption.of("Foo", Some("1. option")),
             SelectOption("Bar", "bar", Some("2. option")),

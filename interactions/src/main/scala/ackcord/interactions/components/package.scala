@@ -1,6 +1,6 @@
 package ackcord.interactions
 
-import ackcord.data.{SelectMenu, TextButton}
+import ackcord.data.{StringSelect, TextButton}
 
 package object components {
 
@@ -29,7 +29,7 @@ package object components {
       (button, makeHandler(button.identifier))
   }
 
-  implicit class SelectMenuOps(private val menu: SelectMenu) extends AnyVal {
+  implicit class SelectMenuOps(private val menu: StringSelect) extends AnyVal {
 
     /**
       * Create a menu handler to be executed when an option is selected.
@@ -38,7 +38,7 @@ package object components {
       * @return
       *   The menu.
       */
-    def onSelect[A <: MenuInteraction](makeHandler: String => AutoMenuHandler[A]): SelectMenu =
+    def onSelect[A <: MenuInteraction](makeHandler: String => AutoMenuHandler[A]): StringSelect =
       onSelectBoth(makeHandler)._1
 
     /**
@@ -50,7 +50,7 @@ package object components {
       */
     def onSelectBoth[A <: MenuInteraction](
         makeHandler: String => MenuHandler[A]
-    ): (SelectMenu, MenuHandler[A]) =
+    ): (StringSelect, MenuHandler[A]) =
       (menu, makeHandler(menu.customId))
   }
 }

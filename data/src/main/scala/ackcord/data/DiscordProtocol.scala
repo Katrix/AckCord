@@ -294,25 +294,25 @@ trait DiscordProtocol {
   implicit val selectOptionCodec: Codec[SelectOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val selectMenuEncoder: Encoder[SelectMenu] = {
-    val base: Encoder[SelectMenu] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
-    (a: SelectMenu) => base(a).deepMerge(Json.obj("type" := a.tpe))
+  implicit val stringSelectEncoder: Encoder[StringSelect] = {
+    val base: Encoder[StringSelect] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    (a: StringSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
   }
 
-  implicit private val selectMenuDecoder: Decoder[SelectMenu] =
+  implicit private val stringSelectDecoder: Decoder[StringSelect] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
       c.get[ComponentType]("type").flatMap {
-        case ComponentType.Button      => c.as[Button]
-        case ComponentType.SelectMenu  => c.as[SelectMenu]
-        case ComponentType.ActionRow   => Left(DecodingFailure("Invalid component type ActionRow", c.history))
-        case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
+        case ComponentType.Button       => c.as[Button]
+        case ComponentType.StringSelect => c.as[StringSelect]
+        case ComponentType.ActionRow    => Left(DecodingFailure("Invalid component type ActionRow", c.history))
+        case ComponentType.Unknown(id)  => Left(DecodingFailure(s"Unknown component type $id", c.history))
       },
     {
-      case button: Button   => button.asJson
-      case menu: SelectMenu => menu.asJson
+      case button: Button     => button.asJson
+      case menu: StringSelect => menu.asJson
     }
   )
 
