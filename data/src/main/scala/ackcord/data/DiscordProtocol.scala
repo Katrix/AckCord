@@ -291,23 +291,53 @@ trait DiscordProtocol {
     }
   }
 
-  private def makeCodecForActionRowContent[T <: ActionRowContent]: Codec[T] = {
-    val base: Encoder[T] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
-
-    Codec.from(
-      derivation.deriveDecoder(derivation.renaming.snakeCase, false, None),
-      (a: T) => base(a).deepMerge(Json.obj("type" := a.tpe))
-    )
-  }
-
   implicit val selectOptionCodec: Codec[SelectOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val stringSelectCodec: Codec[StringSelect]           = makeCodecForActionRowContent
-  implicit val channelSelectCodec: Codec[ChannelSelect]         = makeCodecForActionRowContent
-  implicit val userSelectCodec: Codec[UserSelect]               = makeCodecForActionRowContent
-  implicit val roleSelectCodec: Codec[RoleSelect]               = makeCodecForActionRowContent
-  implicit val mentionableSelectCodec: Codec[MentionableSelect] = makeCodecForActionRowContent
+  implicit val stringSelectCodec: Codec[StringSelect] = {
+    val base: Codec[StringSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: StringSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val channelSelectCodec: Codec[ChannelSelect] = {
+    val base: Codec[ChannelSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: ChannelSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val userSelectCodec: Codec[UserSelect] = {
+    val base: Codec[UserSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: UserSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val roleSelectCodec: Codec[RoleSelect] = {
+    val base: Codec[RoleSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: RoleSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val mentionableSelectCodec: Codec[MentionableSelect] = {
+    val base: Codec[MentionableSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: MentionableSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
