@@ -291,28 +291,44 @@ trait DiscordProtocol {
     }
   }
 
+  private def makeCodecForActionRowContent[T <: ActionRowContent]: Codec[T] = {
+    val base: Encoder[T] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+
+    Codec.from(
+      derivation.deriveDecoder(derivation.renaming.snakeCase, false, None),
+      (a: T) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
   implicit val selectOptionCodec: Codec[SelectOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val stringSelectEncoder: Encoder[StringSelect] = {
-    val base: Encoder[StringSelect] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
-    (a: StringSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
-  }
-
-  implicit private val stringSelectDecoder: Decoder[StringSelect] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+  implicit val stringSelectCodec: Codec[StringSelect]           = makeCodecForActionRowContent
+  implicit val channelSelectCodec: Codec[ChannelSelect]         = makeCodecForActionRowContent
+  implicit val userSelectCodec: Codec[UserSelect]               = makeCodecForActionRowContent
+  implicit val roleSelectCodec: Codec[RoleSelect]               = makeCodecForActionRowContent
+  implicit val mentionableSelectCodec: Codec[MentionableSelect] = makeCodecForActionRowContent
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
       c.get[ComponentType]("type").flatMap {
-        case ComponentType.Button       => c.as[Button]
-        case ComponentType.StringSelect => c.as[StringSelect]
-        case ComponentType.ActionRow    => Left(DecodingFailure("Invalid component type ActionRow", c.history))
-        case ComponentType.Unknown(id)  => Left(DecodingFailure(s"Unknown component type $id", c.history))
+        case ComponentType.Button            => c.as[Button]
+        case ComponentType.StringSelect      => c.as[StringSelect]
+        case ComponentType.ChannelSelect     => c.as[ChannelSelect]
+        case ComponentType.UserSelect        => c.as[UserSelect]
+        case ComponentType.RoleSelect        => c.as[RoleSelect]
+        case ComponentType.MentionableSelect => c.as[MentionableSelect]
+        case ComponentType.InputText         => Left(DecodingFailure("Unhandled component type: InputText", c.history))
+        case ComponentType.ActionRow         => Left(DecodingFailure("Invalid component type ActionRow", c.history))
+        case ComponentType.Unknown(id)       => Left(DecodingFailure(s"Unknown component type $id", c.history))
       },
     {
-      case button: Button     => button.asJson
-      case menu: StringSelect => menu.asJson
+      case button: Button          => button.asJson
+      case menu: StringSelect      => menu.asJson
+      case menu: ChannelSelect     => menu.asJson
+      case menu: UserSelect        => menu.asJson
+      case menu: RoleSelect        => menu.asJson
+      case menu: MentionableSelect => menu.asJson
     }
   )
 

@@ -273,7 +273,7 @@ object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown
   case object ActionRow         extends ComponentType(1)
   case object Button            extends ComponentType(2)
   case object StringSelect      extends ComponentType(3)
-  case object InputSelect       extends ComponentType(4)
+  case object InputText         extends ComponentType(4)
   case object UserSelect        extends ComponentType(5)
   case object RoleSelect        extends ComponentType(6)
   case object MentionableSelect extends ComponentType(7)
