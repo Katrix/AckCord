@@ -29,15 +29,18 @@ case class ActionRow private (
   })
 }
 object ActionRow {
-  def ofUnsafe(components: Seq[ActionRowContent]) = new ActionRow(components)
-  def of(buttons: Button*): ActionRow             = new ActionRow(buttons)
-  def of(selectMenu: StringSelect): ActionRow     = new ActionRow(Seq(selectMenu))
+  def ofUnsafe(components: Seq[ActionRowContent])     = new ActionRow(components)
+  def of(buttons: Button*): ActionRow                 = new ActionRow(buttons)
+  def of(selectMenu: InteractiveComponent): ActionRow = new ActionRow(Seq(selectMenu))
 }
 
 sealed trait ActionRowContent extends Component
 
-sealed trait Button extends ActionRowContent {
+sealed trait InteractiveComponent extends ActionRowContent {
+  def customId: String
+}
 
+sealed trait Button extends ActionRowContent {
   def tpe: ComponentType = ComponentType.Button
 
   def label: Option[String]
@@ -175,7 +178,7 @@ case class StringSelect(
     minValues: Int = 1,
     maxValues: Int = 1,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthS(options, "Options", max = 25)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
@@ -191,7 +194,7 @@ case class UserSelect(
     minValues: Int = 1,
     maxValues: Int = 1,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
@@ -206,7 +209,7 @@ case class RoleSelect(
     minValues: Int = 1,
     maxValues: Int = 1,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
@@ -221,7 +224,7 @@ case class MentionableSelect(
     minValues: Int = 1,
     maxValues: Int = 1,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
@@ -237,7 +240,7 @@ case class ChannelSelect(
     maxValues: Int = 1,
     channelTypes: Option[Seq[ChannelType]] = None,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
