@@ -231,7 +231,8 @@ case class ApplicationCommandInteractionData(
 case class ApplicationComponentInteractionData(
     componentType: ComponentType,
     customId: String,
-    values: Option[Seq[String]]
+    values: Option[Seq[String]],
+    resolved: Option[ApplicationCommandInteractionDataResolved]
 )                                                        extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(data: Json) extends ApplicationInteractionData
 

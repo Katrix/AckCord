@@ -78,7 +78,9 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
         RoleSelect().onSelect(new AutoMenuHandler(_, requests) {
           override def handle(implicit interaction: MenuInteraction): InteractionResponse = {
             println(interaction.resolved)
-            sendMessage(s"Selected: ${interaction.values.mkString(", ")}")
+            sendMessage(
+              s"Selected: ${interaction.values.mkString(", ")}, resolved: ${interaction.resolved.map(_.roles)}"
+            )
           }
         })
       )
@@ -94,7 +96,9 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
         ).onSelect(new AutoMenuHandler(_, requests) {
           override def handle(implicit interaction: MenuInteraction): InteractionResponse = {
             println(interaction.resolved)
-            sendMessage(s"Selected: ${interaction.values.mkString(", ")}")
+            sendMessage(
+              s"Selected: ${interaction.values.mkString(", ")}, resolved: ${interaction.resolved.map(_.roles)}"
+            )
           }
         })
       )

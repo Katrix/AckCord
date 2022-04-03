@@ -63,7 +63,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       cacheSnapshot: Option[CacheSnapshot]
   ): Option[InteractionResponse] = {
     val isCorrectComponentType = interaction.data
-      .collect { case ApplicationComponentInteractionData(componentType, _, _) =>
+      .collect { case ApplicationComponentInteractionData(componentType, _, _, _) =>
         acceptedComponent.contains(componentType)
       }
       .exists(identity)
