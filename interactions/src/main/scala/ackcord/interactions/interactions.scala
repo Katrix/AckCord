@@ -500,7 +500,9 @@ object InteractionResponse {
       copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
 
-  case class ModalMessage(message: InteractionCallbackDataModal) extends InteractionResponse
+  case class ModalMessage(
+      message: InteractionCallbackDataModal
+  ) extends InteractionResponse
 
   private[interactions] case class Autocomplete(choices: Seq[ApplicationCommandOptionChoice])
       extends InteractionResponse

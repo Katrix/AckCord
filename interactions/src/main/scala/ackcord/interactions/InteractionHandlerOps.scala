@@ -23,6 +23,8 @@
  */
 package ackcord.interactions
 
+import java.util.UUID
+
 import scala.concurrent.ExecutionContext
 
 import ackcord.OptFuture
@@ -88,6 +90,28 @@ trait InteractionHandlerOps {
     ),
     () => OptFuture.unit
   )
+
+  def sendModal(): InteractionResponse = {
+    InteractionResponse.ModalMessage(
+      InteractionCallbackDataModal(
+        UUID.randomUUID().toString,
+        "Test Modal",
+        Seq(
+          ActionRow.ofInputs(
+            TextInput(
+              label = Some("Input 1")
+            )
+          ),
+          ActionRow.ofInputs(
+            TextInput(
+              label = Some("Input 2"),
+              style = TextInputStyle.Paragraph
+            )
+          )
+        )
+      )
+    )
+  }
 
   /**
     * Send a message as response to the interaction with embeds as the primary

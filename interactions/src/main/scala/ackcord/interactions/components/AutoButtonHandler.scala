@@ -18,4 +18,6 @@ abstract class AutoButtonHandler[Interaction <: ComponentInteraction](
     interactionTransformer: InteractionTransformer[ComponentInteraction, Interaction] =
       InteractionTransformer.identity[ComponentInteraction],
     registeredComponents: RegisteredComponents = GlobalRegisteredComponents
-) extends MultiAutoButtonHandler(Seq(identifier), requests, interactionTransformer, registeredComponents)
+) extends MultiAutoButtonHandler(Seq(identifier), requests, interactionTransformer, registeredComponents) {
+  registeredComponents.addHandler(identifier, this)
+}

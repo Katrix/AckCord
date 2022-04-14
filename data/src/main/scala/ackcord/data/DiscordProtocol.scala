@@ -302,17 +302,27 @@ trait DiscordProtocol {
   implicit private val selectMenuDecoder: Decoder[SelectMenu] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
+  implicit val textInputEncoder: Encoder[TextInput] = {
+    val base: Encoder[TextInput] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    (a: TextInput) => base(a).deepMerge(Json.obj("type" := a.tpe))
+  }
+
+  implicit private val textInputDecoder: Decoder[TextInput] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
       c.get[ComponentType]("type").flatMap {
         case ComponentType.Button      => c.as[Button]
         case ComponentType.SelectMenu  => c.as[SelectMenu]
+        case ComponentType.TextInput   => c.as[TextInput]
         case ComponentType.ActionRow   => Left(DecodingFailure("Invalid component type ActionRow", c.history))
         case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
       },
     {
-      case button: Button   => button.asJson
-      case menu: SelectMenu => menu.asJson
+      case button: Button       => button.asJson
+      case menu: SelectMenu     => menu.asJson
+      case textInput: TextInput => textInput.asJson
     }
   )
 
@@ -714,15 +724,20 @@ trait DiscordProtocol {
   implicit val applicationComponentInteractionDataCodec: Codec[ApplicationComponentInteractionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val applicationModalInteractionDataCodec: Codec[ApplicationModalInteractionData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
       (c: HCursor) =>
         c.as[ApplicationComponentInteractionData]
           .orElse(c.as[ApplicationCommandInteractionData])
+          .orElse(c.as[ApplicationModalInteractionData])
           .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
       {
         case a: ApplicationCommandInteractionData    => a.asJson
         case a: ApplicationComponentInteractionData  => a.asJson
+        case a: ApplicationModalInteractionData      => a.asJson
         case ApplicationUnknownInteractionData(data) => data
       }
     )
@@ -734,11 +749,15 @@ trait DiscordProtocol {
     (c: HCursor) => c.as[InteractionCallbackDataMessage].orElse(c.as[InteractionCallbackDataAutocomplete]),
     {
       case a: InteractionCallbackDataMessage      => a.asJson
+      case a: InteractionCallbackDataModal        => a.asJson
       case a: InteractionCallbackDataAutocomplete => a.asJson
     }
   )
 
   implicit val interactionCallbackDataMessageCodec: Codec[InteractionCallbackDataMessage] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionCallbackDataModalCodec: Codec[InteractionCallbackDataModal] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val interactionCallbackDataAutocompleteCodec: Codec[InteractionCallbackDataAutocomplete] =

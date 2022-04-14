@@ -70,6 +70,18 @@ object InteractionsRegistrar {
 
           case _ => Left(Some("None or invalid data sent for component execution"))
         }
+      case InteractionType.ModalSubmit =>
+        println(interaction.data)
+        interaction.data match {
+          case Some(data: ApplicationModalInteractionData) =>
+            registeredComponents
+              .handlerForIdentifier(data.customId)
+              .orElse(GlobalRegisteredComponents.handlerForIdentifier(data.customId))
+              .flatMap(_.handleRaw(clientId, interaction, data.customId, optCache))
+              .toRight(None)
+
+          case _ => Left(Some("None or invalid data sent for modal submit execution"))
+        }
 
       case InteractionType.Unknown(i) => Left(Some(s"Unknown interaction type $i"))
     }

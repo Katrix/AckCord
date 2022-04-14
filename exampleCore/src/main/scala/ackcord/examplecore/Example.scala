@@ -94,7 +94,8 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
         throw e
     }
 
-  private val shard          = context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
+  private val shard: ActorRef[DiscordShard.Command] =
+    context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
   private val ratelimitActor = context.spawn(RatelimiterActor(), "Ratelimiter")
 
   private val requests: Requests = {
@@ -144,6 +145,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   val allCommands = Seq(
     baseSlashCommands.ping,
     baseSlashCommands.yesOrNo,
+    baseSlashCommands.modal,
     baseSlashCommands.echo,
     baseSlashCommands.nudgeUser,
     baseSlashCommands.nudgeRole,
@@ -208,14 +210,14 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     InteractionsRegistrar
       .createGuildCommands(
         msg.applicationId,
-        GuildId("585454996800405509"),
+        GuildId("859206873349881947"),
         requests,
         replaceAll = true,
         allCommands: _*
       )
       .onComplete(println)
 
-    InteractionsRegistrar.createGlobalCommands(msg.applicationId, requests, replaceAll = true).onComplete(println)
+//    InteractionsRegistrar.createGlobalCommands(msg.applicationId, requests, replaceAll = true).onComplete(println)
 
     SupervisionStreams
       .logAndContinue(

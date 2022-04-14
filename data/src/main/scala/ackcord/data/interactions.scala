@@ -24,6 +24,7 @@
 package ackcord.data
 
 import java.time.OffsetDateTime
+import java.util.UUID
 
 import scala.collection.immutable
 
@@ -42,6 +43,7 @@ object InteractionType extends IntCirceEnumWithUnknown[InteractionType] {
   case object ApplicationCommand             extends InteractionType(2)
   case object MessageComponent               extends InteractionType(3)
   case object ApplicationCommandAutocomplete extends InteractionType(4)
+  case object ModalSubmit                    extends InteractionType(5)
   case class Unknown(i: Int)                 extends InteractionType(i)
 
   override def createUnknown(value: Int): InteractionType = Unknown(value)
@@ -233,6 +235,10 @@ case class ApplicationComponentInteractionData(
     componentType: ComponentType,
     customId: String,
     values: Option[Seq[String]]
+) extends ApplicationInteractionData
+case class ApplicationModalInteractionData(
+    customId: String,
+    components: Seq[ActionRow]
 )                                                        extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(data: Json) extends ApplicationInteractionData
 
@@ -319,19 +325,21 @@ case class InteractionCallbackDataMessage(
     components: Option[Seq[ActionRow]] = None,
     attachments: Option[Seq[PartialAttachment]] = None
 ) extends InteractionCallbackData
-
 case class InteractionCallbackDataModal(
     customId: String,
     title: String,
-    components: Option[Seq[ActionRow]] = None
+    components: Seq[ActionRow]
 ) extends InteractionCallbackData {
   Verifier.requireLength(customId, "Custom id", max = 100)
   require(
-    components.isDefined && (components.get.nonEmpty && components.get.length <= 5),
+    components.nonEmpty && components.flatMap(_.components).nonEmpty && components.map(_.components).length <= 5,
     "You can only specify 1-5 (inclusive) components."
   )
+  require(
+    components.forall(_.components.forall(_.tpe == ComponentType.TextInput)),
+    "Modal components must be text inputs (Type 4)."
+  )
 }
-
 case class InteractionCallbackDataAutocomplete(choices: Seq[ApplicationCommandOptionChoice])
     extends InteractionCallbackData
 

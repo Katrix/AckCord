@@ -68,6 +68,12 @@ class ApplicationCommandsController(requests: Requests) extends CacheApplication
         }
       }
 
+  val modal: SlashCommand[ResolvedCommandInteraction, NotUsed] =
+    SlashCommand
+      .command("modal", "Modal") { implicit i =>
+        sendModal()
+      }
+
   val echo: SlashCommand[ResolvedCommandInteraction, String] =
     SlashCommand
       .withParams(string("message", "The message to send back"))

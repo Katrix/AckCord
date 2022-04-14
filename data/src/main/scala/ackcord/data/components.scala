@@ -29,15 +29,17 @@ case class ActionRow private (
   })
 }
 object ActionRow {
-  def ofUnsafe(components: Seq[ActionRowContent]) = new ActionRow(components)
-  def of(buttons: Button*): ActionRow             = new ActionRow(buttons)
-  def of(selectMenu: SelectMenu): ActionRow       = new ActionRow(Seq(selectMenu))
+  def ofUnsafe(components: Seq[ActionRowContent])  = new ActionRow(components)
+  def of(buttons: Button*): ActionRow              = new ActionRow(buttons)
+  def of(selectMenu: SelectMenu): ActionRow        = new ActionRow(Seq(selectMenu))
+  def ofInputs(inputs: InputComponent*): ActionRow = new ActionRow(inputs)
 }
 
 sealed trait ActionRowContent extends Component
 
-sealed trait Button extends ActionRowContent {
+sealed trait InputComponent extends ActionRowContent
 
+sealed trait Button extends ActionRowContent {
   def tpe: ComponentType = ComponentType.Button
 
   def label: Option[String]
@@ -168,6 +170,18 @@ object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[But
   override def createUnknown(value: Int): ButtonStyle = Unknown(value)
 }
 
+sealed abstract class TextInputStyle(val value: Int) extends IntEnumEntry
+object TextInputStyle extends IntEnum[TextInputStyle] with IntCirceEnumWithUnknown[TextInputStyle] {
+  override def values: immutable.IndexedSeq[TextInputStyle] = findValues
+
+  case object Short     extends TextInputStyle(1)
+  case object Paragraph extends TextInputStyle(2)
+
+  case class Unknown(id: Int) extends TextInputStyle(id)
+
+  override def createUnknown(value: Int): TextInputStyle = Unknown(value)
+}
+
 case class SelectMenu(
     options: Seq[SelectOption],
     placeholder: Option[String] = None,
@@ -205,6 +219,25 @@ object SelectOption {
   ): SelectOption = new SelectOption(content, content, description, emoji, default)
 }
 
+case class TextInput(
+    customId: String = UUID.randomUUID().toString,
+    style: TextInputStyle = TextInputStyle.Short,
+    label: Option[String],
+    minLength: Option[Int] = None,
+    maxLength: Option[Int] = None,
+    required: Boolean = true,
+    value: Option[String] = None,
+    placeholder: Option[String] = None
+) extends InputComponent {
+  Verifier.requireLengthO(label, "TextInput label", max = 45)
+  Verifier.requireRangeO(minLength, "TextInput minLength", min = 0, max = 4000)
+  Verifier.requireRangeO(maxLength, "TextInput maxLength", min = 1, max = 4000)
+  Verifier.requireLengthO(value, "TextInput value", max = 4000)
+  Verifier.requireLengthO(placeholder, "TextInput placeholder", max = 100)
+
+  override def tpe: ComponentType = ComponentType.TextInput
+}
+
 sealed abstract class ComponentType(val value: Int) extends IntEnumEntry
 object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown[ComponentType] {
   override def values: immutable.IndexedSeq[ComponentType] = findValues
@@ -212,6 +245,7 @@ object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown
   case object ActionRow  extends ComponentType(1)
   case object Button     extends ComponentType(2)
   case object SelectMenu extends ComponentType(3)
+  case object TextInput  extends ComponentType(4)
 
   case class Unknown(id: Int) extends ComponentType(id)
 
