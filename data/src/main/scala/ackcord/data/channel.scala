@@ -187,23 +187,6 @@ sealed trait GuildChannel extends Channel with GetGuild {
 /** A texual channel in a guild */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   override def id: TextGuildChannelId
-
-  /** The topic for this channel. */
-  def topic: Option[String]
-
-  /**
-    * The amount of time a user has to wait before sending messages after each
-    * other. Bots are not affected.
-    */
-  def rateLimitPerUser: Option[Int]
-
-  /** When the last pinned message was pinned. */
-  def lastPinTimestamp: Option[OffsetDateTime]
-
-  /**
-    * The default for when a newly created thread is auto archived in minutes.
-    */
-  def defaultAutoArchiveDuration: Option[Int]
 }
 
 /**
@@ -266,11 +249,11 @@ case class ThreadGuildChannel(
 ) extends TextGuildChannel {
   def parentId: Option[TextGuildChannelId] = Some(parentChannelId)
 
-  override def topic: Option[String] = None
+  def topic: Option[String] = None
 
-  override def lastPinTimestamp: Option[OffsetDateTime] = None
+  def lastPinTimestamp: Option[OffsetDateTime] = None
 
-  override def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
+  def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
 
   override def position: Int = -1
 
@@ -297,7 +280,7 @@ sealed trait VoiceGuildChannel extends GuildChannel {
   def rtcRegion: Option[String]
 }
 
-sealed trait VoiceWithTextGuildChannel extends VoiceGuildChannel with TextChannel {
+sealed trait VoiceWithTextGuildChannel extends VoiceGuildChannel with TextGuildChannel {
   override def id: VoiceWithTextGuildChannelId
 }
 
