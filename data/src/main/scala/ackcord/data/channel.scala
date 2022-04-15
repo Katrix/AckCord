@@ -143,7 +143,6 @@ case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends C
 
 /** A text channel that has text messages */
 sealed trait TextChannel extends Channel {
-
   override def id: TextChannelId
 
   /**
@@ -187,7 +186,6 @@ sealed trait GuildChannel extends Channel with GetGuild {
 
 /** A texual channel in a guild */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
-
   override def id: TextGuildChannelId
 
   /** The topic for this channel. */
@@ -299,6 +297,10 @@ sealed trait VoiceGuildChannel extends GuildChannel {
   def rtcRegion: Option[String]
 }
 
+sealed trait VoiceWithTextGuildChannel extends VoiceGuildChannel with TextChannel {
+  override def id: VoiceWithTextGuildChannelId
+}
+
 /**
   * A voice channel in a guild
   * @param userLimit
@@ -310,6 +312,7 @@ case class NormalVoiceGuildChannel(
     id: SnowflakeType[NormalVoiceGuildChannel],
     guildId: GuildId,
     name: String,
+    lastMessageId: Option[MessageId],
     position: Int,
     permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     bitrate: Int,
@@ -318,7 +321,7 @@ case class NormalVoiceGuildChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     rtcRegion: Option[String],
     videoQualityMode: VideoQualityMode
-) extends VoiceGuildChannel {
+) extends VoiceWithTextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
 
