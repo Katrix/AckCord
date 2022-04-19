@@ -187,6 +187,12 @@ sealed trait GuildChannel extends Channel with GetGuild {
 /** A texual channel in a guild */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   override def id: TextGuildChannelId
+
+  /**
+    * The amount of time a user has to wait before sending messages after each
+    * other. Bots are not affected.
+    */
+  def rateLimitPerUser: Option[Int]
 }
 
 /**
