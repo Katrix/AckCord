@@ -35,9 +35,12 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
   def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
     InteractionResponse.UpdateMessageLater(() => handle(AsyncToken.fromInteraction(interaction)))
 
-  //TODO: Determine of this should be exposed or not
-  //def acknowledgeLoading: InteractionResponse =
-  //  InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
+  /**
+    * A response with a promise that you'll handle the interaction later. You
+    * are yourself responsible for fulfilling that promise.
+    */
+  def acknowledgeLoading: InteractionResponse =
+    InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
 
   /**
     * Handle the interaction here.
