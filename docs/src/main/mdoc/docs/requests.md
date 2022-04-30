@@ -26,7 +26,7 @@ import ackcord.syntax._
 
 client.onEventSideEffects { implicit c => 
   {
-    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _) =>
+    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _, _) =>
       //There is also CreateMessage.mkContent for this specific pattern
       val constructManually = CreateMessage(channel.id, CreateMessageData(content = "Hello World"))
       val usingSyntax = channel.sendMessage(content = "Hello World")
@@ -46,7 +46,7 @@ to use `DiscordClient#onEventAsync` and `ActionBuilder#asyncOpt` instead.
 ```scala mdoc:silent
 client.onEventAsync { implicit c => 
   {
-    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _) =>
+    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _, _) =>
       client.requestsHelper.run(channel.sendMessage(content = "Hello World")).map(_ => ())
   }
 }
@@ -58,11 +58,11 @@ The `RequestsHelper` object also contains lots of small helpers to deal with
 ```scala mdoc:silent
 client.onEventAsync { implicit c => 
   {
-    case APIMessage.ChannelCreate(_, channel, _) =>
+    case msg: APIMessage.ChannelCreate =>
       import client.requestsHelper._
       for {
         //optionPure lifts an Option into the dsl
-        guildChannel <- optionPure(channel.asGuildChannel)
+        guildChannel <- optionPure(msg.channel.asGuildChannel)
         guild        <- optionPure(guildChannel.guild)
         //runOption runs an Option[Request].
         msg          <- runOption(guild.textChannels.headOption.map(_.sendMessage("FIRST")))

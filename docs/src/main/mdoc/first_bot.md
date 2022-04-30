@@ -50,7 +50,7 @@ val client = Await.result(clientSettings.createClient(), Duration.Inf)
 //import client.executionContext 
 
 client.onEventSideEffectsIgnore {
-  case APIMessage.Ready(_) => println("Now ready")
+  case _: APIMessage.Ready => println("Now ready")
 }
 
 //client.login()

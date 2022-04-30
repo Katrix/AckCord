@@ -38,7 +38,9 @@ one lying around.
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.Sink
-import ackcord.requests.Ratelimiter
+import akka.util.Timeout
+import scala.concurrent.duration._
+import ackcord.requests.{Ratelimiter, RatelimiterActor, RequestSettings}
 
 implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord")
 import system.executionContext
@@ -50,18 +52,28 @@ happened. The `RequestHelper` helps you make stuff happen. I'd recommend
 looking into the settings used when creating both the `Cache` and `RequestHelper` 
 if you want to fine tune your bot.
 ```scala mdoc:silent
-val cache = Cache.create()
-val ratelimiter = system.systemActorOf(Ratelimiter(), "Ratelimiter")
-val requests = new Requests(BotAuthentication(token), ratelimiter)
+val cache = Events.create()
+val ratelimitActor = system.systemActorOf(RatelimiterActor(), "Ratelimiter")
+val requests = {
+  implicit val timeout: Timeout = 2.minutes //For the ratelimiter
+  new Requests(
+    RequestSettings(
+      Some(BotAuthentication(token)),
+      Ratelimiter.ofActor(ratelimitActor)
+    )
+  )
+}
 ```
 
 Now that we have all the pieces we want, we can create our event listener. 
 In the low level API, events are represented as a `Source` you can materialize 
 as many times as you want.
 ```scala mdoc:silent
-cache.subscribeAPI.collect {
-  case APIMessage.Ready(c) => c
-}.to(Sink.foreach(_ => println("Now ready"))).run()
+cache
+  .subscribeAPI
+  .collectType[APIMessage.Ready]
+  .to(Sink.foreach(_ => println("Now ready")))
+  .run()
 ```
 
 Finally we can create our `GatewaySettings` and start the shard.
