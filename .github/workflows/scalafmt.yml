@@ -1,0 +1,23 @@
+name: Scalafmt Check
+
+on:
+  push:
+    paths:
+      - '**.scala'
+      - '**.sc'
+      - '**.sbt'
+  pull_request:
+    paths:
+      - '**.scala'
+      - '**.sc'
+      - '**.sbt'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check formatted
+        run: ./scalafmt --check --non-interactive
