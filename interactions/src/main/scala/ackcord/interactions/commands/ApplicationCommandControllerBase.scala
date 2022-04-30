@@ -38,7 +38,8 @@ trait ApplicationCommandControllerBase[BaseInteraction[A] <: CommandInteraction[
       description,
       None,
       None,
-      (name, str) => ApplicationCommandOptionChoiceString(name, str)
+      (name, str) => ApplicationCommandOptionChoiceString(name, str),
+      processAutoComplete = _.filter(_.nonEmpty)
     )
 
   /**

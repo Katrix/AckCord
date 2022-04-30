@@ -127,7 +127,8 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     maxValue: Option[Either[Int, Double]],
     makeOptionChoice: (String, Orig) => ApplicationCommandOptionChoice,
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A],
-    contramap: A => Orig
+    contramap: A => Orig,
+    processAutoComplete: Seq[Orig] => Seq[Orig]
 ) extends Param[Orig, A, F] {
   require(choices.nonEmpty && autocomplete.isEmpty || choices.isEmpty, "Can't use both autocomplete and static choices")
 
@@ -156,7 +157,7 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     * time as choices.
     */
   def withAutocomplete(complete: String => Seq[A]): ChoiceParam[Orig, A, F] =
-    copy(autocomplete = Some(complete.andThen(_.map(contramap))))
+    copy(autocomplete = Some(complete.andThen(_.map(contramap).distinct)))
   def noAutocomplete: ChoiceParam[Orig, A, F] = copy(autocomplete = None)
 
   override def imapWithResolve[B](
@@ -192,13 +193,15 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
   )
 }
 object ChoiceParam {
+  //noinspection ConvertibleToMethodValue
   private[interactions] def default[A](
       tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
       description: String,
       minValue: Option[Either[Int, Double]],
       maxValue: Option[Either[Int, Double]],
-      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice
+      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice,
+      processAutoComplete: Seq[A] => Seq[A] = identity[Seq[A]](_)
   ): ChoiceParam[A, A, Id] =
     ChoiceParam(
       tpe,
@@ -211,7 +214,8 @@ object ChoiceParam {
       maxValue,
       makeOptionChoice,
       (a, _) => Some(a),
-      identity
+      identity,
+      processAutoComplete
     )
 }
 
@@ -338,9 +342,9 @@ sealed trait ParamList[A] {
       completeFunction <- choiceParam.autocomplete
       option           <- dataOption
       if option.focused.contains(true)
-    } yield completeFunction(option.value.fold("")(_.toString)).map(orig =>
-      choiceParam.makeOptionChoice(orig.toString, orig)
-    )
+    } yield choiceParam
+      .processAutoComplete(choiceParam.processAutoComplete(completeFunction(option.value.fold("")(_.toString))))
+      .map(orig => choiceParam.makeOptionChoice(orig.toString, orig))
 
     res.toSeq.flatten
   }
