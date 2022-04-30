@@ -7,7 +7,7 @@ import ackcord.requests.Requests
   * An [[ButtonHandler]] that registers itself when an instance of it is
   * created.
   *
-  * @param identifier
+  * @param identifiers
   *   The identifiers of the buttons this handler handles.
   * @param interactionTransformer
   *   A transformer to do base processing of the interaction before handling it.
@@ -15,9 +15,14 @@ import ackcord.requests.Requests
   *   Where to register this handler to.
   */
 abstract class MultiAutoButtonHandler[Interaction <: ComponentInteraction](
-    identifier: Seq[String],
+    identifiers: Seq[String],
     requests: Requests,
     interactionTransformer: InteractionTransformer[ComponentInteraction, Interaction] =
       InteractionTransformer.identity[ComponentInteraction],
     registeredComponents: RegisteredComponents = GlobalRegisteredComponents
-) extends ButtonHandler(requests, interactionTransformer)
+) extends ButtonHandler(requests, interactionTransformer) {
+  identifiers.foreach(registeredComponents.addHandler(_, this))
+
+  /** Unregister this handler. */
+  def unregisterMenuHandler(): Unit = registeredComponents.removeHandler(this)
+}
