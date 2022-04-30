@@ -192,7 +192,7 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
   case object Mentionable
       extends ApplicationCommandOptionTypeE[UserOrRoleId](
         9,
-        json => decodeMention[UserOrRole](json).orElse(decodeMention[UserOrRole](json)),
+        json => decodeMention[UserOrRole](json),
         id => s"<@$id>".asJson
       ) //Let's just hope it's a user here
   case object Number extends ApplicationCommandOptionTypeE[Double](10, _.as[Double], _.asJson)
