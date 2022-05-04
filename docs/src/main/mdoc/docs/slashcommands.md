@@ -4,7 +4,8 @@ title: Slash Commands
 ---
 
 # {{page.title}}
-write a little sentence here.
+Slash Commands are the new way of interacting with Discord bots. AckCord comes
+with a built-in slash commands framework.
 
 ## Commands
 The simplest command you can make is a `/ping` command.
@@ -57,7 +58,9 @@ Async commands allow you to inform the user there will be a slight delay before 
 SlashCommand.command("async", "An async test command") { implicit i =>
     async(implicit token => sendAsyncMessage("Async message"))
 }
-
+```
+This will edit the message you've sent, after it has been received in Discord but will not show the user a loading message.
+```scala mdoc:silent
 // This command will show a loading message in discord, send a message and edit the original message (which would mark the end of the async interaction).
 SlashCommand
     .withParams(string("par1", "The first parameter") ~ string("par2", "The second parameter"))
@@ -109,17 +112,16 @@ InteractionsRegistrar.createGuildCommands(
 ```
 
 ## Registering commands with Ackcord
-When you have createad all your slash commands and registered them with discord you can register them with ackcord.
+When you have created all your slash commands and registered them with discord you can register them with ackcord.
 ```scala mdoc:silent
 val events = Events.create()
 
-events.interactions
-  .to(
-    InteractionsRegistrar.gatewayInteractions(
-        slashCommand1,
-        slashCommand2,
-        slashCommand3
-    )(appId, requests)
-  )
-  .run()
+events.subscribeAPI.collectType[APIMessage.Ready].runForeach { msg =>
+    SupervisionStreams
+      .logAndContinue(
+        events.interactions
+          .to(InteractionsRegistrar.gatewayInteractions(slashCommand1, slashCommand2, slashCommand3)(msg.applicationId.asString, requests))
+      )
+      .run()
+  }
 ```
