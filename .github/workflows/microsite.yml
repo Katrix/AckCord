@@ -1,10 +1,10 @@
 name: Make microsite
 
-on: create
+on: [create, workflow_dispatch]
 
 jobs:
   makeMicrosite:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == "workflow_dispatch")  }}
     runs-on: ubuntu-latest
 
     steps:
@@ -17,6 +17,14 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: sbt
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby
+        with:
+          ruby-version: 2.6.5
+
+      - name: Install Jekyll
+        run: gem install jekyll -v 4
 
       - name: Deploy microsite
         run: sbt docs/publishMicrosite
