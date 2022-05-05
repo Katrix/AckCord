@@ -29,6 +29,9 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
 import ackcord.data.{GuildId, VoiceGuildChannelId}
+import ackcord.interactions.InteractionsRegistrar
+import ackcord.interactions.commands.CreatedApplicationCommand
+import ackcord.interactions.components.RegisteredComponents
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.NotUsed
 import akka.actor.typed._
@@ -238,4 +241,19 @@ trait DiscordClient {
   /** Load a track using LavaPlayer. */
   def loadTrack(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] =
     LavaplayerHandler.loadItem(playerManager, identifier)
+
+  /** Listen for the specified commands from the gateway. */
+  def runGatewayCommands(clientId: String)(commands: CreatedApplicationCommand*): Unit = {
+    //Client automatically registers the global registered components
+    val dummyRegisteredComponents = new RegisteredComponents
+    events.interactions
+      .to(
+        InteractionsRegistrar.gatewayInteractions(commands: _*)(
+          clientId,
+          requests,
+          registeredComponents = dummyRegisteredComponents
+        )
+      )
+      .run()
+  }
 }

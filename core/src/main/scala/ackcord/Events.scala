@@ -96,9 +96,11 @@ case class Events(
 
   /** Exposes the command interactions sent to this bot. */
   def interactions: Source[(RawInteraction, Option[CacheSnapshot]), NotUsed] =
-    subscribeAPI
-      .collectType[APIMessage.InteractionCreate]
-      .map(e => e.rawInteraction -> Some(e.cache.current))
+    SupervisionStreams.logAndContinue(
+      subscribeAPI
+        .collectType[APIMessage.InteractionCreate]
+        .map(e => e.rawInteraction -> Some(e.cache.current))
+    )
 
   @deprecated("Use toGatewayPublish instead", since = "0.18.0")
   def sendGatewayPublish: Sink[GatewayMessage[Any], NotUsed] = toGatewayPublish

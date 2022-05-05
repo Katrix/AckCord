@@ -27,6 +27,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import ackcord.commands._
+import ackcord.interactions.InteractionsRegistrar
 import ackcord.requests.SupervisionStreams
 import akka.NotUsed
 import akka.actor.CoordinatedShutdown
@@ -49,6 +50,11 @@ class DiscordClientCore(
   )
 
   val requestsHelper: RequestsHelper = new RequestsHelper(requests)
+
+  onEventSideEffectsIgnore { case msg: APIMessage.Ready =>
+    //Register the global components register
+    InteractionsRegistrar.gatewayInteractions()(msg.applicationId.toString, requests)
+  }
 
   override def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
       implicit streamable: Streamable[G]

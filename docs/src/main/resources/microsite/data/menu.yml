@@ -11,7 +11,13 @@ options:
   - title: Making Requests
     url: docs/requests.html
 
-  - title: Commands
+  - title: Slash commands
+    url: docs/slashcommands.html
+
+  - title: Interactions
+    url: docs/interactions.html
+
+  - title: Old style commands
     url: docs/commands.html
 
   - title: Snowflake types

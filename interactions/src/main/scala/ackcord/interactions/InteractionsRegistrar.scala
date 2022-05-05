@@ -179,7 +179,7 @@ object InteractionsRegistrar {
     *   The client id.
     * @param requests
     *   An requests instance.
-    * @param registeredButtons
+    * @param registeredComponents
     *   Where to check for component interaction handlers. Defaults to the
     *   global one.
     */
@@ -188,7 +188,7 @@ object InteractionsRegistrar {
   )(
       clientId: String,
       requests: Requests,
-      registeredButtons: RegisteredComponents = GlobalRegisteredComponents,
+      registeredComponents: RegisteredComponents = GlobalRegisteredComponents,
       parallelism: Int = 4
   ): Sink[(RawInteraction, Option[CacheSnapshot]), NotUsed] = {
     import requests.system
@@ -198,7 +198,7 @@ object InteractionsRegistrar {
     SupervisionStreams.logAndContinue(
       Flow[(RawInteraction, Option[CacheSnapshot])]
         .mapConcat { case (interaction, optCache) =>
-          handleInteraction(clientId, commandsByName, registeredButtons, interaction, optCache)
+          handleInteraction(clientId, commandsByName, registeredComponents, interaction, optCache)
             .map(_ -> interaction)
             .toList
         }
