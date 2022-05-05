@@ -19,7 +19,7 @@ jobs:
           cache: sbt
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby
+        uses: ruby/setup-ruby@1.105.0
         with:
           ruby-version: 2.6.5
 
