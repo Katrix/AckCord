@@ -5,8 +5,8 @@ Unlike all the other modules, this one is also cross built for Scala.JS, meaning
 the client side of a webapp too.
 
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-data" % "0.17.1"
+libraryDependencies += "net.katsstuff" %% "ackcord-data" % "0.18.0"
 
 //Or for Scala.Js stuff
-libraryDependencies += "net.katsstuff" %%% "ackcord-data" % "0.17.1"
+libraryDependencies += "net.katsstuff" %%% "ackcord-data" % "0.18.0"
 ```

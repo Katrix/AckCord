@@ -5,5 +5,5 @@ gateway itself, passing it a Source and Sink to send and receive events. When do
 they can be. No cache, and no normalization.
 
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-gateway" % "0.17.1"
+libraryDependencies += "net.katsstuff" %% "ackcord-gateway" % "0.18.0"
 ```
