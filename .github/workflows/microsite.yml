@@ -26,7 +26,13 @@ jobs:
       - name: Install Jekyll
         run: gem install jekyll -v 4
 
-      - name: Deploy microsite
-        run: sbt docs/publishMicrosite
+      - name: Build microsite
+        run: sbt docs/makeMicrosite
+
+      - name: Push microsite
+        uses: s0/git-publish-subdir-action@v2.5.1
         env:
+          REPO: self
+          BRANCH: gh-pages
+          FOLDER: docs/target/site
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
