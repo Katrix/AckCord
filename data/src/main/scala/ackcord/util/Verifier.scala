@@ -99,7 +99,7 @@ object Verifier {
     requireLengthOS(seq.toOption, name, min, max)
 
   /** Gets the length of a string in code points */
-  def stringLength(s: String): Int = s.codePointCount(0, s.length - 1)
+  def stringLength(s: String): Int = s.codePointCount(0, 0.max(s.length - 1))
 
   /**
     * Verifies that a number is in a range..
