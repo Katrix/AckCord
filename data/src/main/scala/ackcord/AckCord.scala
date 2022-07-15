@@ -26,7 +26,7 @@ package ackcord
 object AckCord {
 
   /** Current version of AckCord */
-  val Version = "0.18.0"
+  val Version = "0.18.1"
 
   /** Current Discord API version in use */
   val DiscordApiVersion = "9"

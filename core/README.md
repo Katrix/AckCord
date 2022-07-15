@@ -5,5 +5,5 @@ instead of the raw one gotten from the Discord API. This module also exposes the
 which lets you handle events from different guilds separately.
 
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-core" % "0.18.0"
+libraryDependencies += "net.katsstuff" %% "ackcord-core" % "0.18.1"
 ```
