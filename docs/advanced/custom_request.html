@@ -67,13 +67,13 @@ encoder for the body, a decoder for the result, and the for the request to go to
 <span class="c1">//Or one of the already defined routes</span>
 <span class="k">val</span> <span class="nv">bar</span> <span class="k">=</span> <span class="n">guild</span> <span class="o">/</span> <span class="s">"bar"</span>
 <span class="c1">// bar: RouteFunction[ackcord.data.package.GuildId] = RouteFunction(</span>
-<span class="c1">//   route = scala.Function1$$Lambda$10210/0x00000008028ffbe8@4e5cc1d</span>
+<span class="c1">//   route = scala.Function1$$Lambda$11026/0x0000000802a1bad0@221f8343</span>
 <span class="c1">// )</span>
 
 <span class="c1">//If you have some parameter, you you the coresponding parameter type</span>
 <span class="k">val</span> <span class="nv">barUser</span> <span class="k">=</span> <span class="n">bar</span> <span class="o">/</span> <span class="n">userId</span>
 <span class="c1">// barUser: RouteFunction[(ackcord.data.package.GuildId, ackcord.data.package.UserId)] = RouteFunction(</span>
-<span class="c1">//   route = scala.Function2$$Lambda$9423/0x0000000802766380@5c48f5ba</span>
+<span class="c1">//   route = scala.Function2$$Lambda$10239/0x0000000802867878@75ffc972</span>
 <span class="c1">// )</span>
 
 <span class="k">case</span> <span class="k">class</span> <span class="nc">Bin</span><span class="o">(</span><span class="n">binName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
@@ -81,33 +81,33 @@ encoder for the body, a decoder for the result, and the for the request to go to
 <span class="c1">//If there is no parameter type for what you want, you can create it</span>
 <span class="c1">//In most cases you want minor parameters</span>
 <span class="k">val</span> <span class="nv">bin</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">MinorParameter</span><span class="o">[</span><span class="kt">Bin</span><span class="o">](</span><span class="s">"bin"</span><span class="o">,</span> <span class="nv">_</span><span class="o">.</span><span class="py">binName</span><span class="o">)</span>
-<span class="c1">// bin: MinorParameter[Bin] = ackcord.requests.Routes$MinorParameter@1a783913</span>
+<span class="c1">// bin: MinorParameter[Bin] = ackcord.requests.Routes$MinorParameter@4830fbb</span>
 
 <span class="c1">//Use it like any other parameter</span>
 <span class="k">val</span> <span class="nv">guildBin</span> <span class="k">=</span> <span class="n">guild</span> <span class="o">/</span> <span class="n">bin</span>
 <span class="c1">// guildBin: RouteFunction[(ackcord.data.package.GuildId, Bin)] = RouteFunction(</span>
-<span class="c1">//   route = scala.Function2$$Lambda$9423/0x0000000802766380@461c6156</span>
+<span class="c1">//   route = scala.Function2$$Lambda$10239/0x0000000802867878@5ef00cfc</span>
 <span class="c1">// )</span>
 
 <span class="c1">//Once you've defined the path of the requst, call toRequest with the method to </span>
 <span class="c1">//get a useable request route</span>
 <span class="k">val</span> <span class="nv">getGuildBin</span> <span class="k">=</span> <span class="nv">guildBin</span><span class="o">.</span><span class="py">toRequest</span><span class="o">(</span><span class="nc">GET</span><span class="o">)</span>
-<span class="c1">// getGuildBin: (ackcord.data.package.GuildId, Bin) =&gt; ackcord.requests.RequestRoute = shapeless.ops.FnFromProductInstances$$Lambda$10233/0x0000000802938b60@1d776827</span>
+<span class="c1">// getGuildBin: (ackcord.data.package.GuildId, Bin) =&gt; ackcord.requests.RequestRoute = shapeless.ops.FnFromProductInstances$$Lambda$11049/0x0000000802a58f30@42923e4e</span>
 
 <span class="c1">// Queries are also parameters</span>
 <span class="k">val</span> <span class="nv">height</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">QueryParameter</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="s">"height"</span><span class="o">,</span> <span class="nv">_</span><span class="o">.</span><span class="py">toString</span><span class="o">)</span>
-<span class="c1">// height: QueryParameter[Int] = ackcord.requests.Routes$QueryParameter@7036fd2c</span>
+<span class="c1">// height: QueryParameter[Int] = ackcord.requests.Routes$QueryParameter@363df0ff</span>
 
 <span class="c1">//Use +? to use a query parameter</span>
 <span class="k">val</span> <span class="nv">binWithHeight</span> <span class="k">=</span> <span class="n">guildBin</span> <span class="o">+?</span> <span class="n">height</span>
 <span class="c1">// binWithHeight: QueryRouteFunction[((ackcord.data.package.GuildId, Bin), Option[Int])] = QueryRouteFunction(</span>
-<span class="c1">//   route = scala.Function2$$Lambda$9423/0x0000000802766380@bc6eeec</span>
+<span class="c1">//   route = scala.Function2$$Lambda$10239/0x0000000802867878@6bb2613f</span>
 <span class="c1">// )</span>
 
 <span class="c1">//You can also define a query parameter inline with query</span>
 <span class="k">val</span> <span class="nv">binWithWidth</span> <span class="k">=</span> <span class="n">guildBin</span> <span class="o">+?</span> <span class="n">query</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="s">"width"</span><span class="o">,</span> <span class="nv">_</span><span class="o">.</span><span class="py">toString</span><span class="o">)</span>
 <span class="c1">// binWithWidth: QueryRouteFunction[((ackcord.data.package.GuildId, Bin), Option[Int])] = QueryRouteFunction(</span>
-<span class="c1">//   route = scala.Function2$$Lambda$9423/0x0000000802766380@7025afc3</span>
+<span class="c1">//   route = scala.Function2$$Lambda$10239/0x0000000802867878@2ed11407</span>
 <span class="c1">// )</span>
 </code></pre></div></div>
 
