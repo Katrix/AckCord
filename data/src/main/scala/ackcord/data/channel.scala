@@ -302,6 +302,7 @@ case class NormalVoiceGuildChannel(
     guildId: GuildId,
     name: String,
     lastMessageId: Option[MessageId],
+    rateLimitPerUser: Option[Int],
     position: Int,
     permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     bitrate: Int,

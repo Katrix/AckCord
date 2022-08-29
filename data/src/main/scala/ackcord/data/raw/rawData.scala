@@ -166,6 +166,8 @@ case class RawChannel(
             SnowflakeType(id),
             guildId,
             name,
+            lastMessageId,
+            rateLimitPerUser,
             position,
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
             bitrate,

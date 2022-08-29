@@ -30,11 +30,12 @@ import scala.util.control.NonFatal
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
-import ackcord.data.GuildId
+import ackcord.data._
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.interactions.InteractionsRegistrar
 import ackcord.requests.{BotAuthentication => _, Requests => _, _}
+import ackcord.syntax._
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
@@ -127,11 +128,27 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     )
   }
 
+  events.subscribe
+    .collect { case (event, _) => event }
+    .collectType[APIMessageCacheUpdate[_]]
+    .map(_.dispatch)
+    .map(_.event)
+    .runForeach { case r: GatewayEvent.Ready =>
+      println(r.data.value.getOrElse(sys.error("")).resumeGatewayUrl)
+    }
+
   events.subscribeAPI.runForeach {
     case mc: APIMessage.MessageCreate =>
       import ackcord.syntax._
       if (mc.message.content.startsWith("Msg")) {
         requests.singleIgnore(mc.message.createReaction("❌"))(Requests.RequestProperties.retry)
+      }
+    case channel: APIMessage.ChannelCreate =>
+      channel.channel match {
+        case channel: VoiceWithTextGuildChannel =>
+          println("Voice channel has been made!")
+          requests.singleIgnore(channel.sendMessage("Hello, world!"))(Requests.RequestProperties.retry)
+        case _ => ()
       }
     case _ =>
   }
