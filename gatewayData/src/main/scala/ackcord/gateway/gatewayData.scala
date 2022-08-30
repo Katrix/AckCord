@@ -368,6 +368,9 @@ object GatewayEvent {
     * @param shard
     *   The shard info, the first index is the shard id, while the second is the
     *   total amount of shards.
+    * @param resumeGatewayUrl
+    *   Session-Specific Gateway Resume URLs
+    *   https://discord.com/developers/docs/change-log#sessionspecific-gateway-resume-urls
     */
   case class ReadyData(
       v: Int,
@@ -375,7 +378,8 @@ object GatewayEvent {
       guilds: Seq[UnavailableGuild],
       sessionId: String,
       shard: Seq[Int],
-      application: ReadyApplication
+      application: ReadyApplication,
+      resumeGatewayUrl: String
   )
 
   /**

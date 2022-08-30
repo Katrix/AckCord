@@ -143,7 +143,6 @@ case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends C
 
 /** A text channel that has text messages */
 sealed trait TextChannel extends Channel {
-
   override def id: TextChannelId
 
   /**
@@ -185,19 +184,22 @@ sealed trait GuildChannel extends Channel with GetGuild {
     parentId.flatMap(c.getGuildChannel(guildId, _)).collect { case cat: GuildCategory => cat }
 }
 
-/** A texual channel in a guild */
+/** A textual channel in a guild */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
-
   override def id: TextGuildChannelId
-
-  /** The topic for this channel. */
-  def topic: Option[String]
 
   /**
     * The amount of time a user has to wait before sending messages after each
     * other. Bots are not affected.
     */
   def rateLimitPerUser: Option[Int]
+}
+
+sealed trait PrimaryTextGuildChannel extends TextGuildChannel {
+  override def id: PrimaryTextGuildChannelId
+
+  /** The topic for this channel. */
+  def topic: Option[String]
 
   /** When the last pinned message was pinned. */
   def lastPinTimestamp: Option[OffsetDateTime]
@@ -224,7 +226,7 @@ case class NewsTextGuildChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
     defaultAutoArchiveDuration: Option[Int]
-) extends TextGuildChannel {
+) extends PrimaryTextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildNews
 
   def rateLimitPerUser: Option[Int] = None
@@ -244,7 +246,7 @@ case class NormalTextGuildChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
     defaultAutoArchiveDuration: Option[Int]
-) extends TextGuildChannel {
+) extends PrimaryTextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
 
@@ -265,7 +267,7 @@ case class ThreadGuildChannel(
     locked: Boolean,
     invitable: Option[Boolean],
     member: Option[ThreadMember]
-) extends TextGuildChannel {
+) extends PrimaryTextGuildChannel {
   def parentId: Option[TextGuildChannelId] = Some(parentChannelId)
 
   override def topic: Option[String] = None
@@ -289,7 +291,6 @@ case class ThreadMember(
 )
 
 sealed trait VoiceGuildChannel extends GuildChannel {
-
   override def id: VoiceGuildChannelId
 
   /** The bitrate of this channel in bits */
@@ -310,6 +311,8 @@ case class NormalVoiceGuildChannel(
     id: SnowflakeType[NormalVoiceGuildChannel],
     guildId: GuildId,
     name: String,
+    lastMessageId: Option[MessageId],
+    rateLimitPerUser: Option[Int],
     position: Int,
     permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     bitrate: Int,
@@ -318,7 +321,8 @@ case class NormalVoiceGuildChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     rtcRegion: Option[String],
     videoQualityMode: VideoQualityMode
-) extends VoiceGuildChannel {
+) extends VoiceGuildChannel
+    with TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
 

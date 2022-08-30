@@ -144,6 +144,23 @@ package object data {
       c.getGuildChannel(guildId, channelId).collect { case ch: TextGuildChannel => ch }
   }
 
+  type PrimaryTextGuildChannelId = SnowflakeType[PrimaryTextGuildChannel]
+  object PrimaryTextGuildChannelId extends SnowflakeCompanion[PrimaryTextGuildChannel]
+
+  implicit class PrimaryTextGuildChannelIdSyntax(private val channelId: PrimaryTextGuildChannelId) extends AnyVal {
+
+    /**
+      * Resolve the channel represented by this id. If a guild id is know,
+      * prefer the method taking a guild id instead.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[PrimaryTextGuildChannel] =
+      c.getGuildChannel(channelId).collect { case ch: PrimaryTextGuildChannel => ch }
+
+    /** Resolve the channel represented by this id relative to a guild id. */
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TextGuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect { case ch: TextGuildChannel => ch }
+  }
+
   type ThreadGuildChannelId = SnowflakeType[ThreadGuildChannel]
   object ThreadGuildChannelId extends SnowflakeCompanion[ThreadGuildChannel]
 
