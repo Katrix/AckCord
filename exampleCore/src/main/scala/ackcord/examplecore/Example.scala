@@ -145,7 +145,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       }
     case channel: APIMessage.ChannelCreate =>
       channel.channel match {
-        case channel: VoiceWithTextGuildChannel =>
+        case channel: NormalVoiceGuildChannel =>
           println("Voice channel has been made!")
           requests.singleIgnore(channel.sendMessage("Hello, world!"))(Requests.RequestProperties.retry)
         case _ => ()
