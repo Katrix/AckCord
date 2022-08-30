@@ -270,11 +270,11 @@ case class ThreadGuildChannel(
 ) extends PrimaryTextGuildChannel {
   def parentId: Option[TextGuildChannelId] = Some(parentChannelId)
 
-  def topic: Option[String] = None
+  override def topic: Option[String] = None
 
-  def lastPinTimestamp: Option[OffsetDateTime] = None
+  override def lastPinTimestamp: Option[OffsetDateTime] = None
 
-  def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
+  override def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
 
   override def position: Int = -1
 
