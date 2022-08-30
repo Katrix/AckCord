@@ -290,7 +290,7 @@ case class ThreadMember(
     flags: Int
 )
 
-sealed trait VoiceGuildChannel extends GuildChannel with TextGuildChannel {
+sealed trait VoiceGuildChannel extends GuildChannel {
   override def id: VoiceGuildChannelId
 
   /** The bitrate of this channel in bits */
