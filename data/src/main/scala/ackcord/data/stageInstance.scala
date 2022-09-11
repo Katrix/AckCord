@@ -20,6 +20,8 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   *   Who the stage instance is visible to.
   * @param discoverableDisabled
   *   If stage discovery is disabled or not.
+  * @param guildScheduledEventId
+  *   The id of the scheduled event for this stage instance.
   */
 case class StageInstance(
     id: SnowflakeType[StageInstance],
@@ -27,7 +29,8 @@ case class StageInstance(
     channelId: StageGuildChannelId,
     topic: String,
     privacyLevel: StageInstancePrivacyLevel,
-    discoverableDisabled: Boolean
+    @deprecated("Discord has deprecated stage discovery", since = "0.19.0") discoverableDisabled: Boolean,
+    guildScheduledEventId: Option[SnowflakeType[GuildScheduledEvent]]
 )
 
 sealed abstract class StageInstancePrivacyLevel(val value: Int) extends IntEnumEntry
@@ -36,6 +39,7 @@ object StageInstancePrivacyLevel
     with IntCirceEnumWithUnknown[StageInstancePrivacyLevel] {
   override def values: immutable.IndexedSeq[StageInstancePrivacyLevel] = findValues
 
+  @deprecated("Discord has deprecated stage discovery", since = "0.19.0")
   case object Public    extends StageInstancePrivacyLevel(1)
   case object GuildOnly extends StageInstancePrivacyLevel(2)
 

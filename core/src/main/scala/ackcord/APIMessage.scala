@@ -478,6 +478,41 @@ object APIMessage {
   ) extends GuildMessage
 
   /**
+    * Sent to the client when a user joins a guild scheduled event.
+    * @param guild
+    *   The guild of the scheduled event.
+    * @param scheduledEventId
+    *   The id of the guild scheduled event the user joined.
+    * @param userId
+    *   The id of the user that joined.
+    */
+  case class GuildScheduledEventUserAdd(
+      guild: GatewayGuild,
+      scheduledEventId: SnowflakeType[GuildScheduledEvent],
+      userId: UserId,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent to the client when a user leaves a guild scheduled event.
+    *
+    * @param guild
+    *   The guild of the scheduled event.
+    * @param scheduledEventId
+    *   The id of the guild scheduled event the user left.
+    * @param userId
+    *   The id of the user that left..
+    */
+  case class GuildScheduledEventUserRemove(
+      guild: GatewayGuild,
+      scheduledEventId: SnowflakeType[GuildScheduledEvent],
+      userId: UserId,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
     * Sent when an invite is created.
     * @param guild
     *   The guild the invite is for.

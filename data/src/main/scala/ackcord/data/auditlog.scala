@@ -24,6 +24,8 @@
 
 package ackcord.data
 
+import java.time.OffsetDateTime
+
 import scala.collection.immutable
 
 import ackcord.CacheSnapshot
@@ -258,6 +260,9 @@ object AuditLogChange {
   /** Color of role changed */
   case class Color(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 
+  /** Timeout for user changed */
+  case class CommunicationDisabledUntil(oldValue: Option[OffsetDateTime], newValue: Option[OffsetDateTime]) extends AuditLogChange[OffsetDateTime]
+
   /** Deaf for user changed */
   case class Deaf(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
 
@@ -311,6 +316,9 @@ object AuditLogChange {
 
   /** Icon hash changed */
   case class IconHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /** Guild scheduled event cover image changed */
+  case class ImageHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
   /** Id of changed object */
   case class Id(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake]) extends AuditLogChange[RawSnowflake]

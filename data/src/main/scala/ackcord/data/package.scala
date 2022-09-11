@@ -263,9 +263,6 @@ package object data {
 
     /** Mention this user. */
     def mention: String = s"<@$userId>"
-
-    /** Mention this user with their nickname. */
-    def mentionNick: String = s"<@!$userId>"
   }
 
   type RoleId = SnowflakeType[Role]
@@ -378,7 +375,7 @@ package object data {
     val CreatePrivateThreads: Permission    = Permission(0x1000000000L)
     val UseExternalStickers: Permission     = Permission(0x2000000000L)
     val SendMessagesInThreads: Permission   = Permission(0x4000000000L)
-    val StartEmbeddedActivities: Permission = Permission(0x8000000000L)
+    val UseEmbeddedActivities: Permission   = Permission(0x8000000000L)
     val ModerateMembers: Permission         = Permission(0x10000000000L)
 
     val None: Permission = Permission(0x00000000)
@@ -422,7 +419,7 @@ package object data {
       CreatePrivateThreads,
       UseExternalStickers,
       SendMessagesInThreads,
-      StartEmbeddedActivities,
+      UseEmbeddedActivities,
       ModerateMembers
     )
   }
@@ -549,15 +546,16 @@ package object data {
     /** Create a MessageFlags from an int. */
     def fromInt(int: Int): MessageFlags = apply(int)
 
-    val None: MessageFlags                 = MessageFlags(0)
-    val Crossposted: MessageFlags          = MessageFlags(1 << 0)
-    val IsCrosspost: MessageFlags          = MessageFlags(1 << 1)
-    val SuppressEmbeds: MessageFlags       = MessageFlags(1 << 2)
-    val SourceMessageDeleted: MessageFlags = MessageFlags(1 << 3)
-    val Urgent: MessageFlags               = MessageFlags(1 << 4)
-    val HasThread: MessageFlags            = MessageFlags(1 << 5)
-    val Ephermal: MessageFlags             = MessageFlags(1 << 6)
-    val Loading: MessageFlags              = MessageFlags(1 << 7)
+    val None: MessageFlags                             = MessageFlags(0)
+    val Crossposted: MessageFlags                      = MessageFlags(1 << 0)
+    val IsCrosspost: MessageFlags                      = MessageFlags(1 << 1)
+    val SuppressEmbeds: MessageFlags                   = MessageFlags(1 << 2)
+    val SourceMessageDeleted: MessageFlags             = MessageFlags(1 << 3)
+    val Urgent: MessageFlags                           = MessageFlags(1 << 4)
+    val HasThread: MessageFlags                        = MessageFlags(1 << 5)
+    val Ephermal: MessageFlags                         = MessageFlags(1 << 6)
+    val Loading: MessageFlags                          = MessageFlags(1 << 7)
+    val FailedToMentionSomeRolesInThread: MessageFlags = MessageFlags(1 << 8)
   }
   implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
 

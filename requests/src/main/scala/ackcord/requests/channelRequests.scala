@@ -309,7 +309,8 @@ case class CreateMessageData(
     replyTo: Option[MessageId] = None,
     replyFailIfNotExist: Boolean = true,
     components: Seq[ActionRow] = Nil,
-    stickerIds: Seq[StickerId] = Nil
+    stickerIds: Seq[StickerId] = Nil,
+    flags: Option[MessageFlags] = None
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -333,7 +334,8 @@ object CreateMessageData {
       "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
       "components"       := a.components,
-      "sticker_ids"      := a.stickerIds
+      "sticker_ids"      := a.stickerIds,
+      "flags"            := a.flags
     )
 
     a.replyTo.fold(base) { reply =>

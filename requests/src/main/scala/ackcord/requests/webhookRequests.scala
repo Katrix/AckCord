@@ -232,7 +232,8 @@ object ExecuteWebhookData {
       "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
       "components"       := a.components,
-      "attachments"      := a.attachments
+      "attachments"      := a.attachments,
+      "flags"            := a.flags
     )
 }
 

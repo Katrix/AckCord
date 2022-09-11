@@ -234,6 +234,10 @@ case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawCha
   *   The category id for the channel.
   * @param nsfw
   *   If the channel is NSFW.
+  * @param defaultAutoArchiveDuration
+  *   The default duration that the clients use (not the API) for newly created
+  *   threads in the channel, in minutes, to automatically archive the thread
+  *   after recent activity
   */
 case class CreateGuildChannelData(
     name: String,
@@ -244,7 +248,8 @@ case class CreateGuildChannelData(
     rateLimitPerUser: JsonOption[Int] = JsonUndefined,
     permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
     parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
-    nsfw: JsonOption[Boolean] = JsonUndefined
+    nsfw: JsonOption[Boolean] = JsonUndefined,
+    defaultAutoArchiveDuration: JsonOption[Integer] = JsonUndefined
 ) {
   Verifier.requireLength(name, "Channel name", min = 2, max = 100)
   Verifier.requireRangeJO(rateLimitPerUser, "Rate limit per user", max = 21600)
@@ -252,15 +257,16 @@ case class CreateGuildChannelData(
 object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
     JsonOption.removeUndefinedToObj(
-      "name"                  -> JsonSome(a.name.asJson),
-      "type"                  -> a.`type`.toJson,
-      "topic"                 -> a.topic.toJson,
-      "bitrate"               -> a.bitrate.toJson,
-      "user_limit"            -> a.userLimit.toJson,
-      "rate_limit_per_user"   -> a.rateLimitPerUser.toJson,
-      "permission_overwrites" -> a.permissionOverwrites.toJson,
-      "parent_id"             -> a.parentId.toJson,
-      "nsfw"                  -> a.nsfw.toJson
+      "name"                          -> JsonSome(a.name.asJson),
+      "type"                          -> a.`type`.toJson,
+      "topic"                         -> a.topic.toJson,
+      "bitrate"                       -> a.bitrate.toJson,
+      "user_limit"                    -> a.userLimit.toJson,
+      "rate_limit_per_user"           -> a.rateLimitPerUser.toJson,
+      "permission_overwrites"         -> a.permissionOverwrites.toJson,
+      "parent_id"                     -> a.parentId.toJson,
+      "nsfw"                          -> a.nsfw.toJson,
+      "default_auto_archive_duration" -> a.defaultAutoArchiveDuration.toJson
     )
 }
 
@@ -607,8 +613,13 @@ case class RemoveGuildMember(
 }
 
 /** Get all the bans for this guild. */
-case class GetGuildBans(guildId: GuildId) extends NoParamsRequest[Seq[RawBan], Seq[Ban]] {
-  override def route: RequestRoute = Routes.getGuildBans(guildId)
+case class GetGuildBans(
+    guildId: GuildId,
+    limit: Option[Int] = None,
+    before: Option[UserId] = None,
+    after: Option[UserId] = None
+) extends NoParamsRequest[Seq[RawBan], Seq[Ban]] {
+  override def route: RequestRoute = Routes.getGuildBans(guildId, limit, before, after)
 
   override def responseDecoder: Decoder[Seq[RawBan]]           = Decoder[Seq[RawBan]]
   override def toNiceResponse(response: Seq[RawBan]): Seq[Ban] = response.map(_.toBan)
@@ -1128,6 +1139,15 @@ object GetCurrentUserGuilds {
       limit: Option[Int] = None
   ): GetCurrentUserGuilds =
     new GetCurrentUserGuilds(GetCurrentUserGuildsData(after = Some(after), limit = limit))
+}
+
+/** Get the [[GuildMember]] for the current user in a guild. */
+case class GetCurrentUserGuildMember(guildId: GuildId) extends NoParamsRequest[RawGuildMember, GuildMember] {
+
+  override def route: RequestRoute = Routes.getCurrentUserGuildMember(guildId)
+
+  override def responseDecoder: Decoder[RawGuildMember]              = Decoder[RawGuildMember]
+  override def toNiceResponse(response: RawGuildMember): GuildMember = response.toGuildMember(guildId)
 }
 
 /** Leave a guild. */

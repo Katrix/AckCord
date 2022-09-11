@@ -131,5 +131,5 @@ case class StickerPack(
     skuId: RawSnowflake,
     coverStickerId: Option[RawSnowflake],
     description: String,
-    bannerAssetId: RawSnowflake
+    bannerAssetId: Option[RawSnowflake]
 )

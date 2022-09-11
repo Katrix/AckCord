@@ -118,6 +118,9 @@ trait DiscordProtocol {
   implicit val rawGuildCodec: Codec[RawGuild] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val stickerCodec: Codec[Sticker] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawGuildPreviewCodec: Codec[GuildPreview] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -555,6 +558,7 @@ trait DiscordProtocol {
       case "channel_id"                    => mkChange(AuditLogChange.ChannelIdChanged)
       case "code"                          => mkChange(AuditLogChange.Code)
       case "color"                         => mkChange(AuditLogChange.Color)
+      case "communication_disabled_until"  => mkChange(AuditLogChange.CommunicationDisabledUntil)
       case "deaf"                          => mkChange(AuditLogChange.Deaf)
       case "default_auto_archive_duration" => mkChange(AuditLogChange.DefaultAutoArchiveDuration)
       case "default_message_notifications" => mkChange(AuditLogChange.DefaultMessageNotification)
@@ -569,6 +573,7 @@ trait DiscordProtocol {
       case "guild_id"                      => mkChange(AuditLogChange.GuildIdChange)
       case "hoist"                         => mkChange(AuditLogChange.Hoist)
       case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
+      case "image_hash"                    => mkChange(AuditLogChange.ImageHash)
       case "id"                            => mkChange(AuditLogChange.Id)
       case "invitable"                     => mkChange(AuditLogChange.Invitable)
       case "inviter_id"                    => mkChange(AuditLogChange.InviterId)

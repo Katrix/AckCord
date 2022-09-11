@@ -253,7 +253,7 @@ object CacheEventCreator {
             for {
               threadId <- data.id
               thread   <- state.current.getThread(threadId.asChannelId[ThreadGuildChannel])
-              guild    <- state.current.getGuild(thread.guildId)
+              guild    <- state.current.getGuild(data.guildId)
             } yield api.ThreadMemberUpdate(
               guild,
               thread,
@@ -570,6 +570,25 @@ object CacheEventCreator {
           registry,
           dispatch
         )
+
+      case gatewayEv.GuildScheduledEventUserAdd(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state => state.current.getGuild(data.guildId).map(g => api.GuildScheduledEventUserAdd(g, data.guildScheduledEventId, data.userId, state, dispatch.gatewayInfo)),
+          CacheHandlers.guildScheduledEventUserAdder,
+          registry,
+          dispatch
+        )
+
+      case gatewayEv.GuildScheduledEventUserAdd(_, GetLazy(data)) =>
+        CacheUpdate.one(
+          data,
+          state => state.current.getGuild(data.guildId).map(g => api.GuildScheduledEventUserRemove(g, data.guildScheduledEventId, data.userId, state, dispatch.gatewayInfo)),
+          CacheHandlers.guildScheduledEventUserRemover,
+          registry,
+          dispatch
+        )
+
       case gatewayEv.InviteCreate(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,

@@ -149,37 +149,42 @@ object GatewayHandler {
       //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
       //Authenticate failed
       case 4004 =>
-        log.error("Authentication failed to WS gateway. Stopping JVM")
-        sys.exit(-1)
-
-      //Invalid shard
-      case 4010 =>
-        log.error("Invalid shard passed to WS gateway. Stopping JVM")
-        sys.exit(-1)
-
-      //Sharding required
-      case 4011 =>
-        log.error("Sharding required to log into WS gateway. Stopping JVM")
+        println("Authentication failed to WS gateway. Stopping JVM")
         sys.exit(-1)
 
       // Invalid seq
       case 4007 =>
-        log.warn("""|Tried to resume with an invalid seq. Likely a bug in AckCord. 
+        log.warn("""|Tried to resume with an invalid seq. Likely a bug in AckCord.
                     |Submit a bug with a debug log on the issue tracker""".stripMargin)
-        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
-
-      //Session timed out
-      case 4009 =>
-        log.debug("""|Tried to resume with a timed out session""".stripMargin)
         retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
 
       //Ratelimited
       case 4008 =>
         throw new GatewayRatelimitedException(e)
 
+      //Session timed out
+      case 4009 =>
+        log.debug("""|Tried to resume with a timed out session""".stripMargin)
+        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
+
+      //Invalid shard
+      case 4010 =>
+        println("Invalid shard passed to WS gateway. Stopping JVM")
+        sys.exit(-1)
+
+      //Sharding required
+      case 4011 =>
+        println("Sharding required to log into WS gateway. Stopping JVM")
+        sys.exit(-1)
+
+      //Sharding required
+      case 4012 =>
+        println("Invalid API version. Your AckCord version is outdated. Update. Stopping JVM")
+        sys.exit(-1)
+
       //Disallowed or invalid intents
       case 4013 | 4014 =>
-        log.error("Invalid or disallow intents specified. Stopping JVM")
+        println("Invalid or disallow intents specified. Stopping JVM")
         sys.exit(-1)
 
       case _ => throw e

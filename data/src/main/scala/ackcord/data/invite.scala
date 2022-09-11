@@ -56,7 +56,7 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 case class Invite(
     code: String,
     guild: Option[InviteGuild],
-    channel: InviteChannel,
+    channel: Option[InviteChannel],
     inviter: Option[User],
     targetUser: Option[User],
     targetType: Option[InviteTargetType],
@@ -64,7 +64,7 @@ case class Invite(
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int],
     expiresAt: Option[OffsetDateTime],
-    stageInstance: Option[InviteStageInstance],
+    @deprecated("Discord has deprecated stage discovery", since = "0.19.0") stageInstance: Option[InviteStageInstance],
     guildScheduledInvite: Option[GuildScheduledEvent]
 )
 
@@ -104,7 +104,7 @@ case class Invite(
 case class InviteWithMetadata(
     code: String,
     guild: Option[InviteGuild],
-    channel: InviteChannel,
+    channel: Option[InviteChannel],
     inviter: Option[User],
     targetUser: Option[User],
     targetType: Option[InviteTargetType],
@@ -120,6 +120,7 @@ case class InviteWithMetadata(
     createdAt: OffsetDateTime
 )
 
+@deprecated("Discord has deprecated stage discovery", since = "0.19.0")
 case class InviteStageInstance(
     members: Seq[InviteStageInstanceMember],
     participantCount: Int,
@@ -200,6 +201,10 @@ case class CreatedInvite(
   *   The verification level of the guild
   * @param vanityUrlCode
   *   The vanity URL code for the guild
+  * @param nsfwLevel
+  *   The guild NSFW level
+  * @param premiumSubscriptionCount
+  *   How many users that are boosting the server
   */
 case class InviteGuild(
     id: GuildId,
@@ -211,7 +216,9 @@ case class InviteGuild(
     features: Seq[GuildFeature],
     verificationLevel: VerificationLevel,
     vanityUrlCode: Option[String],
-    welcomeScreen: Option[WelcomeScreen]
+    welcomeScreen: Option[WelcomeScreen],
+    nsfwLevel: Option[NSFWLevel],
+    premiumSubscriptionCount: Option[Int]
 )
 
 /**

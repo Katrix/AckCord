@@ -54,7 +54,6 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   case object GroupDm            extends ChannelType(3)
   case object GuildCategory      extends ChannelType(4)
   case object GuildNews          extends ChannelType(5)
-  case object GuildStore         extends ChannelType(6)
   case object GuildNewsThread    extends ChannelType(10) with ThreadChannelType
   case object GuildPublicThread  extends ChannelType(11) with ThreadChannelType
   case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
@@ -94,7 +93,12 @@ object PermissionOverwriteType
   * @param deny
   *   The permissions denied by this overwrite.
   */
-case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission) {
+case class PermissionOverwrite(
+    id: UserOrRoleId,
+    `type`: PermissionOverwriteType,
+    allow: Option[Permission],
+    deny: Option[Permission]
+) {
 
   /**
     * If this overwrite applies to a user, get's that user, otherwise returns
@@ -266,6 +270,7 @@ case class ThreadGuildChannel(
     autoArchiveDuration: Int,
     locked: Boolean,
     invitable: Option[Boolean],
+    createTimestamp: Option[OffsetDateTime],
     member: Option[ThreadMember]
 ) extends PrimaryTextGuildChannel {
   def parentId: Option[TextGuildChannelId] = Some(parentChannelId)
@@ -353,19 +358,6 @@ case class GuildCategory(
   override def channelType: ChannelType = ChannelType.GuildCategory
 
   override def parentId: Option[GuildChannelId] = None
-}
-
-/** A store channel in a guild */
-case class GuildStoreChannel(
-    id: SnowflakeType[GuildStoreChannel],
-    guildId: GuildId,
-    name: String,
-    position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
-    nsfw: Boolean,
-    parentId: Option[SnowflakeType[GuildCategory]]
-) extends GuildChannel {
-  override def channelType: ChannelType = ChannelType.GuildStore
 }
 
 /** A DM text channel */

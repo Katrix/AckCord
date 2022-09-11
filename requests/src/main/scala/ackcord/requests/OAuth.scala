@@ -60,6 +60,7 @@ object OAuth {
     case object GDMJoin                    extends Scope("gdm.join")
     case object Guilds                     extends Scope("guilds")
     case object GuildsJoin                 extends Scope("guilds.join")
+    case object GuildsMembersRead          extends Scope("guilds.members.read")
     case object Identify                   extends Scope("identify")
     case object MessagesRead               extends Scope("messages.read")
     case object RelationshipsRead          extends Scope("relationships.read")
@@ -261,7 +262,6 @@ object OAuth {
       name: String,
       icon: String,
       description: String,
-      summary: String,
       hook: Boolean,
       botPublic: Boolean,
       botRequireCodeGrant: Boolean,

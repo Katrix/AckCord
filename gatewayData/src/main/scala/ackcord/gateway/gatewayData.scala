@@ -509,13 +509,21 @@ object GatewayEvent {
     override def name: String                   = "THREAD_LIST_SYNC"
   }
 
+  case class RawThreadMemberWithGuildId(
+      id: Option[ThreadGuildChannelId],
+      userId: Option[UserId],
+      joinTimestamp: OffsetDateTime,
+      flags: Int,
+      guildId: GuildId
+  )
+
   /**
     * Sent when the thread member object for the current user is updated.
     * @param data
     *   An updated thread member for the current user.
     */
-  case class ThreadMemberUpdate(rawData: Json, data: Later[Decoder.Result[RawThreadMember]])
-      extends GatewayEvent[RawThreadMember] {
+  case class ThreadMemberUpdate(rawData: Json, data: Later[Decoder.Result[RawThreadMemberWithGuildId]])
+      extends GatewayEvent[RawThreadMemberWithGuildId] {
     override def name: String = "THREAD_MEMBER_UPDATE"
   }
 
@@ -864,9 +872,34 @@ object GatewayEvent {
     override def name: String                   = "GUILD_SCHEDULED_EVENT_UPDATE"
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
   }
+
   case class GuildScheduledEventDelete(rawData: Json, data: Later[Decoder.Result[GuildScheduledEvent]])
       extends GuildEvent[GuildScheduledEvent] {
     override def name: String                   = "GUILD_SCHEDULED_EVENT_DELETE"
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+  }
+
+  case class GuildScheduledEventUserAddRemoveData(
+      guildScheduledEventId: SnowflakeType[GuildScheduledEvent],
+      userId: UserId,
+      guildId: GuildId
+  )
+
+  case class GuildScheduledEventUserAdd(
+      rawData: Json,
+      data: Later[Decoder.Result[GuildScheduledEventUserAddRemoveData]]
+  ) extends GuildEvent[GuildScheduledEventUserAddRemoveData] {
+    override def name: String = "GUILD_SCHEDULED_EVENT_USER_ADD"
+
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+  }
+
+  case class GuildScheduledEventUserRemove(
+      rawData: Json,
+      data: Later[Decoder.Result[GuildScheduledEventUserAddRemoveData]]
+  ) extends GuildEvent[GuildScheduledEventUserAddRemoveData] {
+    override def name: String = "GUILD_SCHEDULED_EVENT_USER_REMOVE"
+
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
   }
 

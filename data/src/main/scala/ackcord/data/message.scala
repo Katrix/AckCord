@@ -205,9 +205,6 @@ case class User(
   /** Mention this user. */
   def mention: String = id.mention
 
-  /** Mention this user with their nickname. */
-  def mentionNick: String = id.mentionNick
-
   override def isUser: Boolean = true
 }
 
@@ -345,8 +342,8 @@ sealed trait Message {
   def application: Option[PartialApplication]
 
   /**
-    * If an message is a response to an interaction, then this is the id of the
-    * interaction's application.
+    * If the message is an Interaction or application-owned webhook, this is the
+    * id of the application.
     */
   def applicationId: Option[ApplicationId]
 

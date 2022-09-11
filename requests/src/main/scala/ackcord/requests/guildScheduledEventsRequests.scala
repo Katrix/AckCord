@@ -4,7 +4,7 @@ import java.time.OffsetDateTime
 
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import ackcord.util.{JsonOption, JsonUndefined}
+import ackcord.util.{JsonOption, JsonUndefined, Verifier}
 import io.circe._
 
 /**
@@ -31,19 +31,31 @@ case class CreateGuildScheduledEventData(
 )
 
 /** Create a new guild scheduled event. */
-case class CreateGuildScheduledEvent(guildId: GuildId, params: CreateGuildScheduledEventData)
-    extends NoNiceResponseRequest[CreateGuildScheduledEventData, GuildScheduledEvent] {
+case class CreateGuildScheduledEvent(
+    guildId: GuildId,
+    params: CreateGuildScheduledEventData,
+    reason: Option[String] = None
+) extends NoNiceResponseReasonRequest[CreateGuildScheduledEvent, CreateGuildScheduledEventData, GuildScheduledEvent] {
   override def route: RequestRoute = Routes.createGuildScheduledEvent(guildId)
 
   override def paramsEncoder: Encoder[CreateGuildScheduledEventData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
   override def responseDecoder: Decoder[GuildScheduledEvent] = Decoder[GuildScheduledEvent]
+
+  override def withReason(reason: String): CreateGuildScheduledEvent = copy(reason = Some(reason))
 }
 
-/** Get a specific guild scheduled event. */
-case class GetGuildScheduledEvent(guildId: GuildId, guildScheduledEventId: SnowflakeType[GuildScheduledEvent])
-    extends NoParamsNiceResponseRequest[GuildScheduledEvent] {
-  override def route: RequestRoute = Routes.getGuildScheduledEvent(guildId, guildScheduledEventId)
+/**
+  * Get a specific guild scheduled event.
+  * @param withUserCount
+  *   Include number of users subscribed to each event.
+  */
+case class GetGuildScheduledEvent(
+    guildId: GuildId,
+    guildScheduledEventId: SnowflakeType[GuildScheduledEvent],
+    withUserCount: Option[Boolean] = None
+) extends NoParamsNiceResponseRequest[GuildScheduledEvent] {
+  override def route: RequestRoute = Routes.getGuildScheduledEvent(guildId, guildScheduledEventId, withUserCount)
   override def responseDecoder: Decoder[GuildScheduledEvent] = Decoder[GuildScheduledEvent]
 }
 
@@ -77,12 +89,15 @@ object ModifyGuildScheduledEventData {
 case class ModifyGuildScheduledEvent(
     guildId: GuildId,
     guildScheduledEventId: SnowflakeType[GuildScheduledEvent],
-    params: ModifyGuildScheduledEventData
-) extends NoNiceResponseRequest[ModifyGuildScheduledEventData, GuildScheduledEvent] {
+    params: ModifyGuildScheduledEventData,
+    reason: Option[String] = None
+) extends NoNiceResponseReasonRequest[ModifyGuildScheduledEvent, ModifyGuildScheduledEventData, GuildScheduledEvent] {
   override def route: RequestRoute = Routes.modifyGuildScheduledEvent(guildId, guildScheduledEventId)
 
   override def paramsEncoder: Encoder[ModifyGuildScheduledEventData] = ModifyGuildScheduledEventData.encoder
   override def responseDecoder: Decoder[GuildScheduledEvent]         = Decoder[GuildScheduledEvent]
+
+  override def withReason(reason: String): ModifyGuildScheduledEvent = copy(reason = Some(reason))
 }
 
 /** Delete a specific guild scheduled event. */
@@ -110,6 +125,8 @@ case class GetGuildScheduledEventUsers(
     before: Option[UserId] = None,
     after: Option[UserId] = None
 ) extends NoParamsNiceResponseRequest[Seq[GuildScheduledEventUser]] {
+  Verifier.requireRangeO(limit, "Limit", max = 100)
+
   override def route: RequestRoute =
     Routes.getGuildScheduledEventUsers(guildId, guildScheduledEventId, limit, withMember, before, after)
   override def responseDecoder: Decoder[Seq[GuildScheduledEventUser]] = Decoder[Seq[GuildScheduledEventUser]]

@@ -160,7 +160,8 @@ case class GuildPreview(
     features: Seq[GuildFeature],
     approximateMemberCount: Int,
     approximatePresenceCount: Int,
-    description: Option[String]
+    description: Option[String],
+    stickers: Seq[Sticker]
 )
 
 sealed trait Guild extends UnknownStatusGuild {
@@ -241,7 +242,7 @@ sealed trait Guild extends UnknownStatusGuild {
   /** The vanity url code for the guild. */
   def vanityUrlCode: Option[String]
 
-  /** A description for a community guild. */
+  /** A description for a guild. */
   def description: Option[String]
 
   /** A banner hash for the guild. */
@@ -545,6 +546,7 @@ sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
+  case object AnimatedBanner                extends GuildFeature("ANIMATED_BANNER")
   case object AnimatedIcon                  extends GuildFeature("ANIMATED_ICON")
   case object Banner                        extends GuildFeature("BANNER")
   case object Commerce                      extends GuildFeature("COMMERCE")
@@ -634,17 +636,17 @@ case class GuildMember(
         if (guild.ownerId == userId) Permission.All
         else {
           val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
-          val everyoneAllow     = everyoneOverwrite.map(_.allow)
-          val everyoneDeny      = everyoneOverwrite.map(_.deny)
+          val everyoneAllow     = everyoneOverwrite.map(_.allow.getOrElse(Permission.None))
+          val everyoneDeny      = everyoneOverwrite.map(_.deny.getOrElse(Permission.None))
 
           val rolesForUser   = roleIds.flatMap(guild.roles.get)
           val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
-          val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
-          val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
+          val roleAllow      = Permission(roleOverwrites.map(_.allow.getOrElse(Permission.None)): _*)
+          val roleDeny       = Permission(roleOverwrites.map(_.deny.getOrElse(Permission.None)): _*)
 
           val userOverwrite = channel.permissionOverwrites.get(userId)
-          val userAllow     = userOverwrite.map(_.allow)
-          val userDeny      = userOverwrite.map(_.deny)
+          val userAllow     = userOverwrite.map(_.allow.getOrElse(Permission.None))
+          val userDeny      = userOverwrite.map(_.deny.getOrElse(Permission.None))
 
           def mapOrElse(
               permission: Permission,
@@ -961,9 +963,6 @@ sealed trait Integration {
   /** The type of the integration. */
   def `type`: IntegrationType
 
-  /** If the integration is enabled. */
-  def enabled: Boolean
-
   /** Account information. */
   def account: IntegrationAccount
 }
@@ -974,8 +973,6 @@ sealed trait Integration {
   *   The id of the integration
   * @param name
   *   The integration name
-  * @param enabled
-  *   If the integration is enabled
   * @param account
   *   Account information
   * @param application
@@ -984,7 +981,6 @@ sealed trait Integration {
 case class DiscordIntegration(
     id: IntegrationId,
     name: String,
-    enabled: Boolean,
     account: IntegrationAccount,
     application: IntegrationApplication
 ) extends Integration {
@@ -1026,7 +1022,7 @@ case class ExternalIntegration(
     id: IntegrationId,
     name: String,
     `type`: IntegrationType,
-    enabled: Boolean,
+    enabled: Option[Boolean],
     syncing: Boolean,
     roleId: RoleId,
     enableEmoticons: Option[Boolean],
@@ -1074,8 +1070,6 @@ object IntegrationExpireBehavior
   *   The icon hash of the application
   * @param description
   *   The description of the application
-  * @param summary
-  *   The summary of the application
   * @param bot
   *   The bot user of the application
   */
@@ -1084,7 +1078,6 @@ case class IntegrationApplication(
     name: String,
     icon: Option[String],
     description: String,
-    summary: String,
     bot: Option[User]
 )
 

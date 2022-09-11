@@ -222,23 +222,6 @@ case class RawChannel(
             nsfw.getOrElse(false)
           )
         }
-      case ChannelType.GuildStore =>
-        for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-        } yield {
-          GuildStoreChannel(
-            SnowflakeType(id),
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            nsfw.getOrElse(false),
-            parentId.map(SnowflakeType[GuildCategory])
-          )
-        }
       case tpe: ChannelType.ThreadChannelType =>
         for {
           guildId  <- guildId
@@ -246,7 +229,7 @@ case class RawChannel(
           ownerId  <- ownerId
           parentId <- parentId
           metadata <- threadMetadata
-          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked, invitable) = metadata
+          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked, invitable, createTimestamp) = metadata
         } yield {
           ThreadGuildChannel(
             SnowflakeType(id),
@@ -264,6 +247,7 @@ case class RawChannel(
             autoArchiveDuration,
             locked,
             invitable,
+            createTimestamp,
             member.map { raw =>
               ThreadMember(
                 SnowflakeType[ThreadGuildChannel](id),
@@ -302,7 +286,8 @@ case class RawThreadMetadata(
     autoArchiveDuration: Int,
     archiveTimestamp: OffsetDateTime,
     locked: Boolean,
-    invitable: Option[Boolean]
+    invitable: Option[Boolean],
+    createTimestamp: Option[OffsetDateTime]
 )
 
 /**

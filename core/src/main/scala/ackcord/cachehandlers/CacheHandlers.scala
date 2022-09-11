@@ -187,8 +187,8 @@ object CacheHandlers {
     }
   }
 
-  val rawThreadMemberUpdater: CacheUpdater[RawThreadMember] = new CacheUpdater[RawThreadMember] {
-    override def handle(builder: CacheSnapshotBuilder, obj: RawThreadMember, registry: CacheTypeRegistry): Unit = {
+  val rawThreadMemberUpdater: CacheUpdater[RawThreadMemberWithGuildId] = new CacheUpdater[RawThreadMemberWithGuildId] {
+    override def handle(builder: CacheSnapshotBuilder, obj: RawThreadMemberWithGuildId, registry: CacheTypeRegistry): Unit = {
       for {
         threadUpdater <- registry.getUpdater[ThreadGuildChannel]
         thread        <- builder.getThread(obj.id.get)
@@ -547,6 +547,56 @@ object CacheHandlers {
       }
   }
 
+  val guildScheduledEventUserAdder: CacheUpdater[GuildScheduledEventUserAddRemoveData] =
+    new CacheUpdater[GuildScheduledEventUserAddRemoveData] {
+      override def handle(
+          builder: CacheSnapshotBuilder,
+          obj: GuildScheduledEventUserAddRemoveData,
+          registry: CacheTypeRegistry
+      ): Unit =
+        builder.getGuild(obj.guildId) match {
+          case Some(guild) =>
+            registry.updateData(builder) {
+              guild.guildScheduledEvents.get(obj.guildScheduledEventId) match {
+                case Some(guildEvent) =>
+                  guild.copy(guildScheduledEvents =
+                    guild.guildScheduledEvents
+                      .updated(obj.guildScheduledEventId, guildEvent.copy(userCount = guildEvent.userCount.map(_ + 1)))
+                  )
+                case None =>
+                  log.warn(s"No scheduled event for update $obj")
+                  guild
+              }
+            }
+          case None => log.warn(s"No guild found for scheduled event update $obj")
+        }
+    }
+
+  val guildScheduledEventUserRemover: CacheUpdater[GuildScheduledEventUserAddRemoveData] =
+    new CacheUpdater[GuildScheduledEventUserAddRemoveData] {
+      override def handle(
+          builder: CacheSnapshotBuilder,
+          obj: GuildScheduledEventUserAddRemoveData,
+          registry: CacheTypeRegistry
+      ): Unit =
+        builder.getGuild(obj.guildId) match {
+          case Some(guild) =>
+            registry.updateData(builder) {
+              guild.guildScheduledEvents.get(obj.guildScheduledEventId) match {
+                case Some(guildEvent) =>
+                  guild.copy(guildScheduledEvents =
+                    guild.guildScheduledEvents
+                      .updated(obj.guildScheduledEventId, guildEvent.copy(userCount = guildEvent.userCount.map(_ - 1)))
+                  )
+                case None =>
+                  log.warn(s"No scheduled event for update $obj")
+                  guild
+              }
+            }
+          case None => log.warn(s"No guild found for scheduled event update $obj")
+        }
+    }
+
   val rawMessageUpdater: CacheUpdater[RawMessage] = new CacheUpdater[RawMessage] {
     override def handle(builder: CacheSnapshotBuilder, obj: RawMessage, registry: CacheTypeRegistry): Unit = {
       val users = obj.mentions
@@ -781,7 +831,7 @@ object CacheHandlers {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
         case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory |
-            ChannelType.GuildNews | ChannelType.GuildStore | ChannelType.GuildPublicThread |
+            ChannelType.GuildNews | ChannelType.GuildPublicThread |
             ChannelType.GuildNewsThread | ChannelType.GuildPrivateThread =>
           registry.getUpdater[GatewayGuild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
@@ -800,7 +850,6 @@ object CacheHandlers {
               case ChannelType.GuildStageVoice => runDelete[StageGuildChannel]()
               case ChannelType.GuildCategory   => runDelete[GuildCategory]()
               case ChannelType.GuildNews       => runDelete[NewsTextGuildChannel]()
-              case ChannelType.GuildStore      => runDelete[GuildStoreChannel]()
               case _: ChannelType.ThreadChannelType =>
                 if (registry.hasDeleter[ThreadGuildChannel]) {
                   rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>

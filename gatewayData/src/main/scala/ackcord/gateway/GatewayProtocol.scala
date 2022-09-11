@@ -147,6 +147,12 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val userWithGuildIdCodec: Codec[GatewayEvent.UserWithGuildId] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val guildScheduledEventUserAddRemoveDataCodec: Codec[GatewayEvent.GuildScheduledEventUserAddRemoveData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val rawThreadMemberWithGuildIdCodec: Codec[GatewayEvent.RawThreadMemberWithGuildId] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val simpleApplicationCommandWithGuildCodec: Codec[GatewayEvent.ApplicationCommandWithGuildId] =
     Codec.from(
       (c: HCursor) =>
@@ -419,11 +425,11 @@ object GatewayProtocol extends DiscordProtocol {
       ignored("APPLICATION_COMMAND_CREATE"),
       ignored("APPLICATION_COMMAND_UPDATE"),
       ignored("APPLICATION_COMMAND_DELETE"),
-      "GUILD_SCHEDULED_EVENT_CREATE" -> createDispatch(GatewayEvent.GuildScheduledEventCreate),
-      "GUILD_SCHEDULED_EVENT_UPDATE" -> createDispatch(GatewayEvent.GuildScheduledEventUpdate),
-      "GUILD_SCHEDULED_EVENT_DELETE" -> createDispatch(GatewayEvent.GuildScheduledEventDelete),
-      ignored("GUILD_SCHEDULED_EVENT_USER_ADD"),    //TODO: Remove when no longer experimental
-      ignored("GUILD_SCHEDULED_EVENT_USER_REMOVE"), //TODO: Remove when no longer experimental
+      "GUILD_SCHEDULED_EVENT_CREATE"      -> createDispatch(GatewayEvent.GuildScheduledEventCreate),
+      "GUILD_SCHEDULED_EVENT_UPDATE"      -> createDispatch(GatewayEvent.GuildScheduledEventUpdate),
+      "GUILD_SCHEDULED_EVENT_DELETE"      -> createDispatch(GatewayEvent.GuildScheduledEventDelete),
+      "GUILD_SCHEDULED_EVENT_USER_ADD"    -> createDispatch(GatewayEvent.GuildScheduledEventUserAdd),
+      "GUILD_SCHEDULED_EVENT_USER_REMOVE" -> createDispatch(GatewayEvent.GuildScheduledEventUserRemove),
       "INTEGRATION_CREATE"    -> createDispatch(GatewayEvent.IntegrationCreate),
       "INTEGRATION_UPDATE"    -> createDispatch(GatewayEvent.IntegrationUpdate),
       "INTEGRATION_DELETE"    -> createDispatch(GatewayEvent.IntegrationDelete),

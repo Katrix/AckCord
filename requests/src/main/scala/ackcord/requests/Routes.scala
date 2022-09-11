@@ -427,8 +427,8 @@ object Routes {
   val listScheduledEventsForGuild: (GuildId, Option[Boolean]) => RequestRoute =
     (guildScheduledEvents +? query[Boolean]("with_user_count", _.toString)).toRequest(GET)
   val createGuildScheduledEvent: GuildId => RequestRoute = guildScheduledEvents.toRequest(GET)
-  val getGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
-    guildScheduledEvent.toRequest(GET)
+  val getGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent], Option[Boolean]) => RequestRoute =
+    (guildScheduledEvent +? query[Boolean]("with_user_count", _.toString)).toRequest(GET)
   val modifyGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
     guildScheduledEvent.toRequest(PATCH)
   val deleteGuildScheduledEvent: (GuildId, SnowflakeType[GuildScheduledEvent]) => RequestRoute =
@@ -512,7 +512,8 @@ object Routes {
   val guildBans: RouteFunction[GuildId]                = guild / "bans"
   val guildMemberBan: RouteFunction[(GuildId, UserId)] = guildBans / userId
 
-  val getGuildBans: GuildId => RequestRoute                   = guildBans.toRequest(GET)
+  val getGuildBans: (GuildId, Option[Int], Option[UserId], Option[UserId]) => RequestRoute =
+    guildBans +? limitQuery +? query[UserId]("before", _.asString) +? query[UserId]("after", _.asString) toRequest GET
   val getGuildBan: (GuildId, UserId) => RequestRoute          = guildMemberBan.toRequest(GET)
   val createGuildMemberBan: (GuildId, UserId) => RequestRoute = guildMemberBan.toRequest(PUT)
   val removeGuildMemberBan: (GuildId, UserId) => RequestRoute = guildMemberBan.toRequest(DELETE)
@@ -621,6 +622,7 @@ object Routes {
 
     queries.toRequest(GET)
   }
+  val getCurrentUserGuildMember: GuildId => RequestRoute = currentUserGuilds / guildId / "member" toRequest GET
   val leaveGuild: GuildId => RequestRoute = currentUserGuilds / guildId toRequest DELETE
 
   val userDMs: Route         = currentUser / "channels"

@@ -8,7 +8,8 @@ import io.circe.{Decoder, Encoder, derivation}
 case class CreateStageInstanceData(
     channelId: StageGuildChannelId,
     topic: String,
-    privacyLevel: StageInstancePrivacyLevel = StageInstancePrivacyLevel.GuildOnly
+    privacyLevel: StageInstancePrivacyLevel = StageInstancePrivacyLevel.GuildOnly,
+    sendStartNotification: Option[Boolean] = None
 )
 
 case class CreateStageInstance(params: CreateStageInstanceData, reason: Option[String] = None)

@@ -23,9 +23,6 @@ import ackcord.data.raw.PartialUser
   *   URL for the application's privacy policy
   * @param owner
   *   The owner of the application
-  * @param summary
-  *   If this application is a game sold on Discord, then this is a short
-  *   summary
   * @param verifyKey
   *   Hex encoded hey for verification in interactions and the GameSDK's
   *   GetTicket
@@ -56,7 +53,6 @@ case class Application(
     termsOfServiceUrl: Option[String],
     privacyPolicyUrl: Option[String],
     owner: Option[PartialUser],
-    summary: String,
     verifyKey: String,
     team: Option[Team],
     guildId: Option[GuildId],
@@ -77,7 +73,6 @@ case class PartialApplication(
     termsOfServiceUrl: Option[String],
     privacyPolicyUrl: Option[String],
     owner: Option[PartialUser],
-    summary: Option[String],
     verifyKey: Option[String],
     team: Option[Team],
     guildId: Option[GuildId],
