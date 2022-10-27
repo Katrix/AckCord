@@ -75,6 +75,17 @@ object CodeGenTypes {
         values: ListMap[String, String]
     ) extends TypeDef
 
+    case class RequestDef(
+        name: String,
+        imports: Seq[String],
+        documentation: Option[String],
+        path: Seq[PathElem],
+        query: Option[AnonymousClassTypeDef],
+        body: Option[AnonymousClassTypeDefOrType],
+        returnTpe: Option[AnonymousClassTypeDefOrType],
+        allowsReason: Boolean
+    ) extends TypeDef
+
     case class MultipleDefs(
         imports: Seq[String],
         innerTypes: Seq[TypeDef]
@@ -101,6 +112,34 @@ object CodeGenTypes {
               name   <- c.get[String]("name")
               values <- c.get[ListMap[String, String]]("values")
             } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values)
+
+          case "Request" =>
+            for {
+              name             <- c.get[String]("name")
+              path             <- c.get[Seq[PathElem]]("path")
+              query            <- c.get[Option[AnonymousClassTypeDef]]("query")
+              body             <- c.get[Option[AnonymousClassTypeDefOrType]]("body")
+              bodyAllUndefined <- c.downField("body").getOrElse[Boolean]("allUndefined")(false)
+              returnTpe        <- c.get[Option[AnonymousClassTypeDefOrType]]("return")
+              allowsReason     <- c.getOrElse[Boolean]("allowsReason")(false)
+            } yield RequestDef(
+              name,
+              imports,
+              documentation,
+              path,
+              query.map { tpe =>
+                tpe.mapFields(f => f.copy(withNull = true, default = Some("null")))
+              },
+              body.map {
+                case AnonymousClassTypeDefOrType.AnonType(tpe) if bodyAllUndefined =>
+                  AnonymousClassTypeDefOrType.AnonType(
+                    tpe.mapFields(f => f.copy(withUndefined = true, default = Some("undefined")))
+                  )
+                case other => other
+              },
+              returnTpe,
+              allowsReason
+            )
 
           case "Multiple" =>
             Right(MultipleDefs(imports, innerTypes))
@@ -141,5 +180,45 @@ object CodeGenTypes {
         minLength <- c.get[Option[Int]]("minLength")
         maxLength <- c.get[Option[Int]]("maxLength")
       } yield FieldVerification(minLength, maxLength)
+  }
+
+  sealed trait PathElem
+
+  object PathElem {
+    case class StringPathElem(elem: String) extends PathElem
+
+    case class ArgPathElem(name: Option[String], argOf: String, documentation: Option[String]) extends PathElem
+
+    case class CustomArgPathElem(
+        name: String,
+        tpe: String,
+        majorParameter: Boolean,
+        documentation: Option[String]
+    ) extends PathElem
+
+    implicit lazy val pathElemDecoder: Decoder[PathElem] = (c: HCursor) =>
+      c.as[String]
+        .map[PathElem](StringPathElem)
+        .swap
+        .map[Either[DecodingFailure, PathElem]] { _ =>
+          for {
+            name          <- c.get[Option[String]]("name")
+            argOf         <- c.get[String]("argOf")
+            documentation <- c.get[Option[String]]("documentation")
+          } yield ArgPathElem(name, argOf, documentation)
+        }
+        .swap
+        .joinLeft
+        .swap
+        .map { _ =>
+          for {
+            name          <- c.get[String]("name")
+            tpe           <- c.get[String]("customArgType")
+            majorParam    <- c.getOrElse[Boolean]("customArgMajorParameter")(false)
+            documentation <- c.get[Option[String]]("documentation")
+          } yield CustomArgPathElem(name, tpe, majorParam, documentation)
+        }
+        .swap
+        .joinLeft
   }
 }

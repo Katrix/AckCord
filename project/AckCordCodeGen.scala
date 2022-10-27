@@ -27,6 +27,7 @@ object AckCordCodeGen {
     val res = typeDef match {
       case classTypeDef: TypeDef.ClassTypeDef => List(codeFromClassTypeDef(classTypeDef))
       case enumTypeDef: TypeDef.EnumTypeDef   => List(codeFromEnumTypeDef(enumTypeDef))
+      case requestDef: TypeDef.RequestDef     => codeFromRequestDef(requestDef)
       case multiple: TypeDef.MultipleDefs     => multiple.innerTypes.toList.flatMap(codeFromTypeDef)
     }
 
@@ -141,4 +142,113 @@ object AckCordCodeGen {
   def codeFromEnumTypeDef(classTypeDef: TypeDef.EnumTypeDef): String =
     //TODO
     "TODO"
+
+  def knownArgPathElemToCustom(elem: PathElem.ArgPathElem): PathElem.CustomArgPathElem = elem.argOf match {
+    case "GuildId" =>
+      PathElem.CustomArgPathElem(
+        elem.name.getOrElse("guildId"),
+        "GuildId",
+        majorParameter = true,
+        elem.documentation
+      )
+    case _ =>
+      sys.error(s"Unknown path arg element ${elem.argOf}")
+  }
+
+  def codeFromRequestDef(requestDef: TypeDef.RequestDef): List[String] = {
+    val uncapitalizedName = requestDef.name.charAt(0).toLower.toString + requestDef.name.substring(1)
+    val capitalizedName   = uncapitalizedName.capitalize
+    val queryClass = requestDef.query.fold("")(q => codeFromClassTypeDef(q.named(capitalizedName + "Query")) + "\n")
+    val bodyClass = requestDef.body.fold("") {
+      case AnonymousClassTypeDefOrType.TypeRef(_) => ""
+      case AnonymousClassTypeDefOrType.AnonType(anon) =>
+        codeFromClassTypeDef(anon.named(capitalizedName + "Body")) + "\n"
+    }
+    val returnClass = requestDef.returnTpe.fold("") {
+      case AnonymousClassTypeDefOrType.TypeRef(_) => ""
+      case AnonymousClassTypeDefOrType.AnonType(anon) =>
+        codeFromClassTypeDef(anon.named(capitalizedName + "Result")) + "\n"
+    }
+
+    val allCustomPathElems = requestDef.path.map {
+      case argPathElem: PathElem.ArgPathElem => knownArgPathElemToCustom(argPathElem)
+      case other                             => other
+    }
+
+    val pathParamNames = allCustomPathElems.collect { case PathElem.CustomArgPathElem(name, _, _, _) =>
+      name
+    }
+
+    val duplicatePathParamNames = pathParamNames.collect {
+      case name if pathParamNames.count(_ == name) > 1 => name
+    }
+    require(
+      duplicatePathParamNames.isEmpty,
+      s"Found duplicated name for request ${requestDef.name}. Duplicated: ${duplicatePathParamNames.mkString(", ")}"
+    )
+
+    val pathDocs = allCustomPathElems.collect { case PathElem.CustomArgPathElem(name, _, _, Some(documentation)) =>
+      s"@param $name $documentation"
+    }
+
+    val pathParams = allCustomPathElems
+      .collect { case PathElem.CustomArgPathElem(name, tpe, _, _) =>
+        s"$name: $tpe, "
+      }
+      .mkString("\n")
+
+    val queryParam =
+      if (requestDef.query.isDefined) s"query: ${capitalizedName}Query = ${capitalizedName}Query(), " else ""
+
+    val paramsType = requestDef.body.fold("Unit") {
+      case AnonymousClassTypeDefOrType.TypeRef(name)  => name
+      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Body, "
+    }
+
+    val bodyParam = requestDef.body.fold("")(_ => s"body: $paramsType")
+    val returnTpe = requestDef.returnTpe.fold("Unit") {
+      case AnonymousClassTypeDefOrType.TypeRef(name)  => name
+      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Result"
+    }
+
+    val pathArg = requestDef.path
+      .map {
+        case arg @ PathElem.ArgPathElem(_, argOf, _) =>
+          val custom = knownArgPathElemToCustom(arg)
+          s"Parameters.of${argOf.capitalize}(${custom.name})"
+        case PathElem.StringPathElem(elem) => s""""$elem""""
+        case PathElem.CustomArgPathElem(name, tpe, majorParameter, documentation) =>
+          if (majorParameter) s"""Parameters.MajorParameter[$tpe]("$name", $name)"""
+          else s"""Parameters.MinorParameter[$tpe]("$name", $name)"""
+      }
+      .mkString(" / ")
+
+    val queryArg = requestDef.query.filter(_.fields.nonEmpty).fold("") { q =>
+      val highestVersion = q.fields.keys.maxBy(_.replace(".", "").replace("x", "").toInt)
+      q
+        .fields(highestVersion)
+        .map { case (k, v) =>
+          s""" +? Parameters.query("$k", query.$k)"""
+        }
+        .mkString
+    }
+
+    val pathArgWithQuery = pathArg + queryArg
+
+    //TODO: Audit log reason
+
+    val requestDefDef =
+      s"""|${requestDef.documentation.map(docString(_, pathDocs) + "\n")} def $uncapitalizedName(
+          |  $pathParams
+          |  $queryParam
+          |  $bodyParam
+          |): Request[$paramsType, $returnTpe] =
+          |  Request.restRequest(
+          |    route = $pathArgWithQuery,
+          |    ${if (bodyParam.nonEmpty) "params = body," else ""}
+          |  )
+          |""".stripMargin
+
+    List(queryClass, bodyClass, returnClass, requestDefDef).filter(_.nonEmpty)
+  }
 }
