@@ -1,0 +1,125 @@
+defType: Class
+name: Application
+
+imports:
+  - io.circe.Json
+
+documentation:
+  A Discord application
+
+fields:
+  2.0.x:
+    id:
+      type: SnowflakeType[Application]
+      documentation: The id of the application
+
+    name:
+      type: String
+      documentation: The name of the application
+
+    icon:
+      type: String
+      withNull: true
+      documentation: The icon of the application
+
+    rpc_origins:
+      type: Seq[String]
+      withUndefined: true
+
+    bot_public: Boolean
+
+    bot_require_code_grant: Boolean
+
+    terms_of_service_url:
+      type: String
+      withUndefined: true
+
+    privacy_policy_url:
+      type: String
+      withUndefined: true
+
+    owner:
+      type: Application.ApplicationOwner
+      withUndefined: true
+
+    verify_key: String
+
+    team:
+      type: Team
+      withNull: true
+
+    guild_id:
+      type: GuildId
+      withUndefined: true
+
+    primary_sku_id:
+      type: RawSnowflake
+      withUndefined: true
+
+    slug:
+      type: String
+      withUndefined: true
+
+    cover_image:
+      type: String
+      withUndefined: true
+
+    flags:
+      type: Application.Flags
+      withUndefined: true
+
+    tags:
+      type: Seq[String]
+      withUndefined: true
+      verification:
+        max_length: 5
+
+    install_params:
+      type: Application.InstallParams
+      withUndefined: true
+
+    custom_install_url:
+      type: String
+      withUndefined: true
+
+innerTypes:
+  - defType: IntEnum
+    name: Flags
+
+    values:
+      GATEWAY_PRESENCE: "1 << 12"
+      GATEWAY_PRESENCE_LIMITED: "1 << 13"
+      GATEWAY_GUILD_MEMBERS: "1 << 14"
+      GATEWAY_GUILD_MEMBERS_LIMITED: "1 << 15"
+      VERIFICATION_PENDING_GUILD_LIMIT: "1 << 16"
+      EMBEDDED: "1 << 17"
+      GATEWAY_MESSAGE_CONTENT: "1 << 18"
+      GATEWAY_MESSAGE_CONTENT_LIMITED: "1 << 19"
+      APPLICATION_COMMAND_BADGE: "1 << 23"
+
+
+  - defType: Class
+    name: InstallParams
+
+    fields:
+      2.0.x:
+        scopes: Seq[String]
+
+        permissions: Permission
+
+  - defType: Class
+    name: ApplicationOwner
+
+    fields:
+      2.0.x:
+        avatar:
+          type: String
+          withNull: true
+
+        discriminator: String
+
+        flags: Int
+
+        id: UserId
+
+        username: String

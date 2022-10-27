@@ -1,0 +1,219 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AckCord Code generation specifications",
+    "description": "A schema for AckCord's code generation files",
+    "$ref": "#/definitions/typeDef",
+    "definitions": {
+        "typeDef": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/classTypeDef"
+                },
+                {
+                    "$ref": "#/definitions/enumTypeDef"
+                },
+                {
+                    "$ref": "#/definitions/multipleDefs"
+                }
+            ]
+        },
+        "anonymousClassTypeDef": {
+            "description": "A anonymous class type definition",
+            "type": "object",
+            "properties": {
+                "documentation": {
+                    "type": "string",
+                    "description": "A Scaladoc documentation string to add to the definition"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "innerTypes": {
+                    "type": "array",
+                    "description": "Extra types found in the companion object of this type",
+                    "items": {
+                        "$ref": "#/definitions/typeDef"
+                    }
+                },
+                "fields": {
+                    "description": "The fields of this class",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "object",
+                                    "$ref": "#/definitions/fieldDef"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "required": [
+                "fields"
+            ],
+            "additionalProperties": false
+        },
+        "classTypeDef": {
+            "description": "A class type definition",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/anonymousClassTypeDef"
+                },
+                {
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the type"
+                        },
+                        "defType": {
+                            "type": "string",
+                            "description": "The type of Scala type to generate",
+                            "enum": [
+                                "Class"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "defType"
+                    ]
+                }
+            ],
+            "additionalProperties": false
+        },
+        "fieldDef": {
+            "description": "A field within a class",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The type of the field, as seen from the definition of the field"
+                },
+                "default": {
+                    "type": "string",
+                    "description": "The default value of this field"
+                },
+                "documentation": {
+                    "type": "string",
+                    "description": "Documentation for the field"
+                },
+                "withUndefined": {
+                    "type": "boolean",
+                    "description": "Specifies if this field is maybe undefined"
+                },
+                "withNull": {
+                    "type": "boolean",
+                    "description": "Specifies if this field is maybe null"
+                },
+                "verification": {
+                    "type": "object",
+                    "description": "Verification for when the object is constructed by hand",
+                    "properties": {
+                        "max_length": {
+                            "type": "integer"
+                        },
+                        "min_length": {
+                            "type": "integer"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false
+        },
+        "enumTypeDef": {
+            "description": "A enum type definition",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the type"
+                },
+                "documentation": {
+                    "type": "string",
+                    "description": "A Scaladoc documentation string to add to the definition"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "innerTypes": {
+                    "type": "array",
+                    "description": "Extra types found in the companion object of this type",
+                    "items": {
+                        "$ref": "#/definitions/typeDef"
+                    }
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "IntEnum",
+                        "StringEnum"
+                    ]
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "defType",
+                "values"
+            ],
+            "additionalProperties": false
+        },
+        "multipleDefs": {
+            "description": "A definition for multiple entries at the same scope",
+            "type": "object",
+            "properties": {
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "innerTypes": {
+                    "type": "array",
+                    "description": "Extra types found in the current scope",
+                    "items": {
+                        "$ref": "#/definitions/typeDef"
+                    }
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "Multiple"
+                    ]
+                }
+            },
+            "required": [
+                "innerTypes",
+                "defType"
+            ],
+            "additionalProperties": false
+        }
+    }
+}
