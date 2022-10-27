@@ -3,7 +3,7 @@ package ackcord
 
 package object requests {
   type AckCordRequest[Response, -R] = base.AckCordRequest[Response, R]
-  
+
   type ComplexRequest[Params, Response, -R1, -R2] = base.ComplexRequest[Params, Response, R1, R2]
   val ComplexRequest: base.ComplexRequest.type = base.ComplexRequest
 
