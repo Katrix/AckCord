@@ -1,13 +1,13 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion     = "2.6.18"
-lazy val akkaHttpVersion = "10.2.8"
-lazy val circeVersion    = "0.13.0"
-lazy val ackCordVersion  = "0.19.0-SNAPSHOT"
+lazy val circeVersion   = "0.14.2"
+lazy val ackCordVersion = "2.0.0.0-SNAPSHOT"
+
+lazy val generateData = taskKey[Unit]("Generate AckCord data classes")
 
 lazy val commonSettings = Seq(
   scalaVersion       := "2.13.8",
-  crossScalaVersions := Seq("2.12.12", scalaVersion.value),
+  crossScalaVersions := Seq(scalaVersion.value),
   organization       := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -16,13 +16,19 @@ lazy val commonSettings = Seq(
     "-Xlint",
     "-Ywarn-dead-code"
   ),
-  scalacOptions ++= (
-    if (scalaVersion.value.startsWith("2.12"))
-      Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
-    else Nil
-  ),
   libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
-  publishTo := sonatypePublishToBundle.value
+  publishTo := sonatypePublishToBundle.value,
+  generateData := {
+    val sourceDir   = (Compile / sourceDirectory).value.getParentFile.getParentFile.getParentFile / "src" / "main"
+    val resourceDir = sourceDir / "resources"
+    val scalaDir    = sourceDir / "scala"
+
+    val res = AckCordCodeGen.generateCodeFromFile(
+      (resourceDir / "generated").toPath,
+      (resourceDir / "generated" / "ackcord" / "data" / "Application.yaml").toPath
+    )
+    println(res)
+  }
 )
 
 lazy val publishSettings = Seq(
@@ -56,155 +62,34 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
     version                               := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.8",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core"           % circeVersion,
-      "io.circe" %%% "circe-parser"         % circeVersion,
-      "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.13.0-M5"
+      "io.circe" %%% "circe-core"   % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion
     ),
-    libraryDependencies ++= Seq(
-      "com.beachape" %%% "enumeratum"       % "1.7.0",
-      "com.beachape" %%% "enumeratum-circe" % "1.7.0"
-    ),
-    description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
+    description := "AckCord is a Scala library for the Discord API giving as much freedom as possible to the user"
   )
 
 lazy val dataJVM = data.jvm
 lazy val dataJS  = data.js
 
-lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
+lazy val requests = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .settings(
-    commonSettings,
-    publishSettings,
-    name    := "gateway-data",
-    version := ackCordVersion
-  )
   .dependsOn(data)
-
-lazy val gatewayDataJVM = gatewayData.jvm
-lazy val gatewayDataJS  = gatewayData.js
-
-lazy val requests = project
   .settings(
     commonSettings,
     publishSettings,
-    name        := "requests",
-    version     := ackCordVersion,
-    description := "The request module of AckCord",
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
-    ),
-    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
-  )
-  .dependsOn(dataJVM)
-
-lazy val gateway = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name        := "gateway",
-    version     := ackCordVersion,
-    description := "The gateway module of AckCord",
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
-    ),
-    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
-  )
-  .dependsOn(gatewayDataJVM)
-
-lazy val voice = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name        := "voice",
-    version     := ackCordVersion,
-    description := "The voice websocket module of AckCord",
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
-    ),
-    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
-    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern")
-  )
-  .dependsOn(dataJVM)
-
-lazy val commands = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name                                   := "commands",
-    version                                := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.1",
-    description                            := "ackCord-commands provides a Play like commands framework for AckCord"
-  )
-  .dependsOn(requests)
-
-val interactions = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name        := "interactions",
-    version     := ackCordVersion,
-    description := "ackCord-interactions provides a high level API to interact with Discord's interactions"
-  )
-  .dependsOn(requests)
-
-lazy val core = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name    := "core",
+    name    := "requests",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.2.11"    % Test
+      "com.softwaremill.sttp.client3" %% "core"  % "3.7.6",
+      "com.softwaremill.sttp.client3" %% "circe" % "3.7.6"
     ),
-    description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
+    libraryDependencies += "org.slf4j"      % "slf4j-api"       % "2.0.1",
+    libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.3.14",
+    description                            := "The request module of AckCord"
   )
-  .dependsOn(requests, gateway)
 
-lazy val lavaplayerCore = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name    := "lavaplayer-core",
-    version := ackCordVersion,
-    resolvers += Resolver.JCenterRepository,
-    resolvers += "dv8tion" at "https://m2.dv8tion.net/releases",
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.78",
-    description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
-  )
-  .dependsOn(core, voice)
-
-lazy val ackCord = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name                                       := "ackcord",
-    version                                    := ackCordVersion,
-    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    moduleName                                 := "ackcord",
-    description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
-    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
-  )
-  .dependsOn(core, lavaplayerCore, commands, interactions)
-
-lazy val exampleCore = project
-  .settings(
-    commonSettings,
-    noPublishSettings,
-    name                                       := "exampleCore",
-    version                                    := "1.0",
-    Compile / mainClass                        := Some("ackcord.examplecore.Example"),
-    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
-    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.10"
-  )
-  .dependsOn(core, lavaplayerCore, commands, interactions)
+lazy val requestsJVM = requests.jvm
+lazy val requestsJS  = requests.js
 
 lazy val example = project
   .settings(
@@ -214,7 +99,7 @@ lazy val example = project
     version                                := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
   )
-  .dependsOn(ackCord)
+  .dependsOn(dataJVM)
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
@@ -239,18 +124,9 @@ lazy val docs = project
     Compile / scalacOptions ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      dataJVM,
-      gatewayDataJVM,
-      requests,
-      gateway,
-      voice,
-      interactions,
-      core,
-      commands,
-      lavaplayerCore,
-      ackCord
+      dataJVM
     ),
-    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern"),
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp"),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(ScalaUnidoc / packageDoc / mappings, docsMappingsAPIDir),
     //mdoc / fork := true,
@@ -263,25 +139,12 @@ lazy val docs = project
       (LocalRootProject / baseDirectory).value.getAbsolutePath
     )
   )
-  .dependsOn(ackCord)
 
 lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(
     dataJVM,
-    dataJS,
-    gatewayDataJVM,
-    gatewayDataJS,
-    requests,
-    gateway,
-    voice,
-    interactions,
-    core,
-    commands,
-    lavaplayerCore,
-    ackCord,
-    exampleCore,
-    example
+    dataJS
   )
   .settings(
     commonSettings,
