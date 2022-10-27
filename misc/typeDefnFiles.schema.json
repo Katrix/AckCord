@@ -13,6 +13,9 @@
                     "$ref": "#/definitions/enumTypeDef"
                 },
                 {
+                    "$ref": "#/definitions/requestDef"
+                },
+                {
                     "$ref": "#/definitions/multipleDefs"
                 }
             ]
@@ -180,6 +183,138 @@
                 "name",
                 "defType",
                 "values"
+            ],
+            "additionalProperties": false
+        },
+        "requestDef": {
+            "description": "A definition for an AckCord request",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the request"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation": {
+                    "type": "string",
+                    "description": "A Scaladoc documentation string to add to the definition"
+                },
+                "path": {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "argOf": {
+                                        "type": "string",
+                                        "enum": [
+                                            "GuildId",
+                                            "TODO MORE HERE"
+                                        ]
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Name of the parameter"
+                                    },
+                                    "documentation": {
+                                        "type": "string",
+                                        "description": "Docs for this argument"
+                                    }
+                                },
+                                "required": [
+                                    "argOf"
+                                ],
+                                "additionalProperties": false
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "customArgType": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Name of the parameter"
+                                    },
+                                    "customArgMajorParameter": {
+                                        "type": "boolean"
+                                    },
+                                    "documentation": {
+                                        "type": "string",
+                                        "description": "Docs for this argument"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "customArgType"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    }
+                },
+                "query": {
+                    "$ref": "#/definitions/anonymousClassTypeDef"
+                },
+                "body": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/anonymousClassTypeDef"
+                                },
+                                {
+                                    "properties": {
+                                        "allUndefined": {
+                                            "description": "Sets all the body arguments as withUndefined: true. For patch endpoints.",
+
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "return": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "$ref": "#/definitions/anonymousClassTypeDef"
+                        }
+                    ]
+                },
+                "allowsReason": {
+                    "type": "boolean",
+                    "description": "If this requests allows to set the audit log reason"
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "Request"
+                    ]
+                }
+            },
+            "required": [
+                "name",
+                "path",
+                "defType"
             ],
             "additionalProperties": false
         },
