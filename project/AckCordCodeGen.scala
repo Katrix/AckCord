@@ -170,6 +170,8 @@ object AckCordCodeGen {
           |  $values
           |  
           |  def unknown(value: $underlyingType): $tpeName = new $tpeName(value)
+          |
+          |  ${enumTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
           |}""".stripMargin
 
     (enumTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
