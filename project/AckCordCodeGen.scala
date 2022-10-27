@@ -88,7 +88,9 @@ object AckCordCodeGen {
         s"@param $name $documentation"
       }.toSeq
 
-      s"${docString("", fieldDocs)} def $defName(${params.mkString(", ")}): $tpeName = makeRawFromFields(${args.mkString(", ")})"
+      val docs = if (fieldDocs.nonEmpty) docString("", fieldDocs) else ""
+
+      s"$docs def $defName(${params.mkString(", ")}): $tpeName = makeRawFromFields(${args.mkString(", ")})"
     }
 
     val allClassFields = fieldsWithTypes.toSeq.flatMap { case (version, fields) =>
@@ -139,9 +141,41 @@ object AckCordCodeGen {
     (classTypeDef.anonPart.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
   }
 
-  def codeFromEnumTypeDef(classTypeDef: TypeDef.EnumTypeDef): String =
-    //TODO
-    "TODO"
+  def codeFromEnumTypeDef(enumTypeDef: TypeDef.EnumTypeDef): String = {
+    val tpeName = enumTypeDef.name
+
+    val underlyingType = enumTypeDef.enumType match {
+      case "IntEnum"    => "Int"
+      case "StringEnum" => "String"
+    }
+
+    val parent = enumTypeDef.enumType match {
+      case "IntEnum" => "DiscordIntEnum"
+      case "StringEnum" => "DiscordStringEnum"
+    }
+
+    def wrap(value: String): String = enumTypeDef.enumType match {
+      case "IntEnum"    => value
+      case "StringEnum" => "\"" + value + "\""
+    }
+
+    val values = enumTypeDef.values.map { case (name, value) =>
+      s"val $name: $tpeName = $tpeName(${wrap(value)})"
+    }.mkString("\n  ")
+
+    val tpeCode =
+      s"""|sealed case class $tpeName private(value: $underlyingType) extends $parent
+          |object $tpeName extends ${parent}Companion[$tpeName] {
+          |
+          |  $values
+          |  
+          |  def unknown(value: $underlyingType): $tpeName = new $tpeName(value)
+          |
+          |  ${enumTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
+          |}""".stripMargin
+
+    (enumTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
+  }
 
   def knownArgPathElemToCustom(elem: PathElem.ArgPathElem): PathElem.CustomArgPathElem = elem.argOf match {
     case "GuildId" =>

@@ -1,6 +1,6 @@
 package ackcord.data
 
-import io.circe.{Codec, Json}
+import io.circe.Json
 
 /** A Discord application */
 class Application(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -52,13 +52,13 @@ object Application extends DiscordObjectCompanion[Application] {
   def makeRaw(json: Json, cache: Map[String, Any]): Application = new Application(json, cache)
 
   /**
-   * @param id
-   * The id of the application
-   * @param name
-   * The name of the application
-   * @param icon
-   * The icon of the application
-   */
+    * @param id
+    *   The id of the application
+    * @param name
+    *   The name of the application
+    * @param icon
+    *   The icon of the application
+    */
   def make20(
       id: SnowflakeType[Application],
       name: String,
@@ -101,9 +101,20 @@ object Application extends DiscordObjectCompanion[Application] {
     "custom_install_url"    :=? customInstallUrl
   )
 
-  sealed trait Flags
-  object Flags {
-    implicit val codec: Codec[Flags] = ???
+  sealed case class Flags private (value: Int) extends DiscordIntEnum
+  object Flags extends DiscordIntEnumCompanion[Flags] {
+
+    val GATEWAY_PRESENCE: Flags                 = Flags(1 << 12)
+    val GATEWAY_PRESENCE_LIMITED: Flags         = Flags(1 << 13)
+    val GATEWAY_GUILD_MEMBERS: Flags            = Flags(1 << 14)
+    val GATEWAY_GUILD_MEMBERS_LIMITED: Flags    = Flags(1 << 15)
+    val VERIFICATION_PENDING_GUILD_LIMIT: Flags = Flags(1 << 16)
+    val EMBEDDED: Flags                         = Flags(1 << 17)
+    val GATEWAY_MESSAGE_CONTENT: Flags          = Flags(1 << 18)
+    val GATEWAY_MESSAGE_CONTENT_LIMITED: Flags  = Flags(1 << 19)
+    val APPLICATION_COMMAND_BADGE: Flags        = Flags(1 << 23)
+
+    def unknown(value: Int): Flags = new Flags(value)
   }
 
   class InstallParams(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -114,10 +125,7 @@ object Application extends DiscordObjectCompanion[Application] {
   object InstallParams extends DiscordObjectCompanion[InstallParams] {
     def makeRaw(json: Json, cache: Map[String, Any]): InstallParams = new InstallParams(json, cache)
 
-    def
-    /**
-      */
-    make20(scopes: Seq[String], permissions: Permission): InstallParams =
+    def make20(scopes: Seq[String], permissions: Permission): InstallParams =
       makeRawFromFields("scopes" := scopes, "permissions" := permissions)
 
   }
@@ -136,17 +144,19 @@ object Application extends DiscordObjectCompanion[Application] {
   object ApplicationOwner extends DiscordObjectCompanion[ApplicationOwner] {
     def makeRaw(json: Json, cache: Map[String, Any]): ApplicationOwner = new ApplicationOwner(json, cache)
 
-    def
-    /**
-      */
-    make20(avatar: Option[String], discriminator: String, flags: Int, id: UserId, username: String): ApplicationOwner =
-      makeRawFromFields(
-        "avatar"        := avatar,
-        "discriminator" := discriminator,
-        "flags"         := flags,
-        "id"            := id,
-        "username"      := username
-      )
+    def make20(
+        avatar: Option[String],
+        discriminator: String,
+        flags: Int,
+        id: UserId,
+        username: String
+    ): ApplicationOwner = makeRawFromFields(
+      "avatar"        := avatar,
+      "discriminator" := discriminator,
+      "flags"         := flags,
+      "id"            := id,
+      "username"      := username
+    )
 
   }
 }
