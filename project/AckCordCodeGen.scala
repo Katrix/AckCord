@@ -25,10 +25,11 @@ object AckCordCodeGen {
     val imports = typeDef.imports.map(s => s"import $s")
 
     val res = typeDef match {
-      case classTypeDef: TypeDef.ClassTypeDef => List(codeFromClassTypeDef(classTypeDef))
-      case enumTypeDef: TypeDef.EnumTypeDef   => List(codeFromEnumTypeDef(enumTypeDef))
-      case requestDef: TypeDef.RequestDef     => codeFromRequestDef(requestDef)
-      case multiple: TypeDef.MultipleDefs     => multiple.innerTypes.toList.flatMap(codeFromTypeDef)
+      case classTypeDef: TypeDef.ClassTypeDef   => List(codeFromClassTypeDef(classTypeDef))
+      case enumTypeDef: TypeDef.EnumTypeDef     => List(codeFromEnumTypeDef(enumTypeDef))
+      case opaqueTypeDef: TypeDef.OpaqueTypeDef => List(codeFromOpaqueTypeDef(opaqueTypeDef))
+      case requestDef: TypeDef.RequestDef       => codeFromRequestDef(requestDef)
+      case multiple: TypeDef.MultipleDefs       => multiple.innerTypes.toList.flatMap(codeFromTypeDef)
     }
 
     imports.mkString("\n") :: res
@@ -150,7 +151,7 @@ object AckCordCodeGen {
     }
 
     val parent = enumTypeDef.enumType match {
-      case "IntEnum" => "DiscordIntEnum"
+      case "IntEnum"    => "DiscordIntEnum"
       case "StringEnum" => "DiscordStringEnum"
     }
 
@@ -159,9 +160,11 @@ object AckCordCodeGen {
       case "StringEnum" => "\"" + value + "\""
     }
 
-    val values = enumTypeDef.values.map { case (name, value) =>
-      s"val $name: $tpeName = $tpeName(${wrap(value)})"
-    }.mkString("\n  ")
+    val values = enumTypeDef.values
+      .map { case (name, value) =>
+        s"val $name: $tpeName = $tpeName(${wrap(value)})"
+      }
+      .mkString("\n  ")
 
     val tpeCode =
       s"""|sealed case class $tpeName private(value: $underlyingType) extends $parent
@@ -175,6 +178,23 @@ object AckCordCodeGen {
           |}""".stripMargin
 
     (enumTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
+  }
+
+  def codeFromOpaqueTypeDef(opaqueTypeDef: TypeDef.OpaqueTypeDef): String = {
+    val tpeName = opaqueTypeDef.name
+
+    val aliasCode = s"type $tpeName = $tpeName.$tpeName" + "\n"
+
+    val companionCode =
+      s"""|object $tpeName extends DiscordOpaqueCompanion[${opaqueTypeDef.underlying}] {
+          |  type $tpeName = OpaqueType
+          |
+          |  ${opaqueTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
+          |}""".stripMargin
+
+    val tpeCode = if (opaqueTypeDef.includeAlias) aliasCode + companionCode else companionCode
+
+    (opaqueTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
   }
 
   def knownArgPathElemToCustom(elem: PathElem.ArgPathElem): PathElem.CustomArgPathElem = elem.argOf match {
