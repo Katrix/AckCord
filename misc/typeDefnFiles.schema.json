@@ -13,6 +13,9 @@
                     "$ref": "#/definitions/enumTypeDef"
                 },
                 {
+                    "$ref": "#/definitions/opaqueTypeDef"
+                },
+                {
                     "$ref": "#/definitions/requestDef"
                 },
                 {
@@ -113,11 +116,13 @@
                 },
                 "withUndefined": {
                     "type": "boolean",
-                    "description": "Specifies if this field is maybe undefined"
+                    "description": "Specifies if this field is maybe undefined",
+                    "default": false
                 },
                 "withNull": {
                     "type": "boolean",
-                    "description": "Specifies if this field is maybe null"
+                    "description": "Specifies if this field is maybe null",
+                    "default": false
                 },
                 "verification": {
                     "type": "object",
@@ -183,6 +188,56 @@
                 "name",
                 "defType",
                 "values"
+            ],
+            "additionalProperties": false
+        },
+        "opaqueTypeDef": {
+            "description": "A opaque type definition",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the type"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation": {
+                    "type": "string",
+                    "description": "A Scaladoc documentation string to add to the definition"
+                },
+                "underlying": {
+                    "type": "string",
+                    "description": "The underlying type of the opaque type"
+                },
+                "includeAlias": {
+                    "type": "boolean",
+                    "description": "If there should be included an alias outside the companion object of this type",
+                    "default": true
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "Opaque"
+                    ]
+                },
+                "innerTypes": {
+                    "type": "array",
+                    "description": "Extra types found in the current scope",
+                    "items": {
+                        "$ref": "#/definitions/typeDef"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "underlying",
+                "defType"
             ],
             "additionalProperties": false
         },
@@ -280,8 +335,8 @@
                                     "properties": {
                                         "allUndefined": {
                                             "description": "Sets all the body arguments as withUndefined: true. For patch endpoints.",
-
-                                            "type": "boolean"
+                                            "type": "boolean",
+                                            "default": false
                                         }
                                     }
                                 }
@@ -301,7 +356,8 @@
                 },
                 "allowsReason": {
                     "type": "boolean",
-                    "description": "If this requests allows to set the audit log reason"
+                    "description": "If this requests allows to set the audit log reason",
+                    "default": false,
                 },
                 "defType": {
                     "type": "string",

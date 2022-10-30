@@ -75,6 +75,15 @@ object CodeGenTypes {
         values: ListMap[String, String]
     ) extends TypeDef
 
+    case class OpaqueTypeDef(
+        name: String,
+        imports: Seq[String],
+        documentation: Option[String],
+        underlying: String,
+        includeAlias: Boolean,
+        innerTypes: Seq[TypeDef],
+    ) extends TypeDef
+
     case class RequestDef(
         name: String,
         imports: Seq[String],
@@ -112,6 +121,13 @@ object CodeGenTypes {
               name   <- c.get[String]("name")
               values <- c.get[ListMap[String, String]]("values")
             } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values)
+
+          case "Opaque" =>
+            for {
+              name         <- c.get[String]("name")
+              underlying   <- c.get[String]("underlying")
+              includeAlias <- c.getOrElse[Boolean]("includeAlias")(true)
+            } yield OpaqueTypeDef(name, imports, documentation, underlying, includeAlias, innerTypes)
 
           case "Request" =>
             for {
