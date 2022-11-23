@@ -224,7 +224,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     InteractionsRegistrar
       .createGuildCommands(
         msg.applicationId,
-        GuildId("269988507378909186"),
+        GuildId("585454996800405509"),
         requests,
         replaceAll = true,
         allCommands: _*

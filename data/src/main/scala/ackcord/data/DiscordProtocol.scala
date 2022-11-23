@@ -297,25 +297,71 @@ trait DiscordProtocol {
   implicit val selectOptionCodec: Codec[SelectOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val selectMenuEncoder: Encoder[SelectMenu] = {
-    val base: Encoder[SelectMenu] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
-    (a: SelectMenu) => base(a).deepMerge(Json.obj("type" := a.tpe))
+  implicit val stringSelectCodec: Codec[StringSelect] = {
+    val base: Codec[StringSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: StringSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
   }
 
-  implicit private val selectMenuDecoder: Decoder[SelectMenu] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+  implicit val channelSelectCodec: Codec[ChannelSelect] = {
+    val base: Codec[ChannelSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: ChannelSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val userSelectCodec: Codec[UserSelect] = {
+    val base: Codec[UserSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: UserSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val roleSelectCodec: Codec[RoleSelect] = {
+    val base: Codec[RoleSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: RoleSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val mentionableSelectCodec: Codec[MentionableSelect] = {
+    val base: Codec[MentionableSelect] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: MentionableSelect) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
       c.get[ComponentType]("type").flatMap {
-        case ComponentType.Button      => c.as[Button]
-        case ComponentType.SelectMenu  => c.as[SelectMenu]
-        case ComponentType.ActionRow   => Left(DecodingFailure("Invalid component type ActionRow", c.history))
-        case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
+        case ComponentType.Button            => c.as[Button]
+        case ComponentType.StringSelect      => c.as[StringSelect]
+        case ComponentType.ChannelSelect     => c.as[ChannelSelect]
+        case ComponentType.UserSelect        => c.as[UserSelect]
+        case ComponentType.RoleSelect        => c.as[RoleSelect]
+        case ComponentType.MentionableSelect => c.as[MentionableSelect]
+        case ComponentType.InputText         => Left(DecodingFailure("Unhandled component type: InputText", c.history))
+        case ComponentType.ActionRow         => Left(DecodingFailure("Invalid component type ActionRow", c.history))
+        case ComponentType.Unknown(id)       => Left(DecodingFailure(s"Unknown component type $id", c.history))
       },
     {
-      case button: Button   => button.asJson
-      case menu: SelectMenu => menu.asJson
+      case button: Button          => button.asJson
+      case menu: StringSelect      => menu.asJson
+      case menu: ChannelSelect     => menu.asJson
+      case menu: UserSelect        => menu.asJson
+      case menu: RoleSelect        => menu.asJson
+      case menu: MentionableSelect => menu.asJson
     }
   )
 

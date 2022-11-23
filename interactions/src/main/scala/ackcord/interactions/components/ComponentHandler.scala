@@ -23,7 +23,7 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
     val requests: Requests,
     interactionTransformer: InteractionTransformer[BaseInteraction, InteractionTpe] =
       InteractionTransformer.identity[BaseInteraction],
-    acceptedComponent: ComponentType
+    acceptedComponent: Seq[ComponentType]
 ) extends InteractionHandlerOps {
 
   /**
@@ -66,8 +66,8 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
       cacheSnapshot: Option[CacheSnapshot]
   ): Option[InteractionResponse] = {
     val isCorrectComponentType = interaction.data
-      .collect { case ApplicationComponentInteractionData(componentType, _, _) =>
-        acceptedComponent == componentType
+      .collect { case ApplicationComponentInteractionData(componentType, _, _, _) =>
+        acceptedComponent.contains(componentType)
       }
       .exists(identity)
 

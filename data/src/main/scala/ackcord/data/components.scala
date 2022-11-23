@@ -19,8 +19,8 @@ case class ActionRow private (
   override def tpe: ComponentType = ComponentType.ActionRow
 
   def mapButtons(f: Button => Button): ActionRow = copy(components = components.map {
-    case button: Button   => f(button)
-    case menu: SelectMenu => menu
+    case button: Button             => f(button)
+    case menu: InteractiveComponent => menu
   })
 
   def updateButton(identifier: String, f: TextButton => Button): ActionRow = copy(components = components.map {
@@ -29,15 +29,18 @@ case class ActionRow private (
   })
 }
 object ActionRow {
-  def ofUnsafe(components: Seq[ActionRowContent]) = new ActionRow(components)
-  def of(buttons: Button*): ActionRow             = new ActionRow(buttons)
-  def of(selectMenu: SelectMenu): ActionRow       = new ActionRow(Seq(selectMenu))
+  def ofUnsafe(components: Seq[ActionRowContent])     = new ActionRow(components)
+  def of(buttons: Button*): ActionRow                 = new ActionRow(buttons)
+  def of(selectMenu: InteractiveComponent): ActionRow = new ActionRow(Seq(selectMenu))
 }
 
 sealed trait ActionRowContent extends Component
 
-sealed trait Button extends ActionRowContent {
+sealed trait InteractiveComponent extends ActionRowContent {
+  def customId: String
+}
 
+sealed trait Button extends ActionRowContent {
   def tpe: ComponentType = ComponentType.Button
 
   def label: Option[String]
@@ -168,21 +171,82 @@ object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[But
   override def createUnknown(value: Int): ButtonStyle = Unknown(value)
 }
 
-case class SelectMenu(
+case class StringSelect(
     options: Seq[SelectOption],
     placeholder: Option[String] = None,
     customId: String = UUID.randomUUID().toString,
     minValues: Int = 1,
     maxValues: Int = 1,
     disabled: Boolean = false
-) extends ActionRowContent {
+) extends InteractiveComponent {
   Verifier.requireLength(customId, "Custom id", max = 100)
   Verifier.requireLengthS(options, "Options", max = 25)
   Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
   Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
   Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
 
-  override def tpe: ComponentType = ComponentType.SelectMenu
+  override def tpe: ComponentType = ComponentType.StringSelect
+}
+
+case class UserSelect(
+    placeholder: Option[String] = None,
+    customId: String = UUID.randomUUID().toString,
+    minValues: Int = 1,
+    maxValues: Int = 1,
+    disabled: Boolean = false
+) extends InteractiveComponent {
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
+  Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
+  Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
+
+  override def tpe: ComponentType = ComponentType.UserSelect
+}
+
+case class RoleSelect(
+    placeholder: Option[String] = None,
+    customId: String = UUID.randomUUID().toString,
+    minValues: Int = 1,
+    maxValues: Int = 1,
+    disabled: Boolean = false
+) extends InteractiveComponent {
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
+  Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
+  Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
+
+  override def tpe: ComponentType = ComponentType.RoleSelect
+}
+
+case class MentionableSelect(
+    placeholder: Option[String] = None,
+    customId: String = UUID.randomUUID().toString,
+    minValues: Int = 1,
+    maxValues: Int = 1,
+    disabled: Boolean = false
+) extends InteractiveComponent {
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
+  Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
+  Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
+
+  override def tpe: ComponentType = ComponentType.MentionableSelect
+}
+
+case class ChannelSelect(
+    placeholder: Option[String] = None,
+    customId: String = UUID.randomUUID().toString,
+    minValues: Int = 1,
+    maxValues: Int = 1,
+    channelTypes: Option[Seq[ChannelType]] = None,
+    disabled: Boolean = false
+) extends InteractiveComponent {
+  Verifier.requireLength(customId, "Custom id", max = 100)
+  Verifier.requireLengthO(placeholder, "Placeholder", max = 100)
+  Verifier.requireRange(minValues, "Min values", min = 0, max = 25)
+  Verifier.requireRange(maxValues, "Max values", min = 0, max = 25)
+
+  override def tpe: ComponentType = ComponentType.ChannelSelect
 }
 
 case class SelectOption(
@@ -209,9 +273,14 @@ sealed abstract class ComponentType(val value: Int) extends IntEnumEntry
 object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown[ComponentType] {
   override def values: immutable.IndexedSeq[ComponentType] = findValues
 
-  case object ActionRow  extends ComponentType(1)
-  case object Button     extends ComponentType(2)
-  case object SelectMenu extends ComponentType(3)
+  case object ActionRow         extends ComponentType(1)
+  case object Button            extends ComponentType(2)
+  case object StringSelect      extends ComponentType(3)
+  case object InputText         extends ComponentType(4)
+  case object UserSelect        extends ComponentType(5)
+  case object RoleSelect        extends ComponentType(6)
+  case object MentionableSelect extends ComponentType(7)
+  case object ChannelSelect     extends ComponentType(8)
 
   case class Unknown(id: Int) extends ComponentType(id)
 

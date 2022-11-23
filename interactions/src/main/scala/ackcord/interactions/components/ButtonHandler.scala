@@ -19,7 +19,7 @@ abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
 ) extends ComponentHandler[ComponentInteraction, InteractionTpe](
       requests,
       interactionTransformer,
-      ComponentType.Button
+      Seq(ComponentType.Button)
     ) {
 
   override protected def makeBaseInteraction(

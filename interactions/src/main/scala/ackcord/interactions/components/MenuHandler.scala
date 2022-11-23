@@ -1,7 +1,14 @@
 package ackcord.interactions.components
 
 import ackcord.CacheSnapshot
-import ackcord.data.{ApplicationComponentInteractionData, ComponentType, Message, RawInteraction}
+import ackcord.data.{
+  ApplicationCommandInteractionData,
+  ApplicationComponentInteractionData,
+  ApplicationUnknownInteractionData,
+  ComponentType,
+  Message,
+  RawInteraction
+}
 import ackcord.interactions._
 import ackcord.requests.Requests
 
@@ -18,7 +25,13 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
 ) extends ComponentHandler[MenuInteraction, InteractionTpe](
       requests,
       interactionTransformer,
-      ComponentType.SelectMenu
+      Seq(
+        ComponentType.StringSelect,
+        ComponentType.RoleSelect,
+        ComponentType.UserSelect,
+        ComponentType.ChannelSelect,
+        ComponentType.MentionableSelect
+      )
     ) {
 
   override protected def makeBaseInteraction(
@@ -34,9 +47,12 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         message,
         customId,
         interaction.data
-          .collect { case ApplicationComponentInteractionData(_, _, values) => values }
+          .collect { case ApplicationComponentInteractionData(_, _, values, _) => values }
           .flatten
           .getOrElse(Nil),
+        interaction.data.collect { case ApplicationComponentInteractionData(_, _, _, resolved) =>
+          resolved
+        }.flatten,
         c
       )
     case None =>
@@ -45,9 +61,12 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         message,
         customId,
         interaction.data
-          .collect { case ApplicationComponentInteractionData(_, _, values) => values }
+          .collect { case ApplicationComponentInteractionData(_, _, values, _) => values }
           .flatten
-          .getOrElse(Nil)
+          .getOrElse(Nil),
+        interaction.data.collect { case ApplicationComponentInteractionData(_, _, _, resolved) =>
+          resolved
+        }.flatten
       )
   }
 }
@@ -61,7 +80,7 @@ object MenuHandler {
       .identity[MenuInteraction]
       .andThen(
         InteractionTransformer.cache(c =>
-          i => BaseCacheMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, c)
+          i => BaseCacheMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, i.resolved, c)
         )
       )
 
@@ -72,7 +91,17 @@ object MenuHandler {
   val resolvedTransformer: InteractionTransformer[MenuInteraction, ResolvedMenuInteraction] =
     cacheTransformer.andThen(
       InteractionTransformer.resolved((t, g) =>
-        i => BaseResolvedMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, t, g, i.cache)
+        i =>
+          BaseResolvedMenuInteraction(
+            i.interactionInvocationInfo,
+            i.message,
+            i.customId,
+            i.values,
+            i.resolved,
+            t,
+            g,
+            i.cache
+          )
       )
     )
 
@@ -83,7 +112,19 @@ object MenuHandler {
   val guildTransformer: InteractionTransformer[MenuInteraction, GuildMenuInteraction] =
     resolvedTransformer.andThen(
       InteractionTransformer.onlyInGuild((g, m, p, t) =>
-        i => BaseGuildMenuInteraction(i.interactionInvocationInfo, i.message, i.customId, i.values, t, g, m, p, i.cache)
+        i =>
+          BaseGuildMenuInteraction(
+            i.interactionInvocationInfo,
+            i.message,
+            i.customId,
+            i.values,
+            i.resolved,
+            t,
+            g,
+            m,
+            p,
+            i.cache
+          )
       )
     )
 
@@ -100,6 +141,7 @@ object MenuHandler {
             i.message,
             i.customId,
             i.values,
+            i.resolved,
             i.textChannel,
             i.guild,
             i.member,

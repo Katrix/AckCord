@@ -78,6 +78,7 @@ trait ComponentInteraction extends Interaction {
 
 trait MenuInteraction extends ComponentInteraction {
   def values: Seq[String]
+  def resolved: Option[ApplicationCommandInteractionDataResolved]
 }
 
 trait CacheInteraction extends Interaction {
@@ -99,6 +100,7 @@ case class BaseCacheMenuInteraction(
     message: Message,
     customId: String,
     values: Seq[String],
+    resolved: Option[ApplicationCommandInteractionDataResolved],
     cache: CacheSnapshot
 ) extends CacheMenuInteraction
 case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocationInfo[A], cache: CacheSnapshot)
@@ -125,6 +127,7 @@ case class BaseResolvedMenuInteraction(
     message: Message,
     customId: String,
     values: Seq[String],
+    resolved: Option[ApplicationCommandInteractionDataResolved],
     textChannel: TextChannel,
     optGuild: Option[GatewayGuild],
     cache: CacheSnapshot
@@ -164,6 +167,7 @@ case class BaseGuildMenuInteraction(
     message: Message,
     customId: String,
     values: Seq[String],
+    resolved: Option[ApplicationCommandInteractionDataResolved],
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
     member: GuildMember,
@@ -202,6 +206,7 @@ case class BaseVoiceChannelMenuInteraction(
     message: Message,
     customId: String,
     values: Seq[String],
+    resolved: Option[ApplicationCommandInteractionDataResolved],
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
     member: GuildMember,
@@ -231,7 +236,8 @@ case class StatelessMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     customId: String,
-    values: Seq[String]
+    values: Seq[String],
+    resolved: Option[ApplicationCommandInteractionDataResolved]
 ) extends MenuInteraction {
   override def optCache: Option[CacheSnapshot] = None
 }
