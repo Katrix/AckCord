@@ -4,7 +4,10 @@ import ackcord.data.SnowflakeType.SnowflakeType
 
 object Parameters {
 
+  /** A typeclass describing how to print a type in an URI. */
   trait ParameterPrintable[A] {
+
+    /** Print a value for use within an URI. */
     def print(a: A): String
   }
 

@@ -1,13 +1,14 @@
 package ackcord.requests.base.ratelimiter
 
-import scala.concurrent.duration._
-
 /**
   * Misc info needed to handle ratelimits correctly.
   *
-  * @param tilReset
-  *   The amount of time until this endpoint ratelimit is reset. Minus if
+  * @param resetAt
+  *   Time in epoch millis when this endpoint ratelimit is reset. Minus if
   *   unknown.
+  * @param retryAt
+  *   Time in epoch millis when this request (or another one sharing the same
+  *   bucket) can be retried.
   * @param tilRatelimit
   *   The amount of requests that can be made until this endpoint is
   *   ratelimited. -1 if unknown.
@@ -17,16 +18,20 @@ import scala.concurrent.duration._
   * -1 if unknown.
   * @param bucket
   *   The ratelimit bucket for this request. Does not include any parameters.
+  * @param isGlobal
+  *   Indicates if the ratelimit is global.
   */
 case class RatelimitInfo(
-    tilReset: FiniteDuration,
+    resetAt: Long,
+    retryAt: Long,
     tilRatelimit: Int,
     bucketLimit: Int,
-    bucket: String
+    bucket: String,
+    isGlobal: Boolean
 ) {
 
   /**
     * Returns if this ratelimit info does not contain any unknown placeholders.
     */
-  def isValid: Boolean = tilReset > 0.millis && tilRatelimit != -1 && bucketLimit != -1
+  def isValid: Boolean = resetAt > 0 && tilRatelimit != -1 && bucketLimit != -1
 }

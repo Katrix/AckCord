@@ -84,7 +84,7 @@ lazy val requests = crossProject(JSPlatform, JVMPlatform)
       "com.softwaremill.sttp.client3" %% "circe" % "3.7.6"
     ),
     libraryDependencies += "org.slf4j"      % "slf4j-api"       % "2.0.1",
-    libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.3.14",
+    libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.4.4",
     description                            := "The request module of AckCord"
   )
 

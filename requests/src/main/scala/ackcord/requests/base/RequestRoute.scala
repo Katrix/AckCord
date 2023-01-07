@@ -1,6 +1,6 @@
 package ackcord.requests.base
 
-import ackcord.data.AckCord
+import ackcord.data.AckCordInfo
 import sttp.client3._
 import sttp.model.{Method, Uri}
 
@@ -19,6 +19,15 @@ import sttp.model.{Method, Uri}
   */
 case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: Method) {
 
+  /**
+    * Set the URI and method of a Sttp request.
+    * @param base
+    *   The base URI to add on to the URI in this object. The scheme and
+    *   authority are replaced with the ones found on the base. The segments of
+    *   the base come before the segments of the route.
+    * @param request
+    *   The Sttp request object to modify.
+    */
   def setSttpUriMethod[T, R](base: Uri, request: RequestT[Empty, T, R]): RequestT[Identity, T, R] =
     request.method(
       method,
@@ -32,11 +41,11 @@ case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri,
 }
 object RequestRoute {
 
-  val defaultBase: Uri = Uri(s"https://discord.com/api/v${AckCord.DiscordApiVersion}")
+  val defaultBase: Uri = Uri(s"https://discord.com/api/v${AckCordInfo.DiscordApiVersion}")
 
   /**
-    * Create a [[RequestRoute]] from a [[Route]] using the raw and
-    * applied values for the this route, and adding the query at the end.
+    * Create a [[RequestRoute]] from a [[Route]] using the raw and applied
+    * values for the this route, and adding the query at the end.
     */
   def apply(route: Route, method: Method): RequestRoute =
     RequestRoute(

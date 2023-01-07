@@ -15,12 +15,12 @@ case class HttpException(uri: Uri, method: Method, statusCode: StatusCode, extra
   *
   * @param global
   *   If the rate limit is global.
-  * @param tilRetry
-  *   The amount of time in milliseconds until the ratelimit goes away.
+  * @param resetAt
+  *   The time in epoch millis when the ratelimit is reset.
   * @param uri
   *   The Uri for the request.
   */
-case class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
+case class RatelimitException(global: Boolean, resetAt: Long, uri: Uri, identifier: UUID)
     extends Exception(
       if (global) "Encountered global ratelimit"
       else s"Encountered ratelimit at $uri $identifier"

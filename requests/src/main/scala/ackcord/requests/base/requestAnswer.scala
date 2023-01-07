@@ -51,21 +51,20 @@ object FailedRequest {
 
   /** A request that did not succeed because of a ratelimit. */
   case class RequestRatelimited(
-      global: Boolean,
       ratelimitInfo: RatelimitInfo,
       route: RequestRoute,
       identifier: UUID
   ) extends FailedRequest {
 
     override def asException: RatelimitException =
-      RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
+      RatelimitException(ratelimitInfo.isGlobal, ratelimitInfo.resetAt, route.uri, identifier)
   }
 
   /** A request that failed for some other reason. */
   case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) extends FailedRequest {
     override def asException: Throwable = e
 
-    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
+    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", false)
   }
 
   /**
@@ -75,6 +74,6 @@ object FailedRequest {
   case class RequestDropped(route: RequestRoute, identifier: UUID) extends FailedRequest {
     override def asException: DroppedRequestException = DroppedRequestException(route.uri)
 
-    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
+    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", false)
   }
 }
