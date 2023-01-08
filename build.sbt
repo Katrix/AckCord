@@ -19,15 +19,18 @@ lazy val commonSettings = Seq(
   libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
   publishTo := sonatypePublishToBundle.value,
   generateData := {
-    val sourceDir   = (Compile / sourceDirectory).value.getParentFile.getParentFile.getParentFile / "src" / "main"
-    val resourceDir = sourceDir / "resources"
-    val scalaDir    = sourceDir / "scala"
+    val sourceDir    = (Compile / sourceDirectory).value.getParentFile.getParentFile.getParentFile / "src" / "main"
+    val scalaDir     = sourceDir / "scala"
+    val generatedDir = sourceDir / "resources" / "generated"
 
-    val res = AckCordCodeGen.generateCodeFromFile(
-      (resourceDir / "generated").toPath,
-      (resourceDir / "generated" / "ackcord" / "data" / "Application.yaml").toPath
-    )
-    println(res)
+    val files = generatedDir ** "*.yaml"
+
+    files.get().foreach { yamlFile =>
+      val relativeFile  = yamlFile.relativeTo(generatedDir).get
+      val scalaPath     = scalaDir / s"${relativeFile.getParent}${Path.sep}${relativeFile.base}.scala"
+      val generatedCode = AckCordCodeGen.generateCodeFromFile(generatedDir.toPath, yamlFile.toPath)
+      IO.write(scalaPath, generatedCode)
+    }
   }
 )
 
@@ -90,6 +93,23 @@ lazy val requests = crossProject(JSPlatform, JVMPlatform)
 
 lazy val requestsJVM = requests.jvm
 lazy val requestsJS  = requests.js
+
+lazy val gateway = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(data)
+  .settings(
+    commonSettings,
+    publishSettings,
+    name    := "gateway",
+    version := ackCordVersion,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.client3" %% "core"  % "3.7.6",
+      "com.softwaremill.sttp.client3" %% "circe" % "3.7.6"
+    ),
+    libraryDependencies += "org.slf4j"      % "slf4j-api"       % "2.0.1",
+    libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.4.4",
+    description                            := "The gateway module of AckCord"
+  )
 
 lazy val example = project
   .settings(

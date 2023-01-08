@@ -8,7 +8,8 @@ object CodeGenTypes {
       imports: Seq[String],
       documentation: Option[String],
       innerTypes: Seq[TypeDef],
-      fields: ListMap[String, ListMap[String, FieldDef]]
+      fields: ListMap[String, ListMap[String, FieldDef]],
+      `extends`: Seq[String]
   ) {
     def named(name: String): TypeDef.ClassTypeDef = TypeDef.ClassTypeDef(name, this)
 
@@ -30,6 +31,7 @@ object CodeGenTypes {
         documentation <- c.get[Option[String]]("documentation")
         innerTypes    <- c.getOrElse[Seq[TypeDef]]("innerTypes")(Nil)
         fieldsMap     <- c.get[ListMap[String, ListMap[String, Either[String, FieldDef]]]]("fields")
+        extend        <- c.getOrElse[Seq[String]]("extends")(Nil)
       } yield AnonymousClassTypeDef(
         imports,
         documentation,
@@ -38,7 +40,8 @@ object CodeGenTypes {
           k1 -> v1.map { case (k2, v2) =>
             k2 -> v2.swap.map(tpe => FieldDef(tpe, None, None, withUndefined = false, withNull = false, None)).merge
           }
-        }
+        },
+        extend
       )
     }
   }
@@ -81,7 +84,7 @@ object CodeGenTypes {
         documentation: Option[String],
         underlying: String,
         includeAlias: Boolean,
-        innerTypes: Seq[TypeDef],
+        innerTypes: Seq[TypeDef]
     ) extends TypeDef
 
     case class RequestDef(
@@ -96,6 +99,12 @@ object CodeGenTypes {
     ) extends TypeDef
 
     case class MultipleDefs(
+        imports: Seq[String],
+        innerTypes: Seq[TypeDef]
+    ) extends TypeDef
+
+    case class ObjectOnlyDef(
+        name: String,
         imports: Seq[String],
         innerTypes: Seq[TypeDef]
     ) extends TypeDef
@@ -159,6 +168,9 @@ object CodeGenTypes {
 
           case "Multiple" =>
             Right(MultipleDefs(imports, innerTypes))
+
+          case "ObjectOnly" =>
+            c.get[String]("name").map(name => ObjectOnlyDef(name, imports, innerTypes))
         }
       } yield res
   }

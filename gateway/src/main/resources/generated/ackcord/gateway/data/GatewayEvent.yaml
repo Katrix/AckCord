@@ -1,0 +1,248 @@
+name: GatewayEvent
+defType: ObjectOnly
+imports:
+  - ackcord.data.DiscordObject
+  - ackcord.data.DiscordObjectCompanion
+  - ackcord.data.DiscordStringEnum
+  - ackcord.data.DiscordStringEnumCompanion
+  - ackcord.data.UndefOr
+  - ackcord.data.UndefOrSome
+  - io.circe.Json
+innerTypes:
+  - name: Dispatch
+    defType: Class
+    extends: [ "GatewayEventBase[Json]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Dispatch # 0
+        d: Json
+
+
+  - name: Heartbeat
+    defType: Class
+    extends: [ "GatewayEventBase[Int]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Heartbeat # 1
+        d:
+          type: Int
+          withNull: true
+        t: GatewayDispatchType
+        s: Int
+
+  - name: Identify
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.Identify.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Identify # 2
+        d: GatewayEvent.Identify.Data
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            token:
+              type: String
+              documentation: The auth token
+            properties:
+              type: Map[String, String]
+              documentation: Misc connection properties
+            compress:
+              type: Boolean
+              withUndefined: true
+              default: "false"
+              documentation: If the connection supports compression
+            largeThreshold:
+              type: Int
+              withUndefined: true
+              documentation: A number between 50 and 250 indicating when offline members should no longer be sent.
+            shard:
+              type: Seq[Int]
+              withUndefined: true
+              documentation: Array of two intergers, those being [shardId, numShards] indicating how sharding should be done
+            presence:
+              type: GatewayEvent.UpdatePresence.Data
+              withUndefined: true
+              documentation: Initial presence info
+            intents:
+              type: GatewayIntents
+              documentation: The gateway intents indicating what events we want to receive
+
+  - name: UpdatePresence
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.UpdatePresence.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.UpdatePresence # 3
+        d: GatewayEvent.UpdatePresence.Data
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            since:
+              type: Int
+              withNull: true
+              documentation: Unix time (millis) of when client went idle, or null if client is not idle
+            activities:
+              type: Seq[Activity]
+              documentation: Client's activities
+            status:
+              type: GatewayEvent.UpdatePresence.Status
+              documentation: Client's status
+            afk:
+              type: Boolean
+              documentation: If the Client is AFK
+      - name: Status
+        defType: StringEnum
+        values:
+          Online: online
+          DoNotDisturb: dnd
+          Idle: idle
+          Invisible: invisible
+          Offline: Offline
+
+
+
+  - name: UpdateVoiceState
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.UpdateVoiceState.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.UpdateVoiceState # 4
+        d: GatewayEvent.UpdateVoiceState.Data
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            guildId:
+              type: GuildId
+              documentation: Id of the guild
+            channelId:
+              type: ChannelId
+              withNull: true
+              documentation: Id of the voice channel to join, or null if disconnecting
+            selfMute:
+              type: Boolean
+              documentation: If the client is muted
+            selfDeaf:
+              type: Boolean
+              documentation: If the client is deafened
+
+  - name: Resume
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.Identify.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Resume # 6
+        d: GatewayEvent.Resume.Data
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            token:
+              type: String
+              documentation: Session token
+            sessionId:
+              type: String
+              documentation: Session id
+            seq:
+              type: Int
+              documentation: Last sequence number received
+
+  - name: Reconnect
+    defType: Class
+    extends: [ "GatewayEventBase[Unit]", "GatewayEventBase.UnitMixin" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Reconnect # 7
+
+  - name: RequestGuildMembers
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.RequestGuildMembers.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.RequestGuildMember # 8
+        d: GatewayEvent.RequestGuildMembers.Data
+
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            guildId:
+              type: GuildId
+              documentation: Id of the guild to get members in
+            query:
+              type: String
+              withUndefined: true
+              documentation: Query for usernames that begin with the string
+            limit:
+              type: Int
+              documentation: Max amount of members to return
+            presences:
+              type: Boolean
+              withUndefined: true
+              documentation: If presences should be included as well
+            userIds:
+              type: Seq[UserId]
+              withUndefined: true
+              documentation: Specific users to fetch
+            nonce:
+              type: String
+              withUndefined: true
+              documentation: Nonce to identify chunk responses
+
+  - name: InvalidSession
+    defType: Class
+    extends: [ "GatewayEventBase[Boolean]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.InvalidSession # 9
+        d: Boolean
+
+  - name: Hello
+    defType: Class
+    extends: [ "GatewayEventBase[GatewayEvent.Hello.Data]" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.Hello # 10
+        d: GatewayEvent.Hello.Data
+    innerTypes:
+      - name: Data
+        defType: Class
+        fields:
+          2.0.x:
+            heartbeatInterval: Int
+
+  - name: HeartbeatACK
+    defType: Class
+    extends: [ "GatewayEventBase[Unit]", "GatewayEventBase.UnitMixin" ]
+    fields:
+      2.0.x:
+        op:
+          type: GatewayEventOp
+          default: GatewayEventOp.HeartbeatACK # 11

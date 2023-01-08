@@ -20,6 +20,9 @@
                 },
                 {
                     "$ref": "#/definitions/multipleDefs"
+                },
+                {
+                    "$ref": "#/definitions/objectOnlyDefs"
                 }
             ]
         },
@@ -61,6 +64,13 @@
                                 }
                             ]
                         }
+                    }
+                },
+                "extends": {
+                    "description": "The types this class extends",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             },
@@ -397,6 +407,42 @@
                     "description": "The type of Scala type to generate",
                     "enum": [
                         "Multiple"
+                    ]
+                }
+            },
+            "required": [
+                "innerTypes",
+                "defType"
+            ],
+            "additionalProperties": false
+        },
+        "objectOnlyDefs": {
+            "description": "A definition for a companion object only",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the object"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "innerTypes": {
+                    "type": "array",
+                    "description": "Extra types found in the current scope",
+                    "items": {
+                        "$ref": "#/definitions/typeDef"
+                    }
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "ObjectOnly"
                     ]
                 }
             },

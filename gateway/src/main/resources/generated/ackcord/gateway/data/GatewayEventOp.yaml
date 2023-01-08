@@ -1,0 +1,18 @@
+name: GatewayEventOp
+defType: IntEnum
+imports:
+  - ackcord.data.DiscordIntEnum
+  - ackcord.data.DiscordIntEnumCompanion
+values:
+  Dispatch: "0"
+  Heartbeat: "1"
+  Identify: "2"
+  UpdatePresence: "3"
+  UpdateVoiceState: "4"
+  Resume: "6"
+  Reconnect: "7"
+  RequestGuildMember: "8"
+  InvalidSession: "9"
+  Hello: "10"
+  HeartbeatACK: "11"
+

@@ -8,6 +8,8 @@ import io.circe._
 object AckCordCodeGen {
 
   def generateCodeFromFile(generatedRoot: Path, yamlFile: Path): String = {
+    //TODO: Add a notice that the file has been machine generated
+
     val relativeYamlPath = generatedRoot.relativize(yamlFile).iterator.asScala.map(_.toString).toList.init
 
     val typeDef =
@@ -30,6 +32,7 @@ object AckCordCodeGen {
       case opaqueTypeDef: TypeDef.OpaqueTypeDef => List(codeFromOpaqueTypeDef(opaqueTypeDef))
       case requestDef: TypeDef.RequestDef       => codeFromRequestDef(requestDef)
       case multiple: TypeDef.MultipleDefs       => multiple.innerTypes.toList.flatMap(codeFromTypeDef)
+      case objectOnly: TypeDef.ObjectOnlyDef    => List(codeFromObjectOnly(objectOnly))
     }
 
     imports.mkString("\n") :: res
@@ -69,11 +72,14 @@ object AckCordCodeGen {
       val params = fields.map { case (field, (fieldInfo, tpe)) =>
         val defaultStr = fieldInfo.default.fold("") { s =>
           (s, fieldInfo.withUndefined, fieldInfo.withNull) match {
-            case ("null", true, true)       => "JsonNull"
-            case ("undefined", true, true)  => "JsonUndefined"
-            case ("null", false, true)      => "None"
-            case ("undefined", true, false) => "UndefOrUndefined"
-            case _ => sys.error(s"Specified impossible default $s for type $tpeName/$version/$field")
+            case ("null", true, true)       => "= JsonNull"
+            case ("undefined", true, true)  => "= JsonUndefined"
+            case ("null", false, true)      => "= None"
+            case ("undefined", true, false) => "= UndefOrUndefined"
+            case (d, true, true)            => s"= JsonSome($d)"
+            case (d, false, true)           => s"= Some($d)"
+            case (d, true, false)           => s"= UndefOrSome($d)"
+            case (d, false, false)          => s"= $d"
           }
         }
         s"${camelCase(field)}: $tpe$defaultStr"
@@ -127,8 +133,10 @@ object AckCordCodeGen {
       (fieldDef.documentation.map(docString(_)).toList :+ defdef).mkString("\n")
     }
 
+    val withs = classTypeDef.anonPart.`extends`.map(s => s"with $s").mkString(" ")
+
     val tpeCode =
-      s"""|class $tpeName(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+      s"""|class $tpeName(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) $withs {
           |   ${classDefs.mkString("\n\n")}
           |}
           |object ${classTypeDef.name} extends DiscordObjectCompanion[$tpeName] {
@@ -141,6 +149,11 @@ object AckCordCodeGen {
 
     (classTypeDef.anonPart.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
   }
+
+  def codeFromObjectOnly(objectOnlyDef: TypeDef.ObjectOnlyDef): String =
+    s"""|object ${objectOnlyDef.name} {
+        |  ${objectOnlyDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
+        |}""".stripMargin
 
   def codeFromEnumTypeDef(enumTypeDef: TypeDef.EnumTypeDef): String = {
     val tpeName = enumTypeDef.name
