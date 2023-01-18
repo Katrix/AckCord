@@ -253,7 +253,7 @@ object CacheHandlers {
 
       guildUpdater.foreach { guildUpdater =>
         val rawChannels  = obj.channels.filter(_ => registry.hasUpdater[GuildChannel]).getOrElse(Seq.empty)
-        val rawThreads   = obj.channels.filter(_ => registry.hasUpdater[ThreadGuildChannel]).getOrElse(Seq.empty)
+        val rawThreads   = obj.threads.filter(_ => registry.hasUpdater[ThreadGuildChannel]).getOrElse(Seq.empty)
         val rawPresences = obj.presences.filter(_ => registry.hasUpdater[Presence]).getOrElse(Seq.empty)
 
         val presences = rawPresences.map(_.toPresence)
