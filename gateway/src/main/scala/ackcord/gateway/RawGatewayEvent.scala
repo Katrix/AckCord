@@ -10,7 +10,7 @@ case class RawGatewayEvent(
 )
 object RawGatewayEvent {
 
-  //Yes, this is an ugly codec, but it is also probably a codec that will be called a lot, and I want it to be as fast as it can be
+  // Yes, this is an ugly codec, but it is also probably a codec that will be called a lot, and I want it to be as fast as it can be
   implicit val codec: Codec[RawGatewayEvent] = Codec.from(
     (c: HCursor) => c.get[Int]("op") match {
       case Right(op) =>
@@ -31,15 +31,16 @@ object RawGatewayEvent {
     (a: RawGatewayEvent) => {
       val listBuilder = List.newBuilder[(String, Json)]
 
-      listBuilder += ("op", Json.fromInt(a.op))
-      listBuilder += ("d", a.d)
+      listBuilder += "op" -> Json.fromInt(a.op)
+      listBuilder += "d"  -> a.d
+      listBuilder += "op" -> Json.fromInt(a.op)
 
       if (a.s.isDefined) {
-        listBuilder += ("s", Json.fromInt(a.s.get))
+        listBuilder += "s" -> Json.fromInt(a.s.get)
       }
 
       if (a.t.isDefined) {
-        listBuilder += ("s", Json.fromString(a.t.get))
+        listBuilder += "s" -> Json.fromString(a.t.get)
       }
 
       Json.obj(listBuilder.result(): _*)
