@@ -188,7 +188,11 @@ object CacheHandlers {
   }
 
   val rawThreadMemberUpdater: CacheUpdater[RawThreadMemberWithGuildId] = new CacheUpdater[RawThreadMemberWithGuildId] {
-    override def handle(builder: CacheSnapshotBuilder, obj: RawThreadMemberWithGuildId, registry: CacheTypeRegistry): Unit = {
+    override def handle(
+        builder: CacheSnapshotBuilder,
+        obj: RawThreadMemberWithGuildId,
+        registry: CacheTypeRegistry
+    ): Unit = {
       for {
         threadUpdater <- registry.getUpdater[ThreadGuildChannel]
         thread        <- builder.getThread(obj.id.get)
@@ -831,8 +835,8 @@ object CacheHandlers {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
         case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory |
-            ChannelType.GuildNews | ChannelType.GuildPublicThread |
-            ChannelType.GuildNewsThread | ChannelType.GuildPrivateThread =>
+            ChannelType.GuildNews | ChannelType.GuildPublicThread | ChannelType.GuildNewsThread |
+            ChannelType.GuildPrivateThread =>
           registry.getUpdater[GatewayGuild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
               rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>

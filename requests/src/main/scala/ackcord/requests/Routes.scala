@@ -623,7 +623,7 @@ object Routes {
     queries.toRequest(GET)
   }
   val getCurrentUserGuildMember: GuildId => RequestRoute = currentUserGuilds / guildId / "member" toRequest GET
-  val leaveGuild: GuildId => RequestRoute = currentUserGuilds / guildId toRequest DELETE
+  val leaveGuild: GuildId => RequestRoute                = currentUserGuilds / guildId toRequest DELETE
 
   val userDMs: Route         = currentUser / "channels"
   val createDM: RequestRoute = userDMs.toRequest(POST)

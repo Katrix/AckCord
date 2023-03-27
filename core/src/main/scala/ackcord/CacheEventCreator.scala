@@ -574,7 +574,12 @@ object CacheEventCreator {
       case gatewayEv.GuildScheduledEventUserAdd(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,
-          state => state.current.getGuild(data.guildId).map(g => api.GuildScheduledEventUserAdd(g, data.guildScheduledEventId, data.userId, state, dispatch.gatewayInfo)),
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g =>
+                api.GuildScheduledEventUserAdd(g, data.guildScheduledEventId, data.userId, state, dispatch.gatewayInfo)
+              ),
           CacheHandlers.guildScheduledEventUserAdder,
           registry,
           dispatch
@@ -583,7 +588,18 @@ object CacheEventCreator {
       case gatewayEv.GuildScheduledEventUserAdd(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,
-          state => state.current.getGuild(data.guildId).map(g => api.GuildScheduledEventUserRemove(g, data.guildScheduledEventId, data.userId, state, dispatch.gatewayInfo)),
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(g =>
+                api.GuildScheduledEventUserRemove(
+                  g,
+                  data.guildScheduledEventId,
+                  data.userId,
+                  state,
+                  dispatch.gatewayInfo
+                )
+              ),
           CacheHandlers.guildScheduledEventUserRemover,
           registry,
           dispatch

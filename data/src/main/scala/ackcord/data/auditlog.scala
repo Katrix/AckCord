@@ -261,7 +261,8 @@ object AuditLogChange {
   case class Color(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 
   /** Timeout for user changed */
-  case class CommunicationDisabledUntil(oldValue: Option[OffsetDateTime], newValue: Option[OffsetDateTime]) extends AuditLogChange[OffsetDateTime]
+  case class CommunicationDisabledUntil(oldValue: Option[OffsetDateTime], newValue: Option[OffsetDateTime])
+      extends AuditLogChange[OffsetDateTime]
 
   /** Deaf for user changed */
   case class Deaf(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]

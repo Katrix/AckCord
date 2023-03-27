@@ -114,7 +114,8 @@ case class GetGuildBannerImage(
     guildId: GuildId,
     bannerHash: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
   override def route: RequestRoute = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
 }
 
