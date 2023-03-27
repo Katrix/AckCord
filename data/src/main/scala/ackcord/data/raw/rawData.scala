@@ -137,9 +137,9 @@ case class RawChannel(
     permissions: Option[String],
     flags: Option[Int], // TODO: Create type for this
     totalMessageSent: Option[Int],
-    availableTags: Option[RawForumTag],
-    appliedTags: Option[RawForumTag],
-    defaultReactionEmoji: Option[Reaction],
+    availableTags: Option[Seq[RawForumTag]],
+    appliedTags: Option[Seq[ForumTagId]],
+    defaultReactionEmoji: Option[RawDefaultReaction],
     defaultThreadRateLimitPerUser: Option[Int],
     defaultSortOrder: Option[Int],
     defaultForumLayout: Option[Int]
@@ -261,6 +261,31 @@ case class RawChannel(
             nsfw.getOrElse(false)
           )
         }
+      case ChannelType.GuildForum =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          ForumGuildChannel(
+            SnowflakeType(id),
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            topic,
+            lastMessageId.map(SnowflakeType[ThreadGuildChannel]),
+            rateLimitPerUser,
+            nsfw.getOrElse(false),
+            parentId.map(SnowflakeType[GuildCategory]),
+            availableTags.map(_.map(_.toForumTag)),
+            defaultReactionEmoji.map(_.toDefaultReaction),
+            defaultThreadRateLimitPerUser,
+            defaultSortOrder,
+            defaultForumLayout
+          )
+        }
       case tpe: ChannelType.ThreadChannelType =>
         for {
           guildId  <- guildId
@@ -354,7 +379,16 @@ case class RawForumTag(
     moderated: Boolean,
     emojiId: Option[EmojiId],
     emojiName: Option[String]
-)
+) {
+  def toForumTag: ForumTag = ForumTag(id, name, moderated, emojiId, emojiName)
+}
+
+case class RawDefaultReaction(
+    emojiId: Option[EmojiId],
+    emojiName: Option[String]
+) {
+  def toDefaultReaction: DefaultReaction = DefaultReaction(emojiId, emojiName)
+}
 
 /**
   * Represents a user in a guild, without the user field.

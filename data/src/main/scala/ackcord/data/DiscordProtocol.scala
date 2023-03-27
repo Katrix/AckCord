@@ -103,6 +103,12 @@ trait DiscordProtocol {
   implicit val rawThreadMetadataCodec: Codec[RawThreadMetadata] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val rawForumTagCodec: Codec[RawForumTag] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val rawDefaultReactionCodec: Codec[RawDefaultReaction] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawChannelCodec: Codec[RawChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 

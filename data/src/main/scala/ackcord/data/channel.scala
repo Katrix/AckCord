@@ -91,6 +91,11 @@ case class ForumTag(
     emojiName: Option[String]
 )
 
+case class DefaultReaction(
+    emojiId: Option[EmojiId],
+    emojiName: Option[String]
+)
+
 /**
   * Represents a permission overwrite in a channel for a user or a guild.
   * @param id
@@ -271,19 +276,16 @@ case class ForumGuildChannel(
     position: Int,
     permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     topic: Option[String], // 0-4096 characters for forum channels
-    lastMessageId: Option[
-      Nothing
-    ], // TODO: For Forum Channels this is the last thread created, however its locked to MessageId. Should we make a new type for this?
+    lastMessageId: Option[ThreadGuildChannelId],
     rateLimitPerUser: Option[Int],
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     availableTags: Option[Seq[ForumTag]],
-    appliedTags: Option[Seq[ForumTagId]],
-    defaultReactionEmoji: Option[Emoji],
+    defaultReactionEmoji: Option[DefaultReaction],
     defaultThreadRateLimitPerUser: Option[Int],
     defaultSortOrder: Option[Int],
     defaultForumLayout: Option[Int]
-) extends PrimaryTextGuildChannel {
+) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildForum
 }
 
