@@ -84,7 +84,7 @@ object PermissionOverwriteType
 }
 
 case class ForumTag(
-    id: ForumTagId,
+    id: SnowflakeType[ForumTag],
     name: String,
     moderated: Boolean,
     emojiId: Option[EmojiId],
