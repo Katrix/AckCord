@@ -77,6 +77,36 @@ import ackcord.data._
   *   Info about the current member for a thread.
   * @param defaultAutoArchiveDuration
   *   The default for when a newly created thread is auto archived in minutes.
+  * @param permissions
+  *   computed permissions for the invoking user in the channel, including
+  *   overwrites, only included when part of the resolved data received on a
+  *   slash command interaction
+  * @param flags
+  *   channel flags combined as a bitfield
+  * @param totalMessageSent
+  *   number of messages ever sent in a thread, it's similar to message_count on
+  *   message creation, but will not decrement the number when a message is
+  *   deleted
+  * @param availableTags
+  *   the set of tags that can be used in a GUILD_FORUM channel
+  * @param appliedTags
+  *   the IDs of the set of tags that have been applied to a thread in a
+  *   GUILD_FORUM channel
+  * @param defaultReactionEmoji
+  *   the emoji to show in the add reaction button on a thread in a GUILD_FORUM
+  *   channel
+  * @param defaultThreadRateLimitPerUser
+  *   the initial `rate_limit_per_user` to set on newly created threads in a
+  *   channel. this field is copied to the thread at creation time and does not
+  *   live update.
+  * @param defaultSortOrder
+  *   the default sort order type used to order posts in GUILD_FORUM channels.
+  *   Defaults to null, which indicates a preferred sort order hasn't been set
+  *   by a channel admin
+  * @param defaultForumLayout
+  *   the default forum layout view used to display posts in GUILD_FORUM
+  *   channels. Defaults to 0, which indicates a layout view has not been set by
+  *   a channel admin
   */
 case class RawChannel(
     id: ChannelId,
@@ -103,7 +133,16 @@ case class RawChannel(
     memberCount: Option[Int],
     threadMetadata: Option[RawThreadMetadata],
     member: Option[RawThreadMember],
-    defaultAutoArchiveDuration: Option[Int]
+    defaultAutoArchiveDuration: Option[Int],
+    permissions: Option[String],
+    flags: Option[Int], // TODO: Create type for this
+    totalMessageSent: Option[Int],
+    availableTags: Option[Seq[ForumTag]],
+    appliedTags: Option[Seq[SnowflakeType[ForumTag]]],
+    defaultReactionEmoji: Option[DefaultReaction],
+    defaultThreadRateLimitPerUser: Option[Int],
+    defaultSortOrder: Option[Int],
+    defaultForumLayout: Option[Int]
 ) {
 
   private def toChannelUsingGuildId(guildId: Option[GuildId], botUserId: Option[UserId]): Option[Channel] = {
@@ -222,6 +261,31 @@ case class RawChannel(
             nsfw.getOrElse(false)
           )
         }
+      case ChannelType.GuildForum =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          ForumGuildChannel(
+            SnowflakeType(id),
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            topic,
+            lastMessageId.map(SnowflakeType[ThreadGuildChannel]),
+            rateLimitPerUser,
+            nsfw.getOrElse(false),
+            parentId.map(SnowflakeType[GuildCategory]),
+            availableTags,
+            defaultReactionEmoji,
+            defaultThreadRateLimitPerUser,
+            defaultSortOrder,
+            defaultForumLayout
+          )
+        }
       case tpe: ChannelType.ThreadChannelType =>
         for {
           guildId  <- guildId
@@ -229,7 +293,8 @@ case class RawChannel(
           ownerId  <- ownerId
           parentId <- parentId
           metadata <- threadMetadata
-          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked, invitable, createTimestamp) = metadata
+          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked, invitable, createTimestamp) =
+            metadata
         } yield {
           ThreadGuildChannel(
             SnowflakeType(id),

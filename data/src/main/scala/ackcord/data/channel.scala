@@ -58,6 +58,8 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   case object GuildPublicThread  extends ChannelType(11) with ThreadChannelType
   case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
   case object GuildStageVoice    extends ChannelType(13)
+  case object GuildDirectory     extends ChannelType(14)
+  case object GuildForum         extends ChannelType(15)
 
   case class Unknown(i: Int) extends ChannelType(i)
 
@@ -80,6 +82,19 @@ object PermissionOverwriteType
 
   override def createUnknown(value: Int): PermissionOverwriteType = Unknown(value)
 }
+
+case class ForumTag(
+    id: SnowflakeType[ForumTag],
+    name: String,
+    moderated: Boolean,
+    emojiId: Option[EmojiId],
+    emojiName: Option[String]
+)
+
+case class DefaultReaction(
+    emojiId: Option[EmojiId],
+    emojiName: Option[String]
+)
 
 /**
   * Represents a permission overwrite in a channel for a user or a guild.
@@ -252,6 +267,26 @@ case class NormalTextGuildChannel(
     defaultAutoArchiveDuration: Option[Int]
 ) extends PrimaryTextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
+}
+
+case class ForumGuildChannel(
+    id: SnowflakeType[ForumGuildChannel],
+    guildId: GuildId,
+    name: String,
+    position: Int,
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
+    topic: Option[String], // 0-4096 characters for forum channels
+    lastMessageId: Option[ThreadGuildChannelId],
+    rateLimitPerUser: Option[Int],
+    nsfw: Boolean,
+    parentId: Option[SnowflakeType[GuildCategory]],
+    availableTags: Option[Seq[ForumTag]],
+    defaultReactionEmoji: Option[DefaultReaction],
+    defaultThreadRateLimitPerUser: Option[Int],
+    defaultSortOrder: Option[Int],
+    defaultForumLayout: Option[Int]
+) extends GuildChannel {
+  override def channelType: ChannelType = ChannelType.GuildForum
 }
 
 case class ThreadGuildChannel(
