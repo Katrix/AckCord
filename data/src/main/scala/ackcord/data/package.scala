@@ -127,13 +127,6 @@ package object data {
       c.getGuildChannel(guildId, channelId)
   }
 
-  type ForumTagId = SnowflakeType[ForumTag]
-  object ForumTagId extends SnowflakeCompanion[ForumTag]
-
-  implicit class ForumTagIdSyntax(private val tagId: ForumTagId) extends AnyVal {
-//    def resolve(implicit c: CacheSnapshot): Option[ForumTag] = c.getForumTag(tagId)
-  }
-
   type TextGuildChannelId = SnowflakeType[TextGuildChannel]
   object TextGuildChannelId extends SnowflakeCompanion[TextGuildChannel]
 

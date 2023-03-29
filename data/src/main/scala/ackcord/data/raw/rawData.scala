@@ -137,9 +137,9 @@ case class RawChannel(
     permissions: Option[String],
     flags: Option[Int], // TODO: Create type for this
     totalMessageSent: Option[Int],
-    availableTags: Option[Seq[RawForumTag]],
-    appliedTags: Option[Seq[ForumTagId]],
-    defaultReactionEmoji: Option[RawDefaultReaction],
+    availableTags: Option[Seq[ForumTag]],
+    appliedTags: Option[Seq[SnowflakeType[ForumTag]]],
+    defaultReactionEmoji: Option[DefaultReaction],
     defaultThreadRateLimitPerUser: Option[Int],
     defaultSortOrder: Option[Int],
     defaultForumLayout: Option[Int]
@@ -279,8 +279,8 @@ case class RawChannel(
             rateLimitPerUser,
             nsfw.getOrElse(false),
             parentId.map(SnowflakeType[GuildCategory]),
-            availableTags.map(_.map(_.toForumTag)),
-            defaultReactionEmoji.map(_.toDefaultReaction),
+            availableTags,
+            defaultReactionEmoji,
             defaultThreadRateLimitPerUser,
             defaultSortOrder,
             defaultForumLayout
@@ -372,23 +372,6 @@ case class RawThreadMember(
     joinTimestamp: OffsetDateTime,
     flags: Int
 )
-
-case class RawForumTag(
-    id: ForumTagId,
-    name: String,
-    moderated: Boolean,
-    emojiId: Option[EmojiId],
-    emojiName: Option[String]
-) {
-  def toForumTag: ForumTag = ForumTag(id, name, moderated, emojiId, emojiName)
-}
-
-case class RawDefaultReaction(
-    emojiId: Option[EmojiId],
-    emojiName: Option[String]
-) {
-  def toDefaultReaction: DefaultReaction = DefaultReaction(emojiId, emojiName)
-}
 
 /**
   * Represents a user in a guild, without the user field.
