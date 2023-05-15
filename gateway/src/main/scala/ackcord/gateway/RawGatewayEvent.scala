@@ -3,7 +3,7 @@ package ackcord.gateway
 import io.circe.{Codec, HCursor, Json}
 
 case class RawGatewayEvent(
-    op: Int,
+    op: Int, //TODO: Replace with AckCord int enum
     d: Json,
     s: Option[Int],
     t: Option[String]
@@ -33,7 +33,6 @@ object RawGatewayEvent {
 
       listBuilder += "op" -> Json.fromInt(a.op)
       listBuilder += "d"  -> a.d
-      listBuilder += "op" -> Json.fromInt(a.op)
 
       if (a.s.isDefined) {
         listBuilder += "s" -> Json.fromInt(a.s.get)
@@ -43,7 +42,7 @@ object RawGatewayEvent {
         listBuilder += "s" -> Json.fromString(a.t.get)
       }
 
-      Json.obj(listBuilder.result(): _*)
+      Json.fromFields(listBuilder.result())
     }
   )
 }

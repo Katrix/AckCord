@@ -9,7 +9,8 @@ object CodeGenTypes {
       documentation: Option[String],
       innerTypes: Seq[TypeDef],
       fields: ListMap[String, ListMap[String, FieldDef]],
-      `extends`: Seq[String]
+      `extends`: Seq[String],
+      objectExtends: Seq[String]
   ) {
     def named(name: String): TypeDef.ClassTypeDef = TypeDef.ClassTypeDef(name, this)
 
@@ -32,16 +33,20 @@ object CodeGenTypes {
         innerTypes    <- c.getOrElse[Seq[TypeDef]]("innerTypes")(Nil)
         fieldsMap     <- c.get[ListMap[String, ListMap[String, Either[String, FieldDef]]]]("fields")
         extend        <- c.getOrElse[Seq[String]]("extends")(Nil)
+        objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
       } yield AnonymousClassTypeDef(
         imports,
         documentation,
         innerTypes,
         fieldsMap.map { case (k1, v1) =>
           k1 -> v1.map { case (k2, v2) =>
-            k2 -> v2.swap.map(tpe => FieldDef(tpe, None, None, withUndefined = false, withNull = false, None)).merge
+            k2 -> v2.swap
+              .map(tpe => FieldDef(tpe, None, None, None, withUndefined = false, withNull = false, None))
+              .merge
           }
         },
-        extend
+        extend,
+        objectExtends
       )
     }
   }
@@ -75,7 +80,8 @@ object CodeGenTypes {
         enumType: String,
         documentation: Option[String],
         innerTypes: Seq[TypeDef],
-        values: ListMap[String, String]
+        values: ListMap[String, String],
+        objectExtends: Seq[String]
     ) extends TypeDef
 
     case class OpaqueTypeDef(
@@ -84,7 +90,8 @@ object CodeGenTypes {
         documentation: Option[String],
         underlying: String,
         includeAlias: Boolean,
-        innerTypes: Seq[TypeDef]
+        innerTypes: Seq[TypeDef],
+        objectExtends: Seq[String]
     ) extends TypeDef
 
     case class RequestDef(
@@ -92,6 +99,7 @@ object CodeGenTypes {
         imports: Seq[String],
         documentation: Option[String],
         path: Seq[PathElem],
+        method: String,
         query: Option[AnonymousClassTypeDef],
         body: Option[AnonymousClassTypeDefOrType],
         returnTpe: Option[AnonymousClassTypeDefOrType],
@@ -106,7 +114,14 @@ object CodeGenTypes {
     case class ObjectOnlyDef(
         name: String,
         imports: Seq[String],
-        innerTypes: Seq[TypeDef]
+        innerTypes: Seq[TypeDef],
+        objectExtends: Seq[String]
+    ) extends TypeDef
+
+    case class FreeformDef(
+        content: String,
+        imports: Seq[String],
+        documentation: Option[String]
     ) extends TypeDef
 
     implicit lazy val typeDefDecoder: Decoder[TypeDef] = (c: HCursor) =>
@@ -127,21 +142,24 @@ object CodeGenTypes {
 
           case enumType @ ("IntEnum" | "StringEnum") =>
             for {
-              name   <- c.get[String]("name")
-              values <- c.get[ListMap[String, String]]("values")
-            } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values)
+              name          <- c.get[String]("name")
+              values        <- c.get[ListMap[String, String]]("values")
+              objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
+            } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values, objectExtends)
 
           case "Opaque" =>
             for {
-              name         <- c.get[String]("name")
-              underlying   <- c.get[String]("underlying")
-              includeAlias <- c.getOrElse[Boolean]("includeAlias")(true)
-            } yield OpaqueTypeDef(name, imports, documentation, underlying, includeAlias, innerTypes)
+              name          <- c.get[String]("name")
+              underlying    <- c.get[String]("underlying")
+              includeAlias  <- c.getOrElse[Boolean]("includeAlias")(true)
+              objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
+            } yield OpaqueTypeDef(name, imports, documentation, underlying, includeAlias, innerTypes, objectExtends)
 
           case "Request" =>
             for {
               name             <- c.get[String]("name")
               path             <- c.get[Seq[PathElem]]("path")
+              method           <- c.get[String]("method")
               query            <- c.get[Option[AnonymousClassTypeDef]]("query")
               body             <- c.get[Option[AnonymousClassTypeDefOrType]]("body")
               bodyAllUndefined <- c.downField("body").getOrElse[Boolean]("allUndefined")(false)
@@ -152,6 +170,7 @@ object CodeGenTypes {
               imports,
               documentation,
               path,
+              method,
               query.map { tpe =>
                 tpe.mapFields(f => f.copy(withNull = true, default = Some("null")))
               },
@@ -170,13 +189,22 @@ object CodeGenTypes {
             Right(MultipleDefs(imports, innerTypes))
 
           case "ObjectOnly" =>
-            c.get[String]("name").map(name => ObjectOnlyDef(name, imports, innerTypes))
+            for {
+              name          <- c.get[String]("name")
+              objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
+            } yield ObjectOnlyDef(name, imports, innerTypes, objectExtends)
+
+          case "Freeform" =>
+            for {
+              content <- c.get[String]("content")
+            } yield FreeformDef(content, imports, documentation)
         }
       } yield res
   }
 
   case class FieldDef(
       tpe: String,
+      jsonName: Option[String],
       default: Option[String],
       documentation: Option[String],
       withUndefined: Boolean,
@@ -189,12 +217,13 @@ object CodeGenTypes {
     implicit lazy val fieldDefDecoder: Decoder[FieldDef] = (c: HCursor) =>
       for {
         tpe           <- c.get[String]("type")
+        jsonName      <- c.get[Option[String]]("jsonName")
         default       <- c.get[Option[String]]("default")
         documentation <- c.get[Option[String]]("documentation")
         withUndefined <- c.getOrElse("withUndefined")(false)
         withNull      <- c.getOrElse("withNull")(false)
         verification  <- c.get[Option[FieldVerification]]("verification")
-      } yield FieldDef(tpe, default, documentation, withUndefined, withNull, verification)
+      } yield FieldDef(tpe, jsonName, default, documentation, withUndefined, withNull, verification)
   }
 
   case class FieldVerification(

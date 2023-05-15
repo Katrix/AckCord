@@ -9,7 +9,7 @@ class DiscordObject(val json: Json, startCache: Map[String, Any]) {
   private val cache = startCache.to(collection.mutable.Map)
 
   def selectDynamic[A](name: String)(implicit decoder: Decoder[A]): A =
-    cache.getOrElseUpdate(name, json.hcursor.get[A](name)).asInstanceOf[A]
+    cache.getOrElseUpdate(name, json.hcursor.get[A](name).getOrElse(throw new MissingFieldException(name, json))).asInstanceOf[A]
 }
 
 trait DiscordObjectCompanion[Obj <: DiscordObject] {

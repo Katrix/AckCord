@@ -1,0 +1,8 @@
+package ackcord.gateway
+
+trait Compress
+object Compress {
+  case object NoCompress         extends Compress
+  case object PerMessageCompress extends Compress
+  case object ZLibStreamCompress extends Compress
+}

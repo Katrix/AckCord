@@ -106,6 +106,7 @@ class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError](logRateLimitEven
       .supervise(newBehavior *> globalResetFiber.set(None))
       .flatMap(newFiber => globalResetFiber.modify(oldFiber => (Some(newFiber), oldFiber)))
       .flatMap(_.traverse(_.cancel))
+      .void
 
   override protected def onGlobalRatelimit(resetAt: Long): F[Unit] =
     globalRatelimitResetAt.set(resetAt) *>
@@ -164,7 +165,7 @@ class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError](logRateLimitEven
 
           _ <- sleepUntil(resetAt)
           //If we succeeded in retrying a request early, we need to reset with one less token than normal
-          _ <- tokenBucket.traverse(b => b.resetTokens *> (if (didRetry) b.acquireToken else ().pure))
+          _ <- tokenBucket.traverse(b => b.resetTokens *> (if (didRetry) b.acquireToken.void else ().pure))
           _ <- ratelimitQueue.fold(().pure) { q =>
             //If we're missing a bucket, I have no idea how we ended up here at all. We'll just release the entire queue
             tokenBucket.fold(q.dequeueAll)(b => releaseWaitingRequests(b, q))
@@ -313,14 +314,14 @@ object CatsEffectDiscordRatelimiter {
     override def maxSize: F[Int] = maxSizeRef.get
 
     override def tokensRemaining: F[Int] =
-      timeBetweenTokensMsIfStarted.map(_.fold(tokensRemainingRef.get) { betweenTokensMs =>
+      timeBetweenTokensMsIfStarted.flatMap(_.fold(tokensRemainingRef.get) { betweenTokensMs =>
         for {
           now    <- Clock[F].realTimeInstant
           before <- lastTokenAcquired.get
           timeElapsed = before.until(now, ChronoUnit.MILLIS)
           extraTokens = timeElapsed / betweenTokensMs
           trackedRemaining <- tokensRemainingRef.get
-        } yield trackedRemaining + extraTokens
+        } yield (trackedRemaining + extraTokens).toInt
       })
 
     override def setTokensMaxSize(tokens: Int, maxSize: Int): F[Unit] =
@@ -336,7 +337,7 @@ object CatsEffectDiscordRatelimiter {
               before <- lastTokenAcquired.get
               timeElapsed = before.until(now, ChronoUnit.MILLIS)
               extraTokens = timeElapsed / betweenTokensMs
-            } yield remaining + extraTokens
+            } yield (remaining + extraTokens).toInt
           }
           _ <- if (realRemaining > remaining) lastTokenAcquired.set(now) else ().pure
         } yield (0.max(realRemaining - 1), realRemaining > 0)
@@ -362,7 +363,7 @@ object CatsEffectDiscordRatelimiter {
               before <- lastTokenAcquired.get
               timeElapsed = before.until(now, ChronoUnit.MILLIS)
               extraTokens = timeElapsed / betweenTokensMs
-            } yield remaining + extraTokens
+            } yield (remaining + extraTokens).toInt
           }
           _ <- if (realRemaining > remaining) lastTokenAcquired.set(now) else ().pure
           res <- {

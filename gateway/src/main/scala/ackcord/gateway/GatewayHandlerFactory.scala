@@ -3,14 +3,14 @@ package ackcord.gateway
 import ackcord.gateway.GatewayHandler.{NormalGatewayHandler, StreamGatewayHandler}
 import sttp.ws.WebSocket
 
-sealed trait GatewayHandlerFactory[F[_]]
+sealed trait GatewayHandlerFactory[F[_], Handler <: GatewayHandler[F]]
 object GatewayHandlerFactory {
 
-  trait GatewayHandlerNormalFactory[F[_]] extends GatewayHandlerFactory[F] {
-    def create(ws: WebSocket[F], resumeData: Option[ResumeData], wantedEvents: Set[Int]): F[NormalGatewayHandler[F]]
+  trait GatewayHandlerNormalFactory[F[_], Handler <: NormalGatewayHandler[F]] extends GatewayHandlerFactory[F, Handler] {
+    def create(ws: WebSocket[F], identifyData: IdentifyData, resumeData: Option[ResumeData], handle: GatewayCallbacks[F, Handler]): F[Handler]
   }
 
-  trait GatewayHandlerStreamsFactory[F[_], S] extends GatewayHandlerFactory[F]  {
-    def create(resumeData: Option[ResumeData], wantedEvents: Set[Int]): F[StreamGatewayHandler[F, S]]
+  trait GatewayHandlerStreamsFactory[F[_], S, Handler <: StreamGatewayHandler[F, S]] extends GatewayHandlerFactory[F, Handler]  {
+    def create(identifyData: IdentifyData, resumeData: Option[ResumeData]): F[Handler]
   }
 }

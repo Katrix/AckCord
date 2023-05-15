@@ -6,9 +6,12 @@ import ackcord.data.DiscordStringEnum
 import ackcord.data.DiscordStringEnumCompanion
 import ackcord.data.UndefOr
 import ackcord.data.UndefOrSome
+import ackcord.data.GuildId
+import ackcord.data.ChannelId
+import ackcord.data.UserId
 import io.circe.Json
 
-object GatewayEvent {
+object GatewayEvent extends GatewayEventBase.TopMixin {
 
   class Dispatch(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
@@ -16,36 +19,36 @@ object GatewayEvent {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
 
     @inline def d: Json = selectDynamic[Json]("d")
+
+    @inline def s: Int = selectDynamic[Int]("s")
+
+    @inline def t: GatewayDispatchType = selectDynamic[GatewayDispatchType]("t")
   }
-  object Dispatch extends DiscordObjectCompanion[Dispatch] {
+  object Dispatch extends DiscordObjectCompanion[Dispatch] with GatewayEventBase.GatewayEventCompanionMixin[Dispatch] {
     def makeRaw(json: Json, cache: Map[String, Any]): Dispatch = new Dispatch(json, cache)
 
-    def make20(op: GatewayEventOp = GatewayEventOp.Dispatch, d: Json): Dispatch =
-      makeRawFromFields("op" := op, "d" := d)
+    def make20(op: GatewayEventOp = GatewayEventOp.Dispatch, d: Json, s: Int, t: GatewayDispatchType): Dispatch =
+      makeRawFromFields("op" := op, "d" := d, "s" := s, "t" := t)
 
+    override def op: GatewayEventOp = GatewayEventOp.Dispatch
   }
 
   class Heartbeat(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
-      with GatewayEventBase[Int] {
+      with GatewayEventBase[Option[Int]] {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
 
     @inline def d: Option[Int] = selectDynamic[Option[Int]]("d")
-
-    @inline def t: GatewayDispatchType = selectDynamic[GatewayDispatchType]("t")
-
-    @inline def s: Int = selectDynamic[Int]("s")
   }
-  object Heartbeat extends DiscordObjectCompanion[Heartbeat] {
+  object Heartbeat
+      extends DiscordObjectCompanion[Heartbeat]
+      with GatewayEventBase.GatewayEventCompanionMixin[Heartbeat] {
     def makeRaw(json: Json, cache: Map[String, Any]): Heartbeat = new Heartbeat(json, cache)
 
-    def make20(
-        op: GatewayEventOp = GatewayEventOp.Heartbeat,
-        d: Option[Int],
-        t: GatewayDispatchType,
-        s: Int
-    ): Heartbeat = makeRawFromFields("op" := op, "d" := d, "t" := t, "s" := s)
+    def make20(op: GatewayEventOp = GatewayEventOp.Heartbeat, d: Option[Int]): Heartbeat =
+      makeRawFromFields("op" := op, "d" := d)
 
+    override def op: GatewayEventOp = GatewayEventOp.Heartbeat
   }
 
   class Identify(json: Json, cache: Map[String, Any] = Map.empty)
@@ -55,11 +58,13 @@ object GatewayEvent {
 
     @inline def d: GatewayEvent.Identify.Data = selectDynamic[GatewayEvent.Identify.Data]("d")
   }
-  object Identify extends DiscordObjectCompanion[Identify] {
+  object Identify extends DiscordObjectCompanion[Identify] with GatewayEventBase.GatewayEventCompanionMixin[Identify] {
     def makeRaw(json: Json, cache: Map[String, Any]): Identify = new Identify(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.Identify, d: GatewayEvent.Identify.Data): Identify =
       makeRawFromFields("op" := op, "d" := d)
+
+    override def op: GatewayEventOp = GatewayEventOp.Identify
 
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
@@ -76,7 +81,7 @@ object GatewayEvent {
         * A number between 50 and 250 indicating when offline members should no
         * longer be sent.
         */
-      @inline def largeThreshold: UndefOr[Int] = selectDynamic[UndefOr[Int]]("largeThreshold")
+      @inline def largeThreshold: UndefOr[Int] = selectDynamic[UndefOr[Int]]("large_threshold")
 
       /**
         * Array of two intergers, those being [shardId, numShards] indicating
@@ -121,13 +126,13 @@ object GatewayEvent {
           presence: UndefOr[GatewayEvent.UpdatePresence.Data],
           intents: GatewayIntents
       ): Data = makeRawFromFields(
-        "token"           := token,
-        "properties"      := properties,
-        "compress"       :=? compress,
-        "largeThreshold" :=? largeThreshold,
-        "shard"          :=? shard,
-        "presence"       :=? presence,
-        "intents"         := intents
+        "token"            := token,
+        "properties"       := properties,
+        "compress"        :=? compress,
+        "large_threshold" :=? largeThreshold,
+        "shard"           :=? shard,
+        "presence"        :=? presence,
+        "intents"          := intents
       )
 
     }
@@ -140,13 +145,17 @@ object GatewayEvent {
 
     @inline def d: GatewayEvent.UpdatePresence.Data = selectDynamic[GatewayEvent.UpdatePresence.Data]("d")
   }
-  object UpdatePresence extends DiscordObjectCompanion[UpdatePresence] {
+  object UpdatePresence
+      extends DiscordObjectCompanion[UpdatePresence]
+      with GatewayEventBase.GatewayEventCompanionMixin[UpdatePresence] {
     def makeRaw(json: Json, cache: Map[String, Any]): UpdatePresence = new UpdatePresence(json, cache)
 
     def make20(
         op: GatewayEventOp = GatewayEventOp.UpdatePresence,
         d: GatewayEvent.UpdatePresence.Data
     ): UpdatePresence = makeRawFromFields("op" := op, "d" := d)
+
+    override def op: GatewayEventOp = GatewayEventOp.UpdatePresence
 
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
@@ -200,6 +209,8 @@ object GatewayEvent {
 
       def unknown(value: String): Status = new Status(value)
 
+      def values: Seq[Status] = Seq(Online, DoNotDisturb, Idle, Invisible, Offline)
+
     }
   }
 
@@ -210,7 +221,9 @@ object GatewayEvent {
 
     @inline def d: GatewayEvent.UpdateVoiceState.Data = selectDynamic[GatewayEvent.UpdateVoiceState.Data]("d")
   }
-  object UpdateVoiceState extends DiscordObjectCompanion[UpdateVoiceState] {
+  object UpdateVoiceState
+      extends DiscordObjectCompanion[UpdateVoiceState]
+      with GatewayEventBase.GatewayEventCompanionMixin[UpdateVoiceState] {
     def makeRaw(json: Json, cache: Map[String, Any]): UpdateVoiceState = new UpdateVoiceState(json, cache)
 
     def make20(
@@ -218,19 +231,21 @@ object GatewayEvent {
         d: GatewayEvent.UpdateVoiceState.Data
     ): UpdateVoiceState = makeRawFromFields("op" := op, "d" := d)
 
+    override def op: GatewayEventOp = GatewayEventOp.UpdateVoiceState
+
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
       /** Id of the guild */
-      @inline def guildId: GuildId = selectDynamic[GuildId]("guildId")
+      @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
       /** Id of the voice channel to join, or null if disconnecting */
-      @inline def channelId: Option[ChannelId] = selectDynamic[Option[ChannelId]]("channelId")
+      @inline def channelId: Option[ChannelId] = selectDynamic[Option[ChannelId]]("channel_id")
 
       /** If the client is muted */
-      @inline def selfMute: Boolean = selectDynamic[Boolean]("selfMute")
+      @inline def selfMute: Boolean = selectDynamic[Boolean]("self_mute")
 
       /** If the client is deafened */
-      @inline def selfDeaf: Boolean = selectDynamic[Boolean]("selfDeaf")
+      @inline def selfDeaf: Boolean = selectDynamic[Boolean]("self_deaf")
     }
     object Data extends DiscordObjectCompanion[Data] {
       def makeRaw(json: Json, cache: Map[String, Any]): Data = new Data(json, cache)
@@ -247,10 +262,10 @@ object GatewayEvent {
         */
       def make20(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean): Data =
         makeRawFromFields(
-          "guildId"   := guildId,
-          "channelId" := channelId,
-          "selfMute"  := selfMute,
-          "selfDeaf"  := selfDeaf
+          "guild_id"   := guildId,
+          "channel_id" := channelId,
+          "self_mute"  := selfMute,
+          "self_deaf"  := selfDeaf
         )
 
     }
@@ -258,16 +273,18 @@ object GatewayEvent {
 
   class Resume(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
-      with GatewayEventBase[GatewayEvent.Identify.Data] {
+      with GatewayEventBase[GatewayEvent.Resume.Data] {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
 
     @inline def d: GatewayEvent.Resume.Data = selectDynamic[GatewayEvent.Resume.Data]("d")
   }
-  object Resume extends DiscordObjectCompanion[Resume] {
+  object Resume extends DiscordObjectCompanion[Resume] with GatewayEventBase.GatewayEventCompanionMixin[Resume] {
     def makeRaw(json: Json, cache: Map[String, Any]): Resume = new Resume(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.Resume, d: GatewayEvent.Resume.Data): Resume =
       makeRawFromFields("op" := op, "d" := d)
+
+    override def op: GatewayEventOp = GatewayEventOp.Resume
 
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
@@ -275,7 +292,7 @@ object GatewayEvent {
       @inline def token: String = selectDynamic[String]("token")
 
       /** Session id */
-      @inline def sessionId: String = selectDynamic[String]("sessionId")
+      @inline def sessionId: String = selectDynamic[String]("session_id")
 
       /** Last sequence number received */
       @inline def seq: Int = selectDynamic[Int]("seq")
@@ -292,7 +309,7 @@ object GatewayEvent {
         *   Last sequence number received
         */
       def make20(token: String, sessionId: String, seq: Int): Data =
-        makeRawFromFields("token" := token, "sessionId" := sessionId, "seq" := seq)
+        makeRawFromFields("token" := token, "session_id" := sessionId, "seq" := seq)
 
     }
   }
@@ -303,11 +320,14 @@ object GatewayEvent {
       with GatewayEventBase.UnitMixin {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
   }
-  object Reconnect extends DiscordObjectCompanion[Reconnect] {
+  object Reconnect
+      extends DiscordObjectCompanion[Reconnect]
+      with GatewayEventBase.GatewayEventCompanionMixin[Reconnect] {
     def makeRaw(json: Json, cache: Map[String, Any]): Reconnect = new Reconnect(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.Reconnect): Reconnect = makeRawFromFields("op" := op)
 
+    override def op: GatewayEventOp = GatewayEventOp.Reconnect
   }
 
   class RequestGuildMembers(json: Json, cache: Map[String, Any] = Map.empty)
@@ -317,18 +337,22 @@ object GatewayEvent {
 
     @inline def d: GatewayEvent.RequestGuildMembers.Data = selectDynamic[GatewayEvent.RequestGuildMembers.Data]("d")
   }
-  object RequestGuildMembers extends DiscordObjectCompanion[RequestGuildMembers] {
+  object RequestGuildMembers
+      extends DiscordObjectCompanion[RequestGuildMembers]
+      with GatewayEventBase.GatewayEventCompanionMixin[RequestGuildMembers] {
     def makeRaw(json: Json, cache: Map[String, Any]): RequestGuildMembers = new RequestGuildMembers(json, cache)
 
     def make20(
-        op: GatewayEventOp = GatewayEventOp.RequestGuildMember,
+        op: GatewayEventOp = GatewayEventOp.RequestGuildMembers,
         d: GatewayEvent.RequestGuildMembers.Data
     ): RequestGuildMembers = makeRawFromFields("op" := op, "d" := d)
+
+    override def op: GatewayEventOp = GatewayEventOp.RequestGuildMembers
 
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
       /** Id of the guild to get members in */
-      @inline def guildId: GuildId = selectDynamic[GuildId]("guildId")
+      @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
       /** Query for usernames that begin with the string */
       @inline def query: UndefOr[String] = selectDynamic[UndefOr[String]]("query")
@@ -340,7 +364,7 @@ object GatewayEvent {
       @inline def presences: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("presences")
 
       /** Specific users to fetch */
-      @inline def userIds: UndefOr[Seq[UserId]] = selectDynamic[UndefOr[Seq[UserId]]]("userIds")
+      @inline def userIds: UndefOr[Seq[UserId]] = selectDynamic[UndefOr[Seq[UserId]]]("user_ids")
 
       /** Nonce to identify chunk responses */
       @inline def nonce: UndefOr[String] = selectDynamic[UndefOr[String]]("nonce")
@@ -370,11 +394,11 @@ object GatewayEvent {
           userIds: UndefOr[Seq[UserId]],
           nonce: UndefOr[String]
       ): Data = makeRawFromFields(
-        "guildId"    := guildId,
+        "guild_id"   := guildId,
         "query"     :=? query,
         "limit"      := limit,
         "presences" :=? presences,
-        "userIds"   :=? userIds,
+        "user_ids"  :=? userIds,
         "nonce"     :=? nonce
       )
 
@@ -388,12 +412,15 @@ object GatewayEvent {
 
     @inline def d: Boolean = selectDynamic[Boolean]("d")
   }
-  object InvalidSession extends DiscordObjectCompanion[InvalidSession] {
+  object InvalidSession
+      extends DiscordObjectCompanion[InvalidSession]
+      with GatewayEventBase.GatewayEventCompanionMixin[InvalidSession] {
     def makeRaw(json: Json, cache: Map[String, Any]): InvalidSession = new InvalidSession(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.InvalidSession, d: Boolean): InvalidSession =
       makeRawFromFields("op" := op, "d" := d)
 
+    override def op: GatewayEventOp = GatewayEventOp.InvalidSession
   }
 
   class Hello(json: Json, cache: Map[String, Any] = Map.empty)
@@ -403,19 +430,21 @@ object GatewayEvent {
 
     @inline def d: GatewayEvent.Hello.Data = selectDynamic[GatewayEvent.Hello.Data]("d")
   }
-  object Hello extends DiscordObjectCompanion[Hello] {
+  object Hello extends DiscordObjectCompanion[Hello] with GatewayEventBase.GatewayEventCompanionMixin[Hello] {
     def makeRaw(json: Json, cache: Map[String, Any]): Hello = new Hello(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.Hello, d: GatewayEvent.Hello.Data): Hello =
       makeRawFromFields("op" := op, "d" := d)
 
+    override def op: GatewayEventOp = GatewayEventOp.Hello
+
     class Data(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-      @inline def heartbeatInterval: Int = selectDynamic[Int]("heartbeatInterval")
+      @inline def heartbeatInterval: Int = selectDynamic[Int]("heartbeat_interval")
     }
     object Data extends DiscordObjectCompanion[Data] {
       def makeRaw(json: Json, cache: Map[String, Any]): Data = new Data(json, cache)
 
-      def make20(heartbeatInterval: Int): Data = makeRawFromFields("heartbeatInterval" := heartbeatInterval)
+      def make20(heartbeatInterval: Int): Data = makeRawFromFields("heartbeat_interval" := heartbeatInterval)
 
     }
   }
@@ -426,10 +455,27 @@ object GatewayEvent {
       with GatewayEventBase.UnitMixin {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
   }
-  object HeartbeatACK extends DiscordObjectCompanion[HeartbeatACK] {
+  object HeartbeatACK
+      extends DiscordObjectCompanion[HeartbeatACK]
+      with GatewayEventBase.GatewayEventCompanionMixin[HeartbeatACK] {
     def makeRaw(json: Json, cache: Map[String, Any]): HeartbeatACK = new HeartbeatACK(json, cache)
 
     def make20(op: GatewayEventOp = GatewayEventOp.HeartbeatACK): HeartbeatACK = makeRawFromFields("op" := op)
+
+    override def op: GatewayEventOp = GatewayEventOp.HeartbeatACK
+  }
+
+  class Unknown(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayEventBase[Json] {
+    @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
+
+    @inline def d: Json = selectDynamic[Json]("d")
+  }
+  object Unknown extends DiscordObjectCompanion[Unknown] {
+    def makeRaw(json: Json, cache: Map[String, Any]): Unknown = new Unknown(json, cache)
+
+    def make20(op: GatewayEventOp, d: Json): Unknown = makeRawFromFields("op" := op, "d" := d)
 
   }
 }

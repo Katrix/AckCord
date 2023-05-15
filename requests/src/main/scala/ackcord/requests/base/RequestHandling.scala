@@ -19,11 +19,11 @@ object RequestHandling {
 
   private val sentReceivedLogger = LoggerFactory.getLogger(getClass.getName + ".SentReceivedRequests")
 
-  private def logSentREST: Boolean     = ???
-  private def logReceivedREST: Boolean = ???
+  private def logSentREST: Boolean     = true //TODO
+  private def logReceivedREST: Boolean = true //TODO
 
-  private def logSentRESTLevel: Level     = ???
-  private def logReceivedRESTLevel: Level = ???
+  private def logSentRESTLevel: Level     = Level.INFO //TODO
+  private def logReceivedRESTLevel: Level = Level.INFO //TODO
 
   private def remainingRequests[A](response: SttpResponse[A]): Int =
     response.headers.find(_.name == "X-RateLimit-Remaining").fold(-1)(_.value.toInt)
@@ -51,19 +51,21 @@ object RequestHandling {
     s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCordInfo.Version})"
   )
 
-  def runRequestWithoutRatelimits[Response, R, R1 >: R, F[_]](
+  def runRequestWithoutRatelimits[Response, R, R1 >: R with Effect[F], F[_]](
       request: AckCordRequest[Response, R1],
-      backend: SttpBackend[F, R with Effect[F]],
+      backend: SttpBackend[F, R],
       settings: RequestSettings[F]
   ): F[RequestAnswer[Response]] = {
     implicit val monad: MonadError[F] = backend.responseMonad
+
+    val baseSttpRequest = request.toSttpRequest(settings.baseUri)
 
     def logBody(): Unit = {
       if (logSentREST) {
         sentReceivedLogger
           .atLevel(logSentRESTLevel)
           .log(
-            s"Sent REST request to ${request.route.method} ${request.route.uri} with body ${request.bodyForLogging}"
+            s"Sent REST request to ${request.route.method} ${baseSttpRequest.uri} with body ${request.bodyForLogging}"
           )
       }
     }
@@ -78,7 +80,6 @@ object RequestHandling {
       for {
         _ <- backend.responseMonad.unit(())
         _ <- monad.blocking(logBody())
-        baseSttpRequest = request.toSttpRequest(settings.baseUri)
         resWithStrBody <- backend.send(
           baseSttpRequest
             .headers(settings.credentials.toList :+ settings.userAgent: _*)
@@ -115,9 +116,9 @@ object RequestHandling {
     }
   }
 
-  def runRequest[Response, R, F[_]](
-      request: AckCordRequest[Response, R],
-      backend: SttpBackend[F, R with Effect[F]],
+  def runRequest[Response, R, R1 >: R with Effect[F], F[_]](
+      request: AckCordRequest[Response, R1],
+      backend: SttpBackend[F, R],
       settings: RequestSettings[F]
   ): F[RequestAnswer[Response]] =
     settings.ratelimiter

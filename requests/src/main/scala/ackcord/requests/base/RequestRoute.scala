@@ -31,17 +31,19 @@ case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri,
   def setSttpUriMethod[T, R](base: Uri, request: RequestT[Empty, T, R]): RequestT[Identity, T, R] =
     request.method(
       method,
-      uri.copy(
-        scheme = base.scheme,
-        authority = base.authority,
-        pathSegments = base.pathSegments.addSegments(uri.pathSegments.segments),
-        querySegments = base.querySegments ++ uri.querySegments
-      )
+      if (uri.isRelative)
+        uri.copy(
+          scheme = base.scheme,
+          authority = base.authority,
+          pathSegments = base.pathSegments.addSegments(uri.pathSegments.segments),
+          querySegments = base.querySegments ++ uri.querySegments
+        )
+      else uri
     )
 }
 object RequestRoute {
 
-  val defaultBase: Uri = Uri(s"https://discord.com/api/v${AckCordInfo.DiscordApiVersion}")
+  val defaultBase: Uri = Uri.unsafeParse(s"https://discord.com/api/v${AckCordInfo.DiscordApiVersion}")
 
   /**
     * Create a [[RequestRoute]] from a [[Route]] using the raw and applied

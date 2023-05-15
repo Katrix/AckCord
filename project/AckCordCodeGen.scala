@@ -33,6 +33,7 @@ object AckCordCodeGen {
       case requestDef: TypeDef.RequestDef       => codeFromRequestDef(requestDef)
       case multiple: TypeDef.MultipleDefs       => multiple.innerTypes.toList.flatMap(codeFromTypeDef)
       case objectOnly: TypeDef.ObjectOnlyDef    => List(codeFromObjectOnly(objectOnly))
+      case freeform: TypeDef.FreeformDef        => List(codeFromFreeform(freeform))
     }
 
     imports.mkString("\n") :: res
@@ -86,12 +87,13 @@ object AckCordCodeGen {
       }
 
       val args = fields.map { case (field, (fieldInfo, _)) =>
-        val fieldLit = "\"" + field + "\""
+        val jsonName = fieldInfo.jsonName.getOrElse(field)
+        val fieldLit = "\"" + jsonName + "\""
         if (fieldInfo.withUndefined) s"$fieldLit :=? ${camelCase(field)}"
         else s"$fieldLit := ${camelCase(field)}"
       }
 
-      val fieldDocs = fields.collect { case (name, (FieldDef(_, _, Some(documentation), _, _, _), _)) =>
+      val fieldDocs = fields.collect { case (name, (FieldDef(_, _, _, Some(documentation), _, _, _), _)) =>
         s"@param $name $documentation"
       }.toSeq
 
@@ -128,18 +130,21 @@ object AckCordCodeGen {
           )
         else List("@inline")
 
-      val defdef = s"""${mods.mkString(" ")} def ${camelCase(k)}: $tpe = selectDynamic[$tpe]("$k")"""
+      val jsonName = fieldDef.jsonName.getOrElse(k)
+
+      val defdef = s"""${mods.mkString(" ")} def ${camelCase(k)}: $tpe = selectDynamic[$tpe]("$jsonName")"""
 
       (fieldDef.documentation.map(docString(_)).toList :+ defdef).mkString("\n")
     }
 
-    val withs = classTypeDef.anonPart.`extends`.map(s => s"with $s").mkString(" ")
+    val withs    = classTypeDef.anonPart.`extends`.map(w => s"with $w").mkString(" ")
+    val objWiths = classTypeDef.anonPart.objectExtends.map(w => s"with $w").mkString(" ")
 
     val tpeCode =
       s"""|class $tpeName(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) $withs {
           |   ${classDefs.mkString("\n\n")}
           |}
-          |object ${classTypeDef.name} extends DiscordObjectCompanion[$tpeName] {
+          |object ${classTypeDef.name} extends DiscordObjectCompanion[$tpeName] $objWiths {
           |  def makeRaw(json: Json, cache: Map[String, Any]): $tpeName = new $tpeName(json, cache)
           |
           |  ${makeDefs.mkString("\n\n")}
@@ -150,10 +155,16 @@ object AckCordCodeGen {
     (classTypeDef.anonPart.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
   }
 
-  def codeFromObjectOnly(objectOnlyDef: TypeDef.ObjectOnlyDef): String =
-    s"""|object ${objectOnlyDef.name} {
+  def codeFromObjectOnly(objectOnlyDef: TypeDef.ObjectOnlyDef): String = {
+    val extend =
+      if (objectOnlyDef.objectExtends.nonEmpty) "extends " + objectOnlyDef.objectExtends.mkString(" with ") else ""
+    s"""|object ${objectOnlyDef.name} $extend {
         |  ${objectOnlyDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
         |}""".stripMargin
+  }
+
+  def codeFromFreeform(freeformDef: CodeGenTypes.TypeDef.FreeformDef): String =
+    (freeformDef.documentation.map(docString(_)).toList :+ freeformDef.content).mkString("\n")
 
   def codeFromEnumTypeDef(enumTypeDef: TypeDef.EnumTypeDef): String = {
     val tpeName = enumTypeDef.name
@@ -179,13 +190,17 @@ object AckCordCodeGen {
       }
       .mkString("\n  ")
 
+    val objWiths = enumTypeDef.objectExtends.map(w => s"with $w").mkString(" ")
+
     val tpeCode =
       s"""|sealed case class $tpeName private(value: $underlyingType) extends $parent
-          |object $tpeName extends ${parent}Companion[$tpeName] {
+          |object $tpeName extends ${parent}Companion[$tpeName] $objWiths {
           |
           |  $values
           |  
           |  def unknown(value: $underlyingType): $tpeName = new $tpeName(value)
+          |  
+          |  def values: Seq[$tpeName] = Seq(${enumTypeDef.values.keys.mkString(", ")})
           |
           |  ${enumTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
           |}""".stripMargin
@@ -198,8 +213,10 @@ object AckCordCodeGen {
 
     val aliasCode = s"type $tpeName = $tpeName.$tpeName" + "\n"
 
+    val objWiths = opaqueTypeDef.objectExtends.map(w => s"with $w").mkString(" ")
+
     val companionCode =
-      s"""|object $tpeName extends DiscordOpaqueCompanion[${opaqueTypeDef.underlying}] {
+      s"""|object $tpeName extends DiscordOpaqueCompanion[${opaqueTypeDef.underlying}] $objWiths {
           |  type $tpeName = OpaqueType
           |
           |  ${opaqueTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
@@ -218,6 +235,15 @@ object AckCordCodeGen {
         majorParameter = true,
         elem.documentation
       )
+
+    case "ChannelId" =>
+      PathElem.CustomArgPathElem(
+        elem.name.getOrElse("channelId"),
+        "ChannelId",
+        majorParameter = false,
+        elem.documentation
+      )
+
     case _ =>
       sys.error(s"Unknown path arg element ${elem.argOf}")
   }
@@ -269,7 +295,7 @@ object AckCordCodeGen {
 
     val paramsType = requestDef.body.fold("Unit") {
       case AnonymousClassTypeDefOrType.TypeRef(name)  => name
-      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Body, "
+      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Body"
     }
 
     val bodyParam = requestDef.body.fold("")(_ => s"body: $paramsType")
@@ -300,18 +326,18 @@ object AckCordCodeGen {
         .mkString
     }
 
-    val pathArgWithQuery = pathArg + queryArg
+    val pathArgWithQuery = "Route.Empty" + (if (pathArg.isEmpty) "" else s"/ $pathArg") + queryArg
 
     //TODO: Audit log reason
 
     val requestDefDef =
-      s"""|${requestDef.documentation.map(docString(_, pathDocs) + "\n")} def $uncapitalizedName(
+      s"""|${requestDef.documentation.fold("")(docString(_, pathDocs) + "\n")} def $uncapitalizedName(
           |  $pathParams
           |  $queryParam
           |  $bodyParam
           |): Request[$paramsType, $returnTpe] =
           |  Request.restRequest(
-          |    route = $pathArgWithQuery,
+          |    route = ($pathArgWithQuery).toRequest(Method.${requestDef.method}),
           |    ${if (bodyParam.nonEmpty) "params = body," else ""}
           |  )
           |""".stripMargin

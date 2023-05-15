@@ -1,6 +1,5 @@
 package ackcord
 
-
 package object requests {
   type AckCordRequest[Response, -R] = base.AckCordRequest[Response, R]
 
@@ -14,6 +13,7 @@ package object requests {
   val ParseResponse: base.ParseResponse.type = base.ParseResponse
 
   type Request[Params, Response] = ComplexRequest[Params, Response, Any, Any]
+  val Request: base.ComplexRequest.type = base.ComplexRequest
 
   val Parameters: base.Parameters.type = base.Parameters
 
@@ -22,4 +22,10 @@ package object requests {
 
   type RequestRoute = base.RequestRoute
   val RequestRoute: base.RequestRoute.type = base.RequestRoute
+
+  type Requests[F[_], +R] = base.Requests[F, R]
+  val Requests: base.Requests.type = base.Requests
+
+  type RequestSettings[F[_]] = base.RequestSettings[F]
+  val RequestSettings: base.RequestSettings.type = base.RequestSettings
 }

@@ -110,3 +110,6 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
         )
     }
 }
+object Route {
+  val Empty: Route = Route("", "", Uri.relative(Nil), Vector.empty)
+}

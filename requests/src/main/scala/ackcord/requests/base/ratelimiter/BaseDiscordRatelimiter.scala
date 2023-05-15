@@ -134,7 +134,7 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
         case Right(_) =>
           routeTokenBucket(route).flatMap {
             case Some(bucket) => remainingOrResetsAt(bucket, routeRatelimitReset(route), currentTime)
-            case None         => monad.unit(Right(-1))
+            case None         => monad.unit(Right(-1): Either[Duration, Int])
           }
         case l => monad.unit(l)
       }

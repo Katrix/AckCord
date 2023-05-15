@@ -83,10 +83,13 @@ lazy val requests = crossProject(JSPlatform, JVMPlatform)
     name    := "requests",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client3" %% "core"  % "3.7.6",
-      "com.softwaremill.sttp.client3" %% "circe" % "3.7.6"
+      "com.softwaremill.sttp.client3" %% "core"          % "3.8.15",
+      "com.softwaremill.sttp.client3" %% "circe"         % "3.8.15",
+      "com.softwaremill.sttp.client3" %% "cats"          % "3.8.15",
+      "com.softwaremill.sttp.client3" %% "slf4j-backend" % "3.8.15"
     ),
     libraryDependencies += "org.slf4j"      % "slf4j-api"       % "2.0.1",
+    libraryDependencies += "org.typelevel" %% "log4cats-slf4j"  % "2.6.0",
     libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.4.4",
     description                            := "The request module of AckCord"
   )
@@ -96,19 +99,15 @@ lazy val requestsJS  = requests.js
 
 lazy val gateway = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .dependsOn(data)
+  .dependsOn(requests)
   .settings(
     commonSettings,
     publishSettings,
-    name    := "gateway",
-    version := ackCordVersion,
-    libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client3" %% "core"  % "3.7.6",
-      "com.softwaremill.sttp.client3" %% "circe" % "3.7.6"
-    ),
-    libraryDependencies += "org.slf4j"      % "slf4j-api"       % "2.0.1",
-    libraryDependencies += "org.typelevel" %% "cats-effect-std" % "3.4.4",
-    description                            := "The gateway module of AckCord"
+    name                                                   := "gateway",
+    version                                                := ackCordVersion,
+    libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2"          % "3.8.15",
+    libraryDependencies += "ch.qos.logback"                 % "logback-classic" % "1.4.7",
+    description                                            := "The gateway module of AckCord"
   )
 
 lazy val example = project

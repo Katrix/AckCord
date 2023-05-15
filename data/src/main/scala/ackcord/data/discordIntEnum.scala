@@ -13,4 +13,6 @@ trait DiscordIntEnumCompanion[Obj <: DiscordIntEnum] {
     Decoder[Int].map(unknown),
     Encoder[Int].contramap[Obj](_.value)
   )
+
+  def values: Seq[Obj]
 }

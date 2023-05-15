@@ -17,13 +17,13 @@ import sttp.monad.MonadError
   *   Extra processing to do with all request answers.
   */
 class Requests[F[_], +R](
-    backend: SttpBackend[F, R with Effect[F]],
+    backend: SttpBackend[F, R],
     settings: RequestSettings[F],
-    alsoProcessRequests: RequestWithAnswer[_] => F[Unit]
+    alsoProcessRequests: RequestWithAnswer[_] => F[Unit],
 ) {
-  implicit private val F: MonadError[F] = backend.responseMonad
+  implicit val F: MonadError[F] = backend.responseMonad
 
-  private def addExtraProcessing[Response, R1 >: R](
+  private def addExtraProcessing[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1],
       res: F[RequestAnswer[Response]]
   ): F[RequestAnswer[Response]] =
@@ -33,17 +33,17 @@ class Requests[F[_], +R](
     * Run a request without ratelimiting. In almost all cases, you should not be
     * using this function.
     */
-  def runRequestWithoutRatelimits[Response, R1 >: R](
+  def runRequestWithoutRatelimits[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1]
   )(implicit @unused iKnowWhatImDoing: Requests.IWantToMakeRequestsWithoutRatelimits): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequestWithoutRatelimits(request, backend, settings))
 
   /** Run a normal request. If it fails, it will not be retried. */
-  def runRequest[Response, R1 >: R](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
+  def runRequest[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequest(request, backend, settings))
 
   /** Run a request, while retrying if it fails. */
-  def runRequestWithRetry[Response, R1 >: R](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
+  def runRequestWithRetry[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
     addExtraProcessing(
       request,
       RequestHandling.runRequestWithRetry(RequestHandling.runRequest(request, backend, settings), settings)(
@@ -55,7 +55,7 @@ object Requests {
 
   /** Make a [[Requests]] with no extra processing. */
   def ofNoProcessinng[F[_], R](
-      backend: SttpBackend[F, R with Effect[F]],
+      backend: SttpBackend[F, R],
       settings: RequestSettings[F]
   ): Requests[F, R] =
     new Requests(backend, settings, _ => backend.responseMonad.unit(()))

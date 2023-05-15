@@ -1,6 +1,6 @@
 package ackcord.requests.base
 
-import ackcord.data.SnowflakeType.SnowflakeType
+import ackcord.data._
 
 object Parameters {
 
@@ -39,7 +39,9 @@ object Parameters {
     def print: String = printable.print(value)
   }
 
-  //def ofGuildId(guildId: GuildId): MajorParameter[GuildId] = new MajorParameter[GuildId]("guildId", guildId)
+  def ofGuildId(guildId: GuildId): MajorParameter[GuildId] = new MajorParameter[GuildId]("guildId", guildId)
+
+  def ofChannelId(channelId: ChannelId): MinorParameter[ChannelId] = new MinorParameter[ChannelId]("channelId", channelId)
 
   def query[A](name: String, value: Option[A]): QueryParameter[A] =
     QueryParameter(name, value)

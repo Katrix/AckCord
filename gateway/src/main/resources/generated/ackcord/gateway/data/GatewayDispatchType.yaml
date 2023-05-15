@@ -1,0 +1,91 @@
+name: GatewayDispatchType
+defType: StringEnum
+imports:
+  - ackcord.data.DiscordStringEnum
+  - ackcord.data.DiscordStringEnumCompanion
+values:
+  Ready: "READY"
+  Resumed: "RESUMED"
+
+  #Application commands
+  ApplicationCommandPermissionUpdate: "APPLICATION_COMMAND_PERMISSIONS_UPDATE"
+
+  #Auto moderation
+  AutoModerationRuleCreate: "AUTO_MODERATION_RULE_CREATE"
+  AutoModerationRuleUpdate: "AUTO_MODERATION_RULE_UPDATE"
+  AutoModerationRuleDelete: "AUTO_MODERATION_RULE_DELETE"
+  AutoModerationActionExecution: "AUTO_MODERATION_ACTION_EXECUTION"
+
+  #Channels
+  ChannelCreate: "CHANNEL_CREATE"
+  ChannelUpdate: "CHANNEL_UPDATE"
+  ChannelDelete: "CHANNEL_DELETE"
+  ThreadCreate: "THREAD_CREATE"
+  ThreadUpdate: "THREAD_UPDATE"
+  ThreadDelete: "THREAD_DELETE"
+  ThreadListSync: "THREAD_LIST_SYNC"
+  ThreadMemberUpdate: "THREAD_MEMBER_UPDATE"
+  ThreadMembersUpdate: "THREAD_MEMBERS_UPDATE"
+  ChannelPinsUpdate: "CHANNEL_PINS_UPDATE"
+
+  #Guilds
+  GuildCreate: "GUILD_CREATE"
+  GuildUpdate: "GUILD_UPDATE"
+  GuildDelete: "GUILD_DELETE"
+  GuildAuditLogEntryCreate: "GUILD_AUDIT_LOG_ENTRY_CREATE"
+  GuildBanAdd: "GUILD_BAN_ADD"
+  GuildBanRemove: "GUILD_BAN_REMOVE"
+  GuildEmojiUpdate: "GUILD_EMOJI_UPDATE"
+  GuildStickersUpdate: "GUILD_STICKERS_UPDATE"
+  GuildIntegrationsUpdate: "GUILD_INTEGRATIONS_UPDATE"
+  GuildMemberAdd: "GUILD_MEMBER_ADD"
+  GuildMemberRemove: "GUILD_MEMBER_REMOVE"
+  GuildMemberUpdate: "GUILD_MEMBER_UPDATE"
+  GuildMembersChunk: "GUILD_MEMBERS_CHUNK"
+  GuildRoleCreate: "GUILD_ROLE_CREATE"
+  GuildRoleUpdate: "GUILD_ROLE_UPDATE"
+  GuildRoleDelete: "GUILD_ROLE_DELETE"
+  GuildScheduledEventCreate: "GUILD_SCHEDULED_EVENT_CREATE"
+  GuildScheduledEventUpdate: "GUILD_SCHEDULED_EVENT_UPDATE"
+  GuildScheduledEventDelete: "GUILD_SCHEDULED_EVENT_DELETE"
+  GuildScheduledEventUserAdd: "GUILD_SCHEDULED_EVENT_USER_ADD"
+  GuildScheduledEventUserRemove: "GUILD_SCHEDULED_EVENT_USER_REMOVE"
+
+  #Integrations
+  IntegrationCreate: "INTEGRATION_CREATE"
+  IntegrationUpdate: "INTEGRATION_UPDATE"
+  IntegrationDelete: "INTEGRATION_DELETE"
+
+  #Invites
+  InviteCreate: "INVITE_CREATE"
+  InviteDelete: "INVITE_DELETE"
+
+  #Messages
+  MessageCreate: "MESSAGE_CREATE"
+  MessageUpdate: "MESSAGE_UPDATE"
+  MessageDelete: "MESSAGE_DELETE"
+  MessageDeleteBulk: "MESSAGE_DELETE_BULK"
+  MessageReactionAdd: "MESSAGE_REACTION_ADD"
+  MessageReactionRemove: "MESSAGE_REACTION_REMOVE"
+  MessageReactionRemoveAll: "MESSAGE_REACTION_REMOVE_ALL"
+  MessageReactionRemoveEmoji: "MESSAGE_REACTION_REMOVE_EMOJI"
+
+  #Presence
+  PresenceUpdate: "PRESENCE_UPDATE"
+  TypingStart: "TYPING_START"
+  UserUpdate: "USER_UPDATE"
+
+  #Voice
+  VoiceStateUpdate: "VOICE_STATE_UPDATE"
+  VoiceServerUpdate: "VOICE_SERVER_UPDATE"
+
+  #Webhooks
+  WebhookUpdate: "WEBHOOK_UPDATE"
+
+  #Interactions
+  InteractionCreate: "INTERACTION_CREATE"
+
+  #Stage instances
+  StageInstanceCreate: "STAGE_INSTANCE_CREATE"
+  StageInstanceUpdate: "STAGE_INSTANCE_UPDATE"
+  StageInstanceDelete: "STAGE_INSTANCE_DELETE"

@@ -8,21 +8,28 @@ imports:
   - ackcord.data.UndefOr
   - ackcord.data.UndefOrSome
   - io.circe.Json
+objectExtends: [ "GatewayEventBase.TopMixin" ]
 innerTypes:
   - name: Dispatch
     defType: Class
     extends: [ "GatewayEventBase[Json]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Dispatch]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
           default: GatewayEventOp.Dispatch # 0
         d: Json
-
+        s: Int
+        t: GatewayDispatchType
+    innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Dispatch"
 
   - name: Heartbeat
     defType: Class
-    extends: [ "GatewayEventBase[Int]" ]
+    extends: [ "GatewayEventBase[Option[Int]]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Heartbeat]" ]
     fields:
       2.0.x:
         op:
@@ -31,12 +38,14 @@ innerTypes:
         d:
           type: Int
           withNull: true
-        t: GatewayDispatchType
-        s: Int
+    innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Heartbeat"
 
   - name: Identify
     defType: Class
     extends: [ "GatewayEventBase[GatewayEvent.Identify.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Identify]" ]
     fields:
       2.0.x:
         op:
@@ -44,6 +53,9 @@ innerTypes:
           default: GatewayEventOp.Identify # 2
         d: GatewayEvent.Identify.Data
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Identify"
+
       - name: Data
         defType: Class
         fields:
@@ -61,6 +73,7 @@ innerTypes:
               documentation: If the connection supports compression
             largeThreshold:
               type: Int
+              jsonName: large_threshold
               withUndefined: true
               documentation: A number between 50 and 250 indicating when offline members should no longer be sent.
             shard:
@@ -78,6 +91,7 @@ innerTypes:
   - name: UpdatePresence
     defType: Class
     extends: [ "GatewayEventBase[GatewayEvent.UpdatePresence.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[UpdatePresence]" ]
     fields:
       2.0.x:
         op:
@@ -85,6 +99,9 @@ innerTypes:
           default: GatewayEventOp.UpdatePresence # 3
         d: GatewayEvent.UpdatePresence.Data
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.UpdatePresence"
+
       - name: Data
         defType: Class
         fields:
@@ -116,6 +133,7 @@ innerTypes:
   - name: UpdateVoiceState
     defType: Class
     extends: [ "GatewayEventBase[GatewayEvent.UpdateVoiceState.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[UpdateVoiceState]" ]
     fields:
       2.0.x:
         op:
@@ -123,27 +141,35 @@ innerTypes:
           default: GatewayEventOp.UpdateVoiceState # 4
         d: GatewayEvent.UpdateVoiceState.Data
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.UpdateVoiceState"
+
       - name: Data
         defType: Class
         fields:
           2.0.x:
             guildId:
               type: GuildId
+              jsonName: guild_id
               documentation: Id of the guild
             channelId:
               type: ChannelId
+              jsonName: channel_id
               withNull: true
               documentation: Id of the voice channel to join, or null if disconnecting
             selfMute:
               type: Boolean
+              jsonName: self_mute
               documentation: If the client is muted
             selfDeaf:
               type: Boolean
+              jsonName: self_deaf
               documentation: If the client is deafened
 
   - name: Resume
     defType: Class
-    extends: [ "GatewayEventBase[GatewayEvent.Identify.Data]" ]
+    extends: [ "GatewayEventBase[GatewayEvent.Resume.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Resume]" ]
     fields:
       2.0.x:
         op:
@@ -151,6 +177,9 @@ innerTypes:
           default: GatewayEventOp.Resume # 6
         d: GatewayEvent.Resume.Data
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Resume"
+
       - name: Data
         defType: Class
         fields:
@@ -160,6 +189,7 @@ innerTypes:
               documentation: Session token
             sessionId:
               type: String
+              jsonName: session_id
               documentation: Session id
             seq:
               type: Int
@@ -168,29 +198,38 @@ innerTypes:
   - name: Reconnect
     defType: Class
     extends: [ "GatewayEventBase[Unit]", "GatewayEventBase.UnitMixin" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Reconnect]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
           default: GatewayEventOp.Reconnect # 7
+    innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Reconnect"
 
   - name: RequestGuildMembers
     defType: Class
     extends: [ "GatewayEventBase[GatewayEvent.RequestGuildMembers.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[RequestGuildMembers]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
-          default: GatewayEventOp.RequestGuildMember # 8
+          default: GatewayEventOp.RequestGuildMembers # 8
         d: GatewayEvent.RequestGuildMembers.Data
 
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.RequestGuildMembers"
+
       - name: Data
         defType: Class
         fields:
           2.0.x:
             guildId:
               type: GuildId
+              jsonName: guild_id
               documentation: Id of the guild to get members in
             query:
               type: String
@@ -205,26 +244,34 @@ innerTypes:
               documentation: If presences should be included as well
             userIds:
               type: Seq[UserId]
+              jsonName: user_ids
               withUndefined: true
               documentation: Specific users to fetch
             nonce:
               type: String
               withUndefined: true
               documentation: Nonce to identify chunk responses
+              verification:
+                max_length: 32
 
   - name: InvalidSession
     defType: Class
     extends: [ "GatewayEventBase[Boolean]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[InvalidSession]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
           default: GatewayEventOp.InvalidSession # 9
         d: Boolean
+    innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.InvalidSession"
 
   - name: Hello
     defType: Class
     extends: [ "GatewayEventBase[GatewayEvent.Hello.Data]" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Hello]" ]
     fields:
       2.0.x:
         op:
@@ -232,17 +279,32 @@ innerTypes:
           default: GatewayEventOp.Hello # 10
         d: GatewayEvent.Hello.Data
     innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.Hello"
+
       - name: Data
         defType: Class
         fields:
           2.0.x:
-            heartbeatInterval: Int
+            heartbeat_interval: Int
 
   - name: HeartbeatACK
     defType: Class
     extends: [ "GatewayEventBase[Unit]", "GatewayEventBase.UnitMixin" ]
+    objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[HeartbeatACK]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
           default: GatewayEventOp.HeartbeatACK # 11
+    innerTypes:
+      - defType: Freeform
+        content: "override def op: GatewayEventOp = GatewayEventOp.HeartbeatACK"
+
+  - name: Unknown
+    defType: Class
+    extends: [ "GatewayEventBase[Json]" ]
+    fields:
+      2.0.x:
+        op: GatewayEventOp
+        d: Json

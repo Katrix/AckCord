@@ -3,6 +3,7 @@ defType: IntEnum
 imports:
   - ackcord.data.DiscordIntEnum
   - ackcord.data.DiscordIntEnumCompanion
+objectExtends: [ " GatewayEventOpMixin " ]
 values:
   Dispatch: "0"
   Heartbeat: "1"
@@ -11,7 +12,7 @@ values:
   UpdateVoiceState: "4"
   Resume: "6"
   Reconnect: "7"
-  RequestGuildMember: "8"
+  RequestGuildMembers: "8"
   InvalidSession: "9"
   Hello: "10"
   HeartbeatACK: "11"

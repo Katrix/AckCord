@@ -5,17 +5,15 @@ import sttp.ws.WebSocketFrame
 
 trait GatewayHandler[F[_]] {
 
-  def resumeGatewayUrl: F[Option[String]]
-
   def lastSeq: F[Option[Int]]
+
+  def resumeData: F[Option[ResumeData]]
 }
 object GatewayHandler {
 
   trait NormalGatewayHandler[F[_]] extends GatewayHandler[F] {
 
-    def grabNextEvent: F[Option[RawGatewayEvent]]
-
-    def start: F[Unit]
+    def run: F[DisconnectBehavior]
   }
 
   trait StreamGatewayHandler[F[_], S] extends GatewayHandler[F] {

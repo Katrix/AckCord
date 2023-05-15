@@ -23,6 +23,9 @@
                 },
                 {
                     "$ref": "#/definitions/objectOnlyDefs"
+                },
+                {
+                    "$ref": "#/definitions/freeformDefs"
                 }
             ]
         },
@@ -72,6 +75,13 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "objectExtends": {
+                    "description": "The types this companion object extends",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
@@ -115,6 +125,10 @@
                 "type": {
                     "type": "string",
                     "description": "The type of the field, as seen from the definition of the field"
+                },
+                "jsonName": {
+                    "type": "string",
+                    "description": "The string key which is used in JSON for this field"
                 },
                 "default": {
                     "type": "string",
@@ -192,6 +206,13 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "objectExtends": {
+                    "description": "The types this companion object extends",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
@@ -242,6 +263,13 @@
                     "items": {
                         "$ref": "#/definitions/typeDef"
                     }
+                },
+                "objectExtends": {
+                    "description": "The types this companion object extends",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
@@ -284,6 +312,7 @@
                                         "type": "string",
                                         "enum": [
                                             "GuildId",
+                                            "ChannelId",
                                             "TODO MORE HERE"
                                         ]
                                     },
@@ -328,6 +357,11 @@
                         ]
                     }
                 },
+                "method": {
+                    "type": "string",
+                    "description": "The HTTP method for this endpoint",
+                    "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+                },
                 "query": {
                     "$ref": "#/definitions/anonymousClassTypeDef"
                 },
@@ -367,7 +401,7 @@
                 "allowsReason": {
                     "type": "boolean",
                     "description": "If this requests allows to set the audit log reason",
-                    "default": false,
+                    "default": false
                 },
                 "defType": {
                     "type": "string",
@@ -444,10 +478,49 @@
                     "enum": [
                         "ObjectOnly"
                     ]
+                },
+                "objectExtends": {
+                    "description": "The types this object extends",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
                 "innerTypes",
+                "defType"
+            ],
+            "additionalProperties": false
+        },
+        "freeformDefs": {
+            "description": "A definition that can be anything. Inserts a string directly into the generated code",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "The string to insert into the code"
+                },
+                "imports": {
+                    "type": "array",
+                    "description": "Imports to add to this file",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation": {
+                    "type": "string",
+                    "description": "A Scaladoc documentation string to add to the definition"
+                },
+                "defType": {
+                    "type": "string",
+                    "description": "The type of Scala type to generate",
+                    "enum": [
+                        "Freeform"
+                    ]
+                }
+            },
+            "required": [
                 "defType"
             ],
             "additionalProperties": false

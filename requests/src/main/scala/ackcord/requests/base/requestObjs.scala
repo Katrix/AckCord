@@ -38,7 +38,7 @@ case class ComplexRequest[Params, Response, -R1, -R2](
 
   val identifier: UUID = UUID.randomUUID()
 
-  def hasPermissions(implicit c: CacheSnapshot): Boolean = ???
+  def hasPermissions(implicit c: CacheSnapshot): Boolean = true //TODO
 
   def toSttpRequest(base: Uri): RequestT[Identity, Either[Throwable, Either[String, Response]], R1 with R2] = {
     val start            = basicRequest

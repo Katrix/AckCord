@@ -1,8 +1,12 @@
 package ackcord.requests.base
 
 import scala.concurrent.duration.FiniteDuration
-
-import ackcord.requests.base.ratelimiter.Ratelimiter
+import ackcord.requests.base.ratelimiter.{CatsEffectDiscordRatelimiter, Ratelimiter}
+import cats.effect.IO
+import cats.effect.kernel.Async
+import cats.syntax.all._
+import org.typelevel.log4cats.{Logger, LoggerFactory}
+import sttp.client3.impl.cats.implicits._
 import sttp.model.{Header, Uri}
 
 /**
@@ -22,8 +26,22 @@ import sttp.model.{Header, Uri}
 case class RequestSettings[F[_]](
     credentials: Option[Header],
     ratelimiter: Ratelimiter[F],
+    logger: Logger[F],
     waitDuration: FiniteDuration => F[Unit],
     maxRetryCount: Int = 3,
     baseUri: Uri = RequestRoute.defaultBase,
     userAgent: Header = RequestHandling.defaultUserAgent
 )
+object RequestSettings {
+  def simpleF[F[_]](token: String)(implicit F: Async[F], logFactory: LoggerFactory[F]): F[RequestSettings[F]] = {
+    for {
+      ratelimiter <- CatsEffectDiscordRatelimiter[F]()
+      log <- logFactory.fromClass(classOf[Requests[F, Any]])
+    } yield RequestSettings(
+      Some(Header.authorization("Bot", token)),
+      ratelimiter,
+      log,
+      F.sleep
+    )
+  }
+}

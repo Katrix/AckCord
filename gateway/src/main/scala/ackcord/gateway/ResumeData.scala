@@ -1,5 +1,3 @@
 package ackcord.gateway
 
-trait ResumeData {
-
-}
+case class ResumeData(sessionId: String, seq: Int, resumeGatewayUrl: String)
