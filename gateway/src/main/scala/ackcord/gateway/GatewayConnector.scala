@@ -3,7 +3,7 @@ package ackcord.gateway
 import scala.annotation.tailrec
 
 import ackcord.requests._
-import ackcord.requests.base.{EncodeBody, RequestAnswer, Requests}
+import ackcord.requests.base.{EncodeBody, Requests}
 import io.circe.{Decoder, HCursor}
 import org.typelevel.log4cats.{Logger, LoggerFactory}
 import sttp.capabilities.{Effect, Streams, WebSockets}
@@ -117,11 +117,11 @@ object GatewayConnector {
     import requests.F
 
     private def connect(
-        identifyData: IdentifyData,
-        handle: GatewayCallbacks[F, Handler],
-        log: Logger[F],
-        resumeData: Option[ResumeData],
-        wsUrl: String
+                         identifyData: IdentifyData,
+                         handle: GatewayProcess[F, Handler],
+                         log: Logger[F],
+                         resumeData: Option[ResumeData],
+                         wsUrl: String
     ): F[(DisconnectBehavior, Option[ResumeData])] = {
       val request = ComplexRequest(
         route = RequestRoute(wsUrl, wsUrl, Uri.unsafeParse(wsUrl), Method.GET),
@@ -141,16 +141,14 @@ object GatewayConnector {
         })
       )
 
-      requests.runRequest(request).flatMap(r => F.fromTry(r.eitherData.toTry))
+      requests.runRequest(request)
     }
 
-    implicit val IKnowWhatImDoing: Requests.IWantToMakeRequestsWithoutRatelimits = new Requests.IWantToMakeRequestsWithoutRatelimits {}
-
-    def start(identifyData: IdentifyData)(handle: GatewayCallbacks[F, Handler]): F[Unit] =
+    def start(identifyData: IdentifyData)(handle: GatewayProcess[F, Handler]): F[Unit] =
       for {
         log   <- logFactory.fromClass(this.getClass)
         _     <- log.info("Finding WS Url")
-        wsUrl <- requests.runRequest(getGateway).flatMap(r => F.fromTry(r.eitherData.toTry)).map(_.url)
+        wsUrl <- requests.runRequest(getGateway).map(_.url)
         _     <- log.info(s"Found WS Url at $wsUrl. Connecting to Discord")
         _     <- handleReconnect.handleReconnect(wsUrl, connect(identifyData, handle, log, _, _))
       } yield ()

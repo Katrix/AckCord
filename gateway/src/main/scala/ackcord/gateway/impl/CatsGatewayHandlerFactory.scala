@@ -3,11 +3,12 @@ package ackcord.gateway.impl
 import scala.concurrent.duration._
 
 import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
-import ackcord.gateway.data.{GatewayDispatchType, GatewayEvent, GatewayEventBase}
-import ackcord.gateway.{DisconnectBehavior, GatewayCallbacks, IdentifyData, Inflate, ResumeData}
+import ackcord.gateway.data.{GatewayDispatchType, GatewayEvent}
+import ackcord.gateway.{DisconnectBehavior, GatewayProcess, IdentifyData, Inflate, ResumeData}
 import cats.data.OptionT
 import cats.effect.kernel._
 import cats.effect.std.{Queue, Supervisor}
+import cats.effect.syntax.all._
 import cats.syntax.all._
 import org.typelevel.log4cats.{Logger, LoggerFactory}
 import sttp.ws.{WebSocket, WebSocketFrame}
@@ -19,7 +20,7 @@ class CatsGatewayHandlerFactory[F[_]: Temporal: Inflate: LoggerFactory]
       ws: WebSocket[F],
       identifyData: IdentifyData,
       resumeData: Option[ResumeData],
-      handle: GatewayCallbacks[F, CatsGatewayHandlerFactory.CatsGatewayHandler[F]]
+      handle: GatewayProcess[F, CatsGatewayHandlerFactory.CatsGatewayHandler[F]]
   ): F[CatsGatewayHandlerFactory.CatsGatewayHandler[F]] = {
     for {
       log <- LoggerFactory[F].fromClass(classOf[CatsGatewayHandlerFactory.CatsGatewayHandler[F]])
@@ -52,16 +53,16 @@ class CatsGatewayHandlerFactory[F[_]: Temporal: Inflate: LoggerFactory]
 object CatsGatewayHandlerFactory {
 
   class CatsGatewayHandler[F[_]: Temporal: Inflate](
-      ws: WebSocket[F],
-      identifyData: IdentifyData,
-      handle: GatewayCallbacks[F, CatsGatewayHandlerFactory.CatsGatewayHandler[F]],
-      log: Logger[F],
-      receivedHeartbeatAckRef: Ref[F, Boolean],
-      heartbeatNowQueue: Queue[F, Unit],
-      resumeGatewayUrlRef: Ref[F, Option[String]],
-      sessionIdRef: Ref[F, Option[String]],
-      lastReceivedSeqRef: Ref[F, Option[Int]],
-      disconnectBehavior: Deferred[F, DisconnectBehavior]
+                                                     ws: WebSocket[F],
+                                                     identifyData: IdentifyData,
+                                                     handle: GatewayProcess[F, CatsGatewayHandlerFactory.CatsGatewayHandler[F]],
+                                                     log: Logger[F],
+                                                     receivedHeartbeatAckRef: Ref[F, Boolean],
+                                                     heartbeatNowQueue: Queue[F, Unit],
+                                                     resumeGatewayUrlRef: Ref[F, Option[String]],
+                                                     sessionIdRef: Ref[F, Option[String]],
+                                                     lastReceivedSeqRef: Ref[F, Option[Int]],
+                                                     disconnectBehavior: Deferred[F, DisconnectBehavior]
   ) extends NormalGatewayHandlerBase[F](ws, identifyData, log) {
 
     private def reconnect(resumable: Boolean): F[Unit] =
@@ -97,7 +98,17 @@ object CatsGatewayHandlerFactory {
         case Some(js) =>
           GatewayEvent.tryDecode(js) match {
             case Right(ev) =>
-              val handleExternally = handle.onEvent(this, ev)
+              val handleExternally = handle
+                .onEvent(this, ev)
+                .handleError { e =>
+                  log.error(e)("Encountered error while handling event")
+                }
+                .race(
+                  Temporal[F].sleep(3.seconds) *> log.error(new Exception("Event execution took too long"))(
+                    "Handling of event too too long and has timed out. Make sure to not block in event handlers"
+                  )
+                )
+                .void
 
               val actOnEvent = ev match {
                 case GatewayEvent.Dispatch(ev) =>

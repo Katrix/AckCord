@@ -1,15 +1,20 @@
-package ackcord.data
+package ackcord.data.base
 
-import scala.language.implicitConversions
-
+import ackcord.data.{JsonOption, UndefOr}
 import io.circe._
 import io.circe.syntax._
+
+import scala.language.implicitConversions
 
 class DiscordObject(val json: Json, startCache: Map[String, Any]) {
   private val cache = startCache.to(collection.mutable.Map)
 
   def selectDynamic[A](name: String)(implicit decoder: Decoder[A]): A =
     cache.getOrElseUpdate(name, json.hcursor.get[A](name).getOrElse(throw new MissingFieldException(name, json))).asInstanceOf[A]
+
+  override def toString = s"${getClass.getSimpleName}($json)"
+
+  def values: Seq[() => Any] = Nil
 }
 
 trait DiscordObjectCompanion[Obj <: DiscordObject] {

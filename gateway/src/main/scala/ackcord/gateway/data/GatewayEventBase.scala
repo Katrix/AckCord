@@ -1,6 +1,6 @@
 package ackcord.gateway.data
 
-import ackcord.data.{DiscordObject, DiscordObjectCompanion}
+import ackcord.data.base.{DiscordObject, DiscordObjectCompanion}
 import io.circe.{DecodingFailure, Json}
 
 trait GatewayEventBase[D] {

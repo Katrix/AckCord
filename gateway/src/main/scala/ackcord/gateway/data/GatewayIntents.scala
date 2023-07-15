@@ -1,7 +1,6 @@
 package ackcord.gateway.data
 
-import ackcord.data.DiscordIntEnum
-import ackcord.data.DiscordIntEnumCompanion
+import ackcord.data.base.{DiscordIntEnum, DiscordIntEnumCompanion}
 
 sealed case class GatewayIntents private(value: Int) extends DiscordIntEnum
 object GatewayIntents extends DiscordIntEnumCompanion[GatewayIntents] with GatewayIntentsMixin {

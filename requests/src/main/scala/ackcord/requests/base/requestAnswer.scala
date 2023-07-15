@@ -61,10 +61,8 @@ object FailedRequest {
   }
 
   /** A request that failed for some other reason. */
-  case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) extends FailedRequest {
+  case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID, ratelimitInfo: RatelimitInfo) extends FailedRequest {
     override def asException: Throwable = e
-
-    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", false)
   }
 
   /**

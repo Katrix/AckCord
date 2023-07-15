@@ -4,7 +4,6 @@ import java.util.UUID
 
 import scala.concurrent.duration._
 
-import ackcord.requests.base.ratelimiter.BaseDiscordRatelimiter.{PQueue, TokenBucket}
 import ackcord.requests.base.{FailedRequest, RequestAnswer, RequestRoute}
 import org.slf4j.LoggerFactory
 import sttp.monad.MonadError
@@ -12,6 +11,7 @@ import sttp.monad.syntax._
 
 abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)(implicit monad: MonadError[F])
     extends Ratelimiter[F] {
+  import BaseDiscordRatelimiter.{PQueue, TokenBucket}
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
@@ -37,8 +37,8 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
     * Acquire tokens from all the given buckets at the same time. If any of the
     * buckets are missing tokens, no tokens are taken from any bucket.
     * @param buckets
-    *   The buckets to acquire tokens from. The buckets are checked from right
-    *   to left. More general buckets should be placed on the left, while more
+    *   The buckets to acquire tokens from. The buckets are checked from left to
+    *   right. More general buckets should be placed on the left, while more
     *   specific ones on the right.
     * @return
     *   A number indicating the first bucket missing tokens. -1 If all buckets
@@ -46,15 +46,40 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
     */
   protected def acquireTokensFromBuckets(buckets: TokenBucket[F]*): F[Int]
 
+  /** Get a monotonic source of time. */
   protected def getMonotonicTime: F[Long]
 
-  protected def updateBucketLocation(route: RequestRoute, bucket: String): F[Unit]
+  /**
+    * Update the location info to associate the given route with the given
+    * bucket.
+    */
+  protected def associateRouteWithBucket(route: RequestRoute, bucket: String): F[Unit]
 
-  protected def globalRatelimitReset: F[Long]
+  /**
+    * When the global rate limit is over and requests can try to be sent again
+    * unix time millis, or -1 if unknown.
+    */
+  protected def globalRatelimitRetry: F[Long]
+
+  /** When the route rate limit resets in unix time millis, or -1 if unknown. */
   protected def routeRatelimitReset(route: RequestRoute): F[Long]
 
-  protected def onGlobalRatelimit(resetAt: Long): F[Unit]
+  /**
+    * Trigger a global ratelimit
+    * @param retryAt
+    *   When the ratelimiting is over.
+    */
+  protected def onGlobalRatelimit(retryAt: Long): F[Unit]
 
+  /**
+    * Update route ratelimit info.
+    * @param route
+    *   The route for which the info is being updated.
+    * @param resetAt
+    *   When the ratelimit resets.
+    * @param retryAt
+    *   When a single element might be retried.
+    */
   protected def updateRouteRatelimit(route: RequestRoute, resetAt: Long, retryAt: Long): F[Unit]
 
   final override def ratelimitRequest[Req](
@@ -63,7 +88,6 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
       id: UUID
   ): F[Either[FailedRequest.RequestDropped, Req]] = {
     val logging = if (logRateLimitEvents) {
-
       for {
         routeBucket <- routeTokenBucket(route)
         globalBucket = globalTokenBucket
@@ -74,7 +98,7 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
         globalMaxSize         <- globalBucket.maxSize
         globalTokensRemaining <- globalBucket.tokensRemaining
         globalRequestsWaiting <- globalRatelimitQueue.size
-        globalResetAt         <- globalRatelimitReset
+        globalRetryAt         <- globalRatelimitRetry
         _ <- monad.blocking(
           log.debug(
             s"""|
@@ -86,7 +110,7 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
                 |Global limit: $globalMaxSize
                 |Global remaining requests: $globalTokensRemaining
                 |Global requests waiting: $globalRequestsWaiting
-                |Global ratelimit reset: $globalResetAt
+                |Global ratelimit retry: $globalRetryAt
                 |Current time: ${System.currentTimeMillis()}
                 |""".stripMargin
           )
@@ -112,6 +136,25 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
         case 1  => Some(routeRatelimitQueue(route))
       }
 
+      _ <-
+        if (logRateLimitEvents) {
+
+          for {
+            bucketToString <- routeBucket match {
+              case Some(bucket) => bucket.toStringF.map(str => s"Some($str)")
+              case None         => "None".unit
+            }
+            _ <- monad.blocking(
+              log.debug(s"""|
+                            |Ratelimited request: ${route.uriWithMajor} $id
+                            |Bucket obj: $bucketToString
+                            |Failed bucket ids: $failedBucketIds
+                            |Ratelimit queue: $ratelimitQueue
+                            |""".stripMargin)
+            )
+          } yield ()
+        } else ().unit
+
       res <- ratelimitQueue match {
         case None => monad.unit(Right(request))
         case Some(queueF) =>
@@ -123,13 +166,14 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
 
   override def queryRemainingRequests(route: RequestRoute): F[Either[Duration, Int]] = {
     def remainingOrResetsAt(bucket: TokenBucket[F], resetAt: F[Long], currentTime: Long): F[Either[Duration, Int]] =
-      bucket.tokensRemaining.flatMap(remaining =>
-        if (remaining == 0) resetAt.map(at => Left((at - currentTime).millis)) else monad.unit(Right(remaining))
-      )
+      bucket.tokensRemaining.flatMap { remaining =>
+        if (remaining == 0) resetAt.map(at => if (at == -1) Left(-1.millis) else Left((at - currentTime).millis))
+        else monad.unit(Right(remaining))
+      }
 
     for {
       currentTime <- monad.blocking(System.currentTimeMillis())
-      globalRes   <- remainingOrResetsAt(globalTokenBucket, globalRatelimitReset, currentTime)
+      globalRes   <- remainingOrResetsAt(globalTokenBucket, globalRatelimitRetry, currentTime)
       res <- globalRes match {
         case Right(_) =>
           routeTokenBucket(route).flatMap {
@@ -160,6 +204,7 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
               |RetryAt: $retryAt
               |RemainingAmount: $remainingRequestsAmount
               |Current time: ${System.currentTimeMillis()}
+              |Reset diff: ${resetAt - System.currentTimeMillis()}
               |""".stripMargin
         )
       )
@@ -170,7 +215,7 @@ abstract class BaseDiscordRatelimiter[F[_]](logRateLimitEvents: Boolean = false)
         _           <- logging
         routeBucket <- routeTokenBucketOrCreate(route)
         _           <- routeBucket.setTokensMaxSize(tokens = remainingRequestsAmount, maxSize = bucketLimit)
-        _           <- updateBucketLocation(route, bucket)
+        _           <- associateRouteWithBucket(route, bucket)
         _ <-
           if (isGlobal)
             onGlobalRatelimit(resetAt)
@@ -220,5 +265,7 @@ object BaseDiscordRatelimiter {
       *   A boolean indicating if the bucket was not at the max size.
       */
     def giveToken: F[Boolean]
+
+    def toStringF: F[String]
   }
 }

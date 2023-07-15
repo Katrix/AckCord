@@ -1,4 +1,4 @@
-package ackcord.data
+package ackcord.data.base
 
 import io.circe.Codec
 

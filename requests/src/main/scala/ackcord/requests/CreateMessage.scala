@@ -1,8 +1,7 @@
 package ackcord.requests
 
-import ackcord.data.DiscordObject
-import ackcord.data.DiscordObjectCompanion
 import ackcord.data.ChannelId
+import ackcord.data.base.{DiscordObject, DiscordObjectCompanion}
 import io.circe.Json
 
 import sttp.model.Method

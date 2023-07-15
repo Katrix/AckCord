@@ -6,6 +6,7 @@ import ackcord.requests.base.Requests.RequestWithAnswer
 import sttp.capabilities.Effect
 import sttp.client3.SttpBackend
 import sttp.monad.MonadError
+import sttp.monad.syntax._
 
 /**
   * An object used for making requests.
@@ -19,7 +20,7 @@ import sttp.monad.MonadError
 class Requests[F[_], +R](
     backend: SttpBackend[F, R],
     settings: RequestSettings[F],
-    alsoProcessRequests: RequestWithAnswer[_] => F[Unit],
+    alsoProcessRequests: RequestWithAnswer[_] => F[Unit]
 ) {
   implicit val F: MonadError[F] = backend.responseMonad
 
@@ -38,18 +39,37 @@ class Requests[F[_], +R](
   )(implicit @unused iKnowWhatImDoing: Requests.IWantToMakeRequestsWithoutRatelimits): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequestWithoutRatelimits(request, backend, settings))
 
-  /** Run a normal request. If it fails, it will not be retried. */
-  def runRequest[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
+  /** Run a normal request, returning the [[RequestAnswer]]. If it fails, it will not be retried. */
+  def runRequestToAnswer[Response, R1 >: R with Effect[F]](
+      request: AckCordRequest[Response, R1]
+  ): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequest(request, backend, settings))
 
-  /** Run a request, while retrying if it fails. */
-  def runRequestWithRetry[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[RequestAnswer[Response]] =
+  /** Run a normal request, returning the response type. If it fails, it will not be retried. */
+  def runRequest[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[Response] =
+    runRequestToAnswer(request).flatMap {
+      case RequestResponse(data, _, _, _) => F.unit(data)
+      case request: FailedRequest         => F.error(request.asException)
+    }
+
+  /** Run a request, returning the [[RequestAnswer]] while retrying if it fails. */
+  def runRequestToAnswerWithRetry[Response, R1 >: R with Effect[F]](
+      request: AckCordRequest[Response, R1]
+  ): F[RequestAnswer[Response]] =
     addExtraProcessing(
       request,
       RequestHandling.runRequestWithRetry(RequestHandling.runRequest(request, backend, settings), settings)(
         backend.responseMonad
       )
     )
+
+  /** Run a request, returning the response type while retrying if it fails. */
+  def runRequestWithRetry[Response, R1 >: R with Effect[F]](
+      request: AckCordRequest[Response, R1]
+  ): F[Response] = runRequestToAnswerWithRetry(request).flatMap {
+    case RequestResponse(data, _, _, _) => F.unit(data)
+    case request: FailedRequest => F.error(request.asException)
+  }
 }
 object Requests {
 

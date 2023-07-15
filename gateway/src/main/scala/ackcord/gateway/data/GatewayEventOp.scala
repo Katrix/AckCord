@@ -1,7 +1,6 @@
 package ackcord.gateway.data
 
-import ackcord.data.DiscordIntEnum
-import ackcord.data.DiscordIntEnumCompanion
+import ackcord.data.base.{DiscordIntEnum, DiscordIntEnumCompanion}
 
 sealed case class GatewayEventOp private(value: Int) extends DiscordIntEnum
 object GatewayEventOp extends DiscordIntEnumCompanion[GatewayEventOp] with  GatewayEventOpMixin  {

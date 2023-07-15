@@ -1,6 +1,7 @@
 package ackcord.requests.base
 
 import java.time.Instant
+import java.util.Locale
 
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
@@ -25,27 +26,28 @@ object RequestHandling {
   private def logSentRESTLevel: Level     = Level.INFO //TODO
   private def logReceivedRESTLevel: Level = Level.INFO //TODO
 
+  private def findHeader(response: SttpResponse[_], header: String): Option[String] =
+    response.headers.find(_.name.toLowerCase(Locale.ROOT) == header.toLowerCase(Locale.ROOT)).map(_.value)
+
   private def remainingRequests[A](response: SttpResponse[A]): Int =
-    response.headers.find(_.name == "X-RateLimit-Remaining").fold(-1)(_.value.toInt)
+    findHeader(response, "X-RateLimit-Remaining").fold(-1)(_.toInt)
 
   private def requestsForUri[A](response: SttpResponse[A]): Int =
-    response.headers.find(_.name == "X-RateLimit-Limit").fold(-1)(_.value.toInt)
+    findHeader(response, "X-RateLimit-Limit").fold(-1)(_.toInt)
 
   private def resetAt[A](response: SttpResponse[A]): Long =
-    response.headers.find(_.name == "X-RateLimit-Reset").fold(-1L) { header =>
-      (header.value.toDouble * 1000).toLong
+    findHeader(response, "X-RateLimit-Reset-After").fold(-1L) { value =>
+      System.currentTimeMillis() + (value.toDouble * 1000).toLong
     }
 
   private def retryAt[A](response: SttpResponse[A]): Long =
-    response.headers.find(_.name == "Retry-After").fold(-1L)(h => Instant.now().plusSeconds(h.value.toInt).toEpochMilli)
+    findHeader(response, "Retry-After").fold(-1L)(v => Instant.now().plusSeconds(v.toInt).toEpochMilli)
 
   private def isGlobalRatelimit[A](response: SttpResponse[A]): Boolean =
-    response.headers.find(_.name == "X-Ratelimit-Global").fold(false)(_.value.toBoolean)
+    findHeader(response, "X-Ratelimit-Global").fold(false)(_.toBoolean)
 
   private def requestBucket[A](route: RequestRoute, response: SttpResponse[A]): String =
-    response.headers
-      .find(_.name == "X-RateLimit-Bucket")
-      .fold(route.uriWithoutMajor)(_.value) //Sadly this is not always present
+    findHeader(response, "X-RateLimit-Bucket").getOrElse(route.uriWithoutMajor) //Sadly this is not always present
 
   val defaultUserAgent: Header = Header.userAgent(
     s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCordInfo.Version})"
@@ -105,14 +107,16 @@ object RequestHandling {
           FailedRequest.RequestError(
             HttpException(request.route.uri, request.route.method, code, extraInfo = Some(errorMsg)),
             request.route,
-            request.identifier
+            request.identifier,
+            ratelimitInfo
           )
 
         case (Left(err), _) =>
-          FailedRequest.RequestError(err, request.route, request.identifier)
+          FailedRequest.RequestError(err, request.route, request.identifier, ratelimitInfo)
       }
     } { case NonFatal(e) =>
-      monad.unit(FailedRequest.RequestError(e, request.route, request.identifier))
+      val ratelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", isGlobal = false)
+      monad.unit(FailedRequest.RequestError(e, request.route, request.identifier, ratelimitInfo))
     }
   }
 
@@ -120,13 +124,17 @@ object RequestHandling {
       request: AckCordRequest[Response, R1],
       backend: SttpBackend[F, R],
       settings: RequestSettings[F]
-  ): F[RequestAnswer[Response]] =
+  ): F[RequestAnswer[Response]] = {
+    implicit val F: MonadError[F] = backend.responseMonad
+
     settings.ratelimiter
       .ratelimitRequest(request.route, request, request.identifier)
       .flatMap[RequestAnswer[Response]] {
-        case Right(req)    => runRequestWithoutRatelimits(req, backend, settings)
+        case Right(req) =>
+          runRequestWithoutRatelimits(req, backend, settings).flatTap(settings.ratelimiter.reportRatelimits)
         case Left(dropped) => backend.responseMonad.unit(dropped)
-      }(backend.responseMonad)
+      }
+  }
 
   def runRequestWithRetry[Response, F[_]](
       runRequest: F[RequestAnswer[Response]],

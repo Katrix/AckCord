@@ -1,5 +1,6 @@
 package ackcord.data
 
+import ackcord.data.base.{DiscordIntEnum, DiscordIntEnumCompanion, DiscordObject, DiscordObjectCompanion}
 import io.circe.Json
 
 /** A Discord application

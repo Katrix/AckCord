@@ -1,14 +1,11 @@
 package ackcord.gateway.data
 
-import ackcord.data.DiscordObject
-import ackcord.data.DiscordObjectCompanion
-import ackcord.data.DiscordStringEnum
-import ackcord.data.DiscordStringEnumCompanion
 import ackcord.data.UndefOr
 import ackcord.data.UndefOrSome
 import ackcord.data.GuildId
 import ackcord.data.ChannelId
 import ackcord.data.UserId
+import ackcord.data.base.{DiscordObject, DiscordObjectCompanion, DiscordStringEnum, DiscordStringEnumCompanion}
 import io.circe.Json
 
 object GatewayEvent extends GatewayEventBase.TopMixin {

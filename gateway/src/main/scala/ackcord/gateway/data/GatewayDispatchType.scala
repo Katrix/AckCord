@@ -1,7 +1,6 @@
 package ackcord.gateway.data
 
-import ackcord.data.DiscordStringEnum
-import ackcord.data.DiscordStringEnumCompanion
+import ackcord.data.base.{DiscordStringEnum, DiscordStringEnumCompanion}
 
 sealed case class GatewayDispatchType private(value: String) extends DiscordStringEnum
 object GatewayDispatchType extends DiscordStringEnumCompanion[GatewayDispatchType]  {
