@@ -1,0 +1,522 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AckCord Code generation specifications",
+  "description": "A schema for AckCord's code generation files",
+  "$ref": "#/definitions/typeDef",
+  "definitions": {
+    "typeDef": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/classTypeDef"
+        },
+        {
+          "$ref": "#/definitions/enumTypeDef"
+        },
+        {
+          "$ref": "#/definitions/opaqueTypeDef"
+        },
+        {
+          "$ref": "#/definitions/requestDef"
+        },
+        {
+          "$ref": "#/definitions/multipleDefs"
+        },
+        {
+          "$ref": "#/definitions/objectOnlyDefs"
+        },
+        {
+          "$ref": "#/definitions/freeformDefs"
+        }
+      ]
+    },
+    "anonymousClassTypeDef": {
+      "description": "A anonymous class type definition",
+      "type": "object",
+      "properties": {
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innerTypes": {
+          "type": "array",
+          "description": "Extra types found in the companion object of this type",
+          "items": {
+            "$ref": "#/definitions/typeDef"
+          }
+        },
+        "allUndefined": {
+          "description": "Sets all the body arguments as withUndefined: true. For patch endpoints.",
+          "type": "boolean",
+          "default": false
+        },
+        "fields": {
+          "description": "The fields of this class",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "$ref": "#/definitions/fieldDef"
+                }
+              ]
+            }
+          }
+        },
+        "extends": {
+          "description": "The types this class extends",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "objectExtends": {
+          "description": "The types this companion object extends",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "classTypeDef": {
+      "description": "A class type definition",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/anonymousClassTypeDef"
+        },
+        {
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the type"
+            },
+            "defType": {
+              "type": "string",
+              "description": "The type of Scala type to generate",
+              "enum": [
+                "Class"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "defType"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "fieldDef": {
+      "description": "A field within a class",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the field, as seen from the definition of the field"
+        },
+        "jsonName": {
+          "type": "string",
+          "description": "The string key which is used in JSON for this field"
+        },
+        "default": {
+          "type": "string",
+          "description": "The default value of this field"
+        },
+        "documentation": {
+          "type": "string",
+          "description": "Documentation for the field"
+        },
+        "withUndefined": {
+          "type": "boolean",
+          "description": "Specifies if this field is maybe undefined",
+          "default": false
+        },
+        "withNull": {
+          "type": "boolean",
+          "description": "Specifies if this field is maybe null",
+          "default": false
+        },
+        "verification": {
+          "type": "object",
+          "description": "Verification for when the object is constructed by hand",
+          "properties": {
+            "max_length": {
+              "type": "integer"
+            },
+            "min_length": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "enumTypeDef": {
+      "description": "A enum type definition",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the type"
+        },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innerTypes": {
+          "type": "array",
+          "description": "Extra types found in the companion object of this type",
+          "items": {
+            "$ref": "#/definitions/typeDef"
+          }
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "IntEnum",
+            "StringEnum"
+          ]
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "objectExtends": {
+          "description": "The types this companion object extends",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "defType",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "opaqueTypeDef": {
+      "description": "A opaque type definition",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the type"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
+        "underlying": {
+          "type": "string",
+          "description": "The underlying type of the opaque type"
+        },
+        "includeAlias": {
+          "type": "boolean",
+          "description": "If there should be included an alias outside the companion object of this type",
+          "default": true
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "Opaque"
+          ]
+        },
+        "innerTypes": {
+          "type": "array",
+          "description": "Extra types found in the current scope",
+          "items": {
+            "$ref": "#/definitions/typeDef"
+          }
+        },
+        "objectExtends": {
+          "description": "The types this companion object extends",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "underlying",
+        "defType"
+      ],
+      "additionalProperties": false
+    },
+    "requestDef": {
+      "description": "A definition for an AckCord request",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the request"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "argOf": {
+                    "type": "string",
+                    "enum": [
+                      "GuildId",
+                      "ChannelId",
+                      "ApplicationId",
+                      "CommandId"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the parameter"
+                  },
+                  "documentation": {
+                    "type": "string",
+                    "description": "Docs for this argument"
+                  }
+                },
+                "required": [
+                  "argOf"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "customArgType": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the parameter"
+                  },
+                  "customArgMajorParameter": {
+                    "type": "boolean"
+                  },
+                  "documentation": {
+                    "type": "string",
+                    "description": "Docs for this argument"
+                  }
+                },
+                "required": [
+                  "name",
+                  "customArgType"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "method": {
+          "type": "string",
+          "description": "The HTTP method for this endpoint",
+          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        },
+        "query": {
+          "$ref": "#/definitions/anonymousClassTypeDef"
+        },
+        "body": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/anonymousClassTypeDef"
+            }
+          ]
+        },
+        "return": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/anonymousClassTypeDef"
+            }
+          ]
+        },
+        "allowsReason": {
+          "type": "boolean",
+          "description": "If this requests allows to set the audit log reason",
+          "default": false
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "Request"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "defType"
+      ],
+      "additionalProperties": false
+    },
+    "multipleDefs": {
+      "description": "A definition for multiple entries at the same scope",
+      "type": "object",
+      "properties": {
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innerTypes": {
+          "type": "array",
+          "description": "Extra types found in the current scope",
+          "items": {
+            "$ref": "#/definitions/typeDef"
+          }
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "Multiple"
+          ]
+        }
+      },
+      "required": [
+        "innerTypes",
+        "defType"
+      ],
+      "additionalProperties": false
+    },
+    "objectOnlyDefs": {
+      "description": "A definition for a companion object only",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the object"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innerTypes": {
+          "type": "array",
+          "description": "Extra types found in the current scope",
+          "items": {
+            "$ref": "#/definitions/typeDef"
+          }
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "ObjectOnly"
+          ]
+        },
+        "objectExtends": {
+          "description": "The types this object extends",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "innerTypes",
+        "defType"
+      ],
+      "additionalProperties": false
+    },
+    "freeformDefs": {
+      "description": "A definition that can be anything. Inserts a string directly into the generated code",
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The string to insert into the code"
+        },
+        "imports": {
+          "type": "array",
+          "description": "Imports to add to this file",
+          "items": {
+            "type": "string"
+          }
+        },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
+        "defType": {
+          "type": "string",
+          "description": "The type of Scala type to generate",
+          "enum": [
+            "Freeform"
+          ]
+        }
+      },
+      "required": [
+        "defType"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -10,7 +10,7 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
    /** The id of the application
 
  */
-@inline def id: SnowflakeType[Application] = selectDynamic[SnowflakeType[Application]]("id")
+@inline def id: Snowflake[Application] = selectDynamic[Snowflake[Application]]("id")
 
 /** The name of the application
 
@@ -61,7 +61,7 @@ object Application extends DiscordObjectCompanion[Application]  {
 *@param id The id of the application
 *@param name The name of the application
 *@param icon The icon of the application
- */ def make20(id: SnowflakeType[Application], name: String, icon: Option[String], rpcOrigins: UndefOr[Seq[String]], botPublic: Boolean, botRequireCodeGrant: Boolean, termsOfServiceUrl: UndefOr[String], privacyPolicyUrl: UndefOr[String], owner: UndefOr[Application.ApplicationOwner], verifyKey: String, team: Option[Team], guildId: UndefOr[GuildId], primarySkuId: UndefOr[RawSnowflake], slug: UndefOr[String], coverImage: UndefOr[String], flags: UndefOr[Application.Flags], tags: UndefOr[Seq[String]], installParams: UndefOr[Application.InstallParams], customInstallUrl: UndefOr[String]): Application = makeRawFromFields("id" := id, "name" := name, "icon" := icon, "rpc_origins" :=? rpcOrigins, "bot_public" := botPublic, "bot_require_code_grant" := botRequireCodeGrant, "terms_of_service_url" :=? termsOfServiceUrl, "privacy_policy_url" :=? privacyPolicyUrl, "owner" :=? owner, "verify_key" := verifyKey, "team" := team, "guild_id" :=? guildId, "primary_sku_id" :=? primarySkuId, "slug" :=? slug, "cover_image" :=? coverImage, "flags" :=? flags, "tags" :=? tags, "install_params" :=? installParams, "custom_install_url" :=? customInstallUrl)
+ */ def make20(id: Snowflake[Application], name: String, icon: Option[String], rpcOrigins: UndefOr[Seq[String]], botPublic: Boolean, botRequireCodeGrant: Boolean, termsOfServiceUrl: UndefOr[String], privacyPolicyUrl: UndefOr[String], owner: UndefOr[Application.ApplicationOwner], verifyKey: String, team: Option[Team], guildId: UndefOr[GuildId], primarySkuId: UndefOr[RawSnowflake], slug: UndefOr[String], coverImage: UndefOr[String], flags: UndefOr[Application.Flags], tags: UndefOr[Seq[String]], installParams: UndefOr[Application.InstallParams], customInstallUrl: UndefOr[String]): Application = makeRawFromFields("id" := id, "name" := name, "icon" := icon, "rpc_origins" :=? rpcOrigins, "bot_public" := botPublic, "bot_require_code_grant" := botRequireCodeGrant, "terms_of_service_url" :=? termsOfServiceUrl, "privacy_policy_url" :=? privacyPolicyUrl, "owner" :=? owner, "verify_key" := verifyKey, "team" := team, "guild_id" :=? guildId, "primary_sku_id" :=? primarySkuId, "slug" :=? slug, "cover_image" :=? coverImage, "flags" :=? flags, "tags" :=? tags, "install_params" :=? installParams, "custom_install_url" :=? customInstallUrl)
 
   
 

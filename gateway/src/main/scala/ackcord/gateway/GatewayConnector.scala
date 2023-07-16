@@ -1,7 +1,8 @@
 package ackcord.gateway
 
-import scala.annotation.tailrec
+import ackcord.gateway.GatewayProcess.Context
 
+import scala.annotation.tailrec
 import ackcord.requests._
 import ackcord.requests.base.{EncodeBody, Requests}
 import io.circe.{Decoder, HCursor}
@@ -117,11 +118,11 @@ object GatewayConnector {
     import requests.F
 
     private def connect(
-                         identifyData: IdentifyData,
-                         handle: GatewayProcess[F, Handler],
-                         log: Logger[F],
-                         resumeData: Option[ResumeData],
-                         wsUrl: String
+        identifyData: IdentifyData,
+        handle: GatewayProcess[F],
+        log: Logger[F],
+        resumeData: Option[ResumeData],
+        wsUrl: String
     ): F[(DisconnectBehavior, Option[ResumeData])] = {
       val request = ComplexRequest(
         route = RequestRoute(wsUrl, wsUrl, Uri.unsafeParse(wsUrl), Method.GET),
@@ -131,7 +132,7 @@ object GatewayConnector {
             _           <- log.info("Connected with Websockets. Making handler")
             handler     <- handlerFactory.create(ws, identifyData, resumeData, handle)
             _           <- log.info("Handler callback")
-            _           <- handle.onCreateHandler(handler)
+            _           <- handle.onCreateHandler(Context.empty.add(handlerFactory.handlerContextKey, handler))
             _           <- log.info("Running connection")
             behavior    <- handler.run
             _           <- log.info("Disconnected")
@@ -144,7 +145,7 @@ object GatewayConnector {
       requests.runRequest(request)
     }
 
-    def start(identifyData: IdentifyData)(handle: GatewayProcess[F, Handler]): F[Unit] =
+    def start(identifyData: IdentifyData)(handle: GatewayProcess[F]): F[Unit] =
       for {
         log   <- logFactory.fromClass(this.getClass)
         _     <- log.info("Finding WS Url")

@@ -58,6 +58,7 @@ object AckCordCodeGen {
 
   def codeFromClassTypeDef(classTypeDef: TypeDef.ClassTypeDef): String = {
     val tpeName = classTypeDef.name
+    val allUndefined = classTypeDef.anonPart.allUndefined
 
     val fieldsWithTypes = classTypeDef.anonPart.fields.map { case (version, fields) =>
       version -> fields.map { case (name, field) =>
@@ -77,7 +78,7 @@ object AckCordCodeGen {
 
       val params = fields.map { case (field, (fieldInfo, tpe)) =>
         val defaultStr = fieldInfo.default.fold("") { s =>
-          (s, fieldInfo.withUndefined, fieldInfo.withNull) match {
+          (s, allUndefined || fieldInfo.withUndefined, fieldInfo.withNull) match {
             case ("null", true, true)       => "= JsonNull"
             case ("undefined", true, true)  => "= JsonUndefined"
             case ("null", false, true)      => "= None"

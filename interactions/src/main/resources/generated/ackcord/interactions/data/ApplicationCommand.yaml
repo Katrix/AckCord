@@ -1,0 +1,184 @@
+name: ApplicationCommand
+defType: Class
+fields:
+  2.0.x:
+    id: Snowflake[ApplicationCommand]
+
+    tpe:
+      jsonName: type
+      type: ApplicationCommand.ApplicationCommandType
+      withUndefined: true
+
+    application_id: Snowflake[Application]
+
+    guild_id:
+      type: GuildId
+      withUndefined: true
+
+    name: String
+
+    name_localized:
+      type: String
+      withUndefined: true
+
+    name_localizations:
+      type: Map[String, String]
+      withUndefined: true
+      withNull: true
+
+    description: String
+
+    description_localized:
+      type: String
+      withUndefined: true
+
+    description_localizations:
+      type: Map[String, String]
+      withUndefined: true
+      withNull: true
+
+    options:
+      type: Seq[ApplicationCommand.ApplicationCommandOption]
+      withUndefined: true
+      verification:
+        max_length: 25
+
+    default_member_permissions:
+      type: String
+      withNull: true
+
+    dm_permission:
+      type: Boolean
+      withUndefined: true
+
+    nsfw:
+      type: Boolean
+      withUndefined: true
+
+    version: RawSnowflake
+
+innerTypes:
+  - name: ApplicationCommandType
+    defType: StringEnum
+    values:
+      ChatInput: "CHAT_INPUT"
+      User: "USER"
+      Message: "MESSAGE"
+
+  - name: ApplicationCommandOption
+    defType: Class
+    fields:
+      2.0.x:
+        tpe:
+          jsonName: type
+          type: ApplicationCommandOption.ApplicationCommandOptionType
+
+        name: String
+
+        name_localizations:
+          type: Map[String, String]
+          withUndefined: true
+          withNull: true
+
+        description: String
+
+        description_localizations:
+          type: Map[String, String]
+          withUndefined: true
+          withNull: true
+
+        required:
+          type: Boolean
+          withUndefined: true
+
+        choices:
+          type: Seq[ApplicationCommandOption.ApplicationCommandOptionChoice]
+          withUndefined: true
+          verification:
+            max_length: 25
+
+        options:
+          type: Seq[ApplicationCommandOption]
+          withUndefined: true
+
+        channel_types:
+          type: Seq[ChannelType]
+          withUndefined: true
+
+        min_value:
+          type: IntOrDouble
+          withUndefined: true
+
+        max_value:
+          type: IntOrDouble
+          withUndefined: true
+
+        min_length:
+          type: Int
+          withUndefined: true
+
+        max_length:
+          type: Int
+          withUndefined: true
+
+        autocomplete:
+          type: Boolean
+          withUndefined: true
+
+    innerTypes:
+      - name: ApplicationCommandOptionType
+        defType: IntEnum
+        values:
+          SUB_COMMAND: "1"
+          SUB_COMMAND_GROUP: "2"
+          STRING: "3"
+          INTEGER: "4"
+          BOOLEAN: "5"
+          USER: "6"
+          CHANNEL: "7"
+          ROLE: "8"
+          MENTIONABLE: "9"
+          NUMBER: "10"
+          ATTACHMENT: "11"
+
+      - name: ApplicationCommandOptionChoice
+        defType: Class
+        fields:
+          2.0.x:
+            name: String
+
+            name_localizations:
+              type: Map[String, String]
+              withUndefined: true
+              withNull: true
+
+            value: StringOrIntOrDouble
+
+  - name: GuildApplicationCommandPermissions
+    defType: Class
+    fields:
+      2.0.x:
+        id: RawSnowflake
+        application_id: Snowflake[Application]
+        guild_id: GuildId
+        permissions: Seq[GuildApplicationCommandPermissions.ApplicationCommandPermissions]
+
+    innerTypes:
+      - name: ApplicationCommandPermissions
+        defType: Class
+        fields:
+          2.0.x:
+            id: RawSnowflake
+            tpe:
+              jsonName: type
+              type: ApplicationCommandPermissions.ApplicationCommandPermissionType
+            permission: Boolean
+
+        innerTypes:
+          - name: ApplicationCommandPermissionType
+            defType: IntEnum
+            values:
+              ROLE: "1"
+              USER: "2"
+              CHANNEL: "3"
+

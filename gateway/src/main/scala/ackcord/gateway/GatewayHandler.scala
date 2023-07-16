@@ -3,7 +3,7 @@ package ackcord.gateway
 import sttp.capabilities.Streams
 import sttp.ws.WebSocketFrame
 
-trait GatewayHandler[F[_]] {
+sealed trait GatewayHandler[F[_]] {
 
   def lastSeq: F[Option[Int]]
 

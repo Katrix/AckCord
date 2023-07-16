@@ -12,7 +12,7 @@ object Parameters {
   }
 
   object ParameterPrintable extends LowPriorityParameterPrintable {
-    implicit def snowflakePrintable[A]: ParameterPrintable[SnowflakeType[A]] = (a: SnowflakeType[A]) => a.asString
+    implicit def snowflakePrintable[A]: ParameterPrintable[Snowflake[A]] = (a: Snowflake[A]) => a.asString
   }
 
   trait LowPriorityParameterPrintable {

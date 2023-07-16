@@ -105,10 +105,42 @@ lazy val gateway = crossProject(JSPlatform, JVMPlatform)
     publishSettings,
     name                                                   := "gateway",
     version                                                := ackCordVersion,
-    libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2"          % "3.8.15",
+    libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2"             % "3.8.15",
     libraryDependencies += "ch.qos.logback"                 % "logback-classic" % "1.4.7",
     description                                            := "The gateway module of AckCord"
   )
+
+lazy val gatewayJVM = gateway.jvm
+lazy val gatewayJS = gateway.js
+
+lazy val interactions = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(gateway)
+  .settings(
+    commonSettings,
+    publishSettings,
+    name        := "interactions",
+    version     := ackCordVersion,
+    description := "The interactions module of AckCord"
+  )
+
+lazy val interactionsJVM = interactions.jvm
+lazy val interactionsJS = interactions.js
+
+lazy val ackcord = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(gateway)
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord",
+    moduleName := "ackcord",
+    version := ackCordVersion,
+    description := "The high level API of AckCord"
+  )
+
+lazy val ackcordJVM = ackcord.jvm
+lazy val ackcordJS = ackcord.js
 
 lazy val example = project
   .settings(
@@ -118,14 +150,14 @@ lazy val example = project
     version                                := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
   )
-  .dependsOn(dataJVM)
+  .dependsOn(ackcordJVM)
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
 lazy val docs = project
   .enablePlugins(MicrositesPlugin, ScalaUnidocPlugin, GhpagesPlugin)
-  .settings(commonSettings: _*)
   .settings(
+    commonSettings,
     micrositeName                          := "AckCord",
     micrositeAuthor                        := "Katrix",
     micrositeDescription                   := "A Discord library built for flexibility and speed",
@@ -143,7 +175,7 @@ lazy val docs = project
     Compile / scalacOptions ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      dataJVM
+      dataJVM, requestsJVM, gatewayJVM, interactionsJVM
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp"),
     docsMappingsAPIDir := "api",

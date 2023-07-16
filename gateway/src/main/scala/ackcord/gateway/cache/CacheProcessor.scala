@@ -1,21 +1,18 @@
 package ackcord.gateway.cache
 
 import ackcord.data.CacheSnapshot
-import ackcord.gateway.GatewayProcess.ContextKey
 import ackcord.gateway.data.{GatewayEventBase, GatewayEventOp}
-import ackcord.gateway.{DisconnectBehavior, GatewayProcess}
+import ackcord.gateway.{DisconnectBehavior, GatewayProcess, Context, ContextKey}
+import cats.Applicative
 import cats.syntax.all._
-import cats.{Applicative, Id, ~>}
 import org.typelevel.log4cats.Logger
 
-class CacheProcessor[F[_]: Applicative, Handler](log: Logger[F]) extends GatewayProcess[F, Handler] {
+class CacheProcessor[F[_]: Applicative](log: Logger[F]) extends GatewayProcess.Base[F] {
   override def name: String = "CacheProcessor"
 
-  override def onCreateHandler(handler: Handler): F[Unit] = ().pure
+  val getCache: ContextKey[CacheSnapshot] = ContextKey.make
 
-  val getCache: ContextKey[CacheSnapshot] = new ContextKey[CacheSnapshot] {}
-
-  override def onEvent(handler: Handler, event: GatewayEventBase[_], context: ContextKey ~> Id): F[ContextKey ~> Id] =
+  override def onEvent(event: GatewayEventBase[_], context: Context): F[Context] =
     if (event.op == GatewayEventOp.Dispatch) {
 
       /* TODO
@@ -37,7 +34,4 @@ class CacheProcessor[F[_]: Applicative, Handler](log: Logger[F]) extends Gateway
       context.pure
 
     } else context.pure
-
-  override def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] =
-    behavior.pure
 }

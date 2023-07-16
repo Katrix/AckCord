@@ -8,6 +8,7 @@ object CodeGenTypes {
       imports: Seq[String],
       documentation: Option[String],
       innerTypes: Seq[TypeDef],
+      allUndefined: Boolean,
       fields: ListMap[String, ListMap[String, FieldDef]],
       `extends`: Seq[String],
       objectExtends: Seq[String]
@@ -31,6 +32,7 @@ object CodeGenTypes {
         imports       <- c.getOrElse[Seq[String]]("imports")(Nil)
         documentation <- c.get[Option[String]]("documentation")
         innerTypes    <- c.getOrElse[Seq[TypeDef]]("innerTypes")(Nil)
+        allUndefined  <- c.getOrElse[Boolean]("allUndefined")(false)
         fieldsMap     <- c.get[ListMap[String, ListMap[String, Either[String, FieldDef]]]]("fields")
         extend        <- c.getOrElse[Seq[String]]("extends")(Nil)
         objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
@@ -38,6 +40,7 @@ object CodeGenTypes {
         imports,
         documentation,
         innerTypes,
+        allUndefined,
         fieldsMap.map { case (k1, v1) =>
           k1 -> v1.map { case (k2, v2) =>
             k2 -> v2.swap

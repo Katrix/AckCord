@@ -1,0 +1,274 @@
+name: ApplicationCommands
+defType: ObjectOnly
+innerTypes:
+  # Global command requests
+  - name: getGlobalApplicationCommands
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, commands ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_localizations: Boolean
+    return: Seq[ApplicationCommand]
+
+  - name: createGlobalApplicationCommand
+    defType: Request
+    method: POST
+    path: [ applications, { argOf: ApplicationId }, commands ]
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 32
+
+          name_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          description:
+            type: String
+            withUndefined: true
+            verification:
+              min_length: 1
+              max_length: 100
+
+          description_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          options:
+            type: Seq[ApplicationCommand.ApplicationCommandOption]
+            withUndefined: true
+
+          default_member_permissions:
+            type: Permissions
+            withUndefined: true
+            withNull: true
+
+          dm_permission:
+            type: Boolean
+            withUndefined: true
+
+          tpe:
+            jsonName: type
+            type: ApplicationCommand.ApplicationCommandType
+            withUndefined: true
+
+          nsfw:
+            type: Boolean
+            withUndefined: true
+
+    return: ApplicationCommand
+
+  - name: getGlobalApplicationCommand
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
+    return: ApplicationCommand
+
+  - name: editGlobalApplicationCommand
+    defType: Request
+    method: PATCH
+    path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 32
+
+          name_localizations:
+            type: Map[String, String]
+            withNull: true
+
+          description:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 100
+
+          description_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          options: Seq[ApplicationCommand.ApplicationCommandOption]
+
+          default_member_permissions:
+            type: Permissions
+            withNull: true
+
+          dm_permission: Boolean
+
+          nsfw: Boolean
+
+    return: ApplicationCommand
+
+  - name: deleteGlobalApplicationCommand
+    defType: Request
+    method: DELETE
+    path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
+
+  - name: bulkOverwriteGlobalApplicationCommands
+    defType: Request
+    method: PUT
+    path: [ applications, { argOf: ApplicationId }, commands ]
+    body: Seq[ApplicationCommand]
+    return: Seq[ApplicationCommand]
+
+  # Guild command requests
+  - name: getGuildApplicationCommands
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_localizations: Boolean
+    return: Seq[ApplicationCommand]
+
+  - name: createGuildApplicationCommand
+    defType: Request
+    method: POST
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 32
+
+          name_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          description:
+            type: String
+            withUndefined: true
+            verification:
+              min_length: 1
+              max_length: 100
+
+          description_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          options:
+            type: Seq[ApplicationCommand.ApplicationCommandOption]
+            withUndefined: true
+
+          default_member_permissions:
+            type: Permissions
+            withUndefined: true
+            withNull: true
+
+          dm_permission:
+            type: Boolean
+            withUndefined: true
+
+          tpe:
+            jsonName: type
+            type: ApplicationCommand.ApplicationCommandType
+            withUndefined: true
+
+          nsfw:
+            type: Boolean
+            withUndefined: true
+
+    return: ApplicationCommand
+
+  - name: getGuildApplicationCommand
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
+    return: ApplicationCommand
+
+  - name: editGuildApplicationCommand
+    defType: Request
+    method: PATCH
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 32
+
+          name_localizations:
+            type: Map[String, String]
+            withNull: true
+
+          description:
+            type: String
+            verification:
+              min_length: 1
+              max_length: 100
+
+          description_localizations:
+            type: Map[String, String]
+            withUndefined: true
+            withNull: true
+
+          options: Seq[ApplicationCommand.ApplicationCommandOption]
+
+          default_member_permissions:
+            type: Permissions
+            withNull: true
+
+          dm_permission: Boolean
+
+          nsfw: Boolean
+
+    return: ApplicationCommand
+
+  - name: deleteGuildApplicationCommand
+    defType: Request
+    method: DELETE
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
+
+  - name: bulkOverwriteGuildApplicationCommands
+    defType: Request
+    method: PUT
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
+    body: Seq[ApplicationCommand]
+    return: Seq[ApplicationCommand]
+
+  - name: getGuildApplicationCommandPermissions
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, permissions ]
+    return: Seq[ApplicationCommand.GuildApplicationCommandPermissions]
+
+  - name: getApplicationCommandPermissions
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId }, permissions ]
+    return: ApplicationCommand.GuildApplicationCommandPermissions
+
+  - name: editApplicationCommandPermissions
+    defType: Request
+    method: PUT
+    path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId }, permissions ]
+    body:
+      fields:
+        2.0.x:
+          permissions: Seq[ApplicationCommand.GuildApplicationCommandPermissions.ApplicationCommandPermissions]
+    return: ApplicationCommand.GuildApplicationCommandPermissions
