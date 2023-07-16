@@ -1,0 +1,32 @@
+name: AuditLogRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getGuildAuditLog
+    defType: Request
+    method: GET
+    path: [guilds, {argOf: GuildId}, audit-logs]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          user_id:
+            type: UserId
+            documentation: Entries from a specific user ID
+
+          action_type:
+            type: AuditLog.AuditLogEvent
+            documentation: Entries for a specific audit log event
+
+          before:
+            type: RawSnowflake
+            documentation: Entries with ID less than a specific audit log entry ID
+
+          after:
+            type: RawSnowflake
+            documentation: Entries with ID greater than a specific audit log entry ID
+
+          limit:
+            type: Int
+            documentation: Maximum number of entries (between 1-100) to return, defaults to 50
+
+    return: AuditLog

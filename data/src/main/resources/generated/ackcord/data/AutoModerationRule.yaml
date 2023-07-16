@@ -1,0 +1,170 @@
+name: AutoModerationRule
+defType: Class
+fields:
+  2.0.x:
+    id:
+      type: Snowflake[AutoModerationRule]
+      documentation: The id of this rule
+
+    guild_id:
+      type: GuildId
+      documentation: The id of the guild which this rule belongs to
+
+    name:
+      type: String
+      documentation: The rule name
+
+    creator_id:
+      type: UserId
+      documentation: The user which first created this rule
+
+    event_type:
+      type: AutoModerationRule.AutoModerationRuleEventType
+      documentation: The rule event type
+
+    trigger_type:
+      type: AutoModerationRule.AutoModerationRuleTriggerType
+      documentation: The rule trigger type
+
+    trigger_metadata:
+      type: AutoModerationRule.AutoModerationRuleTriggerMetadata
+      documentation: The rule trigger metadata
+
+    actions:
+      type: Seq[AutoModerationRule.AutoModerationRuleAction]
+      documentation: The actions which will execute when the rule is triggered
+
+    enabled:
+      type: Boolean
+      documentation: Whether the rule is enabled
+
+    exempt_roles:
+      type: Seq[RoleId]
+      documentation: The role ids that should not be affected by the rule (Maximum of 20)
+      verification:
+        max_length: 20
+
+    exempt_channels:
+      type: Seq[GuildChannelId]
+      documentation: The channel ids that should not be affected by the rule (Maximum of 50)
+      verification:
+        max_length: 50
+
+innerTypes:
+  - name: AutoModerationRuleTriggerType
+    defType: IntEnum
+    values:
+      KEYWORD:
+        value: "1"
+        documentation: Check if content contains words from a user defined list of keywords
+
+      SPAM:
+        value: "3"
+        documentation: Check if content represents generic spam
+
+      KEYWORD_PRESET:
+        value: "4"
+        documentation: Check if content contains words from internal pre-defined wordsets
+
+      MENTION_SPAM:
+        value: "5"
+        documentation: Check if content contains more unique mentions than allowed
+
+  - name: AutoModerationRuleTriggerMetadata
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        keyword_filter:
+          type: Seq[String]
+          documentation: Substrings which will be searched for in content (Maximum of 1000)
+
+        regex_patterns:
+          type: Seq[String]
+          documentation: Regular expression patterns which will be matched against content (Maximum of 10)
+
+        presets:
+          type: Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]
+          documentation: The internally pre-defined wordsets which will be searched for in content
+
+        allow_list:
+          type: Seq[String]
+          documentation: Substrings which should not trigger the rule (Maximum of 100 or 1000)
+
+        mention_total_limit:
+          type: Int
+          documentation: Total number of unique role and user mentions allowed per message (Maximum of 50)
+
+        mention_raid_protection_enabled:
+          type: Boolean
+          documentation: Whether to automatically detect mention raids
+
+  - name: AutoModerationRuleKeywordPresetType
+    defType: IntEnum
+    values:
+      PROFANITY:
+        value: "1"
+        documentation: Words that may be considered forms of swearing or cursing
+
+      SEXUAL_CONTENT:
+        value: "2"
+        documentation: Words that refer to sexually explicit behavior or activity
+
+      SLURS:
+        value: "3"
+        documentation: Personal insults or words that may be considered hate speech
+
+  - name: AutoModerationRuleEventType
+    defType: IntEnum
+    values:
+      MESSAGE_SEND:
+        value: "1"
+        documentation: When a member sends or edits a message in the guild
+
+  - name: AutoModerationRuleAction
+    defType: Class
+    fields:
+      2.0.x:
+        tpe:
+          jsonName: type
+          type: AutoModerationRule.AutoModerationRuleActionType
+          documentation: The type of action
+
+        metadata:
+          type: AutoModerationRule.AutoModerationRuleActionMetadata
+          withUndefined: true
+          documentation: Additional metadata needed during execution for this specific action type
+
+  - name: AutoModerationRuleActionType
+    defType: IntEnum
+    values:
+      BLOCK_MESSAGE:
+        value: "1"
+        documentation: Blocks a member's message and prevents it from being posted. A custom explanation can be specified and shown to members whenever their message is blocked.
+
+      SEND_ALERT_MESSAGE:
+        value: "2"
+        documentation: Logs user content to a specified channel
+
+      TIMEOUT:
+        value: "3"
+        documentation: Timeout user for a specified duration
+
+  - name: AutoModerationRuleActionMetadata
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        channel_id:
+          type: ChannelId
+          documentation: Channel to which user content should be logged
+
+        duration_seconds:
+          type: Int
+          documentation: Timeout duration in seconds
+
+        custom_message:
+          type: String
+          documentation: Additional explanation that will be shown to members whenever their message is blocked
+          verification:
+            max_length: 150

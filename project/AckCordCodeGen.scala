@@ -13,8 +13,8 @@ object AckCordCodeGen {
     val typeDef =
       yaml.parser.parse(Files.readAllLines(yamlFile).asScala.mkString("\n")).flatMap(_.as[TypeDef]).toTry.get
 
-    val packagePath     = relativeYamlPath.mkString(".")
-    val packageLine     = s"package $packagePath"
+    val packagePath = relativeYamlPath.mkString(".")
+    val packageLine = s"package $packagePath"
     val disclaimer =
       s"""// THIS FILE IS MACHINE GENERATED!
          |//
@@ -57,7 +57,7 @@ object AckCordCodeGen {
   }
 
   def codeFromClassTypeDef(classTypeDef: TypeDef.ClassTypeDef): String = {
-    val tpeName = classTypeDef.name
+    val tpeName      = classTypeDef.name
     val allUndefined = classTypeDef.anonPart.allUndefined
 
     val fieldsWithTypes = classTypeDef.anonPart.fields.map { case (version, fields) =>
@@ -196,7 +196,8 @@ object AckCordCodeGen {
 
     val values = enumTypeDef.values
       .map { case (name, value) =>
-        s"val $name: $tpeName = $tpeName(${wrap(value)})"
+        (value.documentation.map(docString(_)).toList :+ s"val $name: $tpeName = $tpeName(${wrap(value.value)})")
+          .mkString("\n")
       }
       .mkString("\n  ")
 

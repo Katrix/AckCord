@@ -1,0 +1,7 @@
+name: ApplicationRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getCurrentApplication
+    defType: Request
+    path: [applications, @me]
+    return: Application

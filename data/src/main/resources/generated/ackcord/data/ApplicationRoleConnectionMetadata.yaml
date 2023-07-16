@@ -1,0 +1,75 @@
+name: ApplicationRoleConnectionMetadata
+defType: Class
+fields:
+  2.0.x:
+    tpe:
+      jsonName: type
+      type: ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType
+      documentation: Type of metadata value
+
+    key:
+      type: String
+      documentation: Dictionary key for the metadata field (must be a-z, 0-9, or _ characters; 1-50 characters)
+      verification:
+        min_length: 1
+        max_length: 50
+
+    name:
+      type: String
+      documentation: Name of the metadata field (1-100 characters)
+      verification:
+        min_length: 1
+        max_length: 100
+
+    name_localizations:
+      type: Map[String, String]
+      withUndefined: true
+      documentation: Translations of the name
+
+    description:
+      type: String
+      documentation: Description of the metadata field (1-200 characters)
+      verification:
+        min_length: 1
+        max_length: 200
+
+    description_localizations:
+      type: Map[String, String]
+      withUndefined: true
+      documentation: Translations of the description
+
+innerTypes:
+  - name: ApplicationRoleConnectionMetadataType
+    defType: IntEnum
+    values:
+      INTEGER_LESS_THAN_OR_EQUAL:
+        value: "1"
+        documentation: The metadata value (integer) is less than or equal to the guild's configured value (integer)
+
+      INTEGER_GREATER_THAN_OR_EQUAL:
+        value: "2"
+        documentation: The metadata value (integer) is greater than or equal to the guild's configured value (integer)
+
+      INTEGER_EQUAL:
+        value: "3"
+        documentation: The metadata value (integer) is equal to the guild's configured value (integer)
+
+      INTEGER_NOT_EQUAL:
+        value: "4"
+        documentation: The metadata value (integer) is not equal to the guild's configured value (integer)
+
+      DATETIME_LESS_THAN_OR_EQUAL:
+        value: "5"
+        documentation: The metadata value (ISO8601 string) is less than or equal to the guild's configured value (integer; days before current date)
+
+      DATETIME_GREATER_THAN_OR_EQUAL:
+        value: "6"
+        documentation: The metadata value (ISO8601 string) is greater than or equal to the guild's configured value (integer; days before current date)
+
+      BOOLEAN_EQUAL:
+        value: "7"
+        documentation: The metadata value (integer) is equal to the guild's configured value (integer; 1)
+
+      BOOLEAN_NOT_EQUAL:
+        value: "8"
+        documentation: The metadata value (integer) is not equal to the guild's configured value (integer; 1)

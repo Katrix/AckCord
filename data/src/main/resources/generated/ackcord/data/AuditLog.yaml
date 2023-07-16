@@ -1,0 +1,378 @@
+name: AuditLog
+defType: Class
+fields:
+  2.0.x:
+    application_commands:
+      type: Seq[ApplicationCommand]
+      documentation: List of application commands referenced in the audit log
+
+    audit_log_entries:
+      type: Seq[AuditLog.AuditLogEntry]
+      documentation: List of audit log entries, sorted from most to least recent
+
+    auto_moderation_rules:
+      type: Seq[AutoModerationRule]
+      documentation: List of auto moderation rules referenced in the audit log
+
+    guild_scheduled_events:
+      type: Seq[GuildScheduledEvent]
+      documentation: List of guild scheduled events referenced in the audit log
+
+    integrations:
+      type: Seq[AuditLog.AuditLogIntegration]
+      documentation: List of partial integration objects
+
+    threads:
+      type: Seq[ThreadChannel] #TODO: Refine this type once channels exist
+      documentation: List of threads referenced in the audit log
+
+    users:
+      type: Seq[User]
+      documentation: List of users referenced in the audit log
+
+    webhooks:
+      type: Seq[Webhook]
+      documentation: List of webhooks referenced in the audit log
+
+innerTypes:
+  - name: AuditLogIntegration
+    defType: Class
+    fields:
+      2.0.x:
+        id: Snowflake[Integration]
+        name: String
+        type: String
+        account: DiscordObject #TODO
+        application_id: ApplicationId
+
+  - name: AuditLogEntry
+    defType: Class
+    fields:
+      2.0.x:
+        target_id:
+          type: String
+          withNull: true
+          documentation: ID of the affected entity (webhook, user, role, etc.)
+
+        changes:
+          type: Seq[AuditLog.AuditLogChange]
+          withUndefined: true
+          documentation: Changes made to the target_id
+
+        user_id:
+          type: UserId
+          withNull: true
+          documentation: User or app that made the changes
+
+        id:
+          type: Snowflake[AuditLogEntry]
+          documentation: ID of the entry
+
+        action_type:
+          type: AuditLog.AuditLogEvent
+          documentation: Type of action that occurred
+
+        options:
+          type: AuditLog.AuditEntryInfo
+          withUndefined: true
+
+        reason:
+          type: String
+          withUndefined: true
+          verification:
+            min_length: 1
+            max_length: 512
+
+  - name: AuditEntryInfo
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        application_id:
+          type: ApplicationId
+          documentation: ID of the app whose permissions were targeted
+
+        auto_moderation_rule_name:
+          type: String
+          documentation: Name of the Auto Moderation rule that was triggered
+
+        auto_moderation_rule_trigger_type:
+          type: String
+          documentation: Trigger type of the Auto Moderation rule that was triggered
+
+        channel_id:
+          type: ChannelId
+          documentation: Channel in which the entities were targeted
+
+        count:
+          type: String
+          documentation: Number of entities that were targeted
+
+        delete_member_days:
+          type: String
+          documentation: Number of days after which inactive members were kicked
+
+        id:
+          type: RawSnowflake
+          documentation: ID of the overwritten entity
+
+        members_removed:
+          type: String
+          documentation: Number of members removed by the prune
+
+        message_id:
+          type: MessageId
+          documentation: ID of the message that was targeted
+
+        role_name:
+          type: String
+          documentation: Name of the role if type is "0" (not present if type is "1")
+
+        type:
+          type: String
+          documentation: Type of overwritten entity - role ("0") or member ("1")
+
+  - name: AuditLogChange
+    defType: Class
+    fields:
+      2.0.x:
+        new_value:
+          type: Json
+          withUndefined: true
+          documentation: New value of the key
+
+        old_value:
+          type: Json
+          withUndefined: true
+          documentation: Old value of the key
+
+        key:
+          type: String
+          documentation: Name of the changed entity, with a few exceptions
+
+  - name: AuditLogEvent
+    defType: IntEnum
+    values:
+      GUILD_UPDATE:
+        value: "1"
+        documentation: Server settings were updated
+
+      CHANNEL_CREATE:
+        value: "10"
+        documentation: Channel was created
+
+      CHANNEL_UPDATE:
+        value: "11"
+        documentation: Channel settings were updated
+
+      CHANNEL_DELETE:
+        value: "12"
+        documentation: Channel was deleted
+
+      CHANNEL_OVERWRITE_CREATE:
+        value: "13"
+        documentation: Permission overwrite was added to a channel
+
+      CHANNEL_OVERWRITE_UPDATE:
+        value: "14"
+        documentation: Permission overwrite was updated for a channel
+
+      CHANNEL_OVERWRITE_DELETE:
+        value: "15"
+        documentation: Permission overwrite was deleted from a channel
+
+      MEMBER_KICK:
+        value: "20"
+        documentation: Member was removed from server
+
+      MEMBER_PRUNE:
+        value: "21"
+        documentation: Members were pruned from server
+
+      MEMBER_BAN_ADD:
+        value: "22"
+        documentation: Member was banned from server
+
+      MEMBER_BAN_REMOVE:
+        value: "23"
+        documentation: Server ban was lifted for a member
+
+      MEMBER_UPDATE:
+        value: "24"
+        documentation: Member was updated in server
+
+      MEMBER_ROLE_UPDATE:
+        value: "25"
+        documentation: Member was added or removed from a role
+
+      MEMBER_MOVE:
+        value: "26"
+        documentation: Member was moved to a different voice channel
+
+      MEMBER_DISCONNECT:
+        value: "27"
+        documentation: Member was disconnected from a voice channel
+
+      BOT_ADD:
+        value: "28"
+        documentation: Bot user was added to server
+
+      ROLE_CREATE:
+        value: "30"
+        documentation: Role was created
+
+      ROLE_UPDATE:
+        value: "31"
+        documentation: Role was edited
+
+      ROLE_DELETE:
+        value: "32"
+        documentation: Role was deleted
+
+      INVITE_CREATE:
+        value: "40"
+        documentation: Server invite was created
+
+      INVITE_UPDATE:
+        value: "41"
+        documentation: Server invite was updated
+
+      INVITE_DELETE:
+        value: "42"
+        documentation: Server invite was deleted
+
+      WEBHOOK_CREATE:
+        value: "50"
+        documentation: Webhook was created
+
+      WEBHOOK_UPDATE:
+        value: "51"
+        documentation: Webhook properties or channel were updated
+
+      WEBHOOK_DELETE:
+        value: "52"
+        documentation: Webhook was deleted
+
+      EMOJI_CREATE:
+        value: "60"
+        documentation: Emoji was created
+
+      EMOJI_UPDATE:
+        value: "61"
+        documentation: Emoji name was updated
+
+      EMOJI_DELETE:
+        value: "62"
+        documentation: Emoji was deleted
+
+      MESSAGE_DELETE:
+        value: "72"
+        documentation: Single message was deleted
+
+      MESSAGE_BULK_DELETE:
+        value: "73"
+        documentation: Multiple messages were deleted
+
+      MESSAGE_PIN:
+        value: "74"
+        documentation: Message was pinned to a channel
+
+      MESSAGE_UNPIN:
+        value: "75"
+        documentation: Message was unpinned from a channel
+
+      INTEGRATION_CREATE:
+        value: "80"
+        documentation: App was added to server
+
+      INTEGRATION_UPDATE:
+        value: "81"
+        documentation: App was updated (as an example, its scopes were updated)
+
+      INTEGRATION_DELETE:
+        value: "82"
+        documentation: App was removed from server
+
+      STAGE_INSTANCE_CREATE:
+        value: "83"
+        documentation: Stage instance was created (stage channel becomes live)
+
+      STAGE_INSTANCE_UPDATE:
+        value: "84"
+        documentation: Stage instance details were updated
+
+      STAGE_INSTANCE_DELETE:
+        value: "85"
+        documentation: Stage instance was deleted (stage channel no longer live)
+
+      STICKER_CREATE:
+        value: "90"
+        documentation: Sticker was created
+
+      STICKER_UPDATE:
+        value: "91"
+        documentation: Sticker details were updated
+
+      STICKER_DELETE:
+        value: "92"
+        documentation: Sticker was deleted
+
+      GUILD_SCHEDULED_EVENT_CREATE:
+        value: "100"
+        documentation: Event was created
+
+      GUILD_SCHEDULED_EVENT_UPDATE:
+        value: "101"
+        documentation: Event was updated
+
+      GUILD_SCHEDULED_EVENT_DELETE:
+        value: "102"
+        documentation: Event was cancelled
+
+      THREAD_CREATE:
+        value: "110"
+        documentation: Thread was created in a channel
+
+      THREAD_UPDATE:
+        value: "111"
+        documentation: Thread was updated
+
+      THREAD_DELETE:
+        value: "112"
+        documentation: Thread was deleted
+
+      APPLICATION_COMMAND_PERMISSION_UPDATE:
+        value: "121"
+        documentation: Permissions were updated for a command
+
+      AUTO_MODERATION_RULE_CREATE:
+        value: "140"
+        documentation: Auto Moderation rule was created
+
+      AUTO_MODERATION_RULE_UPDATE:
+        value: "141"
+        documentation: Auto Moderation rule was updated
+
+      AUTO_MODERATION_RULE_DELETE:
+        value: "142"
+        documentation: Auto Moderation rule was deleted
+
+      AUTO_MODERATION_BLOCK_MESSAGE:
+        value: "143"
+        documentation: Message was blocked by Auto Moderation
+
+      AUTO_MODERATION_FLAG_TO_CHANNEL:
+        value: "144"
+        documentation: Message was flagged by Auto Moderation
+
+      AUTO_MODERATION_USER_COMMUNICATION_DISABLED:
+        value: "145"
+        documentation: Member was timed out by Auto Moderation
+
+      CREATOR_MONETIZATION_REQUEST_CREATED:
+        value: "150"
+        documentation: Creator monetization request was created
+
+      CREATOR_MONETIZATION_TERMS_ACCEPTED:
+        value: "151"
+        documentation: Creator monetization terms were accepted

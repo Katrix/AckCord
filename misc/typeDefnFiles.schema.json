@@ -209,7 +209,24 @@
         "values": {
           "type": "object",
           "additionalProperties": {
-            "type": "string"
+            "anyOf": [
+              {"type": "string"},
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "description": "The value of the enum value"
+                  },
+                  "documentation": {
+                    "type": "string",
+                    "description": "Documentation for the enum value"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["value"]
+              }
+            ]
           }
         },
         "objectExtends": {

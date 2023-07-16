@@ -10,77 +10,116 @@ documentation:
 fields:
   2.0.x:
     id:
-      type: SnowflakeType[Application]
-      documentation: The id of the application
+      type: ApplicationId
+      documentation: The id of the app
 
     name:
       type: String
-      documentation: The name of the application
+      documentation: The name of the app
 
     icon:
-      type: String
+      type: ImageHash
       withNull: true
-      documentation: The icon of the application
+      documentation: The icon hash of the app
+
+    description:
+      type: String
+      documentation: The description of the app
 
     rpc_origins:
       type: Seq[String]
       withUndefined: true
+      documentation: An array of rpc origin urls, if rpc is enabled
 
-    bot_public: Boolean
+    bot_public:
+      type: Boolean
+      documentation: When false only app owner can join the app's bot to guilds
 
-    bot_require_code_grant: Boolean
+    bot_require_code_grant:
+      type: Boolean
+      documentation: When true the app's bot will only join upon completion of the full oauth2 code grant flow
 
     terms_of_service_url:
       type: String
       withUndefined: true
+      documentation: The url of the app's terms of service
 
     privacy_policy_url:
       type: String
       withUndefined: true
+      documentation: The url of the app's privacy policy
 
     owner:
       type: Application.ApplicationOwner
       withUndefined: true
+      documentation: Partial user object containing info on the owner of the application
 
-    verify_key: String
+    verify_key:
+      type: String
+      documentation: The hex encoded key for verification in interactions and the GameSDK's GetTicket
 
     team:
       type: Team
       withNull: true
+      documentation: If the application belongs to a team, this will be a list of the members of that team
 
     guild_id:
       type: GuildId
       withUndefined: true
+      documentation: Guild associated with the app. For example, a developer support server.
+
+    #TODO: I need information on what this partial object actually contains. Or, we could just leave it typed as DiscordObject. I want to avoid that though
+    #guild:
+    #  type: Application.ApplicationGuild
+    #  withUndefined: true
+    #  documentation: A partial object of the associated guild
 
     primary_sku_id:
       type: RawSnowflake
       withUndefined: true
+      documentation: If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists
 
     slug:
       type: String
       withUndefined: true
+      documentation: If this application is a game sold on Discord, this field will be the URL slug that links to the store page
 
     cover_image:
-      type: String
+      type: ImageHash
       withUndefined: true
+      documentation: The application's default rich presence invite cover image hash
 
     flags:
       type: Application.Flags
       withUndefined: true
+      documentation: The application's public flags
+
+    approximate_guild_count:
+      type: Int
+      withUndefined: true
+      documentation: An approximate count of the app's guild membership
 
     tags:
       type: Seq[String]
       withUndefined: true
+      documentation: Up to 5 tags describing the content and functionality of the application
       verification:
         max_length: 5
 
     install_params:
       type: Application.InstallParams
       withUndefined: true
+      documentation: Settings for the application's default in-app authorization link, if enabled
 
     custom_install_url:
       type: String
       withUndefined: true
+      documentation: The application's default custom authorization link, if enabled
+
+    role_connections_verification_url:
+      type: String
+      withUndefined: true
+      documentation: The application's role connection verification entry point, which when configured will render the app as a verification method in the guild role verification configuration
 
 innerTypes:
   - defType: IntEnum

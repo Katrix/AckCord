@@ -1,0 +1,110 @@
+name: AutoModerationRequests
+defType: ObjectOnly
+innerTypes:
+  - name: listAutoModerationRulesForGuild
+    defType: Request
+    method: GET
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules ]
+    return: Seq[AutoModerationRule]
+
+  - name: getAutoModerationRule
+    defType: Request
+    method: GET
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    return: AutoModerationRule
+
+  - name: createAutoModerationRule
+    defType: Request
+    method: POST
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: The rule name
+
+          event_type:
+            type: AutoModerationRule.AutoModerationRuleEventType
+            documentation: The event type
+
+          trigger_type:
+            type: AutoModerationRule.AutoModerationRuleTriggerType
+            documentation: The trigger type
+
+          trigger_metadata:
+            type: AutoModerationRule.AutoModerationRuleTriggerMetadata
+            documentation: The trigger metadata
+
+          actions:
+            type: Seq[AutoModerationRule.AutoModerationRuleAction]
+            documentation: The actions which will execute when the rule is triggered
+
+          enabled:
+            type: Boolean
+            withUndefined: true
+            documentation: Whether the rule is enabled (False by default)
+
+          exempt_roles:
+            type: Seq[RoleId]
+            documentation: The role ids that should not be affected by the rule (Maximum of 20)
+            verification:
+              max_length: 20
+
+          exempt_channels:
+            type: Seq[GuildChannelId]
+            documentation: The channel ids that should not be affected by the rule (Maximum of 50)
+            verification:
+              max_length: 50
+
+    return: AutoModerationRule
+
+  - name: ModifyAutoModerationRule
+    defType: Request
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: The rule name
+
+          event_type:
+            type: AutoModerationRule.AutoModerationRuleEventType
+            documentation: The event type
+
+          trigger_metadata:
+            type: AutoModerationRule.AutoModerationRuleTriggerMetadata
+            documentation: The trigger metadata
+
+          actions:
+            type: Seq[AutoModerationRule.AutoModerationRuleAction]
+            documentation: The actions which will execute when the rule is triggered
+
+          enabled:
+            type: Boolean
+            documentation: Whether the rule is enabled
+
+          exempt_roles:
+            type: Seq[RoleId]
+            documentation: The role ids that should not be affected by the rule (Maximum of 20)
+            verification:
+              max_length: 20
+
+          exempt_channels:
+            type: Seq[GuildChannelId]
+            documentation: The channel ids that should not be affected by the rule (Maximum of 50)
+            verification:
+              max_length: 50
+
+    return: AutoModerationRule
+
+  - name: DeleteAutoModerationRule
+    defType: Request
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    allowsReason: true

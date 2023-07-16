@@ -83,7 +83,7 @@ object CodeGenTypes {
         enumType: String,
         documentation: Option[String],
         innerTypes: Seq[TypeDef],
-        values: ListMap[String, String],
+        values: ListMap[String, EnumValue],
         objectExtends: Seq[String]
     ) extends TypeDef
 
@@ -146,7 +146,7 @@ object CodeGenTypes {
           case enumType @ ("IntEnum" | "StringEnum") =>
             for {
               name          <- c.get[String]("name")
-              values        <- c.get[ListMap[String, String]]("values")
+              values        <- c.get[ListMap[String, EnumValue]]("values")
               objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
             } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values, objectExtends)
 
@@ -277,6 +277,22 @@ object CodeGenTypes {
             majorParam    <- c.getOrElse[Boolean]("customArgMajorParameter")(false)
             documentation <- c.get[Option[String]]("documentation")
           } yield CustomArgPathElem(name, tpe, majorParam, documentation)
+        }
+        .swap
+        .joinLeft
+  }
+
+  case class EnumValue(value: String, documentation: Option[String])
+  object EnumValue {
+    implicit lazy val enumValueDecoder: Decoder[EnumValue] = (c: HCursor) =>
+      c.as[String]
+        .map(EnumValue(_, None))
+        .swap
+        .map[Either[DecodingFailure, EnumValue]] { _ =>
+          for {
+            value         <- c.get[String]("value")
+            documentation <- c.get[Option[String]]("documentation")
+          } yield EnumValue(value, documentation)
         }
         .swap
         .joinLeft
