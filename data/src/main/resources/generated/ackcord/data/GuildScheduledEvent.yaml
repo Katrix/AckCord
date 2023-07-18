@@ -1,0 +1,113 @@
+defType: Class
+name: GuildScheduledEvent
+
+documentation:
+  A scheduled event for a guild
+
+fields:
+  2.0.x:
+    id:
+      type: GuildScheduledEventId
+      documentation: The id of the scheduled event
+    guild_id:
+      type: GuildId
+      documentation: the guild id which the scheduled event belongs to
+    channel_id:
+      type: ChannelId # TODO: What type of channel?
+      withNull: true
+      documentation: The channel id in which the scheduled event will be hosted, or null if scheduled entity type is EXTERNAL
+    creator_id:
+      type: UserId
+      withUndefined: true
+      withNull: true
+      documentation: The id of the user that created the scheduled event
+    name:
+      type: String
+      documentation: The name of the scheduled event (1-100 characters)
+      verification:
+        max_length: 100
+        min_length: 1
+    description:
+      type: String
+      withUndefined: true
+      withNull: true
+      documentation: The description of the scheduled event (1-1000 characters)
+      verification:
+        max_length: 1000
+        min_length: 1
+    scheduled_start_time:
+      type: OffsetDateTime
+      documentation: The time the scheduled event will start
+    scheduled_end_time:
+      type: OffsetDateTime
+      withNull: true
+      documentation: The time the scheduled event will end, required if entity_type is EXTERNAL
+    privacy_level:
+      type: GuildScheduledEventPrivacyLevel
+      documentation: The privacy level of the scheduled event
+    status:
+      type: GuildScheduledEventStatus
+      documentation: The status of the scheduled event
+    entity_type:
+      type: GuildScheduledEventEntityType
+      documentation: The type of the scheduled event
+    entity_id:
+      type: Snowflake # TODO: Entity???
+      withNull: true
+      documentation: The id of an entity associated with a guild scheduled event
+    entity_metadata:
+      type: GuildScheduledEventEntityMetadata
+      withNull: true
+      documentation: Additional metadata for the guild scheduled event
+    creator:
+      type: User
+      withUndefined: true
+      documentation: The user that created the scheduled event
+    user_count:
+      type: Int
+      withUndefined: true
+      documentation: The number of users subscribed to the scheduled event
+    image:
+      type: String
+      withUndefined: true
+      withNull: true
+      documentation: The cover image hash of the scheduled event
+
+innerTypes:
+  - name: GuildScheduledEventPrivacyLevel
+    defType: IntEnum
+    values:
+        GUILD_ONLY:
+          value: "2"
+          documentation: The scheduled event is only accessible to guild members
+  - name: GuildScheduledEventEntityType
+    defType: IntEnum
+    values:
+        STAGE_INSTANCE:
+          value: "1"
+        VOICE:
+          value: "2"
+        EXTERNAL:
+          value: "3"
+  - name: GuildScheduledEventStatus
+    defType: IntEnum
+    values:
+        SCHEDULED:
+          value: "1"
+        ACTIVE:
+          value: "2"
+        COMPLETED:
+          value: "3"
+        CANCELED:
+          value: "4"
+  - name: GuildScheduledEventEntityMetadata
+    defType: Class
+    documentation: Additional metadata for the guild scheduled event
+    fields:
+      2.0.x:
+        location:
+            type: String
+            documentation: The location of the scheduled event (1-100 characters)
+            verification:
+                max_length: 100
+                min_length: 1
