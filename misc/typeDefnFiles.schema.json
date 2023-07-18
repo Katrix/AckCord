@@ -336,7 +336,8 @@
                       "GuildId",
                       "ChannelId",
                       "ApplicationId",
-                      "CommandId"
+                      "CommandId",
+                      "EmojiId"
                     ]
                   },
                   "name": {

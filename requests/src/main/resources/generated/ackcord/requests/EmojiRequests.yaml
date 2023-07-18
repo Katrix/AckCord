@@ -1,0 +1,50 @@
+## Guild endpoints have different ratelimits depending on the endpoint. See the discord docs for more info.
+
+name: EmojiRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getGuildEmojis
+    defType: Request
+    path: [ guilds, { argOf: GuildId }, emojis ]
+    return: Seq[Emoji]
+  - name: getGuildEmoji
+    defType: Request
+    path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
+    return: Emoji
+  - name: createGuildEmoji
+    defType: Request
+    method: POST
+    path: [ guilds, { argOf: GuildId }, emojis ]
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: The name of the emoji
+          image:
+            type: String
+            documentation: The base64 encoded image
+          roles:
+            type: Seq[RoleId]
+            documentation: The roles that can use this emoji
+    return: Emoji
+  - name: modifyGuildEmoji
+    defType: Request
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: The name of the emoji
+          roles:
+            type: Seq[RoleId]
+            withUndefined: true
+            documentation: The roles that can use this emoji
+    return: Emoji
+  - name: deleteGuildEmoji
+    defType: Request
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
+    return: Unit # TODO: Returns a 204, idk what type you'd want here.
