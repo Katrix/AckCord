@@ -1,0 +1,40 @@
+defType: Class
+name: Emoji
+
+documentation:
+  A custom emoji
+
+fields:
+  2.0.x:
+    id:
+      type: EmojiId
+      withNull: true
+      documentation: The id of this emoji.
+    name:
+      type: String
+      withNull: true
+      documentation: The name of this emoji. Can be None for reaction emojis
+    roles:
+      type: Seq[RoleId]
+      withUndefined: true
+      documentation: The roles this emoji is whitelisted to
+    user:
+      type: User
+      withUndefined: true
+      documentation: The user that created this emoji
+    require_colons:
+      type: Boolean
+      withUndefined: true
+      documentation: Whether this emoji must be wrapped in colons
+    managed:
+      type: Boolean
+      withUndefined: true
+      documentation: Whether this emoji is managed
+    animated:
+      type: Boolean
+      withUndefined: true
+      documentation: Whether this emoji is animated
+    available:
+      type: Boolean
+      withUndefined: true
+      documentation: Whether this emoji can be used, may be false due to loss of Server Boosts
