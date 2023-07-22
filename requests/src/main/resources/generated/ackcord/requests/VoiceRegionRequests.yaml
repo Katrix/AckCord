@@ -1,0 +1,10 @@
+name: VoiceRegionRequests
+defType: ObjectOnly
+innerTypes:
+  - name: listVoiceRegions
+    defType: Request
+    documentation: >-
+      Returns an array of voice region objects that can be used when setting a voice or stage channel's rtc_region.
+    method: GET
+    path: [voice, regions]
+    return: Seq[VoiceRegion]

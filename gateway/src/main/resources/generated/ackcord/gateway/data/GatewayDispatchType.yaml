@@ -1,5 +1,6 @@
 name: GatewayDispatchType
-defType: StringEnum
+defType: Enum
+type: String
 imports:
   - ackcord.data.DiscordStringEnum
   - ackcord.data.DiscordStringEnumCompanion

@@ -1,0 +1,1137 @@
+defType: Multiple
+innerTypes:
+  - name: Channel
+    defType: Class
+    documentation: Represents a guild or DM channel within Discord.
+    fields:
+      2.0.x:
+        id:
+          type: ChannelId
+          documentation: The id of this channel
+
+        tpe:
+          jsonName: type
+          type: Channel.ChannelType
+          documentation: The type of channel
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+          documentation: The id of the guild (may be missing for some channel objects received over gateway guild dispatches)
+
+        position:
+          type: Int
+          withUndefined: true
+          documentation: Sorting position of the channel
+
+        permission_overwrites:
+          type: Seq[PermissionOverwrite]
+          withUndefined: true
+          documentation: Explicit permission overwrites for members and roles
+
+        name:
+          type: String
+          withUndefined: true
+          withNull: true
+          documentation: The name of the channel (1-100 characters)
+          verification:
+            min_length: 1
+            max_length: 100
+
+        topic:
+          type: String
+          withUndefined: true
+          withNull: true
+          documentation: The channel topic (0-4096 characters for GUILD_FORUM channels, 0-1024 characters for all others)
+          verification:
+            max_length: 4096
+
+        nsfw:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the channel is nsfw
+
+        last_message_id:
+          type: Raw
+          withUndefined: true
+          withNull: true
+          documentation: The id of the last message sent in this channel (or thread for GUILD_FORUM channels) (may not point to an existing or valid message or thread)
+
+        bitrate:
+          type: Int
+          withUndefined: true
+          documentation: The bitrate (in bits) of the voice channel
+
+        user_limit:
+          type: Int
+          withUndefined: true
+          documentation: The user limit of the voice channel
+
+        rate_limit_per_user:
+          type: Int
+          withUndefined: true
+          documentation: Amount of seconds a user has to wait before sending another message (0-21600); bots, as well as users with the permission manage_messages or manage_channel, are unaffected
+
+        recipients:
+          type: Seq[User]
+          withUndefined: true
+          documentation: The recipients of the DM
+
+        icon:
+          type: ImageHash
+          withUndefined: true
+          withNull: true
+          documentation: Icon hash of the group DM
+
+        owner_id:
+          type: UserId
+          withUndefined: true
+          documentation: Id of the creator of the group DM or thread
+
+        application_id:
+          type: ApplicationId
+          withUndefined: true
+          documentation: Application id of the group DM creator if it is bot-created
+
+        managed:
+          type: Boolean
+          withUndefined: true
+          documentation: "For group DM channels: whether the channel is managed by an application via the gdm.join OAuth2 scope"
+
+        parent_id:
+          type: GuildChannelId
+          withUndefined: true
+          documentation: "For guild channels: id of the parent category for a channel (each parent category can contain up to 50 channels), for threads: id of the text channel this thread was created"
+
+        last_pin_timestamp:
+          type: OffsetDateTime
+          withUndefined: true
+          withNull: true
+          documentation: When the last pinned message was pinned. This may be null in events such as GUILD_CREATE when a message is not pinned.
+
+        rtc_region:
+          type: VoiceRegion
+          withUndefined: true
+          withNull: true
+          documentation: Voice region id for the voice channel, automatic when set to null
+
+        video_quality_mode:
+          type: Channel.VideoQualityMode
+          withUndefined: true
+          documentation: The camera video quality mode of the voice channel, 1 when not present
+
+        message_count:
+          type: Int
+          withUndefined: true
+          documentation: Number of messages (not including the initial message or deleted messages) in a thread.
+
+        member_count:
+          type: Int
+          withUndefined: true
+          documentation: An approximate count of users in a thread, stops counting at 50
+
+        thread_metadata:
+          type: Channel.ThreadMetadata
+          withUndefined: true
+          documentation: Thread-specific fields not needed by other channels
+
+        member:
+          type: Channel.ThreadMember
+          withUndefined: true
+          documentation: Thread member object for the current user, if they have joined the thread, only included on certain API endpoints
+
+        default_auto_archive_duration:
+          type: Int
+          withUndefined: true
+          documentation: "Default duration, copied onto newly created threads, in minutes, threads will stop showing in the channel list after the specified period of inactivity, can be set to: 60, 1440, 4320, 10080"
+
+        permissions:
+          type: Permissions
+          withUndefined: true
+          documentation: Computed permissions for the invoking user in the channel, including overwrites, only included when part of the resolved data received on a slash command interaction
+
+        flags:
+          type: Channel.ChannelFlags
+          withUndefined: true
+          documentation: Channel flags combined as a bitfield
+
+        total_message_sent:
+          type: Int
+          withUndefined: true
+          documentation: Number of messages ever sent in a thread, it's similar to message_count on message creation, but will not decrement the number when a message is deleted
+
+        available_tags:
+          type: Seq[Channel.Tag]
+          withUndefined: true
+          documentation: The set of tags that can be used in a GUILD_FORUM channel
+
+        applied_tags:
+          type: Seq[Snowflake[Channel.Tag]]
+          withUndefined: true
+          documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel
+
+        default_reaction_emoji:
+          type: Channel.DefaultReaction
+          withUndefined: true
+          withNull: true
+          documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM channel
+
+        default_thread_rate_limit_per_user:
+          type: Int
+          withUndefined: true
+          documentation: The initial rate_limit_per_user to set on newly created threads in a channel. this field is copied to the thread at creation time and does not live update.
+
+        default_sort_order:
+          type: Channel.ForumSortOrder
+          withUndefined: true
+          withNull: true
+          documentation: The default sort order type used to order posts in GUILD_FORUM channels. Defaults to null, which indicates a preferred sort order hasn't been set by a channel admin
+
+        default_forum_layout:
+          type: Channel.ForumLayout
+          withUndefined: true
+          documentation: The default forum layout view used to display posts in GUILD_FORUM channels. Defaults to 0, which indicates a layout view has not been set by a channel admin
+
+    innerTypes:
+      - name: ChannelType
+        defType: Enum
+        type: Int
+        values:
+          GUILD_TEXT:
+            value: "0"
+            documentation: A text channel within a server
+
+          DM:
+            value: "1"
+            documentation: A direct message between users
+
+          GUILD_VOICE:
+            value: "2"
+            documentation: A voice channel within a server
+
+          GROUP_DM:
+            value: "3"
+            documentation: A direct message between multiple users
+
+          GUILD_CATEGORY:
+            value: "4"
+            documentation: An organizational category that contains up to 50 channels
+
+          GUILD_ANNOUNCEMENT:
+            value: "5"
+            documentation: A channel that users can follow and crosspost into their own server (formerly news channels)
+
+          ANNOUNCEMENT_THREAD:
+            value: "10"
+            documentation: A temporary sub-channel within a GUILD_ANNOUNCEMENT channel
+
+          PUBLIC_THREAD:
+            value: "11"
+            documentation: A temporary sub-channel within a GUILD_TEXT or GUILD_FORUM channel
+
+          PRIVATE_THREAD:
+            value: "12"
+            documentation: A temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission
+
+          GUILD_STAGE_VOICE:
+            value: "13"
+            documentation: A voice channel for hosting events with an audience
+
+          GUILD_DIRECTORY:
+            value: "14"
+            documentation: The channel in a hub containing the listed servers
+
+          GUILD_FORUM:
+            value: "15"
+            documentation: Channel that can only contain threads
+
+      - name: VideoQuality
+        defType: Enum
+        type: Int
+        values:
+          AUTO:
+            value: "1"
+            documentation: Discord chooses the quality for optimal performance
+
+          FULL:
+            value: "2"
+            documentation: 720p
+
+      - name: ChannelFlags
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          PINNED:
+            value: "1 << 1"
+            documentation: This thread is pinned to the top of its parent GUILD_FORUM channel
+
+          REQUIRE_TAG:
+            value: "1 << 4"
+            documentation: Whether a tag is required to be specified when creating a thread in a GUILD_FORUM channel. Tags are specified in the applied_tags field.
+
+      - name: ForumSortOrder
+        defType: Enum
+        type: Int
+        values:
+          LATEST_ACTIVITY:
+            value: "0"
+            documentation: Sort forum posts by activity
+
+          CREATION_DATE:
+            value: "1"
+            documentation: Sort forum posts by creation time (from most recent to oldest)
+
+      - name: ForumLayout
+        defType: Enum
+        type: Int
+        values:
+          NOT_SET:
+            value: "0"
+            documentation: No default has been set for forum channel
+
+          LIST_VIEW:
+            value: "1"
+            documentation: Display posts as a list
+
+          GALLERY_VIEW:
+            value: "2"
+            documentation: Display posts as a collection of tiles
+
+      - name: PermissionOverwrite
+        defType: Class
+        fields:
+          2.0.x:
+            id:
+              type: RoleOrUserId
+              documentation: Role or user id
+
+            tpe:
+              jsonName: type
+              type: PermissionOverwrite.PermissionOverwriteType
+              documentation: Either 0 (role) or 1 (member)
+
+            allow:
+              type: Permissions
+              documentation: Permission bit set
+
+            deny:
+              type: Permissions
+              documentation: Permission bit set
+
+        innerTypes:
+          - name: PermissionOverwriteType
+            defType: Enum
+            type: Int
+            values:
+              Role: "0"
+              Member: "1"
+
+      - name: ThreadMetadata
+        defType: Class
+        documentation: The thread metadata object contains a number of thread-specific channel fields that are not needed by other channel types.
+        fields:
+          2.0.x:
+            archived:
+              type: Boolean
+              documentation: Whether the thread is archived
+
+            auto_archive_duration:
+              type: Int
+              documentation: "The thread will stop showing in the channel list after auto_archive_duration minutes of inactivity, can be set to: 60, 1440, 4320, 10080"
+
+            archive_timestamp:
+              type: OffsetDateTime
+              documentation: Timestamp when the thread's archive status was last changed, used for calculating recent activity
+
+            locked:
+              type: Boolean
+              documentation: Whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+
+            invitable:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether non-moderators can add other non-moderators to a thread; only available on private threads
+
+            create_timestamp:
+              type: OffsetDateTime
+              withUndefined: true
+              documentation: Timestamp when the thread was created; only populated for threads created after 2022-01-09
+
+      - name: ThreadMember
+        defType: Class
+        documentation: A thread member object contains information about a user that has joined a thread.
+        fields:
+          2.0.x:
+            id:
+              type: ThreadId
+              withUndefined: true
+              documentation: ID of the thread
+
+            user_id:
+              type: UserId
+              withUndefined: true
+              documentation: ID of the user
+
+            join_timestamp:
+              type: OffsetDateTime
+              documentation: Time the user last joined the thread
+
+            flags:
+              type: Int
+              documentation: Any user-thread settings, currently only used for notifications
+
+            member:
+              type: GuildMember
+              withUndefined: true
+              documentation: Additional information about the user
+
+      - name: DefaultReaction
+        defType: Class
+        documentation: An object that specifies the emoji to use as the default way to react to a forum post. Exactly one of emoji_id and emoji_name must be set.
+        fields:
+          2.0.x:
+            emoji_id:
+              type: EmojiId
+              withNull: true
+              documentation: The id of a guild's custom emoji
+
+            emoji_name:
+              type: String
+              withNull: true
+              documentation: The unicode character of the emoji
+
+      - name: ForumTag
+        defType: Class
+        documentation: An object that represents a tag that is able to be applied to a thread in a GUILD_FORUM channel.
+        fields:
+          2.0.x:
+            id:
+              type: Snowflake[ForumTag]
+              documentation: The id of the tag
+
+            name:
+              type: String
+              documentation: The name of the tag (0-20 characters)
+              verification:
+                max_length: 20
+
+            moderated:
+              type: Boolean
+              documentation: Whether this tag can only be added to or removed from threads by a member with the MANAGE_THREADS permission
+
+            emoji_id:
+              type: EmojiId
+              withNull: true
+              documentation: The id of a guild's custom emoji
+
+            emoji_name:
+              type: String
+              withNull: true
+              documentation: The unicode character of the emoji
+
+      - name: ChannelMention
+        defType: Class
+        fields:
+          2.0.x:
+            id:
+              type: GuildTextChannelId
+              documentation: Id of the channel
+
+            guild_id:
+              type: GuildId
+              documentation: Id of the guild containing the channel
+
+            tpe:
+              jsonName: type
+              type: Channel.ChannelType
+              documentation: The type of channel
+
+            name:
+              type: String
+              documentation: The name of the channel
+
+  - name: Message
+    defType: Class
+    documentation: Represents a message sent in a channel within Discord.
+    fields:
+      2.0.x:
+        id:
+          type: MessageId
+          documentation: Id of the message
+
+        channel_id:
+          type: TextChannelId
+          documentation: Id of the channel the message was sent in
+
+        author:
+          type: MessageAuthor
+          documentation: The author of this message (not guaranteed to be a valid user, see below)
+
+        content:
+          type: String
+          documentation: Contents of the message
+
+        timestamp:
+          type: OffsetDateTime
+          documentation: When this message was sent
+
+        edited_timestamp:
+          type: OffsetDateTime
+          withNull: true
+          documentation: When this message was edited (or null if never)
+
+        tts:
+          type: Boolean
+          documentation: Whether this was a TTS message
+
+        mention_everyone:
+          type: Boolean
+          documentation: Whether this message mentions everyone
+
+        mentions:
+          type: Seq[User]
+          documentation: Users specifically mentioned in the message
+
+        mention_roles:
+          type: Seq[RoleId]
+          documentation: Roles specifically mentioned in this message
+
+        mention_channels:
+          type: Seq[Message.ChannelMention]
+          withUndefined: true
+          documentation: Channels specifically mentioned in this message
+
+        attachments:
+          type: Seq[Attachment]
+          documentation: Any attached files
+
+        embeds:
+          type: Seq[Embed]
+          documentation: Any embedded content
+
+        reactions:
+          type: Seq[Reaction]
+          withUndefined: true
+          documentation: Reactions to the message
+
+        nonce:
+          type: IntOrString
+          withUndefined: true
+          documentation: Used for validating a message was sent
+
+        pinned:
+          type: Boolean
+          documentation: Whether this message is pinned
+
+        webhook_id:
+          type: WebhookId
+          withUndefined: true
+          documentation: If the message is generated by a webhook, this is the webhook's id
+
+        tpe:
+          jsonName: type
+          type: Message.MessageType
+          documentation: Type of message
+
+        activity:
+          type: Message.MessageActivity
+          withUndefined: true
+          documentation: Sent with Rich Presence-related chat embeds
+
+        application:
+          type: Message.MessageApplication
+          withUndefined: true
+          documentation: Sent with Rich Presence-related chat embeds
+
+        application_id:
+          type: ApplicationId
+          withUndefined: true
+          documentation: If the message is an Interaction or application-owned webhook, this is the id of the application
+
+        message_reference:
+          type: Message.MessageReference
+          withUndefined: true
+          documentation: Data showing the source of a crosspost, channel follow add, pin, or reply message
+
+        flags:
+          type: Message.MessageFlags
+          withUndefined: true
+          documentation: Message flags combined as a bitfield
+
+        referenced_message:
+          type: Message
+          withUndefined: true
+          withNull: true
+          documentation: The message associated with the message_reference
+
+        interaction:
+          type: Message.MessageInteraction
+          withUndefined: true
+          documentation: Sent if the message is a response to an Interaction
+
+        thread:
+          type: Channel
+          withUndefined: true
+          documentation: The thread that was started from this message, includes thread member object
+
+        components:
+          type: Seq[MessageComponent]
+          withUndefined: true
+          documentation: Sent if the message contains components like buttons, action rows, or other interactive components
+
+        sticker_items:
+          type: Seq[Message.StickerItem]
+          withUndefined: true
+          documentation: Sent if the message contains stickers
+
+        position:
+          type: Int
+          withUndefined: true
+          documentation: A generally increasing integer (there may be gaps or duplicates) that represents the approximate position of the message in a thread, it can be used to estimate the relative position of the message in a thread in company with total_message_sent on parent thread
+
+        role_subscription_data:
+          type: RoleSubscriptionData
+          withUndefined: true
+          documentation: Data of the role subscription purchase or renewal that prompted this ROLE_SUBSCRIPTION_PURCHASE message
+
+    innerTypes:
+      - name: MessageType
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          DEFAULT: "0"
+          RECIPIENT_ADD: "1"
+          RECIPIENT_REMOVE: "2"
+          CALL: "3"
+          CHANNEL_NAME_CHANGE: "4"
+          CHANNEL_ICON_CHANGE: "5"
+          CHANNEL_PINNED_MESSAGE: "6"
+          USER_JOIN: "7"
+          GUILD_BOOST: "8"
+          GUILD_BOOST_TIER_1: "9"
+          GUILD_BOOST_TIER_2: "10"
+          GUILD_BOOST_TIER_3: "11"
+          CHANNEL_FOLLOW_ADD: "12"
+          GUILD_DISCOVERY_DISQUALIFIED: "14"
+          GUILD_DISCOVERY_REQUALIFIED: "15"
+          GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING: "16"
+          GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: "17"
+          THREAD_CREATED: "18"
+          REPLY: "19"
+          CHAT_INPUT_COMMAND: "20"
+          THREAD_STARTER_MESSAGE: "21"
+          GUILD_INVITE_REMINDER: "22"
+          CONTEXT_MENU_COMMAND: "23"
+          AUTO_MODERATION_ACTION: "24"
+          ROLE_SUBSCRIPTION_PURCHASE: "25"
+          INTERACTION_PREMIUM_UPSELL: "26"
+          STAGE_START: "27"
+          STAGE_END: "28"
+          STAGE_SPEAKER: "29"
+          STAGE_TOPIC: "31"
+          GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: "32"
+
+      - name: MessageActivity
+        defType: Class
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: MessageActivity.MessageActivityType
+              documentation: Type of message activity
+
+            party_id:
+              type: String
+              withUndefined: true
+              documentation: "party_id from a Rich Presence event"
+
+        innerTypes:
+          - name: MessageActivityType
+            defType: Enum
+            type: Int
+            values:
+              JOIN: "1"
+              SPECTATE: "2"
+              LISTEN: "3"
+              JOIN_REQUEST: "5"
+
+      - name: MessageFlags
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          CROSSPOSTED:
+            value: "1 << 0"
+            documentation: This message has been published to subscribed channels (via Channel Following)
+
+          IS_CROSSPOST:
+            value: "1 << 1"
+            documentation: This message originated from a message in another channel (via Channel Following)
+
+          SUPPRESS_EMBEDS:
+            value: "1 << 2"
+            documentation: Do not include any embeds when serializing this message
+
+          SOURCE_MESSAGE_DELETED:
+            value: "1 << 3"
+            documentation: The source message for this crosspost has been deleted (via Channel Following)
+
+          URGENT:
+            value: "1 << 4"
+            documentation: This message came from the urgent message system
+
+          HAS_THREAD:
+            value: "1 << 5"
+            documentation: This message has an associated thread, with the same id as the message
+
+          EPHEMERAL:
+            value: "1 << 6"
+            documentation: This message is only visible to the user who invoked the Interaction
+
+          LOADING:
+            value: "1 << 7"
+            documentation: This message is an Interaction Response and the bot is "thinking"
+
+          FAILED_TO_MENTION_SOME_ROLES_IN_THREAD:
+            value: "1 << 8"
+            documentation: This message failed to mention some roles and add their members to the thread
+
+          SUPPRESS_NOTIFICATIONS:
+            value: "1 << 12"
+            documentation: This message will not trigger push and desktop notifications
+
+          IS_VOICE_MESSAGE:
+            value: "1 << 13"
+            documentation: This message is a voice message
+
+      - name: RoleSubscriptionData
+        defType: Class
+        fields:
+          2.0.x:
+            role_subscription_listing_id:
+              type: RawSnowflake
+              documentation: The id of the sku and listing that the user is subscribed to
+
+            tier_name:
+              type: String
+              documentation: The name of the tier that the user is subscribed to
+
+            total_months_subscribed:
+              type: Int
+              documentation: The cumulative number of months that the user has been subscribed for
+
+            is_renewal:
+              type: Boolean
+              documentation: Whether this notification is for a renewal rather than a new purchase
+
+  - name: MessageReference
+    defType: Class
+    fields:
+      2.0.x:
+        message_id:
+          type: MessageI
+          withUndefined: true
+          documentation: Id of the originating message
+
+        channel_id:
+          type: TextChannelId
+          withUndefined: true
+          documentation: Id of the originating message's channel
+
+        guild_id:
+          type: GuildID
+          withUndefined: true
+          documentation: Id of the originating message's guild
+
+        fail_if_not_exists:
+          type: Boolean
+          withUndefined: true
+          documentation: When sending, whether to error if the referenced message doesn't exist instead of sending as a normal (non-reply) message, default true
+
+  - name: FollowedChannel
+    defType: Class
+    fields:
+      2.0.x:
+        channel_id:
+          type: TextChannelId
+          documentation: Source channel id
+
+        webhook_id:
+          type: WebhookId
+          documentation: Created target webhook id
+
+  - name: Reaction
+    defType: Class
+    fields:
+      2.0.x:
+        count:
+          type: Int
+          documentation: Times this emoji has been used to react
+
+        me:
+          type: Boolean
+          documentation: Whether the current user reacted using this emoji
+
+        emoji:
+          type: Reaction.ReactionEmoji
+          documentation: Emoji information
+
+  - name: Embed
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        title:
+          type: String
+          documentation: Title of embed
+          verification:
+            max_length: 256
+
+        type:
+          type: Embed.EmbedType
+          documentation: Type of embed (always "rich" for webhook embeds)
+
+        description:
+          type: String
+          documentation: Description of embed
+          verification:
+            max_length: 4096
+
+        url:
+          type: String
+          documentation: Url of embed
+
+        timestamp:
+          type: OffsetDateTime
+          documentation: Timestamp of embed content
+
+        color:
+          type: Int
+          documentation: Color code of the embed
+
+        footer:
+          type: Embed.EmbedFooter
+          documentation: Footer information
+
+        image:
+          type: Embed.EmbedImage
+          documentation: Image information
+
+        thumbnail:
+          type: Embed.EmbedThumbnail
+          documentation: Thumbnail information
+
+        video:
+          type: Embed.EmbedVideo
+          documentation: Video information
+
+        provider:
+          type: Embed.EmbedProvider
+          documentation: Provider information
+
+        author:
+          type: Embed.EmbedAuthor
+          documentation: Author information
+
+        fields:
+          type: Seq[Embed.EmbedField]
+          documentation: Fields information
+          verification:
+            max_length: 25
+
+    innerTypes:
+      - name: EmbedType
+        defType: Enum
+        type: String
+        values:
+          Rich:
+            value: rich
+            documentation: Generic embed rendered from embed attributes
+
+          Image:
+            value: image
+            documentation: Image embed
+
+          Video:
+            value: video
+            documentation: Video embed
+
+          Gifv:
+            value: gifv
+            documentation: Animated gif image embed rendered as a video embed
+
+          Article:
+            value: article
+            documentation: Article embed
+
+          Link:
+            value: link
+            documentation: Link embed
+
+      - name: EmbedThumbnail
+        defType: Class
+        fields:
+          2.0.x:
+            url:
+              type: String
+              documentation: Source url of thumbnail (only supports http(s) and attachments)
+
+            proxy_url:
+              type: String
+              withUndefined: true
+              documentation: A proxied url of the thumbnail
+
+            height:
+              type: Int
+              withUndefined: true
+              documentation: Height of thumbnail
+
+            width:
+              type: Int
+              withUndefined: true
+              documentation: Width of thumbnail
+
+      - name: EmbedVideo
+        defType: Class
+        allUndefined: true
+        fields:
+          2.0.x:
+            url:
+              type: String
+              documentation: Source url of video
+
+            proxy_url:
+              type: String
+              documentation: A proxied url of the video
+
+            height:
+              type: Int
+              documentation: Height of video
+
+            width:
+              type: Int
+              documentation: Width of video
+
+      - name: EmbedImage
+        defType: Class
+        fields:
+          2.0.x:
+            url:
+              type: String
+              documentation: Source url of image (only supports http(s) and attachments)
+
+            proxy_url:
+              type: String
+              withUndefined: true
+              documentation: A proxied url of the image
+
+            height:
+              type: Int
+              withUndefined: true
+              documentation: Height of image
+
+            width:
+              type: Int
+              withUndefined: true
+              documentation: Width of image
+
+      - name: EmbedProvider
+        defType: Class
+        allUndefined: true
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: Name of provider
+
+            url:
+              type: String
+              documentation: Url of provider
+
+      - name: EmbedAuthor
+        defType: Class
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: Name of author
+              verification:
+                max_length: 256
+
+            url:
+              type: String
+              withUndefined: true
+              documentation: Url of author (only supports http(s))
+
+            icon_url:
+              type: String
+              withUndefined: true
+              documentation: Url of author icon (only supports http(s) and attachments)
+
+            proxy_icon_url:
+              type: String
+              withUndefined: true
+              documentation: A proxied url of author icon
+
+      - name: EmbedFooter
+        defType: Class
+        fields:
+          2.0.x:
+            text:
+              type: String
+              documentation: Footer text
+              verification:
+                max_length: 2048
+
+            icon_url:
+              type: String
+              withUndefined: true
+              documentation: Url of footer icon (only supports http(s) and attachments)
+
+            proxy_icon_url:
+              type: String
+              withUndefined: true
+              documentation: A proxied url of footer icon
+
+      - name: EmbedField
+        defType: Class
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: Name of the field
+              verification:
+                max_length: 256
+
+            value:
+              type: String
+              documentation: Value of the field
+              verification:
+                max_length: 1024
+
+            inline:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether or not this field should display inline
+
+  - name: Attachment
+    defType: Class
+    fields:
+      2.0.x:
+        id:
+          type: Snowflake[Attachment]
+          documentation: Attachment id
+
+        filename:
+          type: String
+          documentation: Name of file attached
+
+        description:
+          type: String
+          withUndefined: true
+          documentation: Description for the file (max 1024 characters)
+          verification:
+            max_length: 1024
+
+        content_type:
+          type: String
+          withUndefined: true
+          documentation: The attachment's media type
+
+        size:
+          type: Int
+          documentation: Size of file in bytes
+
+        url:
+          type: String
+          documentation: Source url of file
+
+        proxy_url:
+          type: String
+          documentation: A proxied url of file
+
+        height:
+          type: Int
+          withUndefined: true
+          withNull: true
+          documentation: Height of file (if image)
+
+        width:
+          type: Int
+          withUndefined: true
+          withNull: true
+          documentation: Width of file (if image)
+
+        ephemeral:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether this attachment is ephemeral
+
+        duration_secs:
+          type: Float
+          withUndefined: true
+          documentation: The duration of the audio file (currently for voice messages)
+
+        waveform:
+          type: String
+          withUndefined: true
+          documentation: Base64 encoded bytearray representing a sampled waveform (currently for voice messages)
+
+        flags:
+          type: Attachment.AttachmentFlags
+          withUndefined: true
+          documentation: Attachment flags combined as a bitfield
+
+    innerTypes:
+      - name: AttachmentFlags
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          IS_REMIX:
+            value: "1 << 2"
+            documentation: This attachment has been edited using the remix feature on mobile
+
+  - name: AllowedMentions
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        parse:
+          type: Seq[AllowedMentions.AllowedMentionsType]
+          documentation: An array of allowed mention types to parse from the content.
+
+        roles:
+          type: Seq[RoleId]
+          documentation: Array of role_ids to mention (Max size of 100)
+          verification:
+            max_length: 100
+
+        users:
+          type: Seq[UserId]
+          documentation: Array of user_ids to mention (Max size of 100)
+          verification:
+            max_length: 100
+
+        replied_user:
+          type: Boolean
+          documentation: For replies, whether to mention the author of the message being replied to (default false)
+
+    innerTypes:
+      - name: AllowedMentionsType
+        defType: Enum
+        type: String
+        values:
+          RoleMentions:
+            value: roles
+            documentation: Controls role mentions
+
+          UserMentions:
+            value: users
+            documentation: Controls user mentions
+
+          EveryoneMentions:
+            value: everyone
+            documentation: Controls @everyone and @here mentions

@@ -42,8 +42,13 @@ innerTypes:
         id: Snowflake[Integration]
         name: String
         type: String
-        account: DiscordObject #TODO
+        account: AuditLogIntegration.AuditLogIntegrationAccount
         application_id: ApplicationId
+    innerTypes:
+      - name: AuditLogIntegrationAccount
+        defType: Class
+        fields:
+          2.0.x: {}
 
   - name: AuditLogEntry
     defType: Class
@@ -151,7 +156,8 @@ innerTypes:
           documentation: Name of the changed entity, with a few exceptions
 
   - name: AuditLogEvent
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       GUILD_UPDATE:
         value: "1"

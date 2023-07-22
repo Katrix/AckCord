@@ -1,0 +1,87 @@
+defType: Multiple
+innerTypes:
+  - name: VoiceState
+    defType: Class
+    documentation: Used to represent a user's voice connection status.
+    fields:
+      2.0.x:
+        guild_id:
+          type: GuildId
+          withUndefined: true
+          documentation: The guild id this voice state is for
+
+        channel_id:
+          type: VoiceGuildChannelId
+          withNull: true
+          documentation: The channel id this user is connected to
+
+        user_id:
+          type: UserId
+          documentation: The user id this voice state is for
+
+        member:
+          type: GuildMember
+          withUndefined: true
+          documentation: The guild member this voice state is for
+
+        session_id:
+          type: String
+          documentation: The session id for this voice state
+
+        deaf:
+          type: Boolean
+          documentation: Whether this user is deafened by the server
+
+        mute:
+          type: Boolean
+          documentation: Whether this user is muted by the server
+
+        self_deaf:
+          type: Boolean
+          documentation: Whether this user is locally deafened
+
+        self_mute:
+          type: Boolean
+          documentation: Whether this user is locally muted
+
+        self_stream:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether this user is streaming using "Go Live"
+
+        self_video:
+          type: Boolean
+          documentation: Whether this user's camera is enabled
+
+        suppress:
+          type: Boolean
+          documentation: Whether this user's permission to speak is denied
+
+        request_to_speak_timestamp:
+          type: OffsetDateTime
+          withNull: true
+          documentation: The time at which the user requested to speak
+
+  - name: VoiceRegion
+    defType: Class
+    fields:
+      2.0.x:
+        id:
+          type: String
+          documentation: Unique ID for the region
+
+        name:
+          type: String
+          documentation: Name of the region
+
+        optimal:
+          type: Boolean
+          documentation: True for a single server that is closest to the current user's client
+
+        deprecated:
+          type: Boolean
+          documentation: Whether this is a deprecated voice region (avoid switching to these)
+
+        custom:
+          type: Boolean
+          documentation: Whether this is a custom voice region (used for events/etc)

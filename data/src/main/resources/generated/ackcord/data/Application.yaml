@@ -68,11 +68,10 @@ fields:
       withUndefined: true
       documentation: Guild associated with the app. For example, a developer support server.
 
-    #TODO: I need information on what this partial object actually contains. Or, we could just leave it typed as DiscordObject. I want to avoid that though
-    #guild:
-    #  type: Application.ApplicationGuild
-    #  withUndefined: true
-    #  documentation: A partial object of the associated guild
+    guild:
+      type: Application.ApplicationGuild
+      withUndefined: true
+      documentation: A partial object of the associated guild
 
     primary_sku_id:
       type: RawSnowflake
@@ -122,7 +121,9 @@ fields:
       documentation: The application's role connection verification entry point, which when configured will render the app as a verification method in the guild role verification configuration
 
 innerTypes:
-  - defType: IntEnum
+  - defType: Enum
+    type: Int
+    isBitfield: true
     name: Flags
 
     values:
@@ -136,6 +137,10 @@ innerTypes:
       GATEWAY_MESSAGE_CONTENT_LIMITED: "1 << 19"
       APPLICATION_COMMAND_BADGE: "1 << 23"
 
+  - name: ApplicationGuild
+    defType: Class
+    fields:
+      2.0.x: {}
 
   - defType: Class
     name: InstallParams

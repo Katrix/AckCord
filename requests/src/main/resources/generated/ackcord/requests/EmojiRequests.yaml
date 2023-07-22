@@ -7,10 +7,12 @@ innerTypes:
     defType: Request
     path: [ guilds, { argOf: GuildId }, emojis ]
     return: Seq[Emoji]
+
   - name: getGuildEmoji
     defType: Request
     path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
     return: Emoji
+
   - name: createGuildEmoji
     defType: Request
     method: POST
@@ -28,6 +30,7 @@ innerTypes:
             type: Seq[RoleId]
             documentation: The roles that can use this emoji
     return: Emoji
+
   - name: modifyGuildEmoji
     defType: Request
     method: PATCH
@@ -43,8 +46,8 @@ innerTypes:
             withUndefined: true
             documentation: The roles that can use this emoji
     return: Emoji
+
   - name: deleteGuildEmoji
     defType: Request
     method: DELETE
     path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
-    return: Unit # TODO: Returns a 204, idk what type you'd want here.

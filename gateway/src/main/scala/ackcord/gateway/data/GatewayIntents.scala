@@ -3,7 +3,7 @@ package ackcord.gateway.data
 import ackcord.data.base.{DiscordIntEnum, DiscordIntEnumCompanion}
 
 sealed case class GatewayIntents private(value: Int) extends DiscordIntEnum
-object GatewayIntents extends DiscordIntEnumCompanion[GatewayIntents] with GatewayIntentsMixin {
+object GatewayIntents extends DiscordIntEnumCompanion[GatewayIntents] {
 
   val Guilds: GatewayIntents = GatewayIntents(1 << 0)
   val GuildMembers: GatewayIntents = GatewayIntents(1 << 1)

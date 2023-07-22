@@ -95,11 +95,15 @@ object AckCordCodeGen {
       val args = fields.map { case (field, (fieldInfo, _)) =>
         val jsonName = fieldInfo.jsonName.getOrElse(field)
         val fieldLit = "\"" + jsonName + "\""
-        if (fieldInfo.withUndefined) s"$fieldLit :=? ${camelCase(field)}"
-        else s"$fieldLit := ${camelCase(field)}"
+        if (fieldInfo.isExtension) {
+          s"DiscordObjectFrom.FromExtension($fieldLit, ${camelCase(field)})"
+        } else {
+          if (fieldInfo.withUndefined) s"$fieldLit :=? ${camelCase(field)}"
+          else s"$fieldLit := ${camelCase(field)}"
+        }
       }
 
-      val fieldDocs = fields.collect { case (name, (FieldDef(_, _, _, Some(documentation), _, _, _), _)) =>
+      val fieldDocs = fields.collect { case (name, (FieldDef(_, _, _, Some(documentation), _, _, _, _), _)) =>
         s"@param $name $documentation"
       }.toSeq
 
@@ -138,7 +142,10 @@ object AckCordCodeGen {
 
       val jsonName = fieldDef.jsonName.getOrElse(k)
 
-      val defdef = s"""${mods.mkString(" ")} def ${camelCase(k)}: $tpe = selectDynamic[$tpe]("$jsonName")"""
+      val defBody =
+        if (fieldDef.isExtension) s"""$tpe.makeRaw(json, extensionCache("$jsonName"))"""
+        else s"""selectDynamic[$tpe]("$jsonName")"""
+      val defdef = s"""${mods.mkString(" ")} def ${camelCase(k)}: $tpe = $defBody"""
 
       (fieldDef.documentation.map(docString(_)).toList :+ defdef).mkString("\n")
     }
@@ -179,19 +186,11 @@ object AckCordCodeGen {
   def codeFromEnumTypeDef(enumTypeDef: TypeDef.EnumTypeDef): String = {
     val tpeName = enumTypeDef.name
 
-    val underlyingType = enumTypeDef.enumType match {
-      case "IntEnum"    => "Int"
-      case "StringEnum" => "String"
-    }
+    val underlyingType = enumTypeDef.tpe
 
-    val parent = enumTypeDef.enumType match {
-      case "IntEnum"    => "DiscordIntEnum"
-      case "StringEnum" => "DiscordStringEnum"
-    }
-
-    def wrap(value: String): String = enumTypeDef.enumType match {
-      case "IntEnum"    => value
-      case "StringEnum" => "\"" + value + "\""
+    def wrap(value: String): String = underlyingType match {
+      case "String" => "\"" + value + "\""
+      case _        => value
     }
 
     val values = enumTypeDef.values
@@ -203,17 +202,33 @@ object AckCordCodeGen {
 
     val objWiths = enumTypeDef.objectExtends.map(w => s"with $w").mkString(" ")
 
+    val bitfieldMembers = if (enumTypeDef.name == "BitfieldIntEnum") {
+
+      List(
+        s"""|implicit class ${tpeName}BitFieldOps(private val here: $tpeName) extends AnyVal {
+            |  def to$underlyingType: $underlyingType = here.value
+            |
+            |  def ++(there: $tpeName): $tpeName = $tpeName(here.value | there.value)
+            |
+            |  def --(there: $tpeName): $tpeName = $tpeName(here.value & ~there.value)
+            |
+            |  def isNone: Boolean = here.value == 0
+            |}""".stripMargin
+      )
+
+    } else Nil
+
     val tpeCode =
-      s"""|sealed case class $tpeName private(value: $underlyingType) extends $parent
-          |object $tpeName extends ${parent}Companion[$tpeName] $objWiths {
+      s"""|sealed case class $tpeName private(value: $underlyingType) extends DiscordEnum[$underlyingType]
+          |object $tpeName extends DiscordEnumCompanion[$underlyingType, $tpeName] $objWiths {
           |
           |  $values
           |  
           |  def unknown(value: $underlyingType): $tpeName = new $tpeName(value)
           |  
           |  def values: Seq[$tpeName] = Seq(${enumTypeDef.values.keys.mkString(", ")})
-          |
-          |  ${enumTypeDef.innerTypes.flatMap(codeFromTypeDef).mkString("\n\n")}
+          |  
+          |  ${(bitfieldMembers :+ enumTypeDef.innerTypes.flatMap(codeFromTypeDef)).mkString("\n\n")}
           |}""".stripMargin
 
     (enumTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
@@ -295,6 +310,9 @@ object AckCordCodeGen {
       s"@param $name $documentation"
     }
 
+    val typeParams =
+      if (requestDef.additionalTypeParams.nonEmpty) requestDef.additionalTypeParams.mkString("[", ", ", "]") else ""
+
     val pathParams = allCustomPathElems
       .collect { case PathElem.CustomArgPathElem(name, tpe, _, _) =>
         s"$name: $tpe, "
@@ -304,16 +322,32 @@ object AckCordCodeGen {
     val queryParam =
       if (requestDef.query.isDefined) s"query: ${capitalizedName}Query = ${capitalizedName}Query(), " else ""
 
-    val paramsType = requestDef.body.fold("Unit") {
-      case AnonymousClassTypeDefOrType.TypeRef(name)  => name
-      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Body"
+    val paramsType = {
+      val tpe = requestDef.body.fold("Unit") {
+        case AnonymousClassTypeDefOrType.TypeRef(name) => name
+        case AnonymousClassTypeDefOrType.AnonType(_)   => s"${capitalizedName}Body"
+      }
+      if (requestDef.arrayOfBody) s"Seq[$tpe]" else tpe
     }
 
-    val bodyParam = requestDef.body.fold("")(_ => s"body: $paramsType")
-    val returnTpe = requestDef.returnTpe.fold("Unit") {
-      case AnonymousClassTypeDefOrType.TypeRef(name)  => name
-      case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Result"
+    val bodyParam   = requestDef.body.fold("")(_ => s"body: $paramsType,")
+    val reasonParam = if (requestDef.allowsReason) "reason: Option[String]," else ""
+    val additionalParams =
+      requestDef.additionalParams
+        .map(t => s"${t._1}: ${t._2.tpe}${t._2.default.fold("")(d => s" = $d")},")
+        .mkString("\n")
+
+    val returnTpe = {
+      val tpe = requestDef.returnTpe.fold("Unit") {
+        case AnonymousClassTypeDefOrType.TypeRef(name)  => name
+        case AnonymousClassTypeDefOrType.AnonType(anon) => s"${capitalizedName}Result"
+      }
+      if (requestDef.arrayOfReturn) s"Seq[$tpe]" else tpe
     }
+
+    val requestType =
+      if (requestDef.complexType.isEmpty) s"Request[$paramsType, $returnTpe]"
+      else s"ComplexRequest[$paramsType, $returnTpe, ${requestDef.complexType.r1}, ${requestDef.complexType.r2}]"
 
     val pathArg = requestDef.path
       .map {
@@ -339,17 +373,24 @@ object AckCordCodeGen {
 
     val pathArgWithQuery = "Route.Empty" + (if (pathArg.isEmpty) "" else s"/ $pathArg") + queryArg
 
-    //TODO: Audit log reason
+    val extraHeaders =
+      if (requestDef.allowsReason) """extraHeaders = reason.fold(Map.empty)(r => Map("X-Audit-Log-Reason" -> r)),"""
+      else ""
 
     val requestDefDef =
-      s"""|${requestDef.documentation.fold("")(docString(_, pathDocs) + "\n")} def $uncapitalizedName(
+      s"""|${requestDef.documentation.fold("")(docString(_, pathDocs) + "\n")} def $uncapitalizedName$typeParams(
           |  $pathParams
           |  $queryParam
           |  $bodyParam
-          |): Request[$paramsType, $returnTpe] =
-          |  Request.restRequest(
+          |  $reasonParam
+          |  $additionalParams
+          |): $requestType =
+          |  Request.complexRestRequest(
           |    route = ($pathArgWithQuery).toRequest(Method.${requestDef.method}),
-          |    ${if (bodyParam.nonEmpty) "params = body," else ""}
+          |    ${if (bodyParam.nonEmpty) "params = body," else ""},
+          |    $extraHeaders,
+          |    ${requestDef.encodeBody.fold("")(e => s"encodeBody = Some($e),")}
+          |    ${requestDef.parseResponse.fold("")(r => s"parseResponse = Some($r),")}
           |  )
           |""".stripMargin
 

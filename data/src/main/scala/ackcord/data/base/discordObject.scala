@@ -1,16 +1,25 @@
 package ackcord.data.base
 
+import scala.language.implicitConversions
+
 import ackcord.data.{JsonOption, UndefOr}
 import io.circe._
 import io.circe.syntax._
 
-import scala.language.implicitConversions
-
 class DiscordObject(val json: Json, startCache: Map[String, Any]) {
-  private val cache = startCache.to(collection.mutable.Map)
+  private[base] val cache = startCache.to(collection.mutable.Map)
+
+  def extensionCache(s: String): Map[String, Any] = startCache.collect {
+    case (k, v) if k.startsWith(s"$s.") => k.substring(s.length + 1) -> v
+  }
+
+  def retype[A <: DiscordObject](companion: DiscordObjectCompanion[A]): A =
+    companion.makeRaw(json, Map.empty)
 
   def selectDynamic[A](name: String)(implicit decoder: Decoder[A]): A =
-    cache.getOrElseUpdate(name, json.hcursor.get[A](name).getOrElse(throw new MissingFieldException(name, json))).asInstanceOf[A]
+    cache
+      .getOrElseUpdate(name, json.hcursor.get[A](name).getOrElse(throw new MissingFieldException(name, json)))
+      .asInstanceOf[A]
 
   override def toString = s"${getClass.getSimpleName}($json)"
 
@@ -26,9 +35,19 @@ trait DiscordObjectCompanion[Obj <: DiscordObject] {
 
   def makeRaw(json: Json, cache: Map[String, Any]): Obj
 
-  def makeRawFromFields(fields: MakeField*): Obj = {
-    val json  = Json.obj(fields.flatMap(f => f.json.map(f.fieldName -> _)): _*)
-    val cache = fields.map(f => f.fieldName -> f.value).toMap
+  def makeRawFromFields(fields: DiscordObjectFrom*): Obj = {
+    val jsonFields = fields.flatMap {
+      case f: DiscordObjectFrom.MakeField => f.json.map(f.fieldName -> _).toList
+      case DiscordObjectFrom.FromExtension(_, obj) =>
+        obj.json.asObject.get.toList
+    }
+
+    val json = Json.obj(jsonFields: _*)
+    val cache = fields.flatMap {
+      case f: DiscordObjectFrom.MakeField => List(f.fieldName -> f.value)
+      case DiscordObjectFrom.FromExtension(fieldName, obj) =>
+        obj.cache.map(t => (fieldName + "." + t._1) -> t._2)
+    }.toMap
 
     makeRaw(json, cache)
   }
@@ -37,6 +56,7 @@ trait DiscordObjectCompanion[Obj <: DiscordObject] {
 }
 
 class MakeFieldOps(private val str: String) extends AnyVal {
+  import DiscordObjectFrom.MakeField
   def :=[A](value: A)(implicit encoder: Encoder[A]): MakeField =
     MakeField.MakeFieldImpl(str, value, Some(encoder(value)))
 
@@ -47,14 +67,21 @@ class MakeFieldOps(private val str: String) extends AnyVal {
     MakeField.MakeFieldImpl(str, value, if (value.isUndefined) None else Some(value.toOption.asJson))
 }
 
-sealed trait MakeField {
-  type A
-  val fieldName: String
-  val value: A
-  val json: Option[Json]
-}
-object MakeField {
-  case class MakeFieldImpl[A0](fieldName: String, value: A0, json: Option[Json]) extends MakeField {
-    type A = A0
+sealed trait DiscordObjectFrom
+object DiscordObjectFrom {
+  sealed trait MakeField extends DiscordObjectFrom {
+    type A
+    val fieldName: String
+    val value: A
+    val json: Option[Json]
   }
+
+  case class FromExtension(fieldName: String, obj: DiscordObject) extends DiscordObjectFrom
+
+  object MakeField {
+    case class MakeFieldImpl[A0](fieldName: String, value: A0, json: Option[Json]) extends MakeField {
+      type A = A0
+    }
+  }
+
 }

@@ -75,13 +75,15 @@ fields:
 
 innerTypes:
   - name: GuildScheduledEventPrivacyLevel
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
         GUILD_ONLY:
           value: "2"
           documentation: The scheduled event is only accessible to guild members
   - name: GuildScheduledEventEntityType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
         STAGE_INSTANCE:
           value: "1"
@@ -90,7 +92,8 @@ innerTypes:
         EXTERNAL:
           value: "3"
   - name: GuildScheduledEventStatus
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
         SCHEDULED:
           value: "1"

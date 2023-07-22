@@ -1,0 +1,144 @@
+defType: Multiple
+innerTypes:
+  - name: Invite
+    defType: Class
+    documentation: Represents a code that when used, adds a user to a guild or group DM channel.
+    fields:
+      2.0.x:
+        code:
+          type: String
+          documentation: The invite code (unique ID)
+
+        guild:
+          type: Invite.InviteGuild
+          withUndefined: true
+          documentation: The guild this invite is for
+
+        channel:
+          type: Invite.InviteChannel
+          withNull: true
+          documentation: The channel this invite is for
+
+        inviter:
+          type: User
+          withUndefined: true
+          documentation: The user who created the invite
+
+        target_type:
+          type: Invite.InviteTargetType
+          withUndefined: true
+          documentation: The type of target for this voice channel invite
+
+        target_user:
+          type: User
+          withUndefined: true
+          documentation: The user whose stream to display for this voice channel stream invite
+
+        target_application:
+          type: Invite.InviteApplication
+          withUndefined: true
+          documentation: The embedded application to open for this voice channel embedded
+            application invite
+
+        approximate_presence_count:
+          type: Int
+          withUndefined: true
+          documentation: Approximate count of online members, returned from the GET
+            /invites/<code> endpoint when with_counts is true
+
+        approximate_member_count:
+          type: Int
+          withUndefined: true
+          documentation: Approximate count of total members, returned from the GET
+            /invites/<code> endpoint when with_counts is true
+
+        expires_at:
+          type: OffsetDateTime
+          withUndefined: true
+          withNull: true
+          documentation: The expiration date of this invite, returned from the GET
+            /invites/<code> endpoint when with_expiration is true
+
+        guild_scheduled_event:
+          type: GuildScheduledEvent
+          withUndefined: true
+          documentation: Guild scheduled event data, only included if
+            guild_scheduled_event_id contains a valid guild scheduled event id
+
+    innerTypes:
+      - name: InviteTargetType
+        defType: Enum
+        type: Int
+        values:
+          STREAM:
+            value: "1"
+
+          EMBEDDED_APPLICATION:
+            value: "2"
+
+      - name: InviteGuild
+        defType: Class
+        fields:
+          2.0.x:
+            id: GuildId
+            name: String
+            splash:
+              type: ImageHash
+              withNull: true
+            banner:
+              type: ImageHash
+              withNull: true
+            description: String
+            icon:
+              type: ImageHash
+              withNull: true
+            features: Seq[Guild.GuildFeature]
+            verification_level: Guild.VerificationLevel
+            vanity_url_code:
+              type: String
+              withNull: true
+            nsfw_level: Guild.ExplicitContentFilterLevel
+            premium_subscription_count: Int
+
+      - name: InviteChannel
+        defType: Class
+        fields:
+          2.0.x:
+            id: GuildChannelId
+            name: String
+            type: Channel.ChannelType
+
+      - name: InviteApplication
+        defType: Class
+        fields:
+          2.0.x: {}
+
+  - name: InviteMetadata
+    defType: Class
+    documentation: Extra information about an invite, will extend the invite object.
+    fields:
+      2.0.x:
+        invite:
+          type: Invite
+          isExtension: true
+          documentation: Rest of the invite object
+
+        uses:
+          type: Int
+          documentation: Number of times this invite has been used
+
+        max_uses:
+          type: Int
+          documentation: Max number of times this invite can be used
+
+        max_age:
+          type: Int
+          documentation: Duration (in seconds) after which the invite expires
+
+        temporary:
+          type: Boolean
+          documentation: Whether this invite only grants temporary membership
+
+        created_at:
+          type: OffsetDateTime
+          documentation: When this invite was created

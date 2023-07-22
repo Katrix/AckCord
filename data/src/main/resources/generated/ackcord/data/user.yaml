@@ -1,0 +1,354 @@
+defType: Multiple
+innerTypes:
+  - name: User
+    defType: Class
+    documentation: >-
+      Users in Discord are generally considered the base entity. Users can spawn across the entire platform, be members of guilds, participate in text and voice chat, and much more. Users are separated by a distinction of "bot" vs "normal." Although they are similar, bot users are automated users that are "owned" by another user. Unlike normal users, bot users do not have a limitation on the number of Guilds they can be a part of.
+    fields:
+      2.0.x:
+        id:
+          type: UserId
+          documentation: The user's id
+
+        username:
+          type: String
+          documentation: The user's username, not unique across the platform
+
+        discriminator:
+          type: String
+          documentation: The user's Discord-tag
+
+        global_name:
+          type: String
+          withNull: true
+          documentation: The user's display name, if it is set. For bots, this is the
+            application name
+
+        avatar:
+          type: ImageHash
+          withNull: true
+          documentation: The user's avatar hash
+
+        bot:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the user belongs to an OAuth2 application
+
+        system:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the user is an Official Discord System user (part of the
+            urgent message system)
+
+        mfa_enabled:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the user has two factor enabled on their account
+
+        banner:
+          type: ImageHash
+          withUndefined: true
+          withNull: true
+          documentation: The user's banner hash
+
+        accent_color:
+          type: Int
+          withUndefined: true
+          withNull: true
+          documentation: The user's banner color encoded as an integer representation of
+            hexadecimal color code
+
+        locale:
+          type: String
+          withUndefined: true
+          documentation: The user's chosen language option
+
+        verified:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the email on this account has been verified
+
+        email:
+          type: String
+          withUndefined: true
+          withNull: true
+          documentation: The user's email
+
+        flags:
+          type: User.UserFlags
+          withUndefined: true
+          documentation: The flags on a user's account
+
+        premium_type:
+          type: User.PremiumType
+          withUndefined: true
+          documentation: The type of Nitro subscription on a user's account
+
+        public_flags:
+          type: User.UserFlags
+          withUndefined: true
+          documentation: The public flags on a user's account
+
+        avatar_decoration:
+          type: ImageHash
+          withUndefined: true
+          withNull: true
+          documentation: The user's avatar decoration hash
+
+    innerTypes:
+      - name: UserFlags
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          STAFF:
+            value: "1 << 0"
+            documentation: Discord Employee
+
+          PARTNER:
+            value: "1 << 1"
+            documentation: Partnered Server Owner
+
+          HYPESQUAD:
+            value: "1 << 2"
+            documentation: HypeSquad Events Member
+
+          BUG_HUNTER_LEVEL_1:
+            value: "1 << 3"
+            documentation: Bug Hunter Level 1
+
+          HYPESQUAD_ONLINE_HOUSE_1:
+            value: "1 << 6"
+            documentation: House Bravery Member
+
+          HYPESQUAD_ONLINE_HOUSE_2:
+            value: "1 << 7"
+            documentation: House Brilliance Member
+
+          HYPESQUAD_ONLINE_HOUSE_3:
+            value: "1 << 8"
+            documentation: House Balance Member
+
+          PREMIUM_EARLY_SUPPORTER:
+            value: "1 << 9"
+            documentation: Early Nitro Supporter
+
+          TEAM_PSEUDO_USER:
+            value: "1 << 10"
+            documentation: User is a team
+
+          BUG_HUNTER_LEVEL_2:
+            value: "1 << 14"
+            documentation: Bug Hunter Level 2
+
+          VERIFIED_BOT:
+            value: "1 << 16"
+            documentation: Verified Bot
+
+          VERIFIED_DEVELOPER:
+            value: "1 << 17"
+            documentation: Early Verified Bot Developer
+
+          CERTIFIED_MODERATOR:
+            value: "1 << 18"
+            documentation: Moderator Programs Alumni
+
+          BOT_HTTP_INTERACTIONS:
+            value: "1 << 19"
+            documentation: Bot uses only HTTP interactions and is shown in the online member
+              list
+
+          ACTIVE_DEVELOPER:
+            value: "1 << 22"
+            documentation: User is an Active Developer
+
+      - name: PremiumType
+        defType: Enum
+        type: Int
+        documentation: Premium types denote the level of premium a user has. Visit the
+          Nitro page to learn more about the premium plans we currently offer.
+        values:
+          None:
+            value: "0"
+
+          Nitro Classic:
+            value: "1"
+
+          Nitro:
+            value: "2"
+
+          Nitro Basic:
+            value: "3"
+
+  - name: Connection
+    defType: Class
+    documentation: The connection object that the user has attached.
+    fields:
+      2.0.x:
+        id:
+          type: String
+          documentation: Id of the connection account
+
+        name:
+          type: String
+          documentation: The username of the connection account
+
+        type:
+          type: Connection.ConnectionServiceType
+          documentation: The service of this connection
+
+        revoked:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether the connection is revoked
+
+        integrations:
+          type: Seq[Connection.ConnectionIntegration]
+          withUndefined: true
+          documentation: An array of partial server integrations
+
+        verified:
+          type: Boolean
+          documentation: Whether the connection is verified
+
+        friend_sync:
+          type: Boolean
+          documentation: Whether friend sync is enabled for this connection
+
+        show_activity:
+          type: Boolean
+          documentation: Whether activities related to this connection will be shown in
+            presence updates
+
+        two_way_link:
+          type: Boolean
+          documentation: Whether this connection has a corresponding third party OAuth2 token
+
+        visibility:
+          type: Connection.ConnectionVisibility
+          documentation: Visibility of this connection
+
+    innerTypes:
+      - name: ConnectionIntegration
+        defType: Class
+        fields:
+          2.0.x: {}
+
+      - name: ConnectionServiceType
+        defType: Enum
+        type: String
+        values:
+          Battlenet:
+            value: "battlenet"
+            documentation: Battle.net
+
+          Ebay:
+            value: "ebay"
+            documentation: EBay
+
+          Epicgames:
+            value: "epicgames"
+            documentation: Epic Games
+
+          Facebook:
+            value: "facebook"
+            documentation: Facebook
+
+          Github:
+            value: "github"
+            documentation: GitHub
+
+          Instagram:
+            value: "instagram"
+            documentation: Instagram
+
+          Leagueoflegends:
+            value: "leagueoflegends"
+            documentation: League of Legends
+
+          Paypal:
+            value: "paypal"
+            documentation: PayPal
+
+          Playstation:
+            value: "playstation"
+            documentation: PlayStation Network
+
+          Reddit:
+            value: "reddit"
+            documentation: Reddit
+
+          Riotgames:
+            value: "riotgames"
+            documentation: Riot Games
+
+          Spotify:
+            value: "spotify"
+            documentation: Spotify
+
+          Skype:
+            value: "skype"
+            documentation: Skype
+
+          Steam:
+            value: "steam"
+            documentation: Steam
+
+          Tiktok:
+            value: "tiktok"
+            documentation: TikTok
+
+          Twitch:
+            value: "twitch"
+            documentation: Twitch
+
+          Twitter:
+            value: "twitter"
+            documentation: Twitter
+
+          Xbox:
+            value: "xbox"
+            documentation: Xbox
+
+          Youtube:
+            value: "youtube"
+            documentation: YouTube
+
+      - name: ConnectionVisibility
+        defType: Enum
+        type: Int
+        values:
+          None:
+            value: "0"
+            documentation: Invisible to everyone except the user themselves
+
+          Everyone:
+            value: "1"
+            documentation: Visible to everyone
+
+  - name: ApplicationRoleConnection
+    defType: Class
+    documentation: The role connection object that an application has attached to a user.
+    fields:
+      2.0.x:
+        platform_name:
+          type: String
+          withNull: true
+          documentation: The vanity name of the platform a bot has connected (max 50 characters)
+          verification:
+            max_length: 50
+
+        platform_username:
+          type: String
+          withNull: true
+          documentation: The username on the platform a bot has connected (max 100 characters)
+          verification:
+            max_length: 100
+
+        metadata:
+          type: Object
+          documentation: Object mapping application role connection metadata keys to their
+            string-ified value (max 100 characters) for the user on the platform a
+            bot has connected
+          verification:
+            max_length: 100

@@ -7,32 +7,118 @@
     "typeDef": {
       "oneOf": [
         {
-          "$ref": "#/definitions/classTypeDef"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Class",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/classTypeDef"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/enumTypeDef"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Enum",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/enumTypeDef"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/opaqueTypeDef"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Opaque",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/opaqueTypeDef"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/requestDef"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Request",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/requestDef"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/multipleDefs"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Multiple",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/multipleDefs"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/objectOnlyDefs"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "ObjectOnly",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/objectOnlyDefs"
+            }
+          ]
         },
         {
-          "$ref": "#/definitions/freeformDefs"
+          "allOf": [
+            {
+              "properties": {
+                "defType": {
+                  "const": "Freeform",
+                  "description": "The type of Scala type to generate"
+                }
+              }
+            },
+            {
+              "$ref": "#/definitions/freeformDefs"
+            }
+          ]
         }
       ]
     },
-    "anonymousClassTypeDef": {
+    "anonymousClassTypeDefBase": {
       "description": "A anonymous class type definition",
       "type": "object",
       "properties": {
+        "defType": true,
+        "name": true,
         "documentation": {
           "type": "string",
           "description": "A Scaladoc documentation string to add to the definition"
@@ -59,6 +145,22 @@
         "fields": {
           "description": "The fields of this class",
           "type": "object",
+          "properties": {
+            "2.0.x": {
+              "type": "object",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "$ref": "#/definitions/fieldDef"
+                  }
+                ]
+              }
+            }
+          },
           "additionalProperties": {
             "type": "object",
             "additionalProperties": {
@@ -94,41 +196,61 @@
       ],
       "additionalProperties": false
     },
+    "anonymousClassTypeDef": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/anonymousClassTypeDefBase"
+        },
+        {
+          "properties": {
+            "documentation": true,
+            "imports": true,
+            "innerTypes": true,
+            "allUndefined": true,
+            "fields": true,
+            "extends": true,
+            "objectExtends": true
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "classTypeDef": {
       "description": "A class type definition",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/anonymousClassTypeDef"
+          "$ref": "#/definitions/anonymousClassTypeDefBase"
         },
         {
           "properties": {
+            "defType": true,
+            "documentation": true,
+            "imports": true,
+            "innerTypes": true,
+            "allUndefined": true,
+            "fields": true,
+            "extends": true,
+            "objectExtends": true,
             "name": {
               "type": "string",
               "description": "Name of the type"
-            },
-            "defType": {
-              "type": "string",
-              "description": "The type of Scala type to generate",
-              "enum": [
-                "Class"
-              ]
             }
           },
           "required": [
-            "name",
-            "defType"
-          ]
+            "defType",
+            "name"
+          ],
+          "additionalProperties": false
         }
-      ],
-      "additionalProperties": false
+      ]
     },
     "fieldDef": {
       "description": "A field within a class",
       "type": "object",
       "properties": {
         "type": {
-          "type": "string",
+          "$ref": "#/definitions/scalaType",
           "description": "The type of the field, as seen from the definition of the field"
         },
         "jsonName": {
@@ -151,6 +273,11 @@
         "withNull": {
           "type": "boolean",
           "description": "Specifies if this field is maybe null",
+          "default": false
+        },
+        "isExtension": {
+          "type": "boolean",
+          "description": "This object extends another object with more fields",
           "default": false
         },
         "verification": {
@@ -176,6 +303,7 @@
       "description": "A enum type definition",
       "type": "object",
       "properties": {
+        "defType": true,
         "name": {
           "type": "string",
           "description": "Name of the type"
@@ -198,19 +326,22 @@
             "$ref": "#/definitions/typeDef"
           }
         },
-        "defType": {
-          "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "IntEnum",
-            "StringEnum"
-          ]
+        "type": {
+          "$ref": "#/definitions/scalaType",
+          "description": "The underlying type of this enum"
+        },
+        "isBitfield": {
+          "type": "boolean",
+          "description": "If this enum is a bitfield",
+          "default": false
         },
         "values": {
           "type": "object",
           "additionalProperties": {
             "anyOf": [
-              {"type": "string"},
+              {
+                "type": "string"
+              },
               {
                 "type": "object",
                 "properties": {
@@ -224,7 +355,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["value"]
+                "required": [
+                  "value"
+                ]
               }
             ]
           }
@@ -238,8 +371,9 @@
         }
       },
       "required": [
-        "name",
         "defType",
+        "name",
+        "type",
         "values"
       ],
       "additionalProperties": false
@@ -248,6 +382,7 @@
       "description": "A opaque type definition",
       "type": "object",
       "properties": {
+        "defType": true,
         "name": {
           "type": "string",
           "description": "Name of the type"
@@ -272,13 +407,6 @@
           "description": "If there should be included an alias outside the companion object of this type",
           "default": true
         },
-        "defType": {
-          "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "Opaque"
-          ]
-        },
         "innerTypes": {
           "type": "array",
           "description": "Extra types found in the current scope",
@@ -295,9 +423,9 @@
         }
       },
       "required": [
+        "defType",
         "name",
-        "underlying",
-        "defType"
+        "underlying"
       ],
       "additionalProperties": false
     },
@@ -305,6 +433,7 @@
       "description": "A definition for an AckCord request",
       "type": "object",
       "properties": {
+        "defType": true,
         "name": {
           "type": "string",
           "description": "Name of the request"
@@ -337,7 +466,11 @@
                       "ChannelId",
                       "ApplicationId",
                       "CommandId",
-                      "EmojiId"
+                      "EmojiId",
+                      "MessageId",
+                      "UserId",
+                      "Emoji",
+                      "RoleId"
                     ]
                   },
                   "name": {
@@ -384,10 +517,20 @@
         "method": {
           "type": "string",
           "description": "The HTTP method for this endpoint",
-          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH"
+          ]
         },
         "query": {
           "$ref": "#/definitions/anonymousClassTypeDef"
+        },
+        "arrayOfBody": {
+          "type": "boolean",
+          "description": "If the body type is an array of the body specified"
         },
         "body": {
           "oneOf": [
@@ -398,6 +541,17 @@
               "$ref": "#/definitions/anonymousClassTypeDef"
             }
           ]
+        },
+        "parseResponse": {
+          "type": "string",
+          "description": "Content of the parseResponse request parameter",
+          "x-intellij-language-injection": {
+            "language": "Scala"
+          }
+        },
+        "arrayOfReturn": {
+          "type": "boolean",
+          "description": "If the return type is an array of the return specified"
         },
         "return": {
           "oneOf": [
@@ -414,18 +568,59 @@
           "description": "If this requests allows to set the audit log reason",
           "default": false
         },
-        "defType": {
+        "additionalTypeParams": {
+          "type": "array",
+          "description": "Type parameters to place on the def",
+          "items": {
+            "$ref": "#/definitions/scalaType"
+          }
+        },
+        "additionalParams": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/scalaType"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "$ref": "#/definitions/scalaType"
+                  },
+                  "default": {
+                    "type": "string",
+                    "description": "Default value of this parameter"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["type"]
+              }
+            ]
+          }
+        },
+        "complexType": {
+          "type": "object",
+          "properties": {
+            "R1": {
+              "$ref": "#/definitions/scalaType"
+            },
+            "R2": {
+              "$ref": "#/definitions/scalaType"
+            }
+          },
+          "additionalProperties": false
+        },
+        "encodeBody": {
           "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "Request"
-          ]
+          "description": "Scala code for EncodeBody"
         }
       },
       "required": [
+        "defType",
         "name",
         "path",
-        "defType"
+        "method"
       ],
       "additionalProperties": false
     },
@@ -433,6 +628,7 @@
       "description": "A definition for multiple entries at the same scope",
       "type": "object",
       "properties": {
+        "defType": true,
         "imports": {
           "type": "array",
           "description": "Imports to add to this file",
@@ -446,18 +642,11 @@
           "items": {
             "$ref": "#/definitions/typeDef"
           }
-        },
-        "defType": {
-          "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "Multiple"
-          ]
         }
       },
       "required": [
-        "innerTypes",
-        "defType"
+        "defType",
+        "innerTypes"
       ],
       "additionalProperties": false
     },
@@ -465,6 +654,7 @@
       "description": "A definition for a companion object only",
       "type": "object",
       "properties": {
+        "defType": true,
         "name": {
           "type": "string",
           "description": "Name of the object"
@@ -483,13 +673,6 @@
             "$ref": "#/definitions/typeDef"
           }
         },
-        "defType": {
-          "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "ObjectOnly"
-          ]
-        },
         "objectExtends": {
           "description": "The types this object extends",
           "type": "array",
@@ -499,8 +682,9 @@
         }
       },
       "required": [
-        "innerTypes",
-        "defType"
+        "name",
+        "defType",
+        "innerTypes"
       ],
       "additionalProperties": false
     },
@@ -508,9 +692,13 @@
       "description": "A definition that can be anything. Inserts a string directly into the generated code",
       "type": "object",
       "properties": {
+        "defType": true,
         "content": {
           "type": "string",
-          "description": "The string to insert into the code"
+          "description": "The string to insert into the code",
+          "x-intellij-language-injection": {
+            "language": "Scala"
+          }
         },
         "imports": {
           "type": "array",
@@ -522,19 +710,35 @@
         "documentation": {
           "type": "string",
           "description": "A Scaladoc documentation string to add to the definition"
-        },
-        "defType": {
-          "type": "string",
-          "description": "The type of Scala type to generate",
-          "enum": [
-            "Freeform"
-          ]
         }
       },
       "required": [
         "defType"
       ],
       "additionalProperties": false
+    },
+    "scalaType": {
+      "anyOf": [
+        {
+          "type": "string",
+          "examples": [
+            "Int",
+            "String"
+          ]
+        },
+        {
+          "type": "string",
+          "$comment": "Purely here to provide completion for commonly used types. Feel free to add onto this array, although do add them to the examples array too",
+          "enum": [
+            "Int",
+            "String",
+            "Boolean",
+            "RawSnowflake",
+            "Snowflake",
+            "OffsetDateTime"
+          ]
+        }
+      ]
     }
   }
 }

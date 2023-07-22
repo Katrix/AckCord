@@ -59,7 +59,8 @@ fields:
 
 innerTypes:
   - name: ApplicationCommandType
-    defType: StringEnum
+    defType: Enum
+    type: String
     values:
       ChatInput: "CHAT_INPUT"
       User: "USER"
@@ -127,7 +128,8 @@ innerTypes:
 
     innerTypes:
       - name: ApplicationCommandOptionType
-        defType: IntEnum
+        defType: Enum
+        type: Int
         values:
           SUB_COMMAND: "1"
           SUB_COMMAND_GROUP: "2"
@@ -176,7 +178,8 @@ innerTypes:
 
         innerTypes:
           - name: ApplicationCommandPermissionType
-            defType: IntEnum
+            defType: Enum
+            type: Int
             values:
               ROLE: "1"
               USER: "2"

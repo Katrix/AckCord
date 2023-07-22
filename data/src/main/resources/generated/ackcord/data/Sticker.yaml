@@ -1,0 +1,140 @@
+name: Sticker
+defType: Class
+documentation: Represents a sticker that can be sent in messages.
+fields:
+  2.0.x:
+    id:
+      type: Snowflake[Sticker]
+      documentation: Id of the sticker
+
+    pack_id:
+      type: Snowflake[Sticker.StickerPack]
+      withUndefined: true
+      documentation: For standard stickers, id of the pack the sticker is from
+
+    name:
+      type: String
+      documentation: Name of the sticker
+
+    description:
+      type: String
+      withNull: true
+      documentation: Description of the sticker
+
+    tags:
+      type: String
+      documentation: Autocomplete/suggestion tags for the sticker (max 200 characters)
+      verification:
+        max_length: 200
+
+    type:
+      type: Sticker.StickerType
+      documentation: Type of sticker
+
+    format_type:
+      type: Sticker.StickerFormatType
+      documentation: Type of sticker format
+
+    available:
+      type: Boolean
+      withUndefined: true
+      documentation: Whether this guild sticker can be used, may be false due to loss
+        of Server Boosts
+
+    guild_id:
+      type: GuildId
+      withUndefined: true
+      documentation: Id of the guild that owns this sticker
+
+    user:
+      type: User
+      withUndefined: true
+      documentation: The user that uploaded the guild sticker
+
+    sort_value:
+      type: Int
+      withUndefined: true
+      documentation: The standard sticker's sort order within its pack
+
+innerTypes:
+  - name: StickerType
+    defType: Enum
+    type: Int
+    values:
+      STANDARD:
+        value: "1"
+        documentation: An official sticker in a pack, part of Nitro or in a removed
+          purchasable pack
+
+      GUILD:
+        value: "2"
+        documentation: A sticker uploaded to a guild for the guild's members
+
+  - name: StickerFormatType
+    defType: Enum
+    type: Int
+    values:
+      PNG:
+        value: "1"
+
+      APNG:
+        value: "2"
+
+      LOTTIE:
+        value: "3"
+
+      GIF:
+        value: "4"
+
+  - name: StickerItem
+    defType: Class
+    documentation: The smallest amount of data required to render a sticker. A
+      partial sticker object.
+    fields:
+      2.0.x:
+        id:
+          type: RawSnowflake
+          documentation: Id of the sticker
+
+        name:
+          type: String
+          documentation: Name of the sticker
+
+        format_type:
+          type: Sticker.StickerFormatType
+          documentation: Type of sticker format
+
+  - name: StickerPack
+    defType: Class
+    documentation: Represents a pack of standard stickers.
+    fields:
+      2.0.x:
+        id:
+          type: RawSnowflake
+          documentation: Id of the sticker pack
+
+        stickers:
+          type: Seq[Sticker]
+          documentation: The stickers in the pack
+
+        name:
+          type: String
+          documentation: Name of the sticker pack
+
+        sku_id:
+          type: RawSnowflake
+          documentation: Id of the pack's SKU
+
+        cover_sticker_id:
+          type: Snowflake[Sticker]
+          withUndefined: true
+          documentation: Id of a sticker in the pack which is shown as the pack's icon
+
+        description:
+          type: String
+          documentation: Description of the sticker pack
+
+        banner_asset_id:
+          type: RawSnowflake
+          withUndefined: true
+          documentation: Id of the sticker pack's banner image

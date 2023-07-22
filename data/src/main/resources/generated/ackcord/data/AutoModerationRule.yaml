@@ -52,7 +52,8 @@ fields:
 
 innerTypes:
   - name: AutoModerationRuleTriggerType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       KEYWORD:
         value: "1"
@@ -100,7 +101,8 @@ innerTypes:
           documentation: Whether to automatically detect mention raids
 
   - name: AutoModerationRuleKeywordPresetType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       PROFANITY:
         value: "1"
@@ -115,7 +117,8 @@ innerTypes:
         documentation: Personal insults or words that may be considered hate speech
 
   - name: AutoModerationRuleEventType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       MESSAGE_SEND:
         value: "1"
@@ -136,7 +139,8 @@ innerTypes:
           documentation: Additional metadata needed during execution for this specific action type
 
   - name: AutoModerationRuleActionType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       BLOCK_MESSAGE:
         value: "1"

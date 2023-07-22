@@ -40,7 +40,8 @@ fields:
 
 innerTypes:
   - name: ApplicationRoleConnectionMetadataType
-    defType: IntEnum
+    defType: Enum
+    type: Int
     values:
       INTEGER_LESS_THAN_OR_EQUAL:
         value: "1"

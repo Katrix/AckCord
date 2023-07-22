@@ -79,8 +79,9 @@ object CodeGenTypes {
 
     case class EnumTypeDef(
         name: String,
+        tpe: String,
+        isBitField: Boolean,
         imports: Seq[String],
-        enumType: String,
         documentation: Option[String],
         innerTypes: Seq[TypeDef],
         values: ListMap[String, EnumValue],
@@ -104,9 +105,16 @@ object CodeGenTypes {
         path: Seq[PathElem],
         method: String,
         query: Option[AnonymousClassTypeDef],
+        arrayOfBody: Boolean,
         body: Option[AnonymousClassTypeDefOrType],
+        arrayOfReturn: Boolean,
         returnTpe: Option[AnonymousClassTypeDefOrType],
-        allowsReason: Boolean
+        allowsReason: Boolean,
+        additionalTypeParams: Seq[String],
+        additionalParams: Map[String, RequestDefAdditionalParam],
+        complexType: RequestDefComplexType,
+        encodeBody: Option[String],
+        parseResponse: Option[String]
     ) extends TypeDef
 
     case class MultipleDefs(
@@ -143,12 +151,14 @@ object CodeGenTypes {
               anonPart
             )
 
-          case enumType @ ("IntEnum" | "StringEnum") =>
+          case "Enum" =>
             for {
               name          <- c.get[String]("name")
+              tpe           <- c.get[String]("type")
+              isBitfield    <- c.getOrElse[Boolean]("isBitfield")(false)
               values        <- c.get[ListMap[String, EnumValue]]("values")
               objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
-            } yield EnumTypeDef(name, imports, enumType, documentation, innerTypes, values, objectExtends)
+            } yield EnumTypeDef(name, tpe, isBitfield, imports, documentation, innerTypes, values, objectExtends)
 
           case "Opaque" =>
             for {
@@ -160,32 +170,37 @@ object CodeGenTypes {
 
           case "Request" =>
             for {
-              name             <- c.get[String]("name")
-              path             <- c.get[Seq[PathElem]]("path")
-              method           <- c.get[String]("method")
-              query            <- c.get[Option[AnonymousClassTypeDef]]("query")
-              body             <- c.get[Option[AnonymousClassTypeDefOrType]]("body")
-              bodyAllUndefined <- c.downField("body").getOrElse[Boolean]("allUndefined")(false)
-              returnTpe        <- c.get[Option[AnonymousClassTypeDefOrType]]("return")
-              allowsReason     <- c.getOrElse[Boolean]("allowsReason")(false)
+              name                 <- c.get[String]("name")
+              path                 <- c.get[Seq[PathElem]]("path")
+              method               <- c.get[String]("method")
+              query                <- c.get[Option[AnonymousClassTypeDef]]("query")
+              arrayOfBody          <- c.getOrElse[Boolean]("arrayOfBody")(false)
+              body                 <- c.get[Option[AnonymousClassTypeDefOrType]]("body")
+              arrayOfReturn        <- c.getOrElse[Boolean]("arrayOfReturn")(false)
+              returnTpe            <- c.get[Option[AnonymousClassTypeDefOrType]]("return")
+              allowsReason         <- c.getOrElse[Boolean]("allowsReason")(false)
+              additionalTypeParams <- c.getOrElse[Seq[String]]("additionalTypeParams")(Nil)
+              additionalParams     <- c.getOrElse[Map[String, RequestDefAdditionalParam]]("additionalParams")(Map.empty)
+              complexType   <- c.getOrElse[RequestDefComplexType]("complexType")(RequestDefComplexType(None, None))
+              encodeBody    <- c.get[Option[String]]("encodeBody")
+              parseResponse <- c.get[Option[String]]("parseResponse")
             } yield RequestDef(
               name,
               imports,
               documentation,
               path,
               method,
-              query.map { tpe =>
-                tpe.mapFields(f => f.copy(withNull = true, default = Some("null")))
-              },
-              body.map {
-                case AnonymousClassTypeDefOrType.AnonType(tpe) if bodyAllUndefined =>
-                  AnonymousClassTypeDefOrType.AnonType(
-                    tpe.mapFields(f => f.copy(withUndefined = true, default = Some("undefined")))
-                  )
-                case other => other
-              },
+              query,
+              arrayOfBody,
+              body,
+              arrayOfReturn,
               returnTpe,
-              allowsReason
+              allowsReason,
+              additionalTypeParams,
+              additionalParams,
+              complexType,
+              encodeBody,
+              parseResponse
             )
 
           case "Multiple" =>
@@ -212,6 +227,7 @@ object CodeGenTypes {
       documentation: Option[String],
       withUndefined: Boolean,
       withNull: Boolean,
+      isExtension: Boolean,
       verification: Option[FieldVerification]
   )
 
@@ -225,8 +241,9 @@ object CodeGenTypes {
         documentation <- c.get[Option[String]]("documentation")
         withUndefined <- c.getOrElse("withUndefined")(false)
         withNull      <- c.getOrElse("withNull")(false)
+        isExtension   <- c.getOrElse("isExtension")(false)
         verification  <- c.get[Option[FieldVerification]]("verification")
-      } yield FieldDef(tpe, jsonName, default, documentation, withUndefined, withNull, verification)
+      } yield FieldDef(tpe, jsonName, default, documentation, withUndefined, withNull, isExtension, verification)
   }
 
   case class FieldVerification(
@@ -280,6 +297,33 @@ object CodeGenTypes {
         }
         .swap
         .joinLeft
+  }
+
+  case class RequestDefAdditionalParam(tpe: String, default: Option[String])
+  object RequestDefAdditionalParam {
+    implicit lazy val requestDefAdditionalParamsDecoder: Decoder[RequestDefAdditionalParam] = (c: HCursor) =>
+      c.as[String]
+        .map(RequestDefAdditionalParam(_, None))
+        .swap
+        .map[Either[DecodingFailure, RequestDefAdditionalParam]] { _ =>
+          for {
+            tpe     <- c.get[String]("type")
+            default <- c.get[Option[String]]("default")
+          } yield RequestDefAdditionalParam(tpe, default)
+        }
+        .swap
+        .joinLeft
+  }
+
+  case class RequestDefComplexType(r1: String, r2: String) {
+    def isEmpty: Boolean = r1 == "Any" && r2 == "Any"
+  }
+  object RequestDefComplexType {
+    implicit lazy val requestDefComplexTypeDecoder: Decoder[RequestDefComplexType] = (c: HCursor) =>
+      for {
+        r1 <- c.getOrElse[String]("R1")("Any")
+        r2 <- c.getOrElse[String]("R2")("Any")
+      } yield RequestDefComplexType(r1, r2)
   }
 
   case class EnumValue(value: String, documentation: Option[String])

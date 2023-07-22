@@ -1,0 +1,1104 @@
+name: ChannelRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getChannel
+    defType: Request
+    documentation: Get a channel by ID. Returns a channel object. If the channel is a thread, a thread member object is included in the returned result.
+    method: GET
+    path: [ channels, { argOf: ChannelId } ]
+    return: Channel
+
+  - name: modifyChannel
+    defType: Request
+    documentation: Update a channel's settings. Returns a channel on success, and a 400 BAD REQUEST on invalid parameters. All JSON parameters are optional.
+    allowsReason: true
+    method: PATCH
+    path: [ channels, { argOf: ChannelId } ]
+    body: ModifyChannelBody
+    return: Channel
+
+  - defType: Freeform
+    content: "sealed trait ModifyChannelBody"
+
+  - name: ModifyChannelBody
+    defType: ObjectOnly
+    innerTypes:
+      - defType: Freeform
+        content: |-
+          implicit val codec: Codec[ModifyChannelBody] = Codec.from(
+            Codec[ModifyGroupDMBody].or(Codec[ModifyGuildChannelBody]).or(Codec[ModifyThreadChannelBody]),
+            {
+              case m: ModifyGroupDMBody => m.asJson
+              case m: ModifyGuildChannelBody => m.asJson
+              case m: ModifyThreadChannelBody => m.asJson
+            }
+          )
+
+      - name: ModifyGroupDMBody
+        defType: Class
+        documentation: Fires a Channel Update Gateway event.
+        extends: [ ModifyChannelBody ]
+        allUndefined: true
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: 1-100 character channel name
+              verification:
+                min_length: 1
+                max_length: 100
+
+            icon:
+              type: ImageData
+              documentation: Base64 encoded icon
+
+      - name: ModifyGuildChannelBody
+        defType: Class
+        documentation: Requires the MANAGE_CHANNELS permission for the guild. Fires a Channel Update Gateway event. If modifying a category, individual Channel Update events will fire for each child channel that also changes. If modifying permission overwrites, the MANAGE_ROLES permission is required. Only permissions your bot has in the guild or parent channel (if applicable) can be allowed/denied (unless your bot has a MANAGE_ROLES overwrite in the channel).
+        extends: [ ModifyChannelBody ]
+        allUndefined: true
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: 1-100 character channel name
+              verification:
+                min_length: 1
+                max_length: 100
+
+            tpe:
+              jsonName: type
+              type: Channel.ChannelType
+              documentation: The type of channel; only conversion between text and announcement is supported and only in guilds with the "NEWS" feature
+
+            position:
+              type: Int
+              withNull: true
+              documentation: The position of the channel in the left-hand listing
+
+            topic:
+              type: String
+              withNull: true
+              documentation: 0-1024 character channel topic (0-4096 characters for GUILD_FORUM channels)
+              verification:
+                max_length: 4096
+
+            nsfw:
+              type: Boolean
+              withNull: true
+              documentation: Whether the channel is nsfw
+
+            rate_limit_per_user:
+              type: Int
+              withNull: true
+              documentation: Amount of seconds a user has to wait before sending another message (0-21600); bots, as well as users with the permission manage_messages or manage_channel, are unaffected
+
+            bitrate:
+              type: Int
+              withNull: true
+              documentation: The bitrate (in bits) of the voice or stage channel; min 8000
+
+            user_limit:
+              type: Int
+              withNull: true
+              documentation: The user limit of the voice or stage channel, max 99 for voice channels and 10,000 for stage channels (0 refers to no limit)
+
+            permission_overwrites:
+              type: ModifyGuildChannelBody.EditChannelPartialOverwrite
+              withNull: true
+              documentation: Channel or category-specific permissions
+
+            parent_id:
+              type: GuildCategoryId
+              withNull: true
+              documentation: Id of the new parent category for a channel
+
+            rtc_region:
+              type: VoiceRegion
+              withNull: true
+              documentation: Channel voice region id, automatic when set to null
+
+            video_quality_mode:
+              type: Channel.VideoQualityMode
+              withNull: true
+              documentation: The camera video quality mode of the voice channel
+
+            default_auto_archive_duration:
+              type: Int
+              withNull: true
+              documentation: The default duration that the clients use (not the API) for newly created threads in the channel, in minutes, to automatically archive the thread after recent activity
+
+            flags:
+              type: Channel.ChannelFlags
+              documentation: Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1 << 4) is supported.
+
+            available_tags:
+              type: Seq[Channel.ForumTag]
+              documentation: The set of tags that can be used in a GUILD_FORUM channel; limited to 20
+              verification:
+                max_length: 20
+
+            default_reaction_emoji:
+              type: Channel.DefaultReaction
+              withNull: true
+              documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM channel
+
+            default_thread_rate_limit_per_user:
+              type: Int
+              documentation: The initial rate_limit_per_user to set on newly created threads in a channel. This field is copied to the thread at creation time and does not live update
+
+            default_sort_order:
+              type: Channel.ForumSortOrder
+              withNull: true
+              documentation: The default sort order type used to order posts in GUILD_FORUM channels
+
+            default_forum_layout:
+              type: Channel.ForumLayout
+              documentation: The default forum layout type used to display posts in GUILD_FORUM channels
+
+        innerTypes:
+          - name: EditChannelPartialOverwrite
+            defType: Class
+            fields:
+              2.0.x:
+                id:
+                  type: RoleOrUserId
+                  documentation: Role or user id
+
+                tpe:
+                  jsonName: type
+                  type: Channel.PermissionOverwrite.PermissionOverwriteType
+                  documentation: Either 0 (role) or 1 (member)
+
+                allow:
+                  type: Permissions
+                  withUndefined: true
+                  withNull: true
+                  documentation: Permission bit set
+
+                deny:
+                  type: Permissions
+                  withUndefined: true
+                  withNull: true
+                  documentation: Permission bit set
+
+      - name: ModifyThreadChannelBody
+        defType: Class
+        extends: [ ModifyChannelBody ]
+        allUndefined: true
+        fields:
+          2.0.x:
+            name:
+              type: String
+              documentation: 1-100 character channel name
+              verification:
+                min_length: 1
+                max_length: 100
+
+            archived:
+              type: Boolean
+              documentation: Whether the thread is archived
+
+            auto_archive_duration:
+              type: Int
+              documentation: "The thread will stop showing in the channel list after auto_archive_duration minutes of inactivity, can be set to: 60, 1440, 4320, 10080"
+
+            locked:
+              type: Boolean
+              documentation: Whether the thread is locked; when a thread is locked, only users with MANAGE_THREADS can unarchive it
+
+            invitable:
+              type: Boolean
+              documentation: Whether non-moderators can add other non-moderators to a thread; only available on private threads
+
+            rate_limit_per_user:
+              type: Int
+              withNull: true
+              documentation: Amount of seconds a user has to wait before sending another message (0-21600); bots, as well as users with the permission manage_messages, manage_thread, or manage_channel, are unaffected
+
+            flags:
+              type: Channel.ChannelFlags
+              documentation: Channel flags combined as a bitfield; PINNED can only be set for threads in forum channels
+
+            applied_tags:
+              type: Seq[Snowflake[Channel.ForumTag]]
+              documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel; limited to 5
+              verification:
+                max_length: 5
+
+  - name: deleteCloseChannel
+    defType: Request
+    documentation: Delete a channel, or close a private message. Requires the MANAGE_CHANNELS permission for the guild, or MANAGE_THREADS if the channel is a thread. Deleting a category does not delete its child channels; they will have their parent_id removed and a Channel Update Gateway event will fire for each of them. Returns a channel object on success. Fires a Channel Delete Gateway event (or Thread Delete if the channel was a thread).
+    allowsReason: true
+    method: DELETE
+    path: [channels, {argOf: ChannelId}]
+
+  - name: getChannelMessage
+    defType: Request
+    documentation: |-
+      Retrieves a specific message in the channel. Returns a message object on success.
+
+      If operating on a guild channel, this endpoint requires the current user to have the VIEW_CHANNEL and READ_MESSAGE_HISTORY permissions. If the channel is a voice channel, they must also have the CONNECT permission.
+    method: GET
+    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}]
+    return: Message
+
+  - name: createMessage
+    defType: Request
+    documentation: |-
+      Post a message to a guild text or DM channel. Returns a message object. Fires a Message Create Gateway event. See message formatting for more information on how to properly format messages.
+
+      To create a message as a reply to another message, apps can include a message_reference with a message_id. The channel_id and guild_id in the message_reference are optional, but will be validated if provided.
+
+      Files must be attached using a multipart/form-data body as described in Uploading Files.
+      **Limitations:**
+
+      * When operating on a guild channel, the current user must have the SEND_MESSAGES permission.
+      * When sending a message with tts (text-to-speech) set to true, the current user must have the SEND_TTS_MESSAGES permission.
+      * When creating a message as a reply to another message, the current user must have the READ_MESSAGE_HISTORY permission.
+      * * The referenced message must exist and cannot be a system message.
+      * The maximum request size when sending a message is 25 MiB
+      * For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
+    method: POST
+    path: [channels, {argOf: ChannelId}, messages]
+    additionalTypeParams: ["MPR"]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.EncodeJson(params, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          content:
+            type: String
+            documentation: Message contents (up to 2000 characters)
+            verification:
+              max_length: 2000
+
+          nonce:
+            type: IntOrString
+            documentation: Can be used to verify a message was sent (up to 25 characters). Value will appear in the Message Create event.
+
+          tts:
+            type: Boolean
+            documentation: true if this is a TTS message
+
+          embeds:
+            type: Seq[OutgoingEmbed]
+            documentation: Up to 10 rich embeds (up to 6000 characters)
+            verification:
+              max_length: 10
+
+          allowed_mentions:
+            type: AllowedMentions
+            documentation: Allowed mentions for the message
+
+          message_reference:
+            type: MessageReference
+            documentation: Include to make your message a reply
+
+          components:
+            type: Seq[MessageComponent]
+            documentation: Components to include with the message
+
+          sticker_ids:
+            type: Seq[RawSnowflake]
+            documentation: IDs of up to 3 stickers in the server to send in the message
+
+          attachments:
+            type: Seq[MessageCreateEditAttachment]
+            documentation: Attachment objects with filename and description
+
+          flags:
+            type: Message.MessageFlags
+            documentation: Message flags combined as a bitfield (only SUPPRESS_EMBEDS and SUPPRESS_NOTIFICATIONS can be set)
+
+    return: Message
+
+  - name: MessageCreateEditAttachment
+    defType: Class
+    fields:
+      2.0.x:
+        id:
+          type: Snowflake[Attachment]
+          documentation: Attachment id
+
+        filename:
+          type: String
+          withUndefined: true
+          documentation: Name of file attached
+
+        description:
+          type: String
+          withUndefined: true
+          documentation: Description for the file (max 1024 characters)
+          verification:
+            max_length: 1024
+
+        content_type:
+          type: String
+          withUndefined: true
+          documentation: The attachment's media type
+
+        size:
+          type: Int
+          withUndefined: true
+          documentation: Size of file in bytes
+
+        url:
+          type: String
+          withUndefined: true
+          documentation: Source url of file
+
+        proxy_url:
+          type: String
+          withUndefined: true
+          documentation: A proxied url of file
+
+        height:
+          type: Int
+          withUndefined: true
+          withNull: true
+          documentation: Height of file (if image)
+
+        width:
+          type: Int
+          withUndefined: true
+          withNull: true
+          documentation: Width of file (if image)
+
+        ephemeral:
+          type: Boolean
+          withUndefined: true
+          documentation: Whether this attachment is ephemeral
+
+        duration_secs:
+          type: Float
+          withUndefined: true
+          documentation: The duration of the audio file (currently for voice messages)
+
+        waveform:
+          type: String
+          withUndefined: true
+          documentation: Base64 encoded bytearray representing a sampled waveform (currently for voice messages)
+
+        flags:
+          type: Attachment.AttachmentFlags
+          withUndefined: true
+          documentation: Attachment flags combined as a bitfield
+
+  - name: crosspostMessage
+    defType: Request
+    documentation: |-
+      Crosspost a message in an Announcement Channel to following channels. This endpoint requires the SEND_MESSAGES permission, if the current user sent the message, or additionally the MANAGE_MESSAGES permission, for all other messages, to be present for the current user.
+
+      Returns a message object. Fires a Message Update Gateway event.
+    method: POST
+    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}, crosspost]
+    return: Message
+
+  - name: createReaction
+    defType: Request
+    documentation: |-
+      Create a reaction for the message. This endpoint requires the READ_MESSAGE_HISTORY permission to be present on the current user. Additionally, if nobody else has reacted to the message using this emoji, this endpoint requires the ADD_REACTIONS permission to be present on the current user. Returns a 204 empty response on success. Fires a Message Reaction Add Gateway event. The emoji must be URL Encoded or the request will fail with 10014: Unknown Emoji. To use custom emoji, you must encode it in the format name:id with the emoji name and emoji id.
+    method: PUT
+    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}, reactions, {argOf: Emoji}, @me]
+
+  - name: deleteOwnReaction
+    defType: Request
+    documentation: |-
+      Delete a reaction the current user has made for the message. Returns a 204 empty response on success. Fires a Message Reaction Remove Gateway event. The emoji must be URL Encoded or the request will fail with 10014: Unknown Emoji. To use custom emoji, you must encode it in the format name:id with the emoji name and emoji id.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions, { argOf: Emoji }, @me ]
+
+  - name: deleteUserReaction
+    defType: Request
+    documentation: |-
+      Deletes another user's reaction. This endpoint requires the MANAGE_MESSAGES permission to be present on the current user. Returns a 204 empty response on success. Fires a Message Reaction Remove Gateway event. The emoji must be URL Encoded or the request will fail with 10014: Unknown Emoji. To use custom emoji, you must encode it in the format name:id with the emoji name and emoji id.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions, { argOf: Emoji }, { argOf: UserId } ]
+
+  - name: getReactions
+    defType: Request
+    documentation: >-
+      Get a list of users that reacted with this emoji. Returns an array of user
+      objects on success. The emoji must be URL Encoded or the request will fail
+      with 10014: Unknown Emoji. To use custom emoji, you must encode it in the
+      format name:id with the emoji name and emoji id.
+    method: GET
+    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}, reactions, {argOf: Emoji}]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          after:
+            type: RawSnowflake
+            documentation: Get users after this user ID
+
+          limit:
+            type: Int
+            documentation: Max number of users to return (1-100)
+    return: Seq[User]
+
+  - name: deleteAllReactions
+    defType: Request
+    documentation: >-
+      Deletes all reactions on a message. This endpoint requires the
+      MANAGE_MESSAGES permission to be present on the current user. Fires a
+      Message Reaction Remove All Gateway event.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions ]
+
+  - name: deleteAllReactionsForEmoji
+    defType: Request
+    documentation: >-
+      Deletes all the reactions for a given emoji on a message. This endpoint
+      requires the MANAGE_MESSAGES permission to be present on the current user.
+      Fires a Message Reaction Remove Emoji Gateway event. The emoji must be URL
+      Encoded or the request will fail with 10014: Unknown Emoji. To use custom
+      emoji, you must encode it in the format name:id with the emoji name and
+      emoji id.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions, { argOf: Emoji } ]
+
+  - name: editMessage
+    defType: Request
+    documentation: |-
+      Edit a previously sent message. The fields content, embeds, and flags can be edited by the original message author. Other users can only edit flags and only if they have the MANAGE_MESSAGES permission in the corresponding channel. When specifying flags, ensure to include all previously set flags/bits in addition to ones that you are modifying. Only flags documented in the table below may be modified by users (unsupported flag changes are currently ignored without error).
+
+      When the content field is edited, the mentions array in the message object will be reconstructed from scratch based on the new content. The allowed_mentions field of the edit request controls how this happens. If there is no explicit allowed_mentions in the edit request, the content will be parsed with default allowances, that is, without regard to whether or not an allowed_mentions was present in the request that originally created the message.
+
+      Returns a message object. Fires a Message Update Gateway event.
+
+      Refer to Uploading Files for details on attachments and multipart/form-data requests. Any provided files will be appended to the message. To remove or replace files you will have to supply the attachments field which specifies the files to retain on the message after edit.
+    method: PATCH
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId } ]
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.EncodeJson(params, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          content:
+            type: String
+            documentation: Message contents (up to 2000 characters)
+            verification:
+              max_length: 200
+
+          embeds:
+            type: Seq[OutgoingEmbed]
+            documentation: Up to 10 rich embeds (up to 6000 characters)
+            verification:
+              max_length: 10
+
+          flags:
+            type: Message.MessageFlags
+            documentation: Edit the flags of a message (only SUPPRESS_EMBEDS can currently be set/unset)
+
+          allowed_mentions:
+            type: AllowedMentions
+            documentation: Allowed mentions for the message
+
+          components:
+            type: Seq[MessageComponent]
+            documentation: Components to include with the message
+
+          attachments:
+            type: Seq[MessageCreateEditAttachment]
+            documentation: Attached files to keep and possible descriptions for new files. See Uploading Files
+    return: Message
+
+  - name: deleteMessage
+    defType: Request
+    documentation: >-
+      Delete a message. If operating on a guild channel and trying to delete a
+      message that was not sent by the current user, this endpoint requires the
+      MANAGE_MESSAGES permission. Returns a 204 empty response on success. Fires a
+      Message Delete Gateway event.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId } ]
+    allowsReason: true
+
+  - name: bulkDeleteMessages
+    defType: Request
+    documentation: |-
+      Delete multiple messages in a single request. This endpoint can only be used on guild channels and requires the MANAGE_MESSAGES permission. Returns a 204 empty response on success. Fires a Message Delete Bulk Gateway event.
+
+      Any message IDs given that do not exist or are invalid will count towards the minimum and maximum message count (currently 2 and 100 respectively).
+    method: POST
+    path: [ channels, { argOf: ChannelId }, messages, bulk-delete ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          messages:
+            type: Seq[Snowflake]
+            documentation: An array of message ids to delete (2-100)
+
+  - name: editChannelPermissions
+    defType: Request
+    documentation: >-
+      Edit the channel permission overwrites for a user or role in a channel. Only
+      usable for guild channels. Requires the MANAGE_ROLES permission. Only
+      permissions your bot has in the guild or parent channel (if applicable) can
+      be allowed/denied (unless your bot has a MANAGE_ROLES overwrite in the
+      channel). Returns a 204 empty response on success. Fires a Channel Update
+      Gateway event. For more information about permissions, see permissions.
+    method: PUT
+    path: [ channels, { argOf: ChannelId }, permissions, { name: overwriteId, customArgType: "Snowflake[UserOrRoleId]"}]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          allow:
+            type: String
+            withUndefined: true
+            withNull: true
+            documentation: The bitwise value of all allowed permissions (default "0")
+
+          deny:
+            type: String
+            withUndefined: true
+            withNull: true
+            documentation: The bitwise value of all disallowed permissions (default "0")
+
+          type:
+            type: PermissionOverwrite.PermissionOverwriteType
+            documentation: 0 for a role or 1 for a member
+
+  - name: getChannelInvites
+    defType: Request
+    documentation: >-
+      Returns a list of invite objects (with invite metadata) for the channel.
+      Only usable for guild channels. Requires the MANAGE_CHANNELS permission.
+    method: GET
+    path: [ channels, { argOf: ChannelId }, invites ]
+    return: Seq[Invite]
+
+  - name: createChannelInvite
+    defType: Request
+    documentation: >-
+      Create a new invite object for the channel. Only usable for guild channels.
+      Requires the CREATE_INSTANT_INVITE permission. All JSON parameters for this
+      route are optional, however the request body is not. If you are not sending
+      any fields, you still have to send an empty JSON object ({}). Returns an
+      invite object. Fires an Invite Create Gateway event.
+    method: POST
+    path: [ channels, { argOf: ChannelId }, invites ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          max_age:
+            type: Int
+            documentation: Duration of invite in seconds before expiry, or 0 for never.
+              between 0 and 604800 (7 days)
+
+          max_uses:
+            type: Int
+            documentation: Max number of uses or 0 for unlimited. between 0 and 100
+
+          temporary:
+            type: Boolean
+            documentation: Whether this invite only grants temporary membership
+
+          unique:
+            type: Boolean
+            documentation: If true, don't try to reuse a similar invite (useful for creating
+              many unique one time use invites)
+
+          target_type:
+            type: Invite.InviteTargetType
+            documentation: The type of target for this voice channel invite
+
+          target_user_id:
+            type: UserId
+            documentation: The id of the user whose stream to display for this invite,
+              required if target_type is 1, the user must be streaming in the
+              channel
+
+          target_application_id:
+            type: ApplicationId
+            documentation: The id of the embedded application to open for this invite,
+              required if target_type is 2, the application must have the EMBEDDED
+              flag
+    return: Invite
+
+  - name: deleteChannelPermission
+    defType: Request
+    documentation: >-
+      Delete a channel permission overwrite for a user or role in a channel. Only
+      usable for guild channels. Requires the MANAGE_ROLES permission. Returns a
+      204 empty response on success. Fires a Channel Update Gateway event. For
+      more information about permissions, see permissions
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, permissions, { name: overwriteId, customArgType: "Snowflake[UserOrRoleId]" } ]
+    allowsReason: true
+
+  - name: followAnnouncementChannel
+    defType: Request
+    documentation: >-
+      Follow an Announcement Channel to send messages to a target channel.
+      Requires the MANAGE_WEBHOOKS permission in the target channel. Returns a
+      followed channel object. Fires a Webhooks Update Gateway event for the
+      target channel.
+    method: POST
+    path: [ channels, { argOf: ChannelId }, followers ]
+    body:
+      fields:
+        2.0.x:
+          webhook_channel_id:
+            type: ChannelId
+            documentation: Id of target channel
+    return: FollowedChannel
+
+  - name: triggerTypingIndicator
+    defType: Request
+    documentation: >-
+      Post a typing indicator for the specified channel. Generally bots should not
+      implement this route. However, if a bot is responding to a command and
+      expects the computation to take a few seconds, this endpoint may be called
+      to let the user know that the bot is processing their message. Returns a 204
+      empty response on success. Fires a Typing Start Gateway event.
+    method: POST
+    path: [ channels, { argOf: ChannelId }, typing ]
+
+  - name: getPinnedMessages
+    defType: Request
+    documentation: >-
+      Returns all pinned messages in the channel as an array of message objects.
+    method: GET
+    path: [ channels, { argOf: ChannelId }, pins ]
+    return: Seq[Message]
+
+  - name: pinMessage
+    defType: Request
+    documentation: >-
+      Pin a message in a channel. Requires the MANAGE_MESSAGES permission. Returns
+      a 204 empty response on success. Fires a Channel Pins Update Gateway event.
+    method: PUT
+    path: [ channels, { argOf: ChannelId }, pins, { argOf: MessageId } ]
+    allowsReason: true
+
+  - name: unpinMessage
+    defType: Request
+    documentation: >-
+      Unpin a message in a channel. Requires the MANAGE_MESSAGES permission.
+      Returns a 204 empty response on success. Fires a Channel Pins Update Gateway
+      event.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, pins, { argOf: MessageId } ]
+    allowsReason: true
+
+  - name: groupDMAddRecipient
+    defType: Request
+    documentation: >-
+      Adds a recipient to a Group DM using their access token.
+    method: PUT
+    path: [ channels, { argOf: ChannelId }, recipients, { argOf: UserId } ]
+    body:
+      fields:
+        2.0.x:
+          access_token:
+            type: String
+            documentation: Access token of a user that has granted your app the gdm.join scope
+
+          nick:
+            type: String
+            documentation: Nickname of the user being added
+    return: Json #TODO: Unknown
+
+  - name: groupDMRemoveRecipient
+    defType: Request
+    documentation: >-
+      Removes a recipient from a Group DM.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, recipients, { argOf: UserId } ]
+
+  - name: startThreadfromMessage
+    defType: Request
+    documentation: |-
+      Creates a new thread from an existing message. Returns a channel on success, and a 400 BAD REQUEST on invalid parameters. Fires a Thread Create and a Message Update Gateway event.
+
+      When called on a GUILD_TEXT channel, creates a PUBLIC_THREAD. When called on a GUILD_ANNOUNCEMENT channel, creates a ANNOUNCEMENT_THREAD. Does not work on a GUILD_FORUM channel. The id of the created thread will be the same as the id of the source message, and as such a message can only have a single thread created from it.
+    method: POST
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, threads ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: 1-100 character channel name
+            verification:
+              min_length: 1
+              max_length: 100
+
+          auto_archive_duration:
+            type: Int
+            withUndefined: true
+            documentation: "The thread will stop showing in the channel list after
+              auto_archive_duration minutes of inactivity, can be set to: 60,
+              1440, 4320, 10080"
+
+          rate_limit_per_user:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Amount of seconds a user has to wait before sending another
+              message (0-21600)
+    return: Channel
+
+  - name: startThreadwithoutMessage
+    defType: Request
+    documentation: >-
+      Creates a new thread that is not connected to an existing message. Returns a
+      channel on success, and a 400 BAD REQUEST on invalid parameters. Fires a
+      Thread Create Gateway event.
+    method: POST
+    path: [ channels, { argOf: ChannelId }, threads ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: 1-100 character channel name
+            verification:
+              min_length: 1
+              max_length: 100
+
+          auto_archive_duration:
+            type: Int
+            withUndefined: true
+            documentation: "The thread will stop showing in the channel list after
+              auto_archive_duration minutes of inactivity, can be set to: 60,
+              1440, 4320, 10080"
+
+          type:
+            type: Channel.ChannelType
+            withUndefined: true
+            documentation: The type of thread to create
+
+          invitable:
+            type: Boolean
+            withUndefined: true
+            documentation: Whether non-moderators can add other non-moderators to a thread;
+              only available when creating a private thread
+
+          rate_limit_per_user:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Amount of seconds a user has to wait before sending another
+              message (0-21600)
+    return: Channel
+
+  - name: startThreadInForumChannel
+    defType: Request
+    documentation: |-
+      Creates a new thread in a forum channel, and sends a message within the
+      created thread. Returns a channel, with a nested message object, on success,
+      and a 400 BAD REQUEST on invalid parameters. Fires a Thread Create and
+      Message Create Gateway event.
+      
+      * The type of the created thread is PUBLIC_THREAD.
+      * See message formatting for more information on how to properly format messages.
+      * The current user must have the SEND_MESSAGES permission (CREATE_PUBLIC_THREADS is ignored).
+      * The maximum request size when sending a message is 25 MiB.
+      * For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
+      * Examples for file uploads are available in Uploading Files.
+      * Files must be attached using a multipart/form-data body as described in Uploading Files.
+      * Note that when sending a message, you must provide a value for at least one of content, embeds, sticker_ids, components, or files[n].
+    method: POST
+    path: [ channels, { argOf: ChannelId }, threads ]
+    allowsReason: true
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.EncodeJson(params, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: 1-100 character channel name
+            verification:
+              min_length: 1
+              max_length: 100
+
+          auto_archive_duration:
+            type: Int
+            withUndefined: true
+            documentation: "Duration in minutes to automatically archive the thread after recent activity, can be set to: 60, 1440, 4320, 10080"
+
+          rate_limit_per_user:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Amount of seconds a user has to wait before sending another message (0-21600)
+
+          message:
+            type: ForumThreadMessageParams
+            documentation: Contents of the first message in the forum thread
+
+          applied_tags:
+            type: Seq[Snowflake[Channel.ForumTag]]
+            documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel
+    return: Channel
+
+  - name: ForumThreadMessageParams
+    defType: Class
+    allUndefined: true
+    fields:
+      2.0.x:
+        content:
+          type: String
+          documentation: Message contents (up to 2000 characters)
+          verification:
+            max_length: 2000
+
+        embeds:
+          type: Seq[OutgoingEmbed]
+          documentation: Up to 10 rich embeds (up to 6000 characters)
+          verification:
+            max_length: 10
+
+        allowed_mentions:
+          type: AllowedMentions
+          documentation: Allowed mentions for the message
+
+        components:
+          type: Seq[MessageComponent]
+          documentation: Components to include with the message
+
+        sticker_ids:
+          type: Seq[Snowflake[Sticker]]
+          documentation: IDs of up to 3 stickers in the server to send in the message
+          verification:
+            max_length: 3
+
+        attachments:
+          type: Seq[MessageCreateEditAttachment]
+          documentation: Attachment objects with filename and description. See Uploading Files
+
+        flags:
+          type: Message.MessageFlags
+          documentation: Message flags combined as a bitfield (only SUPPRESS_EMBEDS and SUPPRESS_NOTIFICATIONS can be set)
+
+  - name: joinThread
+    defType: Request
+    documentation: >-
+      Adds the current user to a thread. Also requires the thread is not archived.
+      Returns a 204 empty response on success. Fires a Thread Members Update and a
+      Thread Create Gateway event.
+    method: PUT
+    path: [ channels, { argOf: ChannelId }, thread-members, @me ]
+
+  - name: addThreadMember
+    defType: Request
+    documentation: >-
+      Adds another member to a thread. Requires the ability to send messages in
+      the thread. Also requires the thread is not archived. Returns a 204 empty
+      response if the member is successfully added or was already a member of the
+      thread. Fires a Thread Members Update Gateway event.
+    method: PUT
+    path: [ channels, { argOf: ChannelId }, thread-members, { argOf: UserId } ]
+
+  - name: leaveThread
+    defType: Request
+    documentation: >-
+      Removes the current user from a thread. Also requires the thread is not
+      archived. Returns a 204 empty response on success. Fires a Thread Members
+      Update Gateway event.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, thread-members, @me ]
+
+  - name: removeThreadMember
+    defType: Request
+    documentation: >-
+      Removes another member from a thread. Requires the MANAGE_THREADS
+      permission, or the creator of the thread if it is a PRIVATE_THREAD. Also
+      requires the thread is not archived. Returns a 204 empty response on
+      success. Fires a Thread Members Update Gateway event.
+    method: DELETE
+    path: [ channels, { argOf: ChannelId }, thread-members, { argOf: UserId } ]
+
+  - name: getThreadMember
+    defType: Request
+    documentation: |-
+      Returns a thread member object for the specified user if they are a member of the thread, returns a 404 response otherwise.
+
+      When with_member is set to true, the thread member object will include a member field containing a guild member object.
+    method: GET
+    path: [ channels, { argOf: ChannelId }, thread-members, { argOf: UserId } ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_member:
+            type: Boolean
+            documentation: Whether to include a guild member object for the thread member
+    return: Channel.ThreadMember
+
+  - name: listThreadMembers
+    defType: Request
+    documentation: >-
+      When with_member is set to true, the results will be paginated and each
+      thread member object will include a member field containing a guild member
+      object.
+    method: GET
+    path: [ channels, { argOf: ChannelId }, thread-members ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_member:
+            type: Boolean
+            documentation: Whether to include a guild member object for each thread member
+
+          after:
+            type: UserId
+            documentation: Get thread members after this user ID
+
+          limit:
+            type: Int
+            documentation: Max number of thread members to return (1-100). Defaults to 100.
+    return: Seq[Channel.ThreadMember]
+
+  - name: listPublicArchivedThreads
+    defType: Request
+    documentation: >-
+      Returns archived threads in the channel that are public. When called on a
+      GUILD_TEXT channel, returns threads of type PUBLIC_THREAD. When called on a
+      GUILD_ANNOUNCEMENT channel returns threads of type ANNOUNCEMENT_THREAD.
+      Threads are ordered by archive_timestamp, in descending order. Requires the
+      READ_MESSAGE_HISTORY permission.
+    method: GET
+    path:  [ channels, { argOf: ChannelId }, threads, archived, public ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          before:
+            type: OffsetDateTime
+            documentation: Returns threads archived before this timestamp
+
+          limit:
+            type: Int
+            documentation: Optional maximum number of threads to return
+    return:
+      fields:
+        2.0.x:
+          threads:
+            type: Seq[Channel]
+            documentation: The public, archived threads
+
+          members:
+            type: Seq[Channel.ThreadMember]
+            documentation: A thread member object for each returned thread the current user
+              has joined
+
+          has_more:
+            type: Boolean
+            documentation: Whether there are potentially additional threads that could be
+              returned on a subsequent call
+
+  - name: listPrivateArchivedThreads
+    defType: Request
+    documentation: >-
+      Returns archived threads in the channel that are of type PRIVATE_THREAD.
+      Threads are ordered by archive_timestamp, in descending order. Requires both
+      the READ_MESSAGE_HISTORY and MANAGE_THREADS permissions.
+    method: GET
+    path:  [ channels, { argOf: ChannelId }, threads, archived, private ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          before:
+            type: OffsetDateTime
+            documentation: Returns threads archived before this timestamp
+
+          limit:
+            type: Int
+            documentation: Optional maximum number of threads to return
+    return:
+      fields:
+        2.0.x:
+          threads:
+            type: Seq[Channel]
+            documentation: The private, archived threads
+
+          members:
+            type: Seq[Channel.ThreadMember]
+            documentation: A thread member object for each returned thread the current user
+              has joined
+
+          has_more:
+            type: Boolean
+            documentation: Whether there are potentially additional threads that could be
+              returned on a subsequent call
+
+  - name: listJoinedPrivateArchivedThreads
+    defType: Request
+    documentation: >-
+      Returns archived threads in the channel that are of type PRIVATE_THREAD, and
+      the user has joined. Threads are ordered by their id, in descending order.
+      Requires the READ_MESSAGE_HISTORY permission.
+    method: GET
+    path:  [ channels, { argOf: ChannelId }, users, @me, threads, archived, private ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          before:
+            type: RawSnowflake
+            documentation: Returns threads before this id
+
+          limit:
+            type: Int
+            documentation: Optional maximum number of threads to return
+    return:
+      fields:
+        2.0.x:
+          threads:
+            type: Seq[Channel]
+            documentation: The private, archived threads the current user has joined
+
+          members:
+            type: Seq[Channel.ThreadMember]
+            documentation: A thread member object for each returned thread the current user
+              has joined
+
+          has_more:
+            type: Boolean
+            documentation: Whether there are potentially additional threads that could be
+              returned on a subsequent call

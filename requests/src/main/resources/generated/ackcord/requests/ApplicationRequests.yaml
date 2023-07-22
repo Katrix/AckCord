@@ -3,5 +3,6 @@ defType: ObjectOnly
 innerTypes:
   - name: getCurrentApplication
     defType: Request
+    method: GET
     path: [applications, @me]
     return: Application

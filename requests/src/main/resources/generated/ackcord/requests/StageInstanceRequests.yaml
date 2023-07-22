@@ -1,0 +1,79 @@
+name: StageInstanceRequests
+defType: ObjectOnly
+innerTypes:
+  - name: createStageInstance
+    defType: Request
+    documentation: |-
+      Creates a new Stage instance associated to a Stage channel. Returns that Stage instance. Fires a Stage Instance Create Gateway event.
+
+      Requires the user to be a moderator of the Stage channel.
+    method: POST
+    path: [ stage-instances ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          channel_id:
+            type: StageChannelId
+            documentation: The id of the Stage channel
+
+          topic:
+            type: String
+            documentation: The topic of the Stage instance (1-120 characters)
+            verification:
+              min_length: 1
+              max_length: 120
+
+          privacy_level:
+            type: StageInstance.StagePrivacyLevel
+            withUndefined: true
+            documentation: The privacy level of the Stage instance (default GUILD_ONLY)
+
+          send_start_notification:
+            type: Boolean
+            withUndefined: true
+            documentation: Notify @everyone that a Stage instance has started
+    return: StageInstance
+
+  - name: getStageInstance
+    defType: Request
+    documentation: >-
+      Gets the stage instance associated with the Stage channel, if it exists.
+    method: GET
+    path: [ stage-instances, { argOf: ChannelId } ]
+    return: StageInstance
+
+  - name: modifyStageInstance
+    defType: Request
+    documentation: |-
+      Updates fields of an existing Stage instance. Returns the updated Stage instance. Fires a Stage Instance Update Gateway event.
+
+      Requires the user to be a moderator of the Stage channel.
+    method: PATCH
+    path: [ stage-instances, { argOf: ChannelId } ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          topic:
+            type: String
+            documentation: The topic of the Stage instance (1-120 characters)
+            verification:
+              min_length: 1
+              max_length: 120
+
+          privacy_level:
+            type: StageInstance.StagePrivacyLevel
+            documentation: The privacy level of the Stage instance
+    return: StageInstance
+
+  - name: deleteStageInstance
+    defType: Request
+    documentation: |-
+      Deletes the Stage instance. Returns 204 No Content. Fires a Stage Instance Delete Gateway event.
+
+      Requires the user to be a moderator of the Stage channel.
+    method: DELETE
+    path: [ stage-instances, { argOf: ChannelId } ]
+    allowsReason: true

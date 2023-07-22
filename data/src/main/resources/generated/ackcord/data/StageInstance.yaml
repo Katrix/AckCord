@@ -1,0 +1,42 @@
+defType: Multiple
+innerTypes:
+  - name: StageInstance
+    defType: Class
+    fields:
+      2.0.x:
+        id:
+          type: Snowflake[StageInstance]
+          documentation: The id of this Stage instance
+
+        guild_id:
+          type: GuildId
+          documentation: The guild id of the associated Stage channel
+
+        channel_id:
+          type: StageChannelId
+          documentation: The id of the associated Stage channel
+
+        topic:
+          type: String
+          documentation: The topic of the Stage instance (1-120 characters)
+          verification:
+            min_length: 1
+            max_length: 120
+
+        privacy_level:
+          type: StageInstance.StagePrivacyLevel
+          documentation: The privacy level of the Stage instance
+
+        guild_scheduled_event_id:
+          type: Snowflake[GuildScheduledEvent]
+          withNull: true
+          documentation: The id of the scheduled event for this Stage instance
+
+    innerTypes:
+      - name: StagePrivacyLevel
+        defType: Enum
+        type: Int
+        values:
+          GUILD_ONLY:
+            value: "2"
+            documentation: The Stage instance is visible to only guild members.

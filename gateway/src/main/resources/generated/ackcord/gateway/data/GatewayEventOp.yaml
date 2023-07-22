@@ -1,5 +1,6 @@
 name: GatewayEventOp
-defType: IntEnum
+defType: Enum
+type: Int
 imports:
   - ackcord.data.DiscordIntEnum
   - ackcord.data.DiscordIntEnumCompanion

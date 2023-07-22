@@ -1,0 +1,193 @@
+name: UserRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getCurrentUser
+    defType: Request
+    documentation: >-
+      Returns the user object of the requester's account. For OAuth2, this
+      requires the identify scope, which will return the object without an email,
+      and optionally the email scope, which returns the object with an email.
+    method: GET
+    path: [ users, "@me" ]
+    return: User
+
+  - name: getUser
+    defType: Request
+    documentation: >-
+      Returns a user object for a given user ID.
+    method: GET
+    path: [ users, { argOf: UserId } ]
+    return: User
+
+  - name: modifyCurrentUser
+    defType: Request
+    documentation: >-
+      Modify the requester's user account settings. Returns a user object on
+      success. Fires a User Update Gateway event.
+    method: PATCH
+    path: [ users, "@me" ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          username:
+            type: String
+            documentation: User's username, if changed may cause the user's discriminator to
+              be randomized.
+
+          avatar:
+            type: ImageData
+            withNull: true
+            documentation: If passed, modifies the user's avatar
+    return: User
+
+  - name: getCurrentUserGuilds
+    defType: Request
+    documentation: >-
+      Returns a list of partial guild objects the current user is a member of.
+      Requires the guilds OAuth2 scope.
+    method: GET
+    path: [ users, "@me", guilds ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          before:
+            type: GuildId
+            documentation: Get guilds before this guild ID
+
+          after:
+            type: GuildId
+            documentation: Get guilds after this guild ID
+
+          limit:
+            type: Int
+            documentation: Max number of guilds to return (1-200)
+
+          with_counts:
+            type: Boolean
+            documentation: Include approximate member and presence counts in response
+    arrayOfReturn: true
+    return:
+      fields:
+        2.0.x:
+          id: GuildId
+          name: String
+          icon:
+            type: ImageHash
+            withNull: true
+          owner: Boolean
+          permissions: Permissions
+          features: Seq[Guild.GuildFeature]
+          approximate_member_count:
+            type: Int
+            withUndefined: true
+          approximate_presence_count:
+            type: Int
+            withUndefined: true
+
+  - name: getCurrentUserGuildMember
+    defType: Request
+    documentation: >-
+      Returns a guild member object for the current user. Requires the
+      guilds.members.read OAuth2 scope.
+    method: GET
+    path: [ users, "@me", guilds, { argOf: GuildId }, member ]
+    return: GuildMember
+
+  - name: leaveGuild
+    defType: Request
+    documentation: >-
+      Leave a guild. Returns a 204 empty response on success. Fires a Guild Delete
+      Gateway event and a Guild Member Remove Gateway event.
+    method: DELETE
+    path: [ users, "@me", guilds, { argOf: GuildId } ]
+
+  - name: createDM
+    defType: Request
+    documentation: >-
+      Create a new DM channel with a user. Returns a DM channel object (if one
+      already exists, it will be returned instead).
+    method: POST
+    path: [ users, "@me", channels ]
+    body:
+      fields:
+        2.0.x:
+          recipient_id:
+            type: UserID
+            documentation: The recipient to open a DM channel with
+    return: DMChannel
+
+  - name: createGroupDM
+    defType: Request
+    documentation: >-
+      Create a new group DM channel with multiple users. Returns a DM channel
+      object. This endpoint was intended to be used with the now-deprecated
+      GameBridge SDK. Fires a Channel Create Gateway event.
+    method: POST
+    path: [ users, "@me", channels ]
+    body:
+      fields:
+        2.0.x:
+          access_tokens:
+            type: Seq[String]
+            documentation: Access tokens of users that have granted your app the gdm.join scope
+
+          nicks:
+            type: Map[UserId, String]
+            documentation: A dictionary of user ids to their respective nicknames
+    return: GroupDMChannel
+
+  - name: getUserConnections
+    defType: Request
+    documentation: >-
+      Returns a list of connection objects. Requires the connections OAuth2 scope.
+    method: GET
+    path: [ users, "@me", connections ]
+    return: Seq[Connection]
+
+  - name: getUserApplicationRoleConnection
+    defType: Request
+    documentation: >-
+      Returns the application role connection for the user. Requires an OAuth2
+      access token with role_connections.write scope for the application specified
+      in the path.
+    method: GET
+    path: [ users, "@me", applications, { argOf: ApplicationId }, role-connection ]
+    return: ApplicationRoleConnection
+
+  - name: updateUserApplicationRoleConnection
+    defType: Request
+    documentation: >-
+      Updates and returns the application role connection for the user. Requires
+      an OAuth2 access token with role_connections.write scope for the application
+      specified in the path.
+    method: PUT
+    path: [ users, "@me", applications, { argOf: ApplicationId }, role-connection ]
+    body:
+      fields:
+        2.0.x:
+          platform_name:
+            type: String
+            withUndefined: true
+            documentation: The vanity name of the platform a bot has connected (max 50
+              characters)
+            verification:
+              max_length: 50
+
+          platform_username:
+            type: String
+            withUndefined: true
+            documentation: The username on the platform a bot has connected (max 100 characters)
+            verification:
+              max_length: 100
+
+          metadata:
+            type: Map[String, String]
+            withUndefined: true
+            documentation: Object mapping application role connection metadata keys to their
+              string-ified value (max 100 characters) for the user on the platform
+              a bot has connected
+            verification:
+              max_length: 100
+    return: ApplicationRoleConnection

@@ -1,0 +1,129 @@
+name: StickerRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getSticker
+    defType: Request
+    documentation: >-
+      Returns a sticker object for the given sticker ID.
+    method: GET
+    path: [ stickers, { name: stickerId, customArgType: "Snowflake[Sticker]" }]
+    return: Sticker
+
+  - name: listNitroStickerPacks
+    defType: Request
+    documentation: >-
+      Returns the list of sticker packs available to Nitro subscribers.
+    method: GET
+    path: [ sticker-packs ]
+    return:
+      fields:
+        2.0.x:
+          sticker_packs: Seq[Sticker.StickerPack]
+
+  - name: listGuildStickers
+    defType: Request
+    documentation: >-
+      Returns an array of sticker objects for the given guild. Includes user
+      fields if the bot has the MANAGE_GUILD_EXPRESSIONS permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, stickers ]
+    return: Seq[Sticker]
+
+  - name: getGuildSticker
+    defType: Request
+    documentation: >-
+      Returns a sticker object for the given guild and sticker IDs. Includes the
+      user field if the bot has the MANAGE_GUILD_EXPRESSIONS permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, stickers, { name: stickerId, customArgType: "Snowflake[Sticker]" }]
+    return: Sticker
+
+  - name: createGuildSticker
+    defType: Request
+    documentation: |-
+      Create a new sticker for the guild. Send a multipart/form-data body. Requires the MANAGE_GUILD_EXPRESSIONS permission. Returns the new sticker object on success. Fires a Guild Stickers Update Gateway event.
+
+      Every guilds has five free sticker slots by default, and each Boost level will grant access to more slots.
+    method: POST
+    path: [ guilds, { argOf: GuildId }, stickers ]
+    allowsReason: true
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      file:
+        type: EncodeBody.Multipart[_, MPR]
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.StringPart(params.name, "name"),
+        EncodeBody.StringPart(params.description, "description"),
+        EncodeBody.StringPart(params.tags, "tags"),
+        file.withName("file")
+      )
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Name of the sticker (2-30 characters)
+            verification:
+              min_length: 2
+              max_length: 30
+
+          description:
+            type: String
+            withNull: true
+            documentation: Description of the sticker (empty or 2-100 characters)
+
+          tags:
+            type: String
+            documentation: Autocomplete/suggestion tags for the sticker (max 200 characters)
+            verification:
+              max_length: 200
+
+    return: Sticker
+
+  - name: modifyGuildSticker
+    defType: Request
+    documentation: >-
+      Modify the given sticker. Requires the MANAGE_GUILD_EXPRESSIONS permission.
+      Returns the updated sticker object on success. Fires a Guild Stickers Update
+      Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, stickers, { name: stickerId, customArgType: "Snowflake[Sticker]" }]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Name of the sticker (2-30 characters)
+            verification:
+              min_length: 2
+              max_length: 30
+
+          description:
+            type: String
+            withNull: true
+            documentation: Description of the sticker (2-100 characters)
+            verification:
+              min_length: 2
+              max_length: 100
+
+          tags:
+            type: String
+            documentation: Autocomplete/suggestion tags for the sticker (max 200 characters)
+            verification:
+              max_length: 200
+    return: Sticker
+
+  - name: deleteGuildSticker
+    defType: Request
+    documentation: >-
+      Delete the given sticker. Requires the MANAGE_GUILD_EXPRESSIONS permission.
+      Returns 204 No Content on success. Fires a Guild Stickers Update Gateway
+      event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, stickers, { name: stickerId, customArgType: "Snowflake[Sticker]" }]
+    allowsReason: true

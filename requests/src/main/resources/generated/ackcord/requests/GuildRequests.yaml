@@ -1,0 +1,1147 @@
+defType: Multiple
+innerTypes:
+  - name: createGuild
+    defType: Request
+    documentation: >-
+      Create a new guild. Returns a guild object on success. Fires a Guild Create
+      Gateway event.
+    method: POST
+    path: [ guilds ]
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Name of the guild (2-100 characters)
+            verification:
+              min_length: 2
+              max_length: 100
+
+          icon:
+            type: ImageData
+            withUndefined: true
+            documentation: Base64 128x128 image for the guild icon
+
+          verification_level:
+            type: Guild.VerificationLevel
+            withUndefined: true
+            documentation: Verification level
+
+          default_message_notifications:
+            type: Guild.MessageNotificationLevel
+            withUndefined: true
+            documentation: Default message notification level
+
+          explicit_content_filter:
+            type: Guild.ExplicitContentFilter
+            withUndefined: true
+            documentation: Explicit content filter level
+
+          roles:
+            type: Seq[Role]
+            withUndefined: true
+            documentation: New guild roles
+
+          channels:
+            type: Seq[CreateGuildPartialChannel]
+            withUndefined: true
+            documentation: New guild's channels
+
+          afk_channel_id:
+            type: GuildChannelId
+            withUndefined: true
+            documentation: Id for afk channel
+
+          afk_timeout:
+            type: Int
+            withUndefined: true
+            documentation: "Afk timeout in seconds, can be set to: 60, 300, 900, 1800, 3600"
+
+          system_channel_id:
+            type: TextGuildChannelId
+            withUndefined: true
+            documentation: The id of the channel where guild notices such as welcome
+              messages and boost events are posted
+
+          system_channel_flags:
+            type: Guild.SystemChannelFlags
+            withUndefined: true
+            documentation: System channel flags
+    return: Guild
+
+  - name: CreateGuildPartialChannel
+    defType: Class
+    fields:
+      2.0.x:
+        name: String
+        id:
+          type: GuildChannelId
+          withUndefined: true
+        tpe:
+          jsonName: type
+          type: Channel.ChannelType
+        parent_id:
+          type: GuildChannelId
+          withUndefined: true
+
+  - name: getGuild
+    defType: Request
+    documentation: >-
+      Returns the guild object for the given id. If with_counts is set to true,
+      this endpoint will also return approximate_member_count and
+      approximate_presence_count for the guild.
+    method: GET
+    path: [ guilds, { argOf: GuildId } ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_counts:
+            type: Boolean
+            documentation: When true, will return approximate member and presence counts for
+              the guild
+    return: Guild
+
+  - name: getGuildPreview
+    defType: Request
+    documentation: >-
+      Returns the guild preview object for the given id. If the user is not in the
+      guild, then the guild must be discoverable.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, preview ]
+    return: GuildPreview
+
+  - name: modifyGuild
+    defType: Request
+    documentation: >-
+      Modify a guild's settings. Requires the MANAGE_GUILD permission. Returns the
+      updated guild object on success. Fires a Guild Update Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId } ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Guild name
+
+          verification_level:
+            type: Guild.VerificationLevel
+            withNull: true
+            documentation: Verification level
+
+          default_message_notifications:
+            type: Guild.MessageNotificationLevel
+            withNull: true
+            documentation: Default message notification level
+
+          explicit_content_filter:
+            type: Guild.ExplicitContentFilterLevel
+            withNull: true
+            documentation: Explicit content filter level
+
+          afk_channel_id:
+            type: VoiceGuildChannelId
+            withNull: true
+            documentation: Id for afk channel
+
+          afk_timeout:
+            type: Int
+            documentation: "Afk timeout in seconds, can be set to: 60, 300, 900, 1800, 3600"
+
+          icon:
+            type: ImageData
+            withNull: true
+            documentation: Base64 1024x1024 png/jpeg/gif image for the guild icon (can be
+              animated gif when the server has the ANIMATED_ICON feature)
+
+          owner_id:
+            type: UserId
+            documentation: User id to transfer guild ownership to (must be owner)
+
+          splash:
+            type: ImageData
+            withNull: true
+            documentation: Base64 16:9 png/jpeg image for the guild splash (when the server
+              has the INVITE_SPLASH feature)
+
+          discovery_splash:
+            type: ImageData
+            withNull: true
+            documentation: Base64 16:9 png/jpeg image for the guild discovery splash (when
+              the server has the DISCOVERABLE feature)
+
+          banner:
+            type: ImageData
+            withNull: true
+            documentation: Base64 16:9 png/jpeg image for the guild banner (when the server
+              has the BANNER feature; can be animated gif when the server has the
+              ANIMATED_BANNER feature)
+
+          system_channel_id:
+            type: TextGuildChannelId
+            withNull: true
+            documentation: The id of the channel where guild notices such as welcome
+              messages and boost events are posted
+
+          system_channel_flags:
+            type: Guild.SystemChannelFlags
+            documentation: System channel flags
+
+          rules_channel_id:
+            type: TextGuildChannelId
+            withNull: true
+            documentation: The id of the channel where Community guilds display rules and/or
+              guidelines
+
+          public_updates_channel_id:
+            type: TextGuildChannelId
+            withNull: true
+            documentation: The id of the channel where admins and moderators of Community
+              guilds receive notices from Discord
+
+          preferred_locale:
+            type: String
+            withNull: true
+            documentation: The preferred locale of a Community guild used in server
+              discovery and notices from Discord; defaults to "en-US"
+
+          features:
+            type: Seq[Guild.GuildFeature]
+            documentation: Enabled guild features
+
+          description:
+            type: String
+            withNull: true
+            documentation: The description for the guild
+
+          premium_progress_bar_enabled:
+            type: Boolean
+            documentation: Whether the guild's boost progress bar should be enabled
+
+          safety_alerts_channel_id:
+            type: TextGuildChannelId
+            withNull: true
+            documentation: The id of the channel where admins and moderators of Community
+              guilds receive safety alerts from Discord
+    return: Guild
+
+  - name: deleteGuild
+    defType: Request
+    documentation: >-
+      Delete a guild permanently. User must be owner. Returns 204 No Content on
+      success. Fires a Guild Delete Gateway event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId } ]
+
+  - name: getGuildChannels
+    defType: Request
+    documentation: >-
+      Returns a list of guild channel objects. Does not include threads.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, channels ]
+    return: Seq[GuildChannel]
+
+  - name: createGuildChannel
+    defType: Request
+    documentation: >-
+      Create a new channel object for the guild. Requires the MANAGE_CHANNELS
+      permission. If setting permission overwrites, only permissions your bot has
+      in the guild can be allowed/denied. Setting MANAGE_ROLES permission in
+      channels is only possible for guild administrators. Returns the new channel
+      object on success. Fires a Channel Create Gateway event.
+    method: POST
+    path: [ guilds, { argOf: GuildId }, channels ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Channel name (1-100 characters)
+            verification:
+              min_length: 1
+              max_length: 100
+
+          type:
+            type: Channel.ChannelType
+            withUndefined: true
+            withNull: true
+            documentation: The type of channel
+
+          topic:
+            type: String
+            withUndefined: true
+            withNull: true
+            documentation: Channel topic (0-1024 characters)
+            verification:
+              max_length: 1024
+
+          bitrate:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: The bitrate (in bits) of the voice or stage channel; min 8000
+
+          user_limit:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: The user limit of the voice channel
+
+          rate_limit_per_user:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Amount of seconds a user has to wait before sending another
+              message (0-21600); bots, as well as users with the permission
+              manage_messages or manage_channel, are unaffected
+
+          position:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Sorting position of the channel
+
+          permission_overwrites:
+            type: Seq[EditChannelPartialOverwrite]
+            withUndefined: true
+            withNull: true
+            documentation: The channel's permission overwrites
+
+          parent_id:
+            type: GuildChannelId
+            withUndefined: true
+            withNull: true
+            documentation: Id of the parent category for a channel
+
+          nsfw:
+            type: Boolean
+            withUndefined: true
+            withNull: true
+            documentation: Whether the channel is nsfw
+
+          rtc_region:
+            type: String
+            withUndefined: true
+            withNull: true
+            documentation: Channel voice region id of the voice or stage channel, automatic
+              when set to null
+
+          video_quality_mode:
+            type: Channel.VideoQualityMode
+            withUndefined: true
+            withNull: true
+            documentation: The camera video quality mode of the voice channel
+
+          default_auto_archive_duration:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: The default duration that the clients use (not the API) for newly
+              created threads in the channel, in minutes, to automatically archive
+              the thread after recent activity
+
+          default_reaction_emoji:
+            type: Channel.DefaultReaction
+            withUndefined: true
+            withNull: true
+            documentation: Emoji to show in the add reaction button on a thread in a
+              GUILD_FORUM channel
+
+          available_tags:
+            type: Seq[Channel.ForumTag]
+            withUndefined: true
+            withNull: true
+            documentation: Set of tags that can be used in a GUILD_FORUM channel
+
+          default_sort_order:
+            type: Channel.ForumSortOrder
+            withUndefined: true
+            withNull: true
+            documentation: The default sort order type used to order posts in GUILD_FORUM
+              channels
+
+          default_forum_layout:
+            type: Channel.ForumLayout
+            documentation: The default forum layout view used to display posts in
+              GUILD_FORUM channels
+    return: GuildChannel
+
+  - name: modifyGuildChannelPositions
+    defType: Request
+    documentation: |-
+      Modify the positions of a set of channel objects for the guild. Requires MANAGE_CHANNELS permission. Returns a 204 empty response on success. Fires multiple Channel Update Gateway events.
+
+      This endpoint takes a JSON array of parameters in the following format:
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, channels ]
+    arrayOfBody: true
+    body:
+      fields:
+        2.0.x:
+          id:
+            type: GuildChannelId
+            documentation: Channel id
+
+          position:
+            type: Int
+            withUndefined: true
+            withNull: true
+            documentation: Sorting position of the channel
+
+          lock_permissions:
+            type: Boolean
+            withUndefined: true
+            withNull: true
+            documentation: Syncs the permission overwrites with the new parent, if moving to
+              a new category
+
+          parent_id:
+            type: GuildChannelId
+            withUndefined: true
+            withNull: true
+            documentation: The new parent ID for the channel that is moved
+
+  - name: listActiveGuildThreads
+    defType: Request
+    documentation: >-
+      Returns all active threads in the guild, including public and private
+      threads. Threads are ordered by their id, in descending order.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, threads, active ]
+    return:
+      fields:
+        2.0.x:
+          threads:
+            type: Seq[Channel]
+            documentation: The active threads
+
+          members:
+            type: Seq[ThreadMember]
+            documentation: A thread member object for each returned thread the current user
+              has joined
+
+  - name: getGuildMember
+    defType: Request
+    documentation: >-
+      Returns a guild member object for the specified user.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId } ]
+    return: GuildMember
+
+  - name: listGuildMembers
+    defType: Request
+    documentation: >-
+      Returns a list of guild member objects that are members of the guild.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, members ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          limit:
+            type: Int
+            documentation: Max number of members to return (1-1000)
+
+          after:
+            type: UserId
+            documentation: The highest user id in the previous page
+    return: Seq[GuildMember]
+
+  - name: searchGuildMembers
+    defType: Request
+    documentation: >-
+      Returns a list of guild member objects whose username or nickname starts
+      with a provided string.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, members, search ]
+    query:
+      fields:
+        2.0.x:
+          query:
+            type: String
+            documentation: Query string to match username(s) and nickname(s) against.
+
+          limit:
+            type: Int
+            withUndefined: true
+            documentation: Max number of members to return (1-1000)
+    return: Seq[GuildMember]
+
+  - name: addGuildMember
+    defType: Request
+    documentation: |-
+      Adds a user to the guild, provided you have a valid oauth2 access token for the user with the guilds.join scope. Returns a 201 Created with the guild member as the body, or 204 No Content if the user is already a member of the guild. Fires a Guild Member Add Gateway event.
+
+      For guilds with Membership Screening enabled, this endpoint will default to adding new members as pending in the guild member object. Members that are pending will have to complete membership screening before they become full members that can talk.
+    method: PUT
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId } ]
+    body:
+      fields:
+        2.0.x:
+          access_token:
+            type: String
+            documentation: An oauth2 access token granted with the guilds.join to the bot's
+              application for the user you want to add to the guild
+
+          nick:
+            type: String
+            withUndefined: true
+            documentation: Value to set user's nickname to
+
+          roles:
+            type: Seq[RoleId]
+            withUndefined: true
+            documentation: Array of role ids the member is assigned
+
+          mute:
+            type: Boolean
+            withUndefined: true
+            documentation: Whether the user is muted in voice channels
+
+          deaf:
+            type: Boolean
+            withUndefined: true
+            documentation: Whether the user is deafened in voice channels
+    parseResponse: |-
+      new ParseResponse[Option[GuildMember], Any] {
+        def setSttpResponse[T, R1](
+          request: RequestT[Identity, T, R1]
+        ): RequestT[Identity, Either[Throwable, Either[String, Response]], R1] = {
+          request.response(
+            asEither(
+              asStringAlways,
+              fromMetadata(
+                asJsonAlways[GuildMember].map(json => Some(json)),
+                ConditionalResponseAs(_.code == StatusCode.NoContent, ignore.map(_ => None))
+              ),
+            ).map {
+              case Right(Right(ret)) => Right(Right(ret))
+              case Right(Left(err))   => Left(err)
+              case Left(err)          => Right(Left(err))
+            }
+          )
+        }
+      }
+    return: Option[GuildMember]
+
+  - name: modifyGuildMember
+    defType: Request
+    documentation: >-
+      Modify attributes of a guild member. Returns a 200 OK with the guild member
+      as the body. Fires a Guild Member Update Gateway event. If the channel_id is
+      set to null, this will force the target user to be disconnected from voice.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId } ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          nick:
+            type: String
+            withNull: true
+            documentation: Value to set user's nickname to
+
+          roles:
+            type: Seq[RoleId]
+            withNull: true
+            documentation: Array of role ids the member is assigned
+
+          mute:
+            type: Boolean
+            withNull: true
+            documentation: Whether the user is muted in voice channels. Will throw a 400
+              error if the user is not in a voice channel
+
+          deaf:
+            type: Boolean
+            withNull: true
+            documentation: Whether the user is deafened in voice channels. Will throw a 400
+              error if the user is not in a voice channel
+
+          channel_id:
+            type: VoiceGuildChannelId
+            withNull: true
+            documentation: Id of channel to move user to (if they are connected to voice)
+
+          communication_disabled_until:
+            type: OffsetDateTime
+            withNull: true
+            documentation: When the user's timeout will expire and the user will be able to
+              communicate in the guild again (up to 28 days in the future), set to
+              null to remove timeout. Will throw a 403 error if the user has the
+              ADMINISTRATOR permission or is the owner of the guild
+
+          flags:
+            type: GuildMember.GuildMemberFlags
+            withNull: true
+            documentation: Guild member flags
+    return: GuildMember
+
+  - name: modifyCurrentMember
+    defType: Request
+    documentation: >-
+      Modifies the current member in a guild. Returns a 200 with the updated
+      member object on success. Fires a Guild Member Update Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, members, "@me" ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          nick:
+            type: String
+            withNull: true
+            documentation: Value to set user's nickname to
+    return: GuildMember
+
+  - name: addGuildMemberRole
+    defType: Request
+    documentation: >-
+      Adds a role to a guild member. Requires the MANAGE_ROLES permission. Returns
+      a 204 empty response on success. Fires a Guild Member Update Gateway event.
+    method: PUT
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId }, roles, { argOf: RoleId } ]
+    allowsReason: true
+
+  - name: removeGuildMemberRole
+    defType: Request
+    documentation: >-
+      Removes a role from a guild member. Requires the MANAGE_ROLES permission.
+      Returns a 204 empty response on success. Fires a Guild Member Update Gateway
+      event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId }, roles, { argOf: RoleId } ]
+    allowsReason: true
+
+  - name: removeGuildMember
+    defType: Request
+    documentation: >-
+      Remove a member from a guild. Requires KICK_MEMBERS permission. Returns a
+      204 empty response on success. Fires a Guild Member Remove Gateway event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, members, { argOf: UserId } ]
+    allowsReason: true
+
+  - name: getGuildBans
+    defType: Request
+    documentation: >-
+      Returns a list of ban objects for the users banned from this guild. Requires
+      the BAN_MEMBERS permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, bans ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          limit:
+            type: Int
+            withUndefined: true
+            documentation: Number of users to return (up to maximum 1000)
+
+          before:
+            type: UserId
+            withUndefined: true
+            documentation: Consider only users before given user id
+
+          after:
+            type: UserId
+            withUndefined: true
+            documentation: Consider only users after given user id
+    return: Seq[Ban]
+
+  - name: getGuildBan
+    defType: Request
+    documentation: >-
+      Returns a ban object for the given user or a 404 not found if the ban cannot
+      be found. Requires the BAN_MEMBERS permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, bans, { argOf: UserId } ]
+    return: Ban
+
+  - name: createGuildBan
+    defType: Request
+    documentation: >-
+      Create a guild ban, and optionally delete previous messages sent by the
+      banned user. Requires the BAN_MEMBERS permission. Returns a 204 empty
+      response on success. Fires a Guild Ban Add Gateway event.
+    method: PUT
+    path: [ guilds, { argOf: GuildId }, bans, { argOf: UserId } ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          delete_message_seconds:
+            type: Int
+            withUndefined: true
+            documentation: Number of seconds to delete messages for, between 0 and 604800 (7
+              days)
+
+  - name: removeGuildBan
+    defType: Request
+    documentation: >-
+      Remove the ban for a user. Requires the BAN_MEMBERS permissions. Returns a
+      204 empty response on success. Fires a Guild Ban Remove Gateway event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, bans, { argOf: UserId } ]
+    allowsReason: true
+
+  - name: getGuildRoles
+    defType: Request
+    documentation: >-
+      Returns a list of role objects for the guild.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, roles ]
+    return: Seq[Role]
+
+  - name: createGuildRole
+    defType: Request
+    documentation: >-
+      Create a new role for the guild. Requires the MANAGE_ROLES permission.
+      Returns the new role object on success. Fires a Guild Role Create Gateway
+      event. All JSON params are optional.
+    method: POST
+    path: [ guilds, { argOf: GuildId }, roles ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            documentation: Name of the role, max 100 characters
+            verification:
+              max_length: 100
+
+          permissions:
+            type: Permissions
+            documentation: Bitwise value of the enabled/disabled permissions
+
+          color:
+            type: Int
+            documentation: RGB color value
+
+          hoist:
+            type: Boolean
+            documentation: Whether the role should be displayed separately in the sidebar
+
+          icon:
+            type: ImageData
+            withNull: true
+            documentation: The role's icon image (if the guild has the ROLE_ICONS feature)
+
+          unicode_emoji:
+            type: String
+            withNull: true
+            documentation: The role's unicode emoji as a standard emoji (if the guild has
+              the ROLE_ICONS feature)
+
+          mentionable:
+            type: Boolean
+            documentation: Whether the role should be mentionable
+    return: Role
+
+  - name: modifyGuildRolePositions
+    defType: Request
+    documentation: >-
+      Modify the positions of a set of role objects for the guild. Requires the
+      MANAGE_ROLES permission. Returns a list of all of the guild's role objects
+      on success. Fires multiple Guild Role Update Gateway events.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, roles ]
+    allowsReason: true
+    arrayOfBody: true
+    body:
+      fields:
+        2.0.x:
+          id:
+            type: RoleId
+            documentation: Role
+
+          position:
+            type: Int
+            withNull: true
+            documentation: Sorting position of the role
+    return: Seq[Role]
+
+  - name: modifyGuildRole
+    defType: Request
+    documentation: >-
+      Modify a guild role. Requires the MANAGE_ROLES permission. Returns the
+      updated role on success. Fires a Guild Role Update Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, roles, { argOf: RoleId } ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          name:
+            type: String
+            withNull: true
+            documentation: Name of the role, max 100 characters
+            verification:
+              max_length: 100
+
+          permissions:
+            type: Permissions
+            withNull: true
+            documentation: Bitwise value of the enabled/disabled permissions
+
+          color:
+            type: Int
+            withNull: true
+            documentation: RGB color value
+
+          hoist:
+            type: Boolean
+            withNull: true
+            documentation: Whether the role should be displayed separately in the sidebar
+
+          icon:
+            type: ImageData
+            withNull: true
+            documentation: The role's icon image (if the guild has the ROLE_ICONS feature)
+
+          unicode_emoji:
+            type: String
+            withNull: true
+            documentation: The role's unicode emoji as a standard emoji (if the guild has
+              the ROLE_ICONS feature)
+
+          mentionable:
+            type: Boolean
+            withNull: true
+            documentation: Whether the role should be mentionable
+    return: Role
+
+  - name: modifyGuildMFALevel
+    defType: Request
+    documentation: >-
+      Modify a guild's MFA level. Requires guild ownership. Returns the updated
+      level on success. Fires a Guild Update Gateway event.
+    method: POST
+    path: [ guilds, { argOf: GuildId }, mfa ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          level:
+            type: Guild.MFALevel
+            documentation: MFA level
+    return: Guild.MFALevel
+
+  - name: deleteGuildRole
+    defType: Request
+    documentation: >-
+      Delete a guild role. Requires the MANAGE_ROLES permission. Returns a 204
+      empty response on success. Fires a Guild Role Delete Gateway event.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, roles, { argOf: RoleId } ]
+    allowsReason: true
+
+  - name: getGuildPruneCount
+    defType: Request
+    documentation: |-
+      Returns an object with one pruned key indicating the number of members that would be removed in a prune operation. Requires the KICK_MEMBERS permission.
+
+      By default, prune will not remove users with roles. You can optionally include specific roles in your prune by providing the include_roles parameter. Any inactive user that has a subset of the provided role(s) will be counted in the prune and users with additional roles will not.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, prune ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          days:
+            type: Int
+            documentation: Number of days to count prune for (1-30)
+
+          include_roles:
+            type: String
+            documentation: Role(s) to include. Comma-delimited array of snowflakes
+    return:
+      fields:
+        2.0.x:
+          pruned: Int
+
+  - name: beginGuildPrune
+    defType: Request
+    documentation: |-
+      Begin a prune operation. Requires the KICK_MEMBERS permission. Returns an object with one pruned key indicating the number of members that were removed in the prune operation. For large guilds it's recommended to set the compute_prune_count option to false, forcing pruned to null. Fires multiple Guild Member Remove Gateway events.
+
+      By default, prune will not remove users with roles. You can optionally include specific roles in your prune by providing the include_roles parameter. Any inactive user that has a subset of the provided role(s) will be included in the prune and users with additional roles will not.
+    method: POST
+    path: [ guilds, { argOf: GuildId }, prune ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          days:
+            type: Int
+            documentation: Number of days to prune (1-30)
+
+          compute_prune_count:
+            type: Boolean
+            documentation: Whether pruned is returned, discouraged for large guilds
+
+          include_roles:
+            type: Seq[RoleId]
+            documentation: Role(s) to include
+    return:
+      fields:
+        2.0.x:
+          pruned:
+            type: Int
+            withNull: true
+
+  - name: getGuildVoiceRegions
+    defType: Request
+    documentation: >-
+      Returns a list of voice region objects for the guild. Unlike the similar
+      /voice route, this returns VIP servers when the guild is VIP-enabled.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, regions ]
+    return: Seq[VoiceRegion]
+
+  - name: getGuildInvites
+    defType: Request
+    documentation: >-
+      Returns a list of invite objects (with invite metadata) for the guild.
+      Requires the MANAGE_GUILD permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, invites ]
+    return: Seq[InviteWithMetadata]
+
+  - name: getGuildIntegrations
+    defType: Request
+    documentation: >-
+      Returns a list of integration objects for the guild. Requires the
+      MANAGE_GUILD permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, integrations ]
+    return: Seq[Integration]
+
+  - name: deleteGuildIntegration
+    defType: Request
+    documentation: >-
+      Delete the attached integration object for the guild. Deletes any associated
+      webhooks and kicks the associated bot if there is one. Requires the
+      MANAGE_GUILD permission. Returns a 204 empty response on success. Fires
+      Guild Integrations Update and Integration Delete Gateway events.
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, integrations, { name: integrationId, customArgType: "Snowflake[Integration]"}]
+    allowsReason: true
+
+  - name: getGuildWidgetSettings
+    defType: Request
+    documentation: >-
+      Returns a guild widget settings object. Requires the MANAGE_GUILD permission.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, widget ]
+    return: GuildWidgetSettings
+
+  - name: modifyGuildWidget
+    defType: Request
+    documentation: >-
+      Modify a guild widget settings object for the guild. All attributes may be
+      passed in with JSON and modified. Requires the MANAGE_GUILD permission.
+      Returns the updated guild widget settings object.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, widget ]
+    body: GuildWidgetSettings
+    allowsReason: true
+    return: GuildWidgetSettings
+
+  - name: getGuildWidget
+    defType: Request
+    documentation: >-
+      Returns the widget for the guild.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, widget.json ]
+    return: GuildWidget
+
+  - name: getGuildVanityURL
+    defType: Request
+    documentation: >-
+      Returns a partial invite object for guilds with that feature enabled.
+      Requires the MANAGE_GUILD permission. code will be null if a vanity url for
+      the guild is not set.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, vanity-url ]
+    return:
+      fields:
+        2.0.x:
+          code:
+            type: String
+            withNull: true
+
+          uses: Int
+
+  - name: getGuildWidgetImage
+    defType: Request
+    documentation: >-
+      Returns a PNG image widget for the guild. Requires no permissions or
+      authentication.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, widget.png ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          style:
+            type: GuildWidgetImageStyle
+            documentation: Style of the widget image returned (see below)
+    parseResponse: |-
+      new ParseResponse[Array[Byte], Any] {
+        override def setSttpResponse[T, R1](
+          request: RequestT[Identity, T, R1]
+        ): RequestT[Identity, Either[Throwable, Either[String, Unit]], R1] =
+          request.response(asEither(asStringAlways, asByteArrayAlways).map(Right(_)))
+      }
+    return: Array[Byte]
+
+  - name: GuildWidgetImageStyle
+    defType: Enum
+    type: String
+    values:
+      Shield:
+        value: shield
+        documentation: Shield style widget with Discord icon and guild members online count
+
+      Banner1:
+        value: banner1
+        documentation: Large image with guild icon, name and online count. "POWERED BY DISCORD" as the footer of the widget
+
+      Banner2:
+        value: banner2
+        documentation: Smaller widget style with guild icon, name and online count. Split on the right with Discord logo
+
+      Banner3:
+        value: banner3
+        documentation: Large image with guild icon, name and online count. In the footer, Discord logo on the left and "Chat Now" on the right
+
+      Banner4:
+        value: banner4
+        documentation: Large Discord logo at the top of the widget. Guild icon, name and online count in the middle portion of the widget and a "JOIN MY SERVER" button at the bottom
+
+  - name: getGuildWelcomeScreen
+    defType: Request
+    documentation: >-
+      Returns the Welcome Screen object for the guild. If the welcome screen is
+      not enabled, the MANAGE_GUILD permission is required.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, welcome-screen ]
+    return: WelcomeScreen
+
+  - name: modifyGuildWelcomeScreen
+    defType: Request
+    documentation: >-
+      Modify the guild's Welcome Screen. Requires the MANAGE_GUILD permission.
+      Returns the updated Welcome Screen object. May fire a Guild Update Gateway
+      event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, welcome-screen ]
+    allowsReason: true
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          enabled:
+            type: Boolean
+            withNull: true
+            documentation: Whether the welcome screen is enabled
+
+          welcome_channels:
+            type: Seq[WelcomeScreen.WelcomeScreenChannel]
+            withNull: true
+            documentation: Channels linked in the welcome screen and their display options
+
+          description:
+            type: String
+            withNull: true
+            documentation: The server description to show in the welcome screen
+    return: WelcomeScreen
+
+  - name: getGuildOnboarding
+    defType: Request
+    documentation: >-
+      Returns the Onboarding object for the guild.
+    method: GET
+    path: [ guilds, { argOf: GuildId }, onboarding ]
+    return: GuildOnboarding
+
+  - name: modifyGuildOnboarding
+    defType: Request
+    documentation: >-
+      Modifies the onboarding configuration of the guild. Returns a 200 with the
+      Onboarding object for the guild. Requires the MANAGE_GUILD and MANAGE_ROLES
+      permissions.
+    method: PUT
+    path: [ guilds, { argOf: GuildId }, onboarding ]
+    allowsReason: true
+    body:
+      fields:
+        2.0.x:
+          prompts:
+            type: Seq[GuildOnboarding.OnboardingPrompt]
+            documentation: Prompts shown during onboarding and in customize community
+
+          default_channel_ids:
+            type: Seq[GuildChannelId]
+            documentation: Channel IDs that members get opted into automatically
+
+          enabled:
+            type: Boolean
+            documentation: Whether onboarding is enabled in the guild
+
+          mode:
+            type: GuildOnboarding.OnboardingMode
+            documentation: Current mode of onboarding
+    return: GuildOnboarding
+
+  - name: modifyCurrentUserVoiceState
+    defType: Request
+    documentation: >-
+      Updates the current user's voice state. Returns 204 No Content on success.
+      Fires a Voice State Update Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, voice-states, "@me" ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          channel_id:
+            type: StageGuildChannelId
+            documentation: The id of the channel the user is currently in
+
+          suppress:
+            type: Boolean
+            documentation: Toggles the user's suppress state
+
+          request_to_speak_timestamp:
+            type: OffsetDateTime
+            withNull: true
+            documentation: Sets the user's request to speak
+
+  - name: modifyUserVoiceState
+    defType: Request
+    documentation: >-
+      Updates another user's voice state. Fires a Voice State Update Gateway event.
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, voice-states, { argOf: UserId } ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          channel_id:
+            type: StageGuildChannelId
+            documentation: The id of the channel the user is currently in
+
+          suppress:
+            type: Boolean
+            documentation: Toggles the user's suppress state

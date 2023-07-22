@@ -144,6 +144,10 @@ object EncodeBody {
   }
 
   trait Multipart[A, -R] {
+    def filename: String
+
+    def withName(name: String): Multipart[A, R]
+
     def bodyForLogging: String
 
     def toSttpPart: Part[RequestBody[R]]
@@ -153,23 +157,58 @@ object EncodeBody {
         extends Multipart[Params, Any] {
       override def bodyForLogging: String = s"$name: ${encoder(params).noSpaces}"
 
-      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, params)
+      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, params).fileName(filename)
+
+      override def withName(name: String): EncodeJson[Params] = copy(name = name)
+
+      override def filename: String = name
     }
-    case class FilePart(file: Path, name: Option[String]) extends Multipart[Path, Any] {
+    case class FilePart(file: Path, name: Option[String], fileNameOpt: Option[String]) extends Multipart[Path, Any] {
       override def bodyForLogging: String = s"$name: Sending file ${file.getFileName}"
 
-      override def toSttpPart: Part[RequestBody[Any]] = multipartFile(name.getOrElse(file.getFileName.toString), file)
+      override def toSttpPart: Part[RequestBody[Any]] =
+        multipartFile(name.getOrElse(file.getFileName.toString), file).fileName(filename)
+
+      override def withName(name: String): FilePart = copy(name = Some(name))
+
+      override def filename: String = fileNameOpt.getOrElse(file.getFileName.toString)
     }
-    case class InputStreamPart(data: InputStream, name: String) extends Multipart[InputStream, Any] {
+    case class InputStreamPart(data: InputStream, name: String, filename: String) extends Multipart[InputStream, Any] {
       override def bodyForLogging: String = s"$name: Sending byte body"
+
+      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, data).fileName(filename)
+
+      override def withName(name: String): InputStreamPart = copy(name = name)
+    }
+    case class StreamPart[S, BinStream](
+        s: Streams[S] { type BinaryStream = BinStream },
+        data: BinStream,
+        name: String,
+        filename: String
+    ) extends Multipart[Nothing, S] {
+      override def bodyForLogging: String = s"$name: Sending stream"
+
+      override def toSttpPart: Part[RequestBody[S]] = multipartStream(s)(name, data).fileName(filename)
+
+      override def withName(name: String): StreamPart[S, BinStream] = copy(name = name)
+    }
+    case class StringPart(data: String, name: String) extends Multipart[String, Any] {
+      override def filename: String = name
+
+      override def withName(name: String): StringPart = copy(name = name)
+
+      override def bodyForLogging: String = data
 
       override def toSttpPart: Part[RequestBody[Any]] = multipart(name, data)
     }
-    case class StreamPart[S, BinStream](s: Streams[S] { type BinaryStream = BinStream }, data: BinStream, name: String)
-        extends Multipart[Nothing, S] {
-      override def bodyForLogging: String = s"$name: Sending stream"
+    case class FormDataPart(data: Map[String, String], name: String) extends Multipart[Map[String, String], Any] {
+      override def filename: String = name
 
-      override def toSttpPart: Part[RequestBody[S]] = multipartStream(s)(name, data)
+      override def withName(name: String): FormDataPart = copy(name = name)
+
+      override def bodyForLogging: String = data.toString()
+
+      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, data)
     }
   }
 
@@ -184,10 +223,19 @@ object EncodeBody {
 }
 
 //TODO: Logging
-trait ParseResponse[Response, -R] {
+trait ParseResponse[Response, -R] { self =>
   def setSttpResponse[T, R1](
       request: RequestT[Identity, T, R1]
   ): RequestT[Identity, Either[Throwable, Either[String, Response]], R1 with R]
+
+  def map[NewResponse](f: Response => NewResponse): ParseResponse[NewResponse, R] = new ParseResponse[NewResponse, R] {
+    override def setSttpResponse[T, R1](
+        request: RequestT[Identity, T, R1]
+    ): RequestT[Identity, Either[Throwable, Either[String, NewResponse]], R1 with R] = {
+      val request = self.setSttpResponse(request)
+      request.response(request.response.map(_.map(_.map(f))))
+    }
+  }
 }
 object ParseResponse {
   case object ExpectNoBody extends ParseResponse[Unit, Any] {

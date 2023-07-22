@@ -1,0 +1,103 @@
+name: Webhook
+defType: Class
+documentation: Webhooks are a low-effort way to post messages to channels in Discord. They do not require a bot user or authentication to use.
+fields:
+  2.0.x:
+    id:
+      type: Snowflake[Webhook]
+      documentation: The id of the webhook
+
+    type:
+      type: Webhook.WebhookType
+      documentation: The type of the webhook
+
+    guild_id:
+      type: GuildId
+      withUndefined: true
+      withNull: true
+      documentation: The guild id this webhook is for, if any
+
+    channel_id:
+      type: TextGuildChannelId
+      withNull: true
+      documentation: The channel id this webhook is for, if any
+
+    user:
+      type: User
+      withUndefined: true
+      documentation: The user this webhook was created by (not returned when getting a
+        webhook with its token)
+
+    name:
+      type: String
+      withNull: true
+      documentation: The default name of the webhook
+
+    avatar:
+      type: ImageHash
+      withNull: true
+      documentation: The default user avatar hash of the webhook
+
+    token:
+      type: String
+      withUndefined: true
+      documentation: The secure token of the webhook (returned for Incoming Webhooks)
+
+    application_id:
+      type: ApplicationId
+      withNull: true
+      documentation: The bot/OAuth2 application that created this webhook
+
+    source_guild:
+      type: Webhook.WebhookGuild
+      withUndefined: true
+      documentation: The guild of the channel that this webhook is following (returned
+        for Channel Follower Webhooks)
+
+    source_channel:
+      type: Webhook.WebhookChannel
+      withUndefined: true
+      documentation: The channel that this webhook is following (returned for Channel
+        Follower Webhooks)
+
+    url:
+      type: String
+      withUndefined: true
+      documentation: The url used for executing the webhook (returned by the webhooks
+        OAuth2 flow)
+
+innerTypes:
+  - name: WebhookGuild
+    defType: Class
+    fields:
+      2.0.x:
+        id: GuildID
+        name: String
+        icon:
+          type: ImageHash
+          withNull: true
+
+  - name: WebhookChannel
+    defType: Class
+    fields:
+      2.0.x:
+        id: TextGuildChannelId
+        name: String
+
+  - name: WebhookType
+    defType: Enum
+    type: Int
+    values:
+      Incoming:
+        value: "1"
+        documentation: Incoming Webhooks can post messages to channels with a generated
+          token
+
+      ChannelFollower:
+        value: "2"
+        documentation: Channel Follower Webhooks are internal webhooks used with Channel
+          Following to post new messages into channels
+
+      Application:
+        value: "3"
+        documentation: Application webhooks are webhooks used with Interactions

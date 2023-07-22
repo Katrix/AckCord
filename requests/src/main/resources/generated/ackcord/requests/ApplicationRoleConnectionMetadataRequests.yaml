@@ -3,11 +3,13 @@ defType: ObjectOnly
 innerTypes:
   - name: getApplicationRoleConnectionMetadataRecords
     defType: Request
+    method: GET
     path: [applications, {argOf: ApplicationId}, role-connections, metadata]
     return: Seq[ApplicationRoleConnectionMetadata]
 
   - name: updateApplicationRoleConnectionMetadataRecords
     defType: Request
+    method: PUT
     path: [applications, {argOf: ApplicationId}, role-connections, metadata]
     body: Seq[ApplicationRoleConnectionMetadata]
     return: Seq[ApplicationRoleConnectionMetadata]

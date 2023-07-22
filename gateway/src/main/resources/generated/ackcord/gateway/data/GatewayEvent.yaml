@@ -120,7 +120,8 @@ innerTypes:
               type: Boolean
               documentation: If the Client is AFK
       - name: Status
-        defType: StringEnum
+        defType: Enum
+        type: String
         values:
           Online: online
           DoNotDisturb: dnd

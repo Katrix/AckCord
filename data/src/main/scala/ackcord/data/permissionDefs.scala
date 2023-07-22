@@ -4,6 +4,8 @@ import io.circe._
 
 import scala.language.implicitConversions
 
+//TODO: Make a data definition. No real need for opaque types here
+
 trait PermissionDefs {
 
   /**

@@ -1,0 +1,37 @@
+name: InviteRequests
+defType: ObjectOnly
+innerTypes:
+  - name: getInvite
+    defType: Request
+    documentation: >-
+      Returns an invite object for the given code.
+    method: GET
+    path: [ invites, { name: inviteCode, customArgType: String } ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_counts:
+            type: Boolean
+            documentation: Whether the invite should contain approximate member counts
+
+          with_expiration:
+            type: Boolean
+            documentation: Whether the invite should contain the expiration date
+
+          guild_scheduled_event_id:
+            type: Snowflake[GuildScheduledId]
+            documentation: The guild scheduled event to include with the invite
+    return: Invite
+
+  - name: deleteInvite
+    defType: Request
+    documentation: >-
+      Delete an invite. Requires the MANAGE_CHANNELS permission on the channel
+      this invite belongs to, or MANAGE_GUILD to remove any invite across the
+      guild. Returns an invite object on success. Fires an Invite Delete Gateway
+      event.
+    method: DELETE
+    path: [ invites, { name: inviteCode, customArgType: String } ]
+    allowsReason: true
+    return: Invite
