@@ -44,7 +44,9 @@ object CodeGenTypes {
         fieldsMap.map { case (k1, v1) =>
           k1 -> v1.map { case (k2, v2) =>
             k2 -> v2.swap
-              .map(tpe => FieldDef(tpe, None, None, None, withUndefined = false, withNull = false, None))
+              .map { tpe =>
+                FieldDef(tpe, None, None, None, withUndefined = false, withNull = false, isExtension = false, None)
+              }
               .merge
           }
         },
@@ -181,7 +183,7 @@ object CodeGenTypes {
               allowsReason         <- c.getOrElse[Boolean]("allowsReason")(false)
               additionalTypeParams <- c.getOrElse[Seq[String]]("additionalTypeParams")(Nil)
               additionalParams     <- c.getOrElse[Map[String, RequestDefAdditionalParam]]("additionalParams")(Map.empty)
-              complexType   <- c.getOrElse[RequestDefComplexType]("complexType")(RequestDefComplexType(None, None))
+              complexType   <- c.getOrElse[RequestDefComplexType]("complexType")(RequestDefComplexType("Any", "Any"))
               encodeBody    <- c.get[Option[String]]("encodeBody")
               parseResponse <- c.get[Option[String]]("parseResponse")
             } yield RequestDef(
