@@ -17,7 +17,9 @@ object AutoModerationRequests {
       guildId: GuildId
   ): Request[Unit, Seq[AutoModerationRule]] =
     Request.restRequest(
-      route = (Route.Empty / "rules").toRequest(Method.GET)
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "auto-moderation" / "rules")
+          .toRequest(Method.GET)
     )
 
   def getAutoModerationRule(
@@ -25,8 +27,14 @@ object AutoModerationRequests {
       autoModerationRuleId: Snowflake[AutoModerationRule]
   ): Request[Unit, AutoModerationRule] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[AutoModerationRule]]("autoModerationRuleId", autoModerationRuleId))
-        .toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "auto-moderation" / "rules" / Parameters[Snowflake[AutoModerationRule]](
+        "autoModerationRuleId",
+        autoModerationRuleId
+      )).toRequest(Method.GET)
     )
 
   class CreateAutoModerationRuleBody(json: Json, cache: Map[String, Any] = Map.empty)
@@ -124,7 +132,9 @@ object AutoModerationRequests {
       reason: Option[String]
   ): Request[CreateAutoModerationRuleBody, AutoModerationRule] =
     Request.restRequest(
-      route = (Route.Empty / "rules").toRequest(Method.POST),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "auto-moderation" / "rules")
+          .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -217,8 +227,14 @@ object AutoModerationRequests {
       reason: Option[String]
   ): Request[ModifyAutoModerationRuleBody, AutoModerationRule] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[AutoModerationRule]]("autoModerationRuleId", autoModerationRuleId))
-        .toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "auto-moderation" / "rules" / Parameters[Snowflake[AutoModerationRule]](
+        "autoModerationRuleId",
+        autoModerationRuleId
+      )).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -229,8 +245,14 @@ object AutoModerationRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[AutoModerationRule]]("autoModerationRuleId", autoModerationRuleId))
-        .toRequest(Method.DELETE),
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "auto-moderation" / "rules" / Parameters[Snowflake[AutoModerationRule]](
+        "autoModerationRuleId",
+        autoModerationRuleId
+      )).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 

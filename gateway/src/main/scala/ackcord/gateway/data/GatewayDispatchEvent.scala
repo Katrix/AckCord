@@ -12,7 +12,77 @@ import ackcord.data._
 import ackcord.data.base._
 import io.circe.Json
 
-object GatewayDispatchEvent {
+sealed trait GatewayDispatchEvent extends DiscordObject
+
+object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent] {
+
+  def makeRaw(json: Json, cache: Map[String, Any]): GatewayDispatchEvent =
+    UnknownGatewayDispatchEvent.makeRaw(json, cache)
+
+  def makeFromType(unknown: UnknownGatewayDispatchEvent, tpe: GatewayDispatchType): GatewayDispatchEvent = tpe match {
+    case GatewayDispatchType.Ready                               => unknown.retype(Ready)
+    case GatewayDispatchType.Resumed                             => unknown.retype(Resumed)
+    case GatewayDispatchType.ApplicationCommandPermissionsUpdate => unknown.retype(ApplicationCommandPermissionsUpdate)
+    case GatewayDispatchType.AutoModerationRuleCreate            => unknown.retype(AutoModerationRuleCreate)
+    case GatewayDispatchType.AutoModerationRuleUpdate            => unknown.retype(AutoModerationRuleUpdate)
+    case GatewayDispatchType.AutoModerationRuleDelete            => unknown.retype(AutoModerationRuleDelete)
+    case GatewayDispatchType.AutoModerationActionExecution       => unknown.retype(AutoModerationActionExecution)
+    case GatewayDispatchType.ChannelCreate                       => unknown.retype(ChannelCreate)
+    case GatewayDispatchType.ChannelUpdate                       => unknown.retype(ChannelUpdate)
+    case GatewayDispatchType.ChannelDelete                       => unknown.retype(ChannelDelete)
+    case GatewayDispatchType.ThreadCreate                        => unknown.retype(ThreadCreate)
+    case GatewayDispatchType.ThreadUpdate                        => unknown.retype(ThreadUpdate)
+    case GatewayDispatchType.ThreadDelete                        => unknown.retype(ThreadDelete)
+    case GatewayDispatchType.ThreadListSync                      => unknown.retype(ThreadListSync)
+    case GatewayDispatchType.ThreadMemberUpdate                  => unknown.retype(ThreadMemberUpdate)
+    case GatewayDispatchType.ThreadMembersUpdate                 => unknown.retype(ThreadMembersUpdate)
+    case GatewayDispatchType.ChannelPinsUpdate                   => unknown.retype(ChannelPinsUpdate)
+    case GatewayDispatchType.GuildCreate                         => unknown.retype(GuildCreate)
+    case GatewayDispatchType.GuildUpdate                         => unknown.retype(GuildUpdate)
+    case GatewayDispatchType.GuildDelete                         => unknown.retype(GuildDelete)
+    case GatewayDispatchType.GuildAuditLogEntryCreate            => unknown.retype(GuildAuditLogEntryCreate)
+    case GatewayDispatchType.GuildBanAdd                         => unknown.retype(GuildBanAdd)
+    case GatewayDispatchType.GuildBanRemove                      => unknown.retype(GuildBanRemove)
+    case GatewayDispatchType.GuildEmojisUpdate                   => unknown.retype(GuildEmojisUpdate)
+    case GatewayDispatchType.GuildStickersUpdate                 => unknown.retype(GuildStickersUpdate)
+    case GatewayDispatchType.GuildIntegrationsUpdate             => unknown.retype(GuildIntegrationsUpdate)
+    case GatewayDispatchType.GuildMemberAdd                      => unknown.retype(GuildMemberAdd)
+    case GatewayDispatchType.GuildMemberRemove                   => unknown.retype(GuildMemberRemove)
+    case GatewayDispatchType.GuildMemberUpdate                   => unknown.retype(GuildMemberUpdate)
+    case GatewayDispatchType.GuildMembersChunk                   => unknown.retype(GuildMembersChunk)
+    case GatewayDispatchType.GuildRoleCreate                     => unknown.retype(GuildRoleCreate)
+    case GatewayDispatchType.GuildRoleUpdate                     => unknown.retype(GuildRoleUpdate)
+    case GatewayDispatchType.GuildRoleDelete                     => unknown.retype(GuildRoleDelete)
+    case GatewayDispatchType.GuildScheduledEventCreate           => unknown.retype(GuildScheduledEventCreate)
+    case GatewayDispatchType.GuildScheduledEventUpdate           => unknown.retype(GuildScheduledEventUpdate)
+    case GatewayDispatchType.GuildScheduledEventDelete           => unknown.retype(GuildScheduledEventDelete)
+    case GatewayDispatchType.GuildScheduledEventUserAdd          => unknown.retype(GuildScheduledEventUserAdd)
+    case GatewayDispatchType.GuildScheduledEventUserRemove       => unknown.retype(GuildScheduledEventUserRemove)
+    case GatewayDispatchType.IntegrationCreate                   => unknown.retype(IntegrationCreate)
+    case GatewayDispatchType.IntegrationUpdate                   => unknown.retype(IntegrationUpdate)
+    case GatewayDispatchType.IntegrationDelete                   => unknown.retype(IntegrationDelete)
+    case GatewayDispatchType.InviteCreate                        => unknown.retype(InviteCreate)
+    case GatewayDispatchType.InviteDelete                        => unknown.retype(InviteDelete)
+    case GatewayDispatchType.MessageCreate                       => unknown.retype(MessageCreate)
+    case GatewayDispatchType.MessageUpdate                       => unknown.retype(MessageUpdate)
+    case GatewayDispatchType.MessageDelete                       => unknown.retype(MessageDelete)
+    case GatewayDispatchType.MessageDeleteBulk                   => unknown.retype(MessageDeleteBulk)
+    case GatewayDispatchType.MessageReactionAdd                  => unknown.retype(MessageReactionAdd)
+    case GatewayDispatchType.MessageReactionRemove               => unknown.retype(MessageReactionRemove)
+    case GatewayDispatchType.MessageReactionRemoveAll            => unknown.retype(MessageReactionRemoveAll)
+    case GatewayDispatchType.MessageReactionRemoveEmoji          => unknown.retype(MessageReactionRemoveEmoji)
+    case GatewayDispatchType.PresenceUpdate                      => unknown.retype(PresenceUpdate)
+    case GatewayDispatchType.TypingStart                         => unknown.retype(TypingStart)
+    case GatewayDispatchType.UserUpdate                          => unknown.retype(UserUpdate)
+    case GatewayDispatchType.VoiceStateUpdate                    => unknown.retype(VoiceStateUpdate)
+    case GatewayDispatchType.VoiceServerUpdate                   => unknown.retype(VoiceServerUpdate)
+    case GatewayDispatchType.WebhooksUpdate                      => unknown.retype(WebhooksUpdate)
+    case GatewayDispatchType.InteractionCreate                   => unknown.retype(InteractionCreate)
+    case GatewayDispatchType.StageInstanceCreate                 => unknown.retype(StageInstanceCreate)
+    case GatewayDispatchType.StageInstanceUpdate                 => unknown.retype(StageInstanceUpdate)
+    case GatewayDispatchType.StageInstanceDelete                 => unknown.retype(StageInstanceDelete)
+    case _                                                       => unknown
+  }
 
   /**
     * * The ready event is dispatched when a client has completed the initial
@@ -25,7 +95,9 @@ object GatewayDispatchEvent {
     * unavailable when you connect to the gateway. As they become available,
     * your bot will be notified via Guild Create events.
     */
-  class Ready(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class Ready(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** API version */
     @inline def v: Int = selectDynamic[Int]("v")
@@ -111,7 +183,9 @@ object GatewayDispatchEvent {
     * The resumed event is dispatched when a client has sent a resume payload to
     * the gateway (for resuming existing sessions).
     */
-  class Resumed(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class Resumed(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     override def values: Seq[() => Any] = Seq()
   }
@@ -128,7 +202,8 @@ object GatewayDispatchEvent {
     * command permissions object.
     */
   class ApplicationCommandPermissionsUpdate(json: Json, cache: Map[String, Any] = Map.empty)
-      extends DiscordObject(json, cache) {
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub =
       ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub.makeRaw(json, extensionCache("data"))
 
@@ -160,7 +235,9 @@ object GatewayDispatchEvent {
     * Sent when a rule is created. The inner payload is an auto moderation rule
     * object.
     */
-  class AutoModerationRuleCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class AutoModerationRuleCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -179,7 +256,9 @@ object GatewayDispatchEvent {
     * Sent when a rule is updated. The inner payload is an auto moderation rule
     * object.
     */
-  class AutoModerationRuleUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class AutoModerationRuleUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -198,7 +277,9 @@ object GatewayDispatchEvent {
     * Sent when a rule is deleted. The inner payload is an auto moderation rule
     * object.
     */
-  class AutoModerationRuleDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class AutoModerationRuleDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -218,7 +299,8 @@ object GatewayDispatchEvent {
     * message is blocked).
     */
   class AutoModerationActionExecution(json: Json, cache: Map[String, Any] = Map.empty)
-      extends DiscordObject(json, cache) {
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild in which action was executed */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -333,7 +415,9 @@ object GatewayDispatchEvent {
     * Sent when a new guild channel is created, relevant to the current user.
     * The inner payload is a channel object.
     */
-  class ChannelCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ChannelCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -354,7 +438,9 @@ object GatewayDispatchEvent {
     * This event may reference roles or guild members that no longer exist in
     * the guild.
     */
-  class ChannelUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ChannelUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -370,7 +456,9 @@ object GatewayDispatchEvent {
     * Sent when a channel relevant to the current user is deleted. The inner
     * payload is a channel object.
     */
-  class ChannelDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ChannelDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -390,7 +478,9 @@ object GatewayDispatchEvent {
     *   - When being added to an existing private thread, includes a thread
     *     member object.
     */
-  class ThreadCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: ThreadChannel = ThreadChannel.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -407,7 +497,9 @@ object GatewayDispatchEvent {
     * is not sent when the field last_message_id is altered. To keep track of
     * the last_message_id changes, you must listen for Message Create events.
     */
-  class ThreadUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def data: ThreadChannel = ThreadChannel.makeRaw(json, extensionCache("data"))
 
     override def values: Seq[() => Any] = Seq(() => data)
@@ -424,7 +516,9 @@ object GatewayDispatchEvent {
     * payload is a subset of the channel object, containing just the id,
     * guild_id, parent_id, and type.
     */
-  class ThreadDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def id: ThreadChannelId = selectDynamic[ThreadChannelId]("id")
 
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -448,7 +542,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when the current user gains access to a channel. */
-  class ThreadListSync(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadListSync(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -510,7 +606,9 @@ object GatewayDispatchEvent {
     * bots. For bots, this event largely is just a signal that you are a member
     * of the thread. See the threads docs for more details
     */
-  class ThreadMemberUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadMemberUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -539,7 +637,9 @@ object GatewayDispatchEvent {
     * does not have the GUILD_MEMBERS Gateway Intent, then this event will only
     * be sent if the current user was added to or removed from the thread.
     */
-  class ThreadMembersUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ThreadMembersUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the thread */
     @inline def id: ThreadChannelId = selectDynamic[ThreadChannelId]("id")
@@ -595,7 +695,9 @@ object GatewayDispatchEvent {
     * Sent when a message is pinned or unpinned in a text channel. This is not
     * sent when a pinned message is deleted.
     */
-  class ChannelPinsUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ChannelPinsUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
@@ -644,7 +746,9 @@ object GatewayDispatchEvent {
     *   1. An available Guild: a guild object with extra fields, as noted below.
     *      2. An unavailable Guild: an unavailable guild object.
     */
-  class GuildCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def guild: GuildCreate.GuildCreateGuild =
       GuildCreate.GuildCreateGuild.makeRaw(json, extensionCache("guild"))
 
@@ -818,7 +922,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild is updated. The inner payload is a guild object. */
-  class GuildUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def guild: Guild = Guild.makeRaw(json, extensionCache("guild"))
 
     override def values: Seq[() => Any] = Seq(() => guild)
@@ -836,7 +942,9 @@ object GatewayDispatchEvent {
     * unavailable guild object. If the unavailable field is not set, the user
     * was removed from the guild.
     */
-  class GuildDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def unavailableGuild: UnavailableGuild = UnavailableGuild.makeRaw(json, extensionCache("unavailable_guild"))
 
     override def values: Seq[() => Any] = Seq(() => unavailableGuild)
@@ -855,7 +963,9 @@ object GatewayDispatchEvent {
     * Audit Log Entry object. This event is only sent to bots with the
     * VIEW_AUDIT_LOG permission.
     */
-  class GuildAuditLogEntryCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildAuditLogEntryCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def auditLogEntry: AuditLog.AuditLogEntry =
       AuditLog.AuditLogEntry.makeRaw(json, extensionCache("audit_log_entry"))
 
@@ -872,7 +982,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user is banned from a guild. */
-  class GuildBanAdd(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildBanAdd(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -896,7 +1008,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user is unbanned from a guild. */
-  class GuildBanRemove(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildBanRemove(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -920,7 +1034,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild's emojis have been updated. */
-  class GuildEmojisUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildEmojisUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -945,7 +1061,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild's stickers have been updated. */
-  class GuildStickersUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildStickersUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -970,7 +1088,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild integration is updated. */
-  class GuildIntegrationsUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildIntegrationsUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild whose integrations were updated */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -989,7 +1109,9 @@ object GatewayDispatchEvent {
     * Sent when a new user joins a guild. The inner payload is a guild member
     * object with an extra guild_id key:
     */
-  class GuildMemberAdd(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildMemberAdd(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1008,7 +1130,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user is removed from a guild (leave/kick/ban). */
-  class GuildMemberRemove(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildMemberRemove(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1036,7 +1160,9 @@ object GatewayDispatchEvent {
     * Sent when a guild member is updated. This will also fire when the user
     * object of a guild member changes.
     */
-  class GuildMemberUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildMemberUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1155,7 +1281,9 @@ object GatewayDispatchEvent {
     * Sent in response to Guild Request Members. You can use the chunk_index and
     * chunk_count to calculate how many chunks are left for your request.
     */
-  class GuildMembersChunk(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildMembersChunk(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1240,7 +1368,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild role is created. */
-  class GuildRoleCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildRoleCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1264,7 +1394,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild role is updated. */
-  class GuildRoleUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildRoleUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1288,7 +1420,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild role is deleted. */
-  class GuildRoleDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildRoleDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1316,7 +1450,9 @@ object GatewayDispatchEvent {
     * Sent when a guild scheduled event is created. The inner payload is a guild
     * scheduled event object.
     */
-  class GuildScheduledEventCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildScheduledEventCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
 
@@ -1336,7 +1472,9 @@ object GatewayDispatchEvent {
     * Sent when a guild scheduled event is updated. The inner payload is a guild
     * scheduled event object.
     */
-  class GuildScheduledEventUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildScheduledEventUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
 
@@ -1356,7 +1494,9 @@ object GatewayDispatchEvent {
     * Sent when a guild scheduled event is deleted. The inner payload is a guild
     * scheduled event object.
     */
-  class GuildScheduledEventDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildScheduledEventDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
 
@@ -1373,7 +1513,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user has subscribed to a guild scheduled event. */
-  class GuildScheduledEventUserAdd(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class GuildScheduledEventUserAdd(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def guildScheduledEventId: Snowflake[GuildScheduledEvent] =
       selectDynamic[Snowflake[GuildScheduledEvent]]("guild_scheduled_event_id")
 
@@ -1406,7 +1548,8 @@ object GatewayDispatchEvent {
 
   /** Sent when a user has unsubscribed  to a guild scheduled event. */
   class GuildScheduledEventUserRemove(json: Json, cache: Map[String, Any] = Map.empty)
-      extends DiscordObject(json, cache) {
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def guildScheduledEventId: Snowflake[GuildScheduledEvent] =
       selectDynamic[Snowflake[GuildScheduledEvent]]("guild_scheduled_event_id")
 
@@ -1441,7 +1584,9 @@ object GatewayDispatchEvent {
     * Sent when an integration is created. The inner payload is an integration
     * object with an additional guild_id key:
     */
-  class IntegrationCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class IntegrationCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def integration: Integration = Integration.makeRaw(json, extensionCache("integration"))
 
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1460,7 +1605,9 @@ object GatewayDispatchEvent {
     * Sent when an integration is updated. The inner payload is an integration
     * object with an additional guild_id key:
     */
-  class IntegrationUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class IntegrationUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def integration: Integration = Integration.makeRaw(json, extensionCache("integration"))
 
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -1476,7 +1623,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when an integration is deleted. */
-  class IntegrationDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class IntegrationDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** Integration ID */
     @inline def id: Snowflake[Integration] = selectDynamic[Snowflake[Integration]]("id")
@@ -1509,7 +1658,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a new invite to a channel is created. */
-  class InviteCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class InviteCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** Channel the invite is for */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
@@ -1632,7 +1783,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when an invite is deleted. */
-  class InviteDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class InviteDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** Channel of the invite */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
@@ -1665,7 +1818,9 @@ object GatewayDispatchEvent {
     * Sent when a message is created. The inner payload is a message object with
     * the following extra fields:
     */
-  class MessageCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def message: Message = Message.makeRaw(json, extensionCache("message"))
 
     /**
@@ -1732,7 +1887,9 @@ object GatewayDispatchEvent {
     * Sent when a message is updated. The inner payload is a message object with
     * the same extra fields as MESSAGE_CREATE.
     */
-  class MessageUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def message: Message.Partial = Message.Partial.makeRaw(json, extensionCache("message"))
 
     @inline def id: MessageId = selectDynamic[MessageId]("id")
@@ -1794,7 +1951,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a message is deleted. */
-  class MessageDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the message */
     @inline def id: MessageId = selectDynamic[MessageId]("id")
@@ -1824,7 +1983,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when multiple messages are deleted at once. */
-  class MessageDeleteBulk(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageDeleteBulk(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** IDs of the messages */
     @inline def ids: Seq[MessageId] = selectDynamic[Seq[MessageId]]("ids")
@@ -1857,7 +2018,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user adds a reaction to a message. */
-  class MessageReactionAdd(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageReactionAdd(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
@@ -1930,7 +2093,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user removes a reaction from a message. */
-  class MessageReactionRemove(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageReactionRemove(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
@@ -1982,7 +2147,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user explicitly removes all reactions from a message. */
-  class MessageReactionRemoveAll(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageReactionRemoveAll(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
@@ -2020,7 +2187,9 @@ object GatewayDispatchEvent {
     * Sent when a bot removes all instances of a given emoji from the reactions
     * of a message.
     */
-  class MessageReactionRemoveEmoji(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class MessageReactionRemoveEmoji(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
@@ -2064,7 +2233,9 @@ object GatewayDispatchEvent {
     * A user's presence is their current state on a guild. This event is sent
     * when a user's presence or info, such as name or avatar, is updated.
     */
-  class PresenceUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class PresenceUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** User whose presence is being updated */
     @inline def user: User.Partial = User.Partial.makeRaw(json, extensionCache("user"))
@@ -2534,6 +2705,15 @@ object GatewayDispatchEvent {
         EMBEDDED
       )
 
+      implicit class ActivityFlagsBitFieldOps(private val here: ActivityFlags) extends AnyVal {
+        def toInt: Int = here.value
+
+        def ++(there: ActivityFlags): ActivityFlags = ActivityFlags(here.value | there.value)
+
+        def --(there: ActivityFlags): ActivityFlags = ActivityFlags(here.value & ~there.value)
+
+        def isNone: Boolean = here.value == 0
+      }
     }
 
     /**
@@ -2555,7 +2735,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a user starts typing in a channel. */
-  class TypingStart(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class TypingStart(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
@@ -2610,7 +2792,9 @@ object GatewayDispatchEvent {
     * Sent when properties about the current bot's user change. Inner payload is
     * a user object.
     */
-  class UserUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class UserUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def user: User = User.makeRaw(json, extensionCache("user"))
 
     override def values: Seq[() => Any] = Seq(() => user)
@@ -2626,7 +2810,9 @@ object GatewayDispatchEvent {
     * Sent when someone joins/leaves/moves voice channels. Inner payload is a
     * voice state object.
     */
-  class VoiceStateUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class VoiceStateUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def voiceState: VoiceState = VoiceState.makeRaw(json, extensionCache("voice_state"))
 
     override def values: Seq[() => Any] = Seq(() => voiceState)
@@ -2645,7 +2831,9 @@ object GatewayDispatchEvent {
     * connecting to voice, and when the current voice instance fails over to a
     * new server.
     */
-  class VoiceServerUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class VoiceServerUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** Voice connection token */
     @inline def token: String = selectDynamic[String]("token")
@@ -2675,7 +2863,9 @@ object GatewayDispatchEvent {
   }
 
   /** Sent when a guild channel's webhook is created, updated, or deleted. */
-  class WebhooksUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class WebhooksUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
@@ -2704,7 +2894,9 @@ object GatewayDispatchEvent {
     * payload is an Interaction. This is intentionally a stub. A proper type can
     * be found in the interactions module.
     */
-  class InteractionCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class InteractionCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
 
     override def values: Seq[() => Any] = Seq()
   }
@@ -2719,7 +2911,9 @@ object GatewayDispatchEvent {
     * Sent when a Stage instance is created (i.e. the Stage is now "live").
     * Inner payload is a Stage instance
     */
-  class StageInstanceCreate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class StageInstanceCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
@@ -2737,7 +2931,9 @@ object GatewayDispatchEvent {
     * Sent when a Stage instance has been updated. Inner payload is a Stage
     * instance
     */
-  class StageInstanceUpdate(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class StageInstanceUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
@@ -2755,7 +2951,9 @@ object GatewayDispatchEvent {
     * Sent when a Stage instance has been deleted (i.e. the Stage has been
     * closed). Inner payload is a Stage instance
     */
-  class StageInstanceDelete(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class StageInstanceDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
@@ -2766,6 +2964,20 @@ object GatewayDispatchEvent {
     def make20(stageInstance: StageInstance): StageInstanceDelete = makeRawFromFields(
       DiscordObjectFrom.FromExtension("stage_instance", stageInstance)
     )
+
+  }
+
+  class UnknownGatewayDispatchEvent(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
+
+    override def values: Seq[() => Any] = Seq()
+  }
+  object UnknownGatewayDispatchEvent extends DiscordObjectCompanion[UnknownGatewayDispatchEvent] {
+    def makeRaw(json: Json, cache: Map[String, Any]): UnknownGatewayDispatchEvent =
+      new UnknownGatewayDispatchEvent(json, cache)
+
+    def make20(): UnknownGatewayDispatchEvent = makeRawFromFields()
 
   }
 }

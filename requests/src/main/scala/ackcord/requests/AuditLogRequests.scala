@@ -69,11 +69,12 @@ object AuditLogRequests {
       query: GetGuildAuditLogQuery = GetGuildAuditLogQuery.make20()
   ): Request[Unit, AuditLog] =
     Request.restRequest(
-      route = (Route.Empty / "audit-logs" +? Parameters.query("user_id", query.userId) +? Parameters.query(
-        "action_type",
-        query.actionType
-      ) +? Parameters.query("before", query.before) +? Parameters.query("after", query.after) +? Parameters
-        .query("limit", query.limit)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "audit-logs" +? Parameters
+          .query("user_id", query.userId) +? Parameters.query("action_type", query.actionType) +? Parameters.query(
+          "before",
+          query.before
+        ) +? Parameters.query("after", query.after) +? Parameters.query("limit", query.limit)).toRequest(Method.GET)
     )
 
 }

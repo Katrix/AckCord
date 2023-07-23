@@ -3,8 +3,8 @@ package ackcord.example
 import ackcord.BotSettings
 import ackcord.data._
 import ackcord.gateway._
-import ackcord.gateway.data.{GatewayDispatchType, GatewayEvent, GatewayEventBase}
-import ackcord.requests.CreateMessageContainer
+import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEventBase}
+import ackcord.requests.ChannelRequests
 import cats.effect.std.Console
 import cats.effect.{ExitCode, IO, Resource, ResourceApp}
 import cats.syntax.all._
@@ -13,26 +13,19 @@ import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
 object Testing extends ResourceApp {
   class StringCommandProcessor(commands: Map[String, (String, ChannelId) => IO[Unit]], log: Logger[IO])
-      extends GatewayProcess.Base[IO] {
+      extends DispatchEventProcess[IO] {
     override def name: String = "StringCommandProcessor"
 
-    override def onEvent(
-        event: GatewayEventBase[_],
-        context: Context
-    ): IO[Context] = event match {
-      case GatewayEvent.Dispatch(ev) if ev.t == GatewayDispatchType.MessageCreate =>
-        val j = ev.d.hcursor
+    override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): IO[Context] = event match {
+      case messageCreate: GatewayDispatchEvent.MessageCreate =>
+        val channelId = messageCreate.message.channelId
+        val content   = messageCreate.message.content
 
-        val res = for {
-          channelId <- j.get[ChannelId]("channel_id")
-          content   <- j.get[String]("content")
-        } yield commands
+        commands
           .find(t => content.startsWith(t._1))
           .map[IO[Unit]](t => t._2(content, channelId))
           .getOrElse(IO.unit)
-
-        val ret = res.sequence.flatMap(r => IO.fromEither(r))
-        ret.onError(e => log.error(e)("Failed to handle command")).as(context)
+          .as(context)
 
       case _ => IO.pure(context)
     }
@@ -77,9 +70,9 @@ object Testing extends ResourceApp {
               "!info" -> ((_, channelId) => {
                 req
                   .runRequest(
-                    CreateMessageContainer.createMessage(
+                    ChannelRequests.createMessage(
                       channelId,
-                      CreateMessageContainer.CreateMessageBody.make20("Hello from AckCord 2.0")
+                      ChannelRequests.CreateMessageBody.make20(content = UndefOrSome("Hello from AckCord 2.0"))
                     )
                   )
                   .void
@@ -87,9 +80,9 @@ object Testing extends ResourceApp {
               "!ratelimitTest " -> ((content, channelId) => {
                 List
                   .tabulate(content.substring("!ratelimitTest ".length).toInt)(i =>
-                    CreateMessageContainer.createMessage(
+                    ChannelRequests.createMessage(
                       channelId,
-                      CreateMessageContainer.CreateMessageBody.make20(s"Ratelimit message ${i + 1}")
+                      ChannelRequests.CreateMessageBody.make20(content = UndefOrSome(s"Ratelimit message ${i + 1}"))
                     )
                   )
                   .traverse_(req.runRequest)

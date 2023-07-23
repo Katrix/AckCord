@@ -56,7 +56,7 @@ object InviteRequests {
       query: GetInviteQuery = GetInviteQuery.make20()
   ): Request[Unit, Invite] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[String]("inviteCode", inviteCode) +? Parameters.query(
+      route = (Route.Empty / "invites" / Parameters[String]("inviteCode", inviteCode) +? Parameters.query(
         "with_counts",
         query.withCounts
       ) +? Parameters.query("with_expiration", query.withExpiration) +? Parameters
@@ -74,7 +74,7 @@ object InviteRequests {
       reason: Option[String]
   ): Request[Unit, Invite] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[String]("inviteCode", inviteCode)).toRequest(Method.DELETE),
+      route = (Route.Empty / "invites" / Parameters[String]("inviteCode", inviteCode)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 

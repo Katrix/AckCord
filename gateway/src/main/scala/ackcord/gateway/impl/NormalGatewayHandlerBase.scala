@@ -12,7 +12,8 @@ import sttp.ws.{WebSocket, WebSocketFrame}
 abstract class NormalGatewayHandlerBase[F[_]](
     ws: WebSocket[F],
     identifyData: IdentifyData,
-    log: Logger[F]
+    log: Logger[F],
+    logMessages: Boolean
 ) extends GatewayHandler.NormalGatewayHandler[F] {
   import ws.monad
 
@@ -25,7 +26,9 @@ abstract class NormalGatewayHandlerBase[F[_]](
         new Exception("Event too send too big. Can only send at most 4096 bytes in a message over the gateway")
       )
     } else {
-      log.debug(s"Sending message to Discord: $msg").flatMap { _ =>
+      val logF = if (logMessages) log.debug(s"Sending message to Discord: $msg") else ().unit
+
+      logF.flatMap { _ =>
         ws.either(ws.sendText(msg)).flatMap {
           case Right(value) => value.unit
           case Left(close)  => handleClose(close)
@@ -58,7 +61,7 @@ abstract class NormalGatewayHandlerBase[F[_]](
               inflater.inflateToString(bytes, "UTF-8")
           }
       }
-      .flatTap(msg => log.debug(s"Received message from Discord: $msg"))
+      .flatTap(msg => if (logMessages) log.debug(s"Received message from Discord: $msg") else ().unit)
   }
 
   protected def receiveRawGatewayEvent(inflater: Inflate.PureInflater[F]): F[Option[Json]] =

@@ -7,15 +7,15 @@ import cats.syntax.all._
 import cats.{Applicative, ApplicativeError, Monad}
 import org.typelevel.log4cats.Logger
 
-trait GatewayProcess[F[_]] {
+abstract class GatewayProcess[F[_]: Applicative] {
 
   def name: String
 
-  def onCreateHandler(context: Context): F[Context]
+  def onCreateHandler(context: Context): F[Context] = context.pure
 
-  def onEvent(event: GatewayEventBase[_], context: Context): F[Context]
+  def onEvent(event: GatewayEventBase[_], context: Context): F[Context] = context.pure
 
-  def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior]
+  def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] = behavior.pure
 
   override def toString: String = name
 }
@@ -33,15 +33,6 @@ object GatewayProcess {
   trait ContextKey[A]
   object ContextKey {
     def make[A]: ContextKey[A] = new ContextKey[A] {}
-  }
-
-  abstract class Base[F[_]: Applicative] extends GatewayProcess[F] {
-    override def onCreateHandler(context: Context): F[Context] = context.pure
-
-    override def onEvent(event: GatewayEventBase[_], context: Context): F[Context] =
-      context.pure
-
-    override def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] = behavior.pure
   }
 
   def sequenced[F[_]: Monad](callbacks: GatewayProcess[F]*): GatewayProcess[F] = new GatewayProcess[F] {

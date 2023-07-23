@@ -25,7 +25,8 @@ class CatsGatewayHandlerFactory[F[_]: Temporal: Inflate: LoggerFactory]
       ws: WebSocket[F],
       identifyData: IdentifyData,
       resumeData: Option[ResumeData],
-      handle: GatewayProcess[F]
+      handle: GatewayProcess[F],
+      logMessages: Boolean
   ): F[CatsGatewayHandlerFactory.CatsGatewayHandler[F]] = {
     for {
       log <- LoggerFactory[F].fromClass(classOf[CatsGatewayHandlerFactory.CatsGatewayHandler[F]])
@@ -43,6 +44,7 @@ class CatsGatewayHandlerFactory[F[_]: Temporal: Inflate: LoggerFactory]
         identifyData,
         handle,
         log,
+        logMessages,
         receivedHeartbeatAckRef,
         heartbeatNowQueue,
         resumeGatewayUrlRef,
@@ -63,6 +65,7 @@ object CatsGatewayHandlerFactory {
       identifyData: IdentifyData,
       handle: GatewayProcess[F],
       log: Logger[F],
+      logMessages: Boolean,
       receivedHeartbeatAckRef: Ref[F, Boolean],
       heartbeatNowQueue: Queue[F, Unit],
       resumeGatewayUrlRef: Ref[F, Option[String]],
@@ -70,7 +73,7 @@ object CatsGatewayHandlerFactory {
       lastReceivedSeqRef: Ref[F, Option[Int]],
       disconnectBehavior: Deferred[F, DisconnectBehavior],
       handlerContextKey: ContextKey[CatsGatewayHandler[F]]
-  ) extends NormalGatewayHandlerBase[F](ws, identifyData, log) {
+  ) extends NormalGatewayHandlerBase[F](ws, identifyData, log, logMessages) {
 
     private def reconnect(resumable: Boolean): F[Unit] =
       disconnectBehavior.complete(DisconnectBehavior.Reconnect(resumable)).void
@@ -123,8 +126,9 @@ object CatsGatewayHandlerFactory {
                 case GatewayEvent.Dispatch(ev) =>
                   val setSeq = lastReceivedSeqRef.set(Some(ev.s))
 
+                  //We don't access to dispatch type for a tiny bit more safety. Don't want to crash here
                   val setResumeDataEither = if (ev.t == GatewayDispatchType.Ready) {
-                    val d = ev.d.hcursor
+                    val d = ev.d.json.hcursor
                     for {
                       resumeGatewayUrl <- d.get[String]("resume_gateway_url")
                       sessionId        <- d.get[String]("session_id")

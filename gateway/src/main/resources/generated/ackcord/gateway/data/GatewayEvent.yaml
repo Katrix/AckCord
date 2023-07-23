@@ -6,14 +6,14 @@ objectExtends: [ "GatewayEventBase.TopMixin" ]
 innerTypes:
   - name: Dispatch
     defType: Class
-    extends: [ "GatewayEventBase[Json]" ]
+    extends: [ "GatewayEventBase[GatewayDispatchEvent.UnknownGatewayDispatchEvent]", "GatewayEventBase.DispatchMixin" ]
     objectExtends: [ "GatewayEventBase.GatewayEventCompanionMixin[Dispatch]" ]
     fields:
       2.0.x:
         op:
           type: GatewayEventOp
           default: GatewayEventOp.Dispatch # 0
-        d: Json
+        d: GatewayDispatchEvent.UnknownGatewayDispatchEvent
         s: Int
         t: GatewayDispatchType
     innerTypes:

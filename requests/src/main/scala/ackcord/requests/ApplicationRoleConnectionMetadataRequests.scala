@@ -17,7 +17,10 @@ object ApplicationRoleConnectionMetadataRequests {
       applicationId: ApplicationId
   ): Request[Unit, Seq[ApplicationRoleConnectionMetadata]] =
     Request.restRequest(
-      route = (Route.Empty / "metadata").toRequest(Method.GET)
+      route = (Route.Empty / "applications" / Parameters[ApplicationId](
+        "applicationId",
+        applicationId
+      ) / "role-connections" / "metadata").toRequest(Method.GET)
     )
 
   def updateApplicationRoleConnectionMetadataRecords(
@@ -25,7 +28,10 @@ object ApplicationRoleConnectionMetadataRequests {
       body: Seq[ApplicationRoleConnectionMetadata]
   ): Request[Seq[ApplicationRoleConnectionMetadata], Seq[ApplicationRoleConnectionMetadata]] =
     Request.restRequest(
-      route = (Route.Empty / "metadata").toRequest(Method.PUT),
+      route = (Route.Empty / "applications" / Parameters[ApplicationId](
+        "applicationId",
+        applicationId
+      ) / "role-connections" / "metadata").toRequest(Method.PUT),
       params = body
     )
 

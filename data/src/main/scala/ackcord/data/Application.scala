@@ -56,7 +56,7 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     * If the application belongs to a team, this will be a list of the members
     * of that team
     */
-  @inline def team: Option[Team] = selectDynamic[Option[Team]]("team")
+  @inline def team: Option[Application.Team] = selectDynamic[Option[Application.Team]]("team")
 
   /** Guild associated with the app. For example, a developer support server. */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
@@ -206,7 +206,7 @@ object Application extends DiscordObjectCompanion[Application] {
       privacyPolicyUrl: UndefOr[String] = UndefOrUndefined,
       owner: UndefOr[Application.ApplicationOwner] = UndefOrUndefined,
       verifyKey: String,
-      team: Option[Team],
+      team: Option[Application.Team],
       guildId: UndefOr[GuildId] = UndefOrUndefined,
       guild: UndefOr[Application.ApplicationGuild] = UndefOrUndefined,
       primarySkuId: UndefOr[RawSnowflake] = UndefOrUndefined,
@@ -271,6 +271,15 @@ object Application extends DiscordObjectCompanion[Application] {
       APPLICATION_COMMAND_BADGE
     )
 
+    implicit class FlagsBitFieldOps(private val here: Flags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: Flags): Flags = Flags(here.value | there.value)
+
+      def --(there: Flags): Flags = Flags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   class ApplicationGuild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -329,5 +338,129 @@ object Application extends DiscordObjectCompanion[Application] {
       "username"      := username
     )
 
+  }
+
+  class Team(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+    /** A hash of the image of the team's icon */
+    @inline def icon: ImageHash = selectDynamic[ImageHash]("icon")
+
+    /** The unique id of the team */
+    @inline def id: Snowflake[Team] = selectDynamic[Snowflake[Team]]("id")
+
+    /** The members of the team */
+    @inline def members: Seq[Team.TeamMember] = selectDynamic[Seq[Team.TeamMember]]("members")
+
+    /** The name of the team */
+    @inline def name: String = selectDynamic[String]("name")
+
+    /** The user id of the current team owner */
+    @inline def ownerUserId: UserId = selectDynamic[UserId]("owner_user_id")
+
+    override def values: Seq[() => Any] = Seq(() => icon, () => id, () => members, () => name, () => ownerUserId)
+  }
+  object Team extends DiscordObjectCompanion[Team] {
+    def makeRaw(json: Json, cache: Map[String, Any]): Team = new Team(json, cache)
+
+    /**
+      * @param icon
+      *   A hash of the image of the team's icon
+      * @param id
+      *   The unique id of the team
+      * @param members
+      *   The members of the team
+      * @param name
+      *   The name of the team
+      * @param ownerUserId
+      *   The user id of the current team owner
+      */
+    def make20(
+        icon: ImageHash,
+        id: Snowflake[Team],
+        members: Seq[Team.TeamMember],
+        name: String,
+        ownerUserId: UserId
+    ): Team = makeRawFromFields(
+      "icon"          := icon,
+      "id"            := id,
+      "members"       := members,
+      "name"          := name,
+      "owner_user_id" := ownerUserId
+    )
+
+    class TeamMember(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+      /** The user's membership state on the team */
+      @inline def membershipState: Team.TeamMembershipState =
+        selectDynamic[Team.TeamMembershipState]("membership_state")
+
+      /** Will always be ["*"] */
+      @inline def permissions: Seq[String] = selectDynamic[Seq[String]]("permissions")
+
+      /** the id of the parent team of which they are a member */
+      @inline def teamId: Snowflake[Team] = selectDynamic[Snowflake[Team]]("team_id")
+
+      /** The avatar, discriminator, id, and username of the user */
+      @inline def user: Team.TeamUser = selectDynamic[Team.TeamUser]("user")
+
+      override def values: Seq[() => Any] = Seq(() => membershipState, () => permissions, () => teamId, () => user)
+    }
+    object TeamMember extends DiscordObjectCompanion[TeamMember] {
+      def makeRaw(json: Json, cache: Map[String, Any]): TeamMember = new TeamMember(json, cache)
+
+      /**
+        * @param membershipState
+        *   The user's membership state on the team
+        * @param permissions
+        *   Will always be ["*"]
+        * @param teamId
+        *   the id of the parent team of which they are a member
+        * @param user
+        *   The avatar, discriminator, id, and username of the user
+        */
+      def make20(
+          membershipState: Team.TeamMembershipState,
+          permissions: Seq[String],
+          teamId: Snowflake[Team],
+          user: Team.TeamUser
+      ): TeamMember = makeRawFromFields(
+        "membership_state" := membershipState,
+        "permissions"      := permissions,
+        "team_id"          := teamId,
+        "user"             := user
+      )
+
+    }
+
+    sealed case class TeamMembershipState private (value: Int) extends DiscordEnum[Int]
+    object TeamMembershipState extends DiscordEnumCompanion[Int, TeamMembershipState] {
+
+      val INVITED: TeamMembershipState  = TeamMembershipState(1)
+      val ACCEPTED: TeamMembershipState = TeamMembershipState(2)
+
+      def unknown(value: Int): TeamMembershipState = new TeamMembershipState(value)
+
+      def values: Seq[TeamMembershipState] = Seq(INVITED, ACCEPTED)
+
+    }
+
+    class TeamUser(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+      @inline def id: UserId = selectDynamic[UserId]("id")
+
+      @inline def username: String = selectDynamic[String]("username")
+
+      @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
+
+      @inline def discriminator: String = selectDynamic[String]("discriminator")
+
+      override def values: Seq[() => Any] = Seq(() => id, () => username, () => avatar, () => discriminator)
+    }
+    object TeamUser extends DiscordObjectCompanion[TeamUser] {
+      def makeRaw(json: Json, cache: Map[String, Any]): TeamUser = new TeamUser(json, cache)
+
+      def make20(id: UserId, username: String, avatar: Option[ImageHash], discriminator: String): TeamUser =
+        makeRawFromFields("id" := id, "username" := username, "avatar" := avatar, "discriminator" := discriminator)
+
+    }
   }
 }

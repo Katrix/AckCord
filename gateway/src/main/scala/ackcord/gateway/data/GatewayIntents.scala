@@ -56,4 +56,13 @@ object GatewayIntents extends DiscordEnumCompanion[Int, GatewayIntents] {
     AutoModerationExecution
   )
 
+  implicit class GatewayIntentsBitFieldOps(private val here: GatewayIntents) extends AnyVal {
+    def toInt: Int = here.value
+
+    def ++(there: GatewayIntents): GatewayIntents = GatewayIntents(here.value | there.value)
+
+    def --(there: GatewayIntents): GatewayIntents = GatewayIntents(here.value & ~there.value)
+
+    def isNone: Boolean = here.value == 0
+  }
 }

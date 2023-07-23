@@ -54,7 +54,8 @@ object WebhookRequests {
       reason: Option[String]
   ): Request[CreateWebhookBody, Webhook] =
     Request.restRequest(
-      route = (Route.Empty / "webhooks").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "webhooks")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -67,7 +68,8 @@ object WebhookRequests {
       channelId: ChannelId
   ): Request[Unit, Seq[Webhook]] =
     Request.restRequest(
-      route = (Route.Empty / "webhooks").toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "webhooks")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -78,7 +80,8 @@ object WebhookRequests {
       guildId: GuildId
   ): Request[Unit, Seq[Webhook]] =
     Request.restRequest(
-      route = (Route.Empty / "webhooks").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "webhooks")
+        .toRequest(Method.GET)
     )
 
   /** Returns the new webhook object for the given id. */
@@ -86,7 +89,8 @@ object WebhookRequests {
       webhookId: WebhookId
   ): Request[Unit, Webhook] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[WebhookId]("webhookId", webhookId, major = true)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true)).toRequest(Method.GET)
     )
 
   /**
@@ -98,7 +102,11 @@ object WebhookRequests {
       webhookToken: String
   ): Request[Unit, Webhook] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[String]("webhookToken", webhookToken)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        )).toRequest(Method.GET)
     )
 
   class ModifyWebhookBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -143,7 +151,8 @@ object WebhookRequests {
       reason: Option[String]
   ): Request[ModifyWebhookBody, Webhook] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[WebhookId]("webhookId", webhookId, major = true)).toRequest(Method.PATCH),
+      route = (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true))
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -187,7 +196,11 @@ object WebhookRequests {
       reason: Option[String]
   ): Request[ModifyWebhookwithTokenBody, Webhook] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[String]("webhookToken", webhookToken)).toRequest(Method.PATCH),
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        )).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -202,7 +215,8 @@ object WebhookRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[WebhookId]("webhookId", webhookId, major = true)).toRequest(Method.DELETE),
+      route = (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true))
+        .toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -213,7 +227,11 @@ object WebhookRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[String]("webhookToken", webhookToken)).toRequest(Method.DELETE),
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        )).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -371,8 +389,12 @@ object WebhookRequests {
       parts: Seq[EncodeBody.Multipart[_, MPR]] = Nil
   ): ComplexRequest[ExecuteWebhookBody, Option[Message], MPR, Any] =
     Request.complexRestRequest(
-      route = (Route.Empty / Parameters[String]("webhookToken", webhookToken) +? Parameters
-        .query("doWait", query.doWait) +? Parameters.query("thread_id", query.threadId)).toRequest(Method.POST),
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) +? Parameters.query("doWait", query.doWait) +? Parameters.query("thread_id", query.threadId))
+          .toRequest(Method.POST),
       params = body,
       requestBody = Some(
         EncodeBody.MultipartBody(
@@ -430,8 +452,12 @@ object WebhookRequests {
       query: ExecuteSlackCompatibleWebhookQuery = ExecuteSlackCompatibleWebhookQuery.make20()
   ): Request[Unit, Option[Message]] =
     Request.restRequest(
-      route = (Route.Empty / "slack" +? Parameters.query("thread_id", query.threadId) +? Parameters
-        .query("doWait", query.doWait)).toRequest(Method.POST),
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) / "slack" +? Parameters.query("thread_id", query.threadId) +? Parameters.query("doWait", query.doWait))
+          .toRequest(Method.POST),
       parseResponse = Some(
         if (query.doWait.contains(true)) ParseResponse.AsJsonResponse[Message]().map(Some(_))
         else ParseResponse.ExpectNoBody.map(_ => None)
@@ -485,8 +511,12 @@ object WebhookRequests {
       query: ExecuteGitHubCompatibleWebhookQuery = ExecuteGitHubCompatibleWebhookQuery.make20()
   ): Request[Unit, Option[Message]] =
     Request.restRequest(
-      route = (Route.Empty / "github" +? Parameters.query("thread_id", query.threadId) +? Parameters
-        .query("doWait", query.doWait)).toRequest(Method.POST),
+      route =
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) / "github" +? Parameters.query("thread_id", query.threadId) +? Parameters.query("doWait", query.doWait))
+          .toRequest(Method.POST),
       parseResponse = Some(
         if (query.doWait.contains(true)) ParseResponse.AsJsonResponse[Message]().map(Some(_))
         else ParseResponse.ExpectNoBody.map(_ => None)
@@ -522,7 +552,10 @@ object WebhookRequests {
   ): Request[Unit, Message] =
     Request.restRequest(
       route =
-        (Route.Empty / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) / "messages" / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
           .toRequest(Method.GET)
     )
 
@@ -623,7 +656,10 @@ object WebhookRequests {
   ): ComplexRequest[EditWebhookMessageBody, Message, MPR, Any] =
     Request.complexRestRequest(
       route =
-        (Route.Empty / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) / "messages" / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
           .toRequest(Method.PATCH),
       params = body,
       requestBody = Some(
@@ -664,7 +700,10 @@ object WebhookRequests {
   ): Request[Unit, Unit] =
     Request.restRequest(
       route =
-        (Route.Empty / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
+        (Route.Empty / "webhooks" / Parameters[WebhookId]("webhookId", webhookId, major = true) / Parameters[String](
+          "webhookToken",
+          webhookToken
+        ) / "messages" / Parameters[MessageId]("messageId", messageId) +? Parameters.query("thread_id", query.threadId))
           .toRequest(Method.DELETE)
     )
 

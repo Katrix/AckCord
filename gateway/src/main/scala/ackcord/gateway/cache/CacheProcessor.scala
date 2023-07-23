@@ -1,16 +1,15 @@
 package ackcord.gateway.cache
 
-import ackcord.data.CacheSnapshot
 import ackcord.gateway.data.{GatewayEventBase, GatewayEventOp}
-import ackcord.gateway.{Context, ContextKey, DisconnectBehavior, GatewayProcess}
+import ackcord.gateway.{Context, GatewayProcess}
 import cats.Applicative
 import cats.syntax.all._
 import org.typelevel.log4cats.Logger
 
-class CacheProcessor[F[_]: Applicative](log: Logger[F]) extends GatewayProcess.Base[F] {
+class CacheProcessor[F[_]: Applicative](log: Logger[F]) extends GatewayProcess[F] {
   override def name: String = "CacheProcessor"
 
-  val getCache: ContextKey[CacheSnapshot] = ContextKey.make
+  //val getCache: ContextKey[CacheSnapshot] = ContextKey.make
 
   override def onEvent(event: GatewayEventBase[_], context: Context): F[Context] =
     if (event.op == GatewayEventOp.Dispatch) {

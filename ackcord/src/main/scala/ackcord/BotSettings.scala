@@ -37,6 +37,7 @@ object BotSettings {
       backend: SttpBackend[F, P],
       requestSettings: RequestSettings[F],
       loggerFactory: LoggerFactory[F],
+      logGatewayMessages: Boolean,
       handlerFactory: GatewayHandlerNormalFactory[F, Handler],
       handleReconnect: HandleReconnect[F],
       supervisor: Supervisor[F],
@@ -80,7 +81,7 @@ object BotSettings {
       implicit val reconnect: HandleReconnect[F] = handleReconnect
       val req                                    = requests
 
-      val connector = new GatewayConnector.NormalGatewayConnector[F, Handler](req, handlerFactory)
+      val connector = new GatewayConnector.NormalGatewayConnector[F, Handler](req, handlerFactory, logGatewayMessages)
       connector
         .start(editIdentifyData(IdentifyData.default(token, intents)))(assembledProcessor)
         .attempt
@@ -119,6 +120,7 @@ object BotSettings {
         backend,
         requestSettings,
         loggerFactory,
+        logGatewayMessages = false,
         handlerFactory,
         handleReconnect,
         supervisor,

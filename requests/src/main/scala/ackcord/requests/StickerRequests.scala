@@ -18,7 +18,7 @@ object StickerRequests {
       stickerId: Snowflake[Sticker]
   ): Request[Unit, Sticker] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.GET)
+      route = (Route.Empty / "stickers" / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.GET)
     )
 
   class ListNitroStickerPacksResult(json: Json, cache: Map[String, Any] = Map.empty)
@@ -51,7 +51,8 @@ object StickerRequests {
       guildId: GuildId
   ): Request[Unit, Seq[Sticker]] =
     Request.restRequest(
-      route = (Route.Empty / "stickers").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -63,7 +64,9 @@ object StickerRequests {
       stickerId: Snowflake[Sticker]
   ): Request[Unit, Sticker] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers" / Parameters[
+        Snowflake[Sticker]
+      ]("stickerId", stickerId)).toRequest(Method.GET)
     )
 
   class CreateGuildStickerBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -110,7 +113,8 @@ object StickerRequests {
       file: EncodeBody.Multipart[_, MPR]
   ): ComplexRequest[CreateGuildStickerBody, Sticker, MPR, Any] =
     Request.complexRestRequest(
-      route = (Route.Empty / "stickers").toRequest(Method.POST),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r)),
       requestBody = Some(
@@ -168,7 +172,9 @@ object StickerRequests {
       reason: Option[String]
   ): Request[ModifyGuildStickerBody, Sticker] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers" / Parameters[
+        Snowflake[Sticker]
+      ]("stickerId", stickerId)).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -184,7 +190,9 @@ object StickerRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers" / Parameters[
+        Snowflake[Sticker]
+      ]("stickerId", stickerId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 

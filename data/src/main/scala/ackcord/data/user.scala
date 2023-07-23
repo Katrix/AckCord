@@ -469,6 +469,15 @@ object User extends DiscordObjectCompanion[User] {
         ACTIVE_DEVELOPER
       )
 
+      implicit class UserFlagsBitFieldOps(private val here: UserFlags) extends AnyVal {
+        def toInt: Int = here.value
+
+        def ++(there: UserFlags): UserFlags = UserFlags(here.value | there.value)
+
+        def --(there: UserFlags): UserFlags = UserFlags(here.value & ~there.value)
+
+        def isNone: Boolean = here.value == 0
+      }
     }
 
     /**
@@ -560,6 +569,15 @@ object User extends DiscordObjectCompanion[User] {
       ACTIVE_DEVELOPER
     )
 
+    implicit class UserFlagsBitFieldOps(private val here: UserFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: UserFlags): UserFlags = UserFlags(here.value | there.value)
+
+      def --(there: UserFlags): UserFlags = UserFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   /**
@@ -1032,5 +1050,14 @@ object Role extends DiscordObjectCompanion[Role] {
 
     def values: Seq[RoleFlags] = Seq(IN_PROMPT)
 
+    implicit class RoleFlagsBitFieldOps(private val here: RoleFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: RoleFlags): RoleFlags = RoleFlags(here.value | there.value)
+
+      def --(there: RoleFlags): RoleFlags = RoleFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 }

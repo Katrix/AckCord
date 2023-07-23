@@ -81,7 +81,8 @@ object StageInstanceRequests {
       channelId: ChannelId
   ): Request[Unit, StageInstance] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.GET)
+      route = (Route.Empty / "stage-instances" / Parameters[ChannelId]("channelId", channelId, major = true))
+        .toRequest(Method.GET)
     )
 
   class ModifyStageInstanceBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -123,7 +124,8 @@ object StageInstanceRequests {
       reason: Option[String]
   ): Request[ModifyStageInstanceBody, StageInstance] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.PATCH),
+      route = (Route.Empty / "stage-instances" / Parameters[ChannelId]("channelId", channelId, major = true))
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -139,7 +141,8 @@ object StageInstanceRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.DELETE),
+      route = (Route.Empty / "stage-instances" / Parameters[ChannelId]("channelId", channelId, major = true))
+        .toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 

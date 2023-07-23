@@ -227,7 +227,7 @@ object AckCordCodeGen {
 
     val objWiths = enumTypeDef.objectExtends.map(w => s"with $w").mkString(" ")
 
-    val bitfieldMembers = if (enumTypeDef.name == "BitfieldIntEnum") {
+    val bitfieldMembers = if (enumTypeDef.isBitField) {
 
       List(
         s"""|implicit class ${tpeName}BitFieldOps(private val here: $tpeName) extends AnyVal {
@@ -395,11 +395,11 @@ object AckCordCodeGen {
           val majorTypes = Set("GuildId", "ChannelId", "WebhookId")
           val major =
             if (custom.major || (majorTypes.contains(custom.tpe) && firstArg)) ", major = true" else ""
-          (s"""/ Parameters[${custom.tpe}]("$name", $name$major)""", false)
+          (s"""$acc / Parameters[${custom.tpe}]("$name", $name$major)""", false)
         }
 
         arg match {
-          case PathElem.StringPathElem(elem)      => (s"""/ "$elem"""", firstArg)
+          case PathElem.StringPathElem(elem)      => (s"""$acc / "$elem"""", firstArg)
           case arg: PathElem.ArgPathElem          => handleCustom(knownArgPathElemToCustom(arg))
           case custom: PathElem.CustomArgPathElem => handleCustom(custom)
         }
@@ -420,7 +420,7 @@ object AckCordCodeGen {
         .mkString
     }
 
-    val pathArgWithQuery = s"Route.Empty $pathArg$queryArg"
+    val pathArgWithQuery = s"Route.Empty$pathArg$queryArg"
 
     val extraHeaders =
       if (requestDef.allowsReason)

@@ -21,7 +21,7 @@ object UserRequests {
     */
   val getCurrentUser: Request[Unit, User] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.GET)
+      route = (Route.Empty / "users" / "@me").toRequest(Method.GET)
     )
 
   /** Returns a user object for a given user ID. */
@@ -29,7 +29,7 @@ object UserRequests {
       userId: UserId
   ): Request[Unit, User] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.GET)
+      route = (Route.Empty / "users" / Parameters[UserId]("userId", userId)).toRequest(Method.GET)
     )
 
   class ModifyCurrentUserBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -70,7 +70,7 @@ object UserRequests {
       body: ModifyCurrentUserBody
   ): Request[ModifyCurrentUserBody, User] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.PATCH),
+      route = (Route.Empty / "users" / "@me").toRequest(Method.PATCH),
       params = body
     )
 
@@ -176,7 +176,7 @@ object UserRequests {
       query: GetCurrentUserGuildsQuery = GetCurrentUserGuildsQuery.make20()
   ): Request[Unit, Seq[GetCurrentUserGuildsResult]] =
     Request.restRequest(
-      route = (Route.Empty / "guilds" +? Parameters.query("before", query.before) +? Parameters.query(
+      route = (Route.Empty / "users" / "@me" / "guilds" +? Parameters.query("before", query.before) +? Parameters.query(
         "after",
         query.after
       ) +? Parameters.query("limit", query.limit) +? Parameters.query("with_counts", query.withCounts))
@@ -191,7 +191,9 @@ object UserRequests {
       guildId: GuildId
   ): Request[Unit, GuildMember] =
     Request.restRequest(
-      route = (Route.Empty / "member").toRequest(Method.GET)
+      route =
+        (Route.Empty / "users" / "@me" / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "member")
+          .toRequest(Method.GET)
     )
 
   /**
@@ -202,7 +204,8 @@ object UserRequests {
       guildId: GuildId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.DELETE)
+      route = (Route.Empty / "users" / "@me" / "guilds" / Parameters[GuildId]("guildId", guildId, major = true))
+        .toRequest(Method.DELETE)
     )
 
   class CreateDMBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -228,7 +231,7 @@ object UserRequests {
       body: CreateDMBody
   ): Request[CreateDMBody, DMChannel] =
     Request.restRequest(
-      route = (Route.Empty / "channels").toRequest(Method.POST),
+      route = (Route.Empty / "users" / "@me" / "channels").toRequest(Method.POST),
       params = body
     )
 
@@ -265,7 +268,7 @@ object UserRequests {
       body: CreateGroupDMBody
   ): Request[CreateGroupDMBody, GroupDMChannel] =
     Request.restRequest(
-      route = (Route.Empty / "channels").toRequest(Method.POST),
+      route = (Route.Empty / "users" / "@me" / "channels").toRequest(Method.POST),
       params = body
     )
 
@@ -275,7 +278,7 @@ object UserRequests {
     */
   val getUserConnections: Request[Unit, Seq[Connection]] =
     Request.restRequest(
-      route = (Route.Empty / "connections").toRequest(Method.GET)
+      route = (Route.Empty / "users" / "@me" / "connections").toRequest(Method.GET)
     )
 
   /**
@@ -287,7 +290,10 @@ object UserRequests {
       applicationId: ApplicationId
   ): Request[Unit, ApplicationRoleConnection] =
     Request.restRequest(
-      route = (Route.Empty / "role-connection").toRequest(Method.GET)
+      route = (Route.Empty / "users" / "@me" / "applications" / Parameters[ApplicationId](
+        "applicationId",
+        applicationId
+      ) / "role-connection").toRequest(Method.GET)
     )
 
   class UpdateUserApplicationRoleConnectionBody(json: Json, cache: Map[String, Any] = Map.empty)
@@ -348,7 +354,10 @@ object UserRequests {
       body: UpdateUserApplicationRoleConnectionBody
   ): Request[UpdateUserApplicationRoleConnectionBody, ApplicationRoleConnection] =
     Request.restRequest(
-      route = (Route.Empty / "role-connection").toRequest(Method.PUT),
+      route = (Route.Empty / "users" / "@me" / "applications" / Parameters[ApplicationId](
+        "applicationId",
+        applicationId
+      ) / "role-connection").toRequest(Method.PUT),
       params = body
     )
 

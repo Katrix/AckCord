@@ -16,7 +16,8 @@ object GatewayHandlerFactory {
         ws: WebSocket[F],
         identifyData: IdentifyData,
         resumeData: Option[ResumeData],
-        handle: GatewayProcess[F]
+        handle: GatewayProcess[F],
+        logMessages: Boolean
     ): F[Handler]
   }
 

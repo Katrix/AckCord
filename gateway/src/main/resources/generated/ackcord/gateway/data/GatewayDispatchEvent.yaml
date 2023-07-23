@@ -1,1513 +1,1657 @@
-name: GatewayDispatchEvent
-defType: ObjectOnly
+defType: Multiple
 imports:
   - ackcord.data._
   - java.time.OffsetDateTime
 innerTypes:
-  - name: Ready
-    defType: Class
-    documentation: |-
-      The ready event is dispatched when a client has completed the initial handshake with the gateway (for new sessions). The ready event can be the largest and most complex event the gateway will send, as it contains all the state required for a client to begin interacting with the rest of the platform.
+  - defType: Freeform
+    content: |-
+      sealed trait GatewayDispatchEvent extends DiscordObject
 
-      guilds are the guilds of which your bot is a member. They start out as unavailable when you connect to the gateway. As they become available, your bot will be notified via Guild Create events.
-    fields:
-      2.0.x:
-        v:
-          type: Int
-          documentation: API version
-
-        user:
-          type: User
-          documentation: Information about the user including email
-
-        guilds:
-          type: Seq[UnavailableGuild]
-          documentation: Guilds the user is in
-
-        session_id:
-          type: String
-          documentation: Used for resuming connections
-
-        resume_gateway_url:
-          type: String
-          documentation: Gateway URL for resuming connections
-
-        shard:
-          type: Seq[Int]
-          withUndefined: true
-          documentation: Shard information associated with this session, if sent when identifying
-
-        application:
-          type: Ready.ReadyApplication
-          documentation: Contains id and flags
-
-    innerTypes:
-      - name: ReadyApplication
-        defType: Class
-        fields:
-          2.0.x:
-            id: ApplicationId
-            flags: Application.Flags
-
-  - name: Resumed
-    defType: Class
-    documentation: The resumed event is dispatched when a client has sent a resume payload to the gateway (for resuming existing sessions).
-    fields:
-      2.0.x: { }
-
-  - name: ApplicationCommandPermissionsUpdate
-    defType: Class
-    documentation: >-
-      APPLICATION_COMMAND_PERMISSIONS_UPDATE event, sent when an application command's permissions are updated. The inner payload is an application command permissions object.
-    fields:
-      2.0.x:
-        data:
-          type: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub
-          isExtension: true
-
-    innerTypes:
-      - name: ApplicationCommandPermissionsStub
-        defType: Class
-        fields:
-          2.0.x: {}
-
-  - name: AutoModerationRuleCreate
-    defType: Class
-    documentation: >-
-      Sent when a rule is created. The inner payload is an auto moderation rule object.
-    fields:
-      2.0.x:
-        data:
-          type: AutoModerationRule
-          isExtension: true
-
-  - name: AutoModerationRuleUpdate
-    defType: Class
-    documentation: >-
-      Sent when a rule is updated. The inner payload is an auto moderation rule object.
-    fields:
-      2.0.x:
-        data:
-          type: AutoModerationRule
-          isExtension: true
-
-  - name: AutoModerationRuleDelete
-    defType: Class
-    documentation: >-
-      Sent when a rule is deleted. The inner payload is an auto moderation rule object.
-    fields:
-      2.0.x:
-        data:
-          type: AutoModerationRule
-          isExtension: true
-
-  - name: AutoModerationActionExecution
-    defType: Class
-    documentation: >-
-      Sent when a rule is triggered and an action is executed (e.g. when a message is blocked).
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild in which action was executed
-
-        action:
-          type: AutoModerationRule.AutoModerationRuleAction
-          documentation: Action which was executed
-
-        rule_id:
-          type: Snowflake[AutoModerationRule]
-          documentation: ID of the rule which action belongs to
-
-        rule_trigger_type:
-          type: AutoModerationRule.AutoModerationRuleTriggerType
-          documentation: Trigger type of rule which was triggered
-
-        user_id:
-          type: UserId
-          documentation: ID of the user which generated the content which triggered the rule
-
-        channel_id:
-          type: TextGuildChannelId
-          withUndefined: true
-          documentation: ID of the channel in which user content was posted
-
-        message_id:
-          type: MessageId
-          withUndefined: true
-          documentation: ID of any user message which content belongs to
-
-        alert_system_message_id:
-          type: MessageId
-          withUndefined: true
-          documentation: ID of any system auto moderation messages posted as a result of this action
-
-        content:
-          type: String
-          documentation: User-generated text content
-
-        matched_keyword:
-          type: String
-          withNull: true
-          documentation: Word or phrase configured in the rule that triggered the rule
-
-        matched_content:
-          type: String
-          withNull: true
-          documentation: Substring in content that triggered the rule
-
-  - name: ChannelCreate
-    defType: Class
-    documentation: >-
-      Sent when a new guild channel is created, relevant to the current user. The inner payload is a channel object.
-    fields:
-      2.0.x:
-        data:
-          type: GuildChannel
-          isExtension: true
-
-  - name: ChannelUpdate
-    defType: Class
-    documentation: |-
-      Sent when a channel is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events (or Thread Create events for GUILD_FORUM channels).
-      
-      This event may reference roles or guild members that no longer exist in the guild.
-    fields:
-      2.0.x:
-        data:
-          type: GuildChannel
-          isExtension: true
-
-  - name: ChannelDelete
-    defType: Class
-    documentation: >-
-      Sent when a channel relevant to the current user is deleted. The inner payload is a channel object.
-    fields:
-      2.0.x:
-        data:
-          type: GuildChannel
-          isExtension: true
-
-  - name: ThreadCreate
-    defType: Class
-    documentation: |-
-      Sent when a thread is created, relevant to the current user, or when the current user is added to a thread. The inner payload is a channel object.
-      - When a thread is created, includes an additional newly_created boolean field.
-      - When being added to an existing private thread, includes a thread member object.
-    fields:
-      2.0.x:
-        data:
-          type: ThreadChannel
-          isExtension: true
-
-  - name: ThreadUpdate
-    defType: Class
-    documentation: >-
-      Sent when a thread is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events.
-    fields:
-      2.0.x:
-        data:
-          type: ThreadChannel
-          isExtension: true
-
-  - name: ThreadDelete
-    defType: Class
-    documentation: >-
-      Sent when a thread relevant to the current user is deleted. The inner payload is a subset of the channel object, containing just the id, guild_id, parent_id, and type.
-    fields:
-      2.0.x:
-        id: ThreadChannelId
-        guild_id: GuildId
-        parent_id: GuildChannelId
-        tpe:
-          jsonName: type
-          type: Channel.ChannelType
-
-  - name: ThreadListSync
-    defType: Class
-    documentation: >-
-      Sent when the current user gains access to a channel.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        channel_ids:
-          type: Seq[GuildChannelId]
-          documentation: Parent channel IDs whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data.
-
-        threads:
-          type: Seq[ThreadChannel]
-          documentation: All active threads in the given channels that the current user can access
-
-        members:
-          type: Seq[Channel.ThreadMember]
-          documentation: All thread member objects from the synced threads for the current user, indicating which threads the current user has been added to
-
-  - name: ThreadMemberUpdate
-    defType: Class
-    documentation: >-
-      Sent when the thread member object for the current user is updated. The inner payload is a thread member object with an extra guild_id field. This event is documented for completeness, but unlikely to be used by most bots. For bots, this event largely is just a signal that you are a member of the thread. See the threads docs for more details
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        thread_member:
-          type: Channel.ThreadMember
-          isExtension: true
-          documentation: Rest of the thread member object
-
-  - name: ThreadMembersUpdate
-    defType: Class
-    documentation: >-
-      Sent when anyone is added to or removed from a thread. If the current user does not have the GUILD_MEMBERS Gateway Intent, then this event will only be sent if the current user was added to or removed from the thread.
-    fields:
-      2.0.x:
-        id:
-          type: ThreadChannelId
-          documentation: ID of the thread
-
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        member_count:
-          type: Int
-          documentation: Approximate number of members in the thread, capped at 50
-
-        added_members:
-          type: Seq[Channel.ThreadMember]
-          withUndefined: true
-          documentation: Users who were added to the thread
-
-        removed_member_ids:
-          type: Seq[UserId]
-          withUndefined: true
-          documentation: ID of the users who were removed from the thread
-
-  - name: ChannelPinsUpdate
-    defType: Class
-    documentation: >-
-      Sent when a message is pinned or unpinned in a text channel. This is not sent when a pinned message is deleted.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        last_pin_timestamp:
-          type: OffsetDateTime
-          withUndefined: true
-          withNull: true
-          documentation: Time at which the most recent pinned message was pinned
-
-  - name: GuildCreate
-    defType: Class
-    documentation: |-
-      This event can be sent in three different scenarios:
-      1. When a user is initially connecting, to lazily load and backfill information for all unavailable guilds sent in the Ready event. Guilds that are unavailable due to an outage will send a Guild Delete event.
-      2. When a Guild becomes available again to the client.
-      3. When the current user joins a new Guild.
-
-      During an outage, the guild object in scenarios 1 and 3 may be marked as unavailable.
-
-      The inner payload can be:
-      1. An available Guild: a guild object with extra fields, as noted below.
-      2. An unavailable Guild: an unavailable guild object.
-    fields:
-      2.0.x:
-        guild:
-          type: GuildCreate.GuildCreateGuild
-          isExtension: true
-
+  - name: GatewayDispatchEvent
+    defType: ObjectOnly
+    objectExtends: ["DiscordObjectCompanion[GatewayDispatchEvent]"]
     innerTypes:
       - defType: Freeform
         content: |-
-          sealed trait GuildCreateGuild extends DiscordObject
+          def makeRaw(json: Json, cache: Map[String, Any]): GatewayDispatchEvent =
+            UnknownGatewayDispatchEvent.makeRaw(json, cache)
           
-          object GuildCreateGuild extends DiscordObjectCompanion[GuildCreateGuild] {
-            override def makeRaw(json: Json, cache: Map[String, Any]): GuildCreateGuild = {
-              if (json.hcursor.getOrElse[Boolean]("unavailable")(false).contains(true)) {
-                GuildCreateUnavailableGuild.makeRaw(json, cache)
-              } else {
-                AvailableGuild.makeRaw(json, cache)
-              }
-            }
+          def makeFromType(unknown: UnknownGatewayDispatchEvent, tpe: GatewayDispatchType): GatewayDispatchEvent = tpe match {
+            case GatewayDispatchType.Ready => unknown.retype(Ready)
+            case GatewayDispatchType.Resumed => unknown.retype(Resumed)
+            case GatewayDispatchType.ApplicationCommandPermissionsUpdate => unknown.retype(ApplicationCommandPermissionsUpdate)
+            case GatewayDispatchType.AutoModerationRuleCreate => unknown.retype(AutoModerationRuleCreate)
+            case GatewayDispatchType.AutoModerationRuleUpdate => unknown.retype(AutoModerationRuleUpdate)
+            case GatewayDispatchType.AutoModerationRuleDelete => unknown.retype(AutoModerationRuleDelete)
+            case GatewayDispatchType.AutoModerationActionExecution => unknown.retype(AutoModerationActionExecution)
+            case GatewayDispatchType.ChannelCreate => unknown.retype(ChannelCreate)
+            case GatewayDispatchType.ChannelUpdate => unknown.retype(ChannelUpdate)
+            case GatewayDispatchType.ChannelDelete => unknown.retype(ChannelDelete)
+            case GatewayDispatchType.ThreadCreate => unknown.retype(ThreadCreate)
+            case GatewayDispatchType.ThreadUpdate => unknown.retype(ThreadUpdate)
+            case GatewayDispatchType.ThreadDelete => unknown.retype(ThreadDelete)
+            case GatewayDispatchType.ThreadListSync => unknown.retype(ThreadListSync)
+            case GatewayDispatchType.ThreadMemberUpdate => unknown.retype(ThreadMemberUpdate)
+            case GatewayDispatchType.ThreadMembersUpdate => unknown.retype(ThreadMembersUpdate)
+            case GatewayDispatchType.ChannelPinsUpdate => unknown.retype(ChannelPinsUpdate)
+            case GatewayDispatchType.GuildCreate => unknown.retype(GuildCreate)
+            case GatewayDispatchType.GuildUpdate => unknown.retype(GuildUpdate)
+            case GatewayDispatchType.GuildDelete => unknown.retype(GuildDelete)
+            case GatewayDispatchType.GuildAuditLogEntryCreate => unknown.retype(GuildAuditLogEntryCreate)
+            case GatewayDispatchType.GuildBanAdd => unknown.retype(GuildBanAdd)
+            case GatewayDispatchType.GuildBanRemove => unknown.retype(GuildBanRemove)
+            case GatewayDispatchType.GuildEmojisUpdate => unknown.retype(GuildEmojisUpdate)
+            case GatewayDispatchType.GuildStickersUpdate => unknown.retype(GuildStickersUpdate)
+            case GatewayDispatchType.GuildIntegrationsUpdate => unknown.retype(GuildIntegrationsUpdate)
+            case GatewayDispatchType.GuildMemberAdd => unknown.retype(GuildMemberAdd)
+            case GatewayDispatchType.GuildMemberRemove => unknown.retype(GuildMemberRemove)
+            case GatewayDispatchType.GuildMemberUpdate => unknown.retype(GuildMemberUpdate)
+            case GatewayDispatchType.GuildMembersChunk => unknown.retype(GuildMembersChunk)
+            case GatewayDispatchType.GuildRoleCreate => unknown.retype(GuildRoleCreate)
+            case GatewayDispatchType.GuildRoleUpdate => unknown.retype(GuildRoleUpdate)
+            case GatewayDispatchType.GuildRoleDelete => unknown.retype(GuildRoleDelete)
+            case GatewayDispatchType.GuildScheduledEventCreate => unknown.retype(GuildScheduledEventCreate)
+            case GatewayDispatchType.GuildScheduledEventUpdate => unknown.retype(GuildScheduledEventUpdate)
+            case GatewayDispatchType.GuildScheduledEventDelete => unknown.retype(GuildScheduledEventDelete)
+            case GatewayDispatchType.GuildScheduledEventUserAdd => unknown.retype(GuildScheduledEventUserAdd)
+            case GatewayDispatchType.GuildScheduledEventUserRemove => unknown.retype(GuildScheduledEventUserRemove)
+            case GatewayDispatchType.IntegrationCreate => unknown.retype(IntegrationCreate)
+            case GatewayDispatchType.IntegrationUpdate => unknown.retype(IntegrationUpdate)
+            case GatewayDispatchType.IntegrationDelete => unknown.retype(IntegrationDelete)
+            case GatewayDispatchType.InviteCreate => unknown.retype(InviteCreate)
+            case GatewayDispatchType.InviteDelete => unknown.retype(InviteDelete)
+            case GatewayDispatchType.MessageCreate => unknown.retype(MessageCreate)
+            case GatewayDispatchType.MessageUpdate => unknown.retype(MessageUpdate)
+            case GatewayDispatchType.MessageDelete => unknown.retype(MessageDelete)
+            case GatewayDispatchType.MessageDeleteBulk => unknown.retype(MessageDeleteBulk)
+            case GatewayDispatchType.MessageReactionAdd => unknown.retype(MessageReactionAdd)
+            case GatewayDispatchType.MessageReactionRemove => unknown.retype(MessageReactionRemove)
+            case GatewayDispatchType.MessageReactionRemoveAll => unknown.retype(MessageReactionRemoveAll)
+            case GatewayDispatchType.MessageReactionRemoveEmoji => unknown.retype(MessageReactionRemoveEmoji)
+            case GatewayDispatchType.PresenceUpdate => unknown.retype(PresenceUpdate)
+            case GatewayDispatchType.TypingStart => unknown.retype(TypingStart)
+            case GatewayDispatchType.UserUpdate => unknown.retype(UserUpdate)
+            case GatewayDispatchType.VoiceStateUpdate => unknown.retype(VoiceStateUpdate)
+            case GatewayDispatchType.VoiceServerUpdate => unknown.retype(VoiceServerUpdate)
+            case GatewayDispatchType.WebhooksUpdate => unknown.retype(WebhooksUpdate)
+            case GatewayDispatchType.InteractionCreate => unknown.retype(InteractionCreate)
+            case GatewayDispatchType.StageInstanceCreate => unknown.retype(StageInstanceCreate)
+            case GatewayDispatchType.StageInstanceUpdate => unknown.retype(StageInstanceUpdate)
+            case GatewayDispatchType.StageInstanceDelete => unknown.retype(StageInstanceDelete)
+            case _ => unknown
           }
 
-      - name: AvailableGuild
+      - name: Ready
         defType: Class
-        extends: [GuildCreateGuild]
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          The ready event is dispatched when a client has completed the initial handshake with the gateway (for new sessions). The ready event can be the largest and most complex event the gateway will send, as it contains all the state required for a client to begin interacting with the rest of the platform.
+
+          guilds are the guilds of which your bot is a member. They start out as unavailable when you connect to the gateway. As they become available, your bot will be notified via Guild Create events.
+        fields:
+          2.0.x:
+            v:
+              type: Int
+              documentation: API version
+
+            user:
+              type: User
+              documentation: Information about the user including email
+
+            guilds:
+              type: Seq[UnavailableGuild]
+              documentation: Guilds the user is in
+
+            session_id:
+              type: String
+              documentation: Used for resuming connections
+
+            resume_gateway_url:
+              type: String
+              documentation: Gateway URL for resuming connections
+
+            shard:
+              type: Seq[Int]
+              withUndefined: true
+              documentation: Shard information associated with this session, if sent when identifying
+
+            application:
+              type: Ready.ReadyApplication
+              documentation: Contains id and flags
+
+        innerTypes:
+          - name: ReadyApplication
+            defType: Class
+            fields:
+              2.0.x:
+                id: ApplicationId
+                flags: Application.Flags
+
+      - name: Resumed
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: The resumed event is dispatched when a client has sent a resume payload to the gateway (for resuming existing sessions).
+        fields:
+          2.0.x: { }
+
+      - name: ApplicationCommandPermissionsUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          APPLICATION_COMMAND_PERMISSIONS_UPDATE event, sent when an application command's permissions are updated. The inner payload is an application command permissions object.
+        fields:
+          2.0.x:
+            data:
+              type: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub
+              isExtension: true
+
+        innerTypes:
+          - name: ApplicationCommandPermissionsStub
+            defType: Class
+            fields:
+              2.0.x: { }
+
+      - name: AutoModerationRuleCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a rule is created. The inner payload is an auto moderation rule object.
+        fields:
+          2.0.x:
+            data:
+              type: AutoModerationRule
+              isExtension: true
+
+      - name: AutoModerationRuleUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a rule is updated. The inner payload is an auto moderation rule object.
+        fields:
+          2.0.x:
+            data:
+              type: AutoModerationRule
+              isExtension: true
+
+      - name: AutoModerationRuleDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a rule is deleted. The inner payload is an auto moderation rule object.
+        fields:
+          2.0.x:
+            data:
+              type: AutoModerationRule
+              isExtension: true
+
+      - name: AutoModerationActionExecution
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a rule is triggered and an action is executed (e.g. when a message is blocked).
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild in which action was executed
+
+            action:
+              type: AutoModerationRule.AutoModerationRuleAction
+              documentation: Action which was executed
+
+            rule_id:
+              type: Snowflake[AutoModerationRule]
+              documentation: ID of the rule which action belongs to
+
+            rule_trigger_type:
+              type: AutoModerationRule.AutoModerationRuleTriggerType
+              documentation: Trigger type of rule which was triggered
+
+            user_id:
+              type: UserId
+              documentation: ID of the user which generated the content which triggered the rule
+
+            channel_id:
+              type: TextGuildChannelId
+              withUndefined: true
+              documentation: ID of the channel in which user content was posted
+
+            message_id:
+              type: MessageId
+              withUndefined: true
+              documentation: ID of any user message which content belongs to
+
+            alert_system_message_id:
+              type: MessageId
+              withUndefined: true
+              documentation: ID of any system auto moderation messages posted as a result of this action
+
+            content:
+              type: String
+              documentation: User-generated text content
+
+            matched_keyword:
+              type: String
+              withNull: true
+              documentation: Word or phrase configured in the rule that triggered the rule
+
+            matched_content:
+              type: String
+              withNull: true
+              documentation: Substring in content that triggered the rule
+
+      - name: ChannelCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a new guild channel is created, relevant to the current user. The inner payload is a channel object.
+        fields:
+          2.0.x:
+            data:
+              type: GuildChannel
+              isExtension: true
+
+      - name: ChannelUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          Sent when a channel is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events (or Thread Create events for GUILD_FORUM channels).
+
+          This event may reference roles or guild members that no longer exist in the guild.
+        fields:
+          2.0.x:
+            data:
+              type: GuildChannel
+              isExtension: true
+
+      - name: ChannelDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a channel relevant to the current user is deleted. The inner payload is a channel object.
+        fields:
+          2.0.x:
+            data:
+              type: GuildChannel
+              isExtension: true
+
+      - name: ThreadCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          Sent when a thread is created, relevant to the current user, or when the current user is added to a thread. The inner payload is a channel object.
+          - When a thread is created, includes an additional newly_created boolean field.
+          - When being added to an existing private thread, includes a thread member object.
+        fields:
+          2.0.x:
+            data:
+              type: ThreadChannel
+              isExtension: true
+
+      - name: ThreadUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a thread is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events.
+        fields:
+          2.0.x:
+            data:
+              type: ThreadChannel
+              isExtension: true
+
+      - name: ThreadDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a thread relevant to the current user is deleted. The inner payload is a subset of the channel object, containing just the id, guild_id, parent_id, and type.
+        fields:
+          2.0.x:
+            id: ThreadChannelId
+            guild_id: GuildId
+            parent_id: GuildChannelId
+            tpe:
+              jsonName: type
+              type: Channel.ChannelType
+
+      - name: ThreadListSync
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when the current user gains access to a channel.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            channel_ids:
+              type: Seq[GuildChannelId]
+              documentation: Parent channel IDs whose threads are being synced. If omitted, then threads were synced for the entire guild. This array may contain channel_ids that have no active threads as well, so you know to clear that data.
+
+            threads:
+              type: Seq[ThreadChannel]
+              documentation: All active threads in the given channels that the current user can access
+
+            members:
+              type: Seq[Channel.ThreadMember]
+              documentation: All thread member objects from the synced threads for the current user, indicating which threads the current user has been added to
+
+      - name: ThreadMemberUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when the thread member object for the current user is updated. The inner payload is a thread member object with an extra guild_id field. This event is documented for completeness, but unlikely to be used by most bots. For bots, this event largely is just a signal that you are a member of the thread. See the threads docs for more details
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            thread_member:
+              type: Channel.ThreadMember
+              isExtension: true
+              documentation: Rest of the thread member object
+
+      - name: ThreadMembersUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when anyone is added to or removed from a thread. If the current user does not have the GUILD_MEMBERS Gateway Intent, then this event will only be sent if the current user was added to or removed from the thread.
+        fields:
+          2.0.x:
+            id:
+              type: ThreadChannelId
+              documentation: ID of the thread
+
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            member_count:
+              type: Int
+              documentation: Approximate number of members in the thread, capped at 50
+
+            added_members:
+              type: Seq[Channel.ThreadMember]
+              withUndefined: true
+              documentation: Users who were added to the thread
+
+            removed_member_ids:
+              type: Seq[UserId]
+              withUndefined: true
+              documentation: ID of the users who were removed from the thread
+
+      - name: ChannelPinsUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a message is pinned or unpinned in a text channel. This is not sent when a pinned message is deleted.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            last_pin_timestamp:
+              type: OffsetDateTime
+              withUndefined: true
+              withNull: true
+              documentation: Time at which the most recent pinned message was pinned
+
+      - name: GuildCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          This event can be sent in three different scenarios:
+          1. When a user is initially connecting, to lazily load and backfill information for all unavailable guilds sent in the Ready event. Guilds that are unavailable due to an outage will send a Guild Delete event.
+          2. When a Guild becomes available again to the client.
+          3. When the current user joins a new Guild.
+
+          During an outage, the guild object in scenarios 1 and 3 may be marked as unavailable.
+
+          The inner payload can be:
+          1. An available Guild: a guild object with extra fields, as noted below.
+          2. An unavailable Guild: an unavailable guild object.
+        fields:
+          2.0.x:
+            guild:
+              type: GuildCreate.GuildCreateGuild
+              isExtension: true
+
+        innerTypes:
+          - defType: Freeform
+            content: |-
+              sealed trait GuildCreateGuild extends DiscordObject
+
+              object GuildCreateGuild extends DiscordObjectCompanion[GuildCreateGuild] {
+                override def makeRaw(json: Json, cache: Map[String, Any]): GuildCreateGuild = {
+                  if (json.hcursor.getOrElse[Boolean]("unavailable")(false).contains(true)) {
+                    GuildCreateUnavailableGuild.makeRaw(json, cache)
+                  } else {
+                    AvailableGuild.makeRaw(json, cache)
+                  }
+                }
+              }
+
+          - name: AvailableGuild
+            defType: Class
+            extends: [ GuildCreateGuild ]
+            fields:
+              2.0.x:
+                guild:
+                  type: Guild
+                  isExtension: true
+
+                joined_at:
+                  type: OffsetDateTime
+                  documentation: When this guild was joined at
+
+                large:
+                  type: Boolean
+                  documentation: True if this is considered a large guild
+
+                member_count:
+                  type: Int
+                  documentation: Total number of members in this guild
+
+                voice_states:
+                  type: Seq[VoiceState]
+                  documentation: States of members currently in voice channels; lacks the guild_id key
+
+                members:
+                  type: Seq[GuildMember]
+                  documentation: Users in the guild
+
+                channels:
+                  type: Seq[GuildChannel]
+                  documentation: Channels in the guild
+
+                threads:
+                  type: Seq[ThreadChannel]
+                  documentation: All active threads in the guild that current user has permission to view
+
+                presences:
+                  type: Seq[AvailableGuild.AvailableGuildPresenceUpdate]
+                  documentation: Presences of the members in the guild, will only include non-offline members if the size is greater than large threshold
+
+                stage_instances:
+                  type: Seq[StageInstance]
+                  documentation: Stage instances in the guild
+
+                guild_scheduled_events:
+                  type: Seq[GuildScheduledEvent]
+                  documentation: Scheduled events in the guild
+
+            innerTypes:
+              #Docs states that these are partial, but not how, so we just make an extension for them for now
+              - name: AvailableGuildPresenceUpdate
+                defType: Class
+                fields:
+                  2.0.x:
+                    presenceUpdate:
+                      type: PresenceUpdate
+                      isExtension: true
+
+          - name: GuildCreateUnavailableGuild
+            defType: Class
+            extends: [ GuildCreateGuild ]
+            fields:
+              2.0.x:
+                guild:
+                  type: UnavailableGuild
+                  isExtension: true
+
+      - name: GuildUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild is updated. The inner payload is a guild object.
         fields:
           2.0.x:
             guild:
               type: Guild
               isExtension: true
 
-            joined_at:
-              type: OffsetDateTime
-              documentation: When this guild was joined at
-
-            large:
-              type: Boolean
-              documentation: True if this is considered a large guild
-
-            member_count:
-              type: Int
-              documentation: Total number of members in this guild
-
-            voice_states:
-              type: Seq[VoiceState]
-              documentation: States of members currently in voice channels; lacks the guild_id key
-
-            members:
-              type: Seq[GuildMember]
-              documentation: Users in the guild
-
-            channels:
-              type: Seq[GuildChannel]
-              documentation: Channels in the guild
-
-            threads:
-              type: Seq[ThreadChannel]
-              documentation: All active threads in the guild that current user has permission to view
-
-            presences:
-              type: Seq[AvailableGuild.AvailableGuildPresenceUpdate]
-              documentation: Presences of the members in the guild, will only include non-offline members if the size is greater than large threshold
-
-            stage_instances:
-              type: Seq[StageInstance]
-              documentation: Stage instances in the guild
-
-            guild_scheduled_events:
-              type: Seq[GuildScheduledEvent]
-              documentation: Scheduled events in the guild
-
-        innerTypes:
-          #Docs states that these are partial, but not how, so we just make an extension for them for now
-          - name: AvailableGuildPresenceUpdate
-            defType: Class
-            fields:
-              2.0.x:
-                presenceUpdate:
-                  type: PresenceUpdate
-                  isExtension: true
-
-      - name: GuildCreateUnavailableGuild
+      - name: GuildDelete
         defType: Class
-        extends: [GuildCreateGuild]
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild becomes or was already unavailable due to an outage, or when the user leaves or is removed from a guild. The inner payload is an unavailable guild object. If the unavailable field is not set, the user was removed from the guild.
         fields:
           2.0.x:
-            guild:
+            unavailable_guild:
               type: UnavailableGuild
               isExtension: true
 
-  - name: GuildUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild is updated. The inner payload is a guild object.
-    fields:
-      2.0.x:
-        guild:
-          type: Guild
-          isExtension: true
-
-  - name: GuildDelete
-    defType: Class
-    documentation: >-
-      Sent when a guild becomes or was already unavailable due to an outage, or when the user leaves or is removed from a guild. The inner payload is an unavailable guild object. If the unavailable field is not set, the user was removed from the guild.
-    fields:
-      2.0.x:
-        unavailable_guild:
-          type: UnavailableGuild
-          isExtension: true
-
-  - name: GuildAuditLogEntryCreate
-    documentation: >-
-      Sent when a guild audit log entry is created. The inner payload is an Audit Log Entry object. This event is only sent to bots with the VIEW_AUDIT_LOG permission.
-    defType: Class
-    fields:
-      2.0.x:
-        audit_log_entry:
-          type: AuditLog.AuditLogEntry
-          isExtension: true
-
-  - name: GuildBanAdd
-    defType: Class
-    documentation: >-
-      Sent when a user is banned from a guild.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        user:
-          type: User
-          documentation: User who was banned
-
-  - name: GuildBanRemove
-    defType: Class
-    documentation: >-
-      Sent when a user is unbanned from a guild.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        user:
-          type: User
-          documentation: User who was unbanned
-
-  - name: GuildEmojisUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild's emojis have been updated.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        emojis:
-          type: Seq[Emoji]
-          documentation: Array of emojis
-
-  - name: GuildStickersUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild's stickers have been updated.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        stickers:
-          type: Seq[Sticker]
-          documentation: Array of stickers
-
-  - name: GuildIntegrationsUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild integration is updated.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild whose integrations were updated
-
-  - name: GuildMemberAdd
-    defType: Class
-    documentation: >-
-      Sent when a new user joins a guild. The inner payload is a guild member
-      object with an extra guild_id key:
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        guild_member:
-          type: GuildMember
-          isExtension: true
-
-  - name: GuildMemberRemove
-    defType: Class
-    documentation: >-
-      Sent when a user is removed from a guild (leave/kick/ban).
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        user:
-          type: User
-          documentation: User who was removed
-
-  - name: GuildMemberUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild member is updated. This will also fire when the user
-      object of a guild member changes.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        roles:
-          type: Seq[RoleId]
-          documentation: User role ids
-
-        user:
-          type: User
-          documentation: User
-
-        nick:
-          type: String
-          withUndefined: true
-          withNull: true
-          documentation: Nickname of the user in the guild
-
-        avatar:
-          type: ImageHash
-          withNull: true
-          documentation: Member's guild avatar hash
-
-        joined_at:
-          type: OffsetDateTime
-          withNull: true
-          documentation: When the user joined the guild
-
-        premium_since:
-          type: OffsetDateTime
-          withUndefined: true
-          withNull: true
-          documentation: When the user starting boosting the guild
-
-        deaf:
-          type: Boolean
-          withUndefined: true
-          documentation: Whether the user is deafened in voice channels
-
-        mute:
-          type: Boolean
-          withUndefined: true
-          documentation: Whether the user is muted in voice channels
-
-        pending:
-          type: Boolean
-          withUndefined: true
-          documentation: Whether the user has not yet passed the guild's Membership
-            Screening requirements
-
-        communication_disabled_until:
-          type: OffsetDateTime
-          withUndefined: true
-          withNull: true
-          documentation: When the user's timeout will expire and the user will be able to
-            communicate in the guild again, null or a time in the past if the
-            user is not timed out
-
-  - name: GuildMembersChunk
-    defType: Class
-    documentation: >-
-      Sent in response to Guild Request Members. You can use the chunk_index and
-      chunk_count to calculate how many chunks are left for your request.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        members:
-          type: Seq[GuildMember]
-          documentation: Set of guild members
-
-        chunk_index:
-          type: Int
-          documentation: Chunk index in the expected chunks for this response (0 <=
-            chunk_index < chunk_count)
-
-        chunk_count:
-          type: Int
-          documentation: Total number of expected chunks for this response
-
-        not_found:
-          type: Seq[UserId]
-          withUndefined: true
-          documentation: When passing an invalid ID to REQUEST_GUILD_MEMBERS, it will be
-            returned here
-
-        presences:
-          type: Seq[PresenceUpdate]
-          withUndefined: true
-          documentation: When passing true to REQUEST_GUILD_MEMBERS, presences of the
-            returned members will be here
-
-        nonce:
-          type: String
-          withUndefined: true
-          documentation: Nonce used in the Guild Members Request
-
-  - name: GuildRoleCreate
-    defType: Class
-    documentation: >-
-      Sent when a guild role is created.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        role:
-          type: Role
-          documentation: Role that was created
-
-  - name: GuildRoleUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild role is updated.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        role:
-          type: Role
-          documentation: Role that was updated
-
-  - name: GuildRoleDelete
-    defType: Class
-    documentation: |-
-      Sent when a guild role is deleted.
-
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        role_id:
-          type: RoleId
-          documentation: ID of the role
-
-  - name: GuildScheduledEventCreate
-    defType: Class
-    documentation: >-
-      Sent when a guild scheduled event is created. The inner payload is a guild scheduled event object.
-    fields:
-      2.0.x:
-        scheduled_event:
-          type: GuildScheduledEvent
-          isExtension: true
-
-  - name: GuildScheduledEventUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild scheduled event is updated. The inner payload is a guild scheduled event object.
-    fields:
-      2.0.x:
-        scheduled_event:
-          type: GuildScheduledEvent
-          isExtension: true
-
-  - name: GuildScheduledEventDelete
-    defType: Class
-    documentation: >-
-      Sent when a guild scheduled event is deleted. The inner payload is a guild scheduled event object.
-    fields:
-      2.0.x:
-        scheduled_event:
-          type: GuildScheduledEvent
-          isExtension: true
-
-  - name: GuildScheduledEventUserAdd
-    defType: Class
-    documentation: >-
-      Sent when a user has subscribed to a guild scheduled event.
-    fields:
-      2.0.x:
-        guild_scheduled_event_id:
-          type: Snowflake[GuildScheduledEvent]
-
-        user_id:
-          type: UserId
-          documentation: ID of the user
-
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-  - name: GuildScheduledEventUserRemove
-    defType: Class
-    documentation: >-
-      Sent when a user has unsubscribed  to a guild scheduled event.
-    fields:
-      2.0.x:
-        guild_scheduled_event_id:
-          type: Snowflake[GuildScheduledEvent]
-
-        user_id:
-          type: UserId
-          documentation: ID of the user
-
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-  - name: IntegrationCreate
-    defType: Class
-    documentation: >-
-      Sent when an integration is created. The inner payload is an integration
-      object with an additional guild_id key:
-    fields:
-      2.0.x:
-        integration:
-          type: Integration
-          isExtension: true
-
-        guild_id:
-          type: GuildId
-
-  - name: IntegrationUpdate
-    defType: Class
-    documentation: >-
-      Sent when an integration is updated. The inner payload is an integration
-      object with an additional guild_id key:
-    fields:
-      2.0.x:
-        integration:
-          type: Integration
-          isExtension: true
-
-        guild_id:
-          type: GuildId
-
-  - name: IntegrationDelete
-    defType: Class
-    documentation: |-
-      Sent when an integration is deleted.
-    fields:
-      2.0.x:
-        id:
-          type: Snowflake[Integration]
-          documentation: Integration ID
-
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        application_id:
-          type: ApplicationId
-          withUndefined: true
-          documentation: ID of the bot/OAuth2 application for this discord integration
-
-  - name: InviteCreate
-    defType: Class
-    documentation: >-
-      Sent when a new invite to a channel is created.
-    fields:
-      2.0.x:
-        channel_id:
-          type: GuildChannelId
-          documentation: Channel the invite is for
-
-        code:
-          type: String
-          documentation: Unique invite code
-
-        created_at:
-          type: OffsetDateTime
-          documentation: Time at which the invite was created
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: Guild of the invite
-
-        inviter:
-          type: User
-          withUndefined: true
-          documentation: User that created the invite
-
-        max_age:
-          type: Int
-          documentation: How long the invite is valid for (in seconds)
-
-        max_uses:
-          type: Int
-          documentation: Maximum number of times the invite can be used
-
-        target_type:
-          type: Invite.InviteTargetType
-          withUndefined: true
-          documentation: Type of target for this voice channel invite
-
-        target_user:
-          type: User
-          withUndefined: true
-          documentation: User whose stream to display for this voice channel stream invite
-
-        target_application:
-          type: Invite.InviteApplication
-          withUndefined: true
-          documentation: Embedded application to open for this voice channel embedded
-            application invite
-
-        temporary:
-          type: Boolean
-          documentation: Whether or not the invite is temporary (invited users will be
-            kicked on disconnect unless they're assigned a role)
-
-        uses:
-          type: Int
-          documentation: How many times the invite has been used (always will be 0)
-
-  - name: InviteDelete
-    defType: Class
-    documentation: >-
-      Sent when an invite is deleted.
-    fields:
-      2.0.x:
-        channel_id:
-          type: GuildChannelId
-          documentation: Channel of the invite
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: Guild of the invite
-
-        code:
-          type: String
-          documentation: Unique invite code
-
-  - name: MessageCreate
-    defType: Class
-    documentation: >-
-      Sent when a message is created. The inner payload is a message object with
-      the following extra fields:
-    fields:
-      2.0.x:
-        message:
-          type: Message
-          isExtension: true
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild the message was sent in - unless it is an ephemeral message
-
-        member:
-          type: MessageCreate.MessageCreateGuildMember
-          withUndefined: true
-          documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
-
-        mentions:
-          type: Seq[User]
-          documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
-
-    innerTypes:
-      - name: MessageCreateGuildMember
+      - name: GuildAuditLogEntryCreate
         defType: Class
-        fields:
-          2.0.x: {}
-
-  - name: MessageUpdate
-    defType: Class
-    documentation: >-
-      Sent when a message is updated. The inner payload is a message object with
-      the same extra fields as MESSAGE_CREATE.
-    fields:
-      2.0.x:
-        message:
-          type: Message.Partial
-          isExtension: true
-
-        id: MessageId
-        channel_id: TextChannelId
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild the message was sent in - unless it is an ephemeral message
-
-        member:
-          type: MessageCreate.MessageCreateGuildMember
-          withUndefined: true
-          documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
-
-        mentions:
-          type: Seq[User]
-          withUndefined: true
-          documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
-
-  - name: MessageDelete
-    defType: Class
-    documentation: >-
-      Sent when a message is deleted.
-    fields:
-      2.0.x:
-        id:
-          type: MessageId
-          documentation: ID of the message
-
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-  - name: MessageDeleteBulk
-    defType: Class
-    documentation: >-
-      Sent when multiple messages are deleted at once.
-    fields:
-      2.0.x:
-        ids:
-          type: Seq[MessageId]
-          documentation: IDs of the messages
-
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-  - name: MessageReactionAdd
-    defType: Class
-    documentation: >-
-      Sent when a user adds a reaction to a message.
-    fields:
-      2.0.x:
-        user_id:
-          type: UserId
-          documentation: ID of the user
-
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        message_id:
-          type: MessageId
-          documentation: ID of the message
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        member:
-          type: GuildMember
-          withUndefined: true
-          documentation: Member who reacted if this happened in a guild
-
-        emoji:
-          type: Emoji
-          documentation: Emoji used to react - example
-
-        message_author_id:
-          type: UserId
-          withUndefined: true
-          documentation: ID of the user who authored the message which was reacted to
-
-  - name: MessageReactionRemove
-    defType: Class
-    documentation: >-
-      Sent when a user removes a reaction from a message.
-    fields:
-      2.0.x:
-        user_id:
-          type: UserId
-          documentation: ID of the user
-
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        message_id:
-          type: MessageId
-          documentation: ID of the message
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        emoji:
-          type: Emoji
-          documentation: Emoji used to react - example
-
-  - name: MessageReactionRemoveAll
-    defType: Class
-    documentation: >-
-      Sent when a user explicitly removes all reactions from a message.
-    fields:
-      2.0.x:
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        message_id:
-          type: MessageId
-          documentation: ID of the message
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-  - name: MessageReactionRemoveEmoji
-    defType: Class
-    documentation: >-
-      Sent when a bot removes all instances of a given emoji from the reactions of
-      a message.
-    fields:
-      2.0.x:
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        message_id:
-          type: MessageId
-          documentation: ID of the message
-
-        emoji:
-          type: Emoji
-          documentation: Emoji that was removed
-
-  - name: PresenceUpdate
-    defType: Class
-    documentation: >-
-      A user's presence is their current state on a guild. This event is sent when
-      a user's presence or info, such as name or avatar, is updated.
-    fields:
-      2.0.x:
-        user:
-          type: User.Partial
-          isExtension: true
-          documentation: User whose presence is being updated
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        status:
-          type: Status
-          withUndefined: true
-          documentation: Either "idle", "dnd", "online", or "offline"
-
-        activities:
-          type: Seq[Activity]
-          withUndefined: true
-          documentation: User's current activities
-
-        client_status:
-          type: PresenceUpdate.ClientStatus
-          withUndefined: true
-          documentation: User's platform-dependent status
-
-    innerTypes:
-      - name: ClientStatus
-        defType: Class
+        extends: [GatewayDispatchEvent]
         documentation: >-
-          Active sessions are indicated with an "online", "idle", or "dnd" string per
-          platform. If a user is offline or invisible, the corresponding field is not
-          present.
-        allUndefined: true
+          Sent when a guild audit log entry is created. The inner payload is an Audit Log Entry object. This event is only sent to bots with the VIEW_AUDIT_LOG permission.
         fields:
           2.0.x:
-            desktop:
-              type: Status
-              documentation: User's status set for an active desktop (Windows, Linux, Mac) application session
+            audit_log_entry:
+              type: AuditLog.AuditLogEntry
+              isExtension: true
 
-            mobile:
-              type: Status
-              documentation: User's status set for an active mobile (iOS, Android) application session
-
-            web:
-              type: Status
-              documentation: User's status set for an active web (browser, bot user) application session
-
-  - name: Activity
-    defType: Class
-    fields:
-      2.0.x:
-        name:
-          type: String
-          documentation: Activity's name
-
-        tpe:
-          jsonName: type
-          type: Activity.ActivityType
-          documentation: Activity type
-
-        url:
-          type: String
-          withUndefined: true
-          withNull: true
-          documentation: Stream URL, is validated when type is 1
-
-        created_at:
-          type: Int
-          documentation: Unix timestamp (in milliseconds) of when the activity was added
-            to the user's session
-
-        timestamps:
-          type: Activity.ActivityTimestamps
-          withUndefined: true
-          documentation: Unix timestamps for start and/or end of the game
-
-        application_id:
-          type: ApplicationId
-          withUndefined: true
-          documentation: Application ID for the game
-
-        details:
-          type: String
-          withUndefined: true
-          withNull: true
-          documentation: What the player is currently doing
-
-        state:
-          type: String
-          withUndefined: true
-          withNull: true
-          documentation: User's current party status
-
-        emoji:
-          type: Activity.ActivityEmoji
-          withUndefined: true
-          withNull: true
-          documentation: Emoji used for a custom status
-
-        party:
-          type: Activity.ActivityParty
-          withUndefined: true
-          documentation: Information for the current party of the player
-
-        assets:
-          type: Activity.ActivityAssets
-          withUndefined: true
-          documentation: Images for the presence and their hover texts
-
-        secrets:
-          type: Activity.ActivitySecrets
-          withUndefined: true
-          documentation: Secrets for Rich Presence joining and spectating
-
-        instance:
-          type: Boolean
-          withUndefined: true
-          documentation: Whether or not the activity is an instanced game session
-
-        flags:
-          type: Activity.ActivityFlags
-          withUndefined: true
-          documentation: Activity flags ORd together, describes what the payload includes
-
-        buttons:
-          type: Seq[Activity.ActivityButtons]
-          withUndefined: true
-          documentation: Custom buttons shown in the Rich Presence (max 2)
-
-    innerTypes:
-      - name: ActivityType
-        defType: Enum
-        type: Int
-        values:
-          Game:
-            value: "0"
-            documentation: Playing {name}
-
-          Streaming:
-            value: "1"
-            documentation: Streaming {details}
-
-          Listening:
-            value: "2"
-            documentation: Listening to {name}
-
-          Watching:
-            value: "3"
-            documentation: Watching {name}
-
-          Custom:
-            value: "4"
-            documentation: "{emoji} {name}"
-
-          Competing:
-            value: "5"
-            documentation: Competing in {name}
-
-      - name: ActivityTimestamps
+      - name: GuildBanAdd
         defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user is banned from a guild.
         fields:
           2.0.x:
-            start:
-              type: Int
-              withUndefined: true
-              documentation: Unix time (in milliseconds) of when the activity started
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
 
-            end:
-              type: Int
-              withUndefined: true
-              documentation: Unix time (in milliseconds) of when the activity ends
+            user:
+              type: User
+              documentation: User who was banned
 
-      - name: ActivityEmoji
+      - name: GuildBanRemove
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user is unbanned from a guild.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            user:
+              type: User
+              documentation: User who was unbanned
+
+      - name: GuildEmojisUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild's emojis have been updated.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            emojis:
+              type: Seq[Emoji]
+              documentation: Array of emojis
+
+      - name: GuildStickersUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild's stickers have been updated.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            stickers:
+              type: Seq[Sticker]
+              documentation: Array of stickers
+
+      - name: GuildIntegrationsUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild integration is updated.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild whose integrations were updated
+
+      - name: GuildMemberAdd
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a new user joins a guild. The inner payload is a guild member
+          object with an extra guild_id key:
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            guild_member:
+              type: GuildMember
+              isExtension: true
+
+      - name: GuildMemberRemove
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user is removed from a guild (leave/kick/ban).
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            user:
+              type: User
+              documentation: User who was removed
+
+      - name: GuildMemberUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild member is updated. This will also fire when the user
+          object of a guild member changes.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            roles:
+              type: Seq[RoleId]
+              documentation: User role ids
+
+            user:
+              type: User
+              documentation: User
+
+            nick:
+              type: String
+              withUndefined: true
+              withNull: true
+              documentation: Nickname of the user in the guild
+
+            avatar:
+              type: ImageHash
+              withNull: true
+              documentation: Member's guild avatar hash
+
+            joined_at:
+              type: OffsetDateTime
+              withNull: true
+              documentation: When the user joined the guild
+
+            premium_since:
+              type: OffsetDateTime
+              withUndefined: true
+              withNull: true
+              documentation: When the user starting boosting the guild
+
+            deaf:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether the user is deafened in voice channels
+
+            mute:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether the user is muted in voice channels
+
+            pending:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether the user has not yet passed the guild's Membership
+                Screening requirements
+
+            communication_disabled_until:
+              type: OffsetDateTime
+              withUndefined: true
+              withNull: true
+              documentation: When the user's timeout will expire and the user will be able to
+                communicate in the guild again, null or a time in the past if the
+                user is not timed out
+
+      - name: GuildMembersChunk
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent in response to Guild Request Members. You can use the chunk_index and
+          chunk_count to calculate how many chunks are left for your request.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            members:
+              type: Seq[GuildMember]
+              documentation: Set of guild members
+
+            chunk_index:
+              type: Int
+              documentation: Chunk index in the expected chunks for this response (0 <=
+                chunk_index < chunk_count)
+
+            chunk_count:
+              type: Int
+              documentation: Total number of expected chunks for this response
+
+            not_found:
+              type: Seq[UserId]
+              withUndefined: true
+              documentation: When passing an invalid ID to REQUEST_GUILD_MEMBERS, it will be
+                returned here
+
+            presences:
+              type: Seq[PresenceUpdate]
+              withUndefined: true
+              documentation: When passing true to REQUEST_GUILD_MEMBERS, presences of the
+                returned members will be here
+
+            nonce:
+              type: String
+              withUndefined: true
+              documentation: Nonce used in the Guild Members Request
+
+      - name: GuildRoleCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild role is created.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            role:
+              type: Role
+              documentation: Role that was created
+
+      - name: GuildRoleUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild role is updated.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            role:
+              type: Role
+              documentation: Role that was updated
+
+      - name: GuildRoleDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          Sent when a guild role is deleted.
+
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            role_id:
+              type: RoleId
+              documentation: ID of the role
+
+      - name: GuildScheduledEventCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild scheduled event is created. The inner payload is a guild scheduled event object.
+        fields:
+          2.0.x:
+            scheduled_event:
+              type: GuildScheduledEvent
+              isExtension: true
+
+      - name: GuildScheduledEventUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild scheduled event is updated. The inner payload is a guild scheduled event object.
+        fields:
+          2.0.x:
+            scheduled_event:
+              type: GuildScheduledEvent
+              isExtension: true
+
+      - name: GuildScheduledEventDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild scheduled event is deleted. The inner payload is a guild scheduled event object.
+        fields:
+          2.0.x:
+            scheduled_event:
+              type: GuildScheduledEvent
+              isExtension: true
+
+      - name: GuildScheduledEventUserAdd
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user has subscribed to a guild scheduled event.
+        fields:
+          2.0.x:
+            guild_scheduled_event_id:
+              type: Snowflake[GuildScheduledEvent]
+
+            user_id:
+              type: UserId
+              documentation: ID of the user
+
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+      - name: GuildScheduledEventUserRemove
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user has unsubscribed  to a guild scheduled event.
+        fields:
+          2.0.x:
+            guild_scheduled_event_id:
+              type: Snowflake[GuildScheduledEvent]
+
+            user_id:
+              type: UserId
+              documentation: ID of the user
+
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+      - name: IntegrationCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an integration is created. The inner payload is an integration
+          object with an additional guild_id key:
+        fields:
+          2.0.x:
+            integration:
+              type: Integration
+              isExtension: true
+
+            guild_id:
+              type: GuildId
+
+      - name: IntegrationUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an integration is updated. The inner payload is an integration
+          object with an additional guild_id key:
+        fields:
+          2.0.x:
+            integration:
+              type: Integration
+              isExtension: true
+
+            guild_id:
+              type: GuildId
+
+      - name: IntegrationDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: |-
+          Sent when an integration is deleted.
+        fields:
+          2.0.x:
+            id:
+              type: Snowflake[Integration]
+              documentation: Integration ID
+
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            application_id:
+              type: ApplicationId
+              withUndefined: true
+              documentation: ID of the bot/OAuth2 application for this discord integration
+
+      - name: InviteCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a new invite to a channel is created.
+        fields:
+          2.0.x:
+            channel_id:
+              type: GuildChannelId
+              documentation: Channel the invite is for
+
+            code:
+              type: String
+              documentation: Unique invite code
+
+            created_at:
+              type: OffsetDateTime
+              documentation: Time at which the invite was created
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: Guild of the invite
+
+            inviter:
+              type: User
+              withUndefined: true
+              documentation: User that created the invite
+
+            max_age:
+              type: Int
+              documentation: How long the invite is valid for (in seconds)
+
+            max_uses:
+              type: Int
+              documentation: Maximum number of times the invite can be used
+
+            target_type:
+              type: Invite.InviteTargetType
+              withUndefined: true
+              documentation: Type of target for this voice channel invite
+
+            target_user:
+              type: User
+              withUndefined: true
+              documentation: User whose stream to display for this voice channel stream invite
+
+            target_application:
+              type: Invite.InviteApplication
+              withUndefined: true
+              documentation: Embedded application to open for this voice channel embedded
+                application invite
+
+            temporary:
+              type: Boolean
+              documentation: Whether or not the invite is temporary (invited users will be
+                kicked on disconnect unless they're assigned a role)
+
+            uses:
+              type: Int
+              documentation: How many times the invite has been used (always will be 0)
+
+      - name: InviteDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an invite is deleted.
+        fields:
+          2.0.x:
+            channel_id:
+              type: GuildChannelId
+              documentation: Channel of the invite
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: Guild of the invite
+
+            code:
+              type: String
+              documentation: Unique invite code
+
+      - name: MessageCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a message is created. The inner payload is a message object with
+          the following extra fields:
+        fields:
+          2.0.x:
+            message:
+              type: Message
+              isExtension: true
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild the message was sent in - unless it is an ephemeral message
+
+            member:
+              type: MessageCreate.MessageCreateGuildMember
+              withUndefined: true
+              documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
+
+            mentions:
+              type: Seq[User]
+              documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
+
+        innerTypes:
+          - name: MessageCreateGuildMember
+            defType: Class
+            fields:
+              2.0.x: { }
+
+      - name: MessageUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a message is updated. The inner payload is a message object with
+          the same extra fields as MESSAGE_CREATE.
+        fields:
+          2.0.x:
+            message:
+              type: Message.Partial
+              isExtension: true
+
+            id: MessageId
+            channel_id: TextChannelId
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild the message was sent in - unless it is an ephemeral message
+
+            member:
+              type: MessageCreate.MessageCreateGuildMember
+              withUndefined: true
+              documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
+
+            mentions:
+              type: Seq[User]
+              withUndefined: true
+              documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
+
+      - name: MessageDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a message is deleted.
+        fields:
+          2.0.x:
+            id:
+              type: MessageId
+              documentation: ID of the message
+
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+      - name: MessageDeleteBulk
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when multiple messages are deleted at once.
+        fields:
+          2.0.x:
+            ids:
+              type: Seq[MessageId]
+              documentation: IDs of the messages
+
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+      - name: MessageReactionAdd
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user adds a reaction to a message.
+        fields:
+          2.0.x:
+            user_id:
+              type: UserId
+              documentation: ID of the user
+
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            message_id:
+              type: MessageId
+              documentation: ID of the message
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+            member:
+              type: GuildMember
+              withUndefined: true
+              documentation: Member who reacted if this happened in a guild
+
+            emoji:
+              type: Emoji
+              documentation: Emoji used to react - example
+
+            message_author_id:
+              type: UserId
+              withUndefined: true
+              documentation: ID of the user who authored the message which was reacted to
+
+      - name: MessageReactionRemove
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user removes a reaction from a message.
+        fields:
+          2.0.x:
+            user_id:
+              type: UserId
+              documentation: ID of the user
+
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            message_id:
+              type: MessageId
+              documentation: ID of the message
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+            emoji:
+              type: Emoji
+              documentation: Emoji used to react - example
+
+      - name: MessageReactionRemoveAll
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user explicitly removes all reactions from a message.
+        fields:
+          2.0.x:
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            message_id:
+              type: MessageId
+              documentation: ID of the message
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+      - name: MessageReactionRemoveEmoji
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a bot removes all instances of a given emoji from the reactions of
+          a message.
+        fields:
+          2.0.x:
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+            message_id:
+              type: MessageId
+              documentation: ID of the message
+
+            emoji:
+              type: Emoji
+              documentation: Emoji that was removed
+
+      - name: PresenceUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          A user's presence is their current state on a guild. This event is sent when
+          a user's presence or info, such as name or avatar, is updated.
+        fields:
+          2.0.x:
+            user:
+              type: User.Partial
+              isExtension: true
+              documentation: User whose presence is being updated
+
+            guild_id:
+              type: GuildId
+              withUndefined: true
+              documentation: ID of the guild
+
+            status:
+              type: Status
+              withUndefined: true
+              documentation: Either "idle", "dnd", "online", or "offline"
+
+            activities:
+              type: Seq[Activity]
+              withUndefined: true
+              documentation: User's current activities
+
+            client_status:
+              type: PresenceUpdate.ClientStatus
+              withUndefined: true
+              documentation: User's platform-dependent status
+
+        innerTypes:
+          - name: ClientStatus
+            defType: Class
+            documentation: >-
+              Active sessions are indicated with an "online", "idle", or "dnd" string per
+              platform. If a user is offline or invisible, the corresponding field is not
+              present.
+            allUndefined: true
+            fields:
+              2.0.x:
+                desktop:
+                  type: Status
+                  documentation: User's status set for an active desktop (Windows, Linux, Mac) application session
+
+                mobile:
+                  type: Status
+                  documentation: User's status set for an active mobile (iOS, Android) application session
+
+                web:
+                  type: Status
+                  documentation: User's status set for an active web (browser, bot user) application session
+
+      - name: Activity
         defType: Class
         fields:
           2.0.x:
             name:
               type: String
-              documentation: Name of the emoji
+              documentation: Activity's name
 
-            id:
-              type: Snowflake[Emoji]
+            tpe:
+              jsonName: type
+              type: Activity.ActivityType
+              documentation: Activity type
+
+            url:
+              type: String
               withUndefined: true
-              documentation: ID of the emoji
+              withNull: true
+              documentation: Stream URL, is validated when type is 1
 
-            animated:
+            created_at:
+              type: Int
+              documentation: Unix timestamp (in milliseconds) of when the activity was added
+                to the user's session
+
+            timestamps:
+              type: Activity.ActivityTimestamps
+              withUndefined: true
+              documentation: Unix timestamps for start and/or end of the game
+
+            application_id:
+              type: ApplicationId
+              withUndefined: true
+              documentation: Application ID for the game
+
+            details:
+              type: String
+              withUndefined: true
+              withNull: true
+              documentation: What the player is currently doing
+
+            state:
+              type: String
+              withUndefined: true
+              withNull: true
+              documentation: User's current party status
+
+            emoji:
+              type: Activity.ActivityEmoji
+              withUndefined: true
+              withNull: true
+              documentation: Emoji used for a custom status
+
+            party:
+              type: Activity.ActivityParty
+              withUndefined: true
+              documentation: Information for the current party of the player
+
+            assets:
+              type: Activity.ActivityAssets
+              withUndefined: true
+              documentation: Images for the presence and their hover texts
+
+            secrets:
+              type: Activity.ActivitySecrets
+              withUndefined: true
+              documentation: Secrets for Rich Presence joining and spectating
+
+            instance:
               type: Boolean
               withUndefined: true
-              documentation: Whether the emoji is animated
+              documentation: Whether or not the activity is an instanced game session
 
-      - name: ActivityParty
+            flags:
+              type: Activity.ActivityFlags
+              withUndefined: true
+              documentation: Activity flags ORd together, describes what the payload includes
+
+            buttons:
+              type: Seq[Activity.ActivityButtons]
+              withUndefined: true
+              documentation: Custom buttons shown in the Rich Presence (max 2)
+
+        innerTypes:
+          - name: ActivityType
+            defType: Enum
+            type: Int
+            values:
+              Game:
+                value: "0"
+                documentation: Playing {name}
+
+              Streaming:
+                value: "1"
+                documentation: Streaming {details}
+
+              Listening:
+                value: "2"
+                documentation: Listening to {name}
+
+              Watching:
+                value: "3"
+                documentation: Watching {name}
+
+              Custom:
+                value: "4"
+                documentation: "{emoji} {name}"
+
+              Competing:
+                value: "5"
+                documentation: Competing in {name}
+
+          - name: ActivityTimestamps
+            defType: Class
+            fields:
+              2.0.x:
+                start:
+                  type: Int
+                  withUndefined: true
+                  documentation: Unix time (in milliseconds) of when the activity started
+
+                end:
+                  type: Int
+                  withUndefined: true
+                  documentation: Unix time (in milliseconds) of when the activity ends
+
+          - name: ActivityEmoji
+            defType: Class
+            fields:
+              2.0.x:
+                name:
+                  type: String
+                  documentation: Name of the emoji
+
+                id:
+                  type: Snowflake[Emoji]
+                  withUndefined: true
+                  documentation: ID of the emoji
+
+                animated:
+                  type: Boolean
+                  withUndefined: true
+                  documentation: Whether the emoji is animated
+
+          - name: ActivityParty
+            defType: Class
+            fields:
+              2.0.x:
+                id:
+                  type: String
+                  withUndefined: true
+                  documentation: ID of the party
+
+                size:
+                  type: Seq[Int]
+                  withUndefined: true
+                  documentation: Array of two integers (current_size, max_size). Used to show the party's current and maximum size
+
+          - name: ActivityAssets
+            defType: Class
+            fields:
+              2.0.x:
+                large_image:
+                  type: String
+                  withUndefined: true
+                  documentation: See Activity Asset Image
+
+                large_text:
+                  type: String
+                  withUndefined: true
+                  documentation: Text displayed when hovering over the large image of the activity
+
+                small_image:
+                  type: String
+                  withUndefined: true
+                  documentation: See Activity Asset Image
+
+                small_text:
+                  type: String
+                  withUndefined: true
+                  documentation: Text displayed when hovering over the small image of the activity
+
+          - name: ActivitySecrets
+            defType: Class
+            fields:
+              2.0.x:
+                join:
+                  type: String
+                  withUndefined: true
+                  documentation: Secret for joining a party
+
+                spectate:
+                  type: String
+                  withUndefined: true
+                  documentation: Secret for spectating a game
+
+                matchSecret:
+                  jsonName: match
+                  type: String
+                  withUndefined: true
+                  documentation: Secret for a specific instanced match
+
+          - name: ActivityFlags
+            defType: Enum
+            type: Int
+            isBitfield: true
+            values:
+              INSTANCE:
+                value: "1 << 0"
+                documentation: 1 << 0
+
+              JOIN:
+                value: "1 << 1"
+                documentation: 1 << 1
+
+              SPECTATE:
+                value: "1 << 2"
+                documentation: 1 << 2
+
+              JOIN_REQUEST:
+                value: "1 << 3"
+                documentation: 1 << 3
+
+              SYNC:
+                value: "1 << 4"
+                documentation: 1 << 4
+
+              PLAY:
+                value: "1 << 5"
+                documentation: 1 << 5
+
+              PARTY_PRIVACY_FRIENDS:
+                value: "1 << 6"
+                documentation: 1 << 6
+
+              PARTY_PRIVACY_VOICE_CHANNEL:
+                value: "1 << 7"
+                documentation: 1 << 7
+
+              EMBEDDED:
+                value: "1 << 8"
+                documentation: 1 << 8
+
+          - name: ActivityButtons
+            defType: Class
+            documentation: "When received over the gateway, the buttons field is an array of
+              strings, which are the button labels. Bots cannot access a user's activity
+              button URLs. When sending, the buttons field must be an array of the below
+              object:"
+            fields:
+              2.0.x: { }
+
+      - name: TypingStart
         defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user starts typing in a channel.
         fields:
           2.0.x:
-            id:
-              type: String
-              withUndefined: true
-              documentation: ID of the party
+            channel_id:
+              type: TextChannelId
+              documentation: ID of the channel
 
-            size:
-              type: Seq[Int]
+            guild_id:
+              type: GuildId
               withUndefined: true
-              documentation: Array of two integers (current_size, max_size). Used to show the party's current and maximum size
+              documentation: ID of the guild
 
-      - name: ActivityAssets
+            user_id:
+              type: UserId
+              documentation: ID of the user
+
+            timestamp:
+              type: Int
+              documentation: Unix time (in seconds) of when the user started typing
+
+            member:
+              type: GuildMember
+              withUndefined: true
+              documentation: Member who started typing if this happened in a guild
+
+      - name: UserUpdate
         defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when properties about the current bot's user change. Inner payload is a
+          user object.
         fields:
           2.0.x:
-            large_image:
-              type: String
-              withUndefined: true
-              documentation: See Activity Asset Image
+            user:
+              type: User
+              isExtension: true
 
-            large_text:
-              type: String
-              withUndefined: true
-              documentation: Text displayed when hovering over the large image of the activity
-
-            small_image:
-              type: String
-              withUndefined: true
-              documentation: See Activity Asset Image
-
-            small_text:
-              type: String
-              withUndefined: true
-              documentation: Text displayed when hovering over the small image of the activity
-
-      - name: ActivitySecrets
+      - name: VoiceStateUpdate
         defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when someone joins/leaves/moves voice channels. Inner payload is a
+          voice state object.
         fields:
           2.0.x:
-            join:
-              type: String
-              withUndefined: true
-              documentation: Secret for joining a party
+            voice_state:
+              type: VoiceState
+              isExtension: true
 
-            spectate:
-              type: String
-              withUndefined: true
-              documentation: Secret for spectating a game
-
-            matchSecret:
-              jsonName: match
-              type: String
-              withUndefined: true
-              documentation: Secret for a specific instanced match
-
-      - name: ActivityFlags
-        defType: Enum
-        type: Int
-        isBitfield: true
-        values:
-          INSTANCE:
-            value: "1 << 0"
-            documentation: 1 << 0
-
-          JOIN:
-            value: "1 << 1"
-            documentation: 1 << 1
-
-          SPECTATE:
-            value: "1 << 2"
-            documentation: 1 << 2
-
-          JOIN_REQUEST:
-            value: "1 << 3"
-            documentation: 1 << 3
-
-          SYNC:
-            value: "1 << 4"
-            documentation: 1 << 4
-
-          PLAY:
-            value: "1 << 5"
-            documentation: 1 << 5
-
-          PARTY_PRIVACY_FRIENDS:
-            value: "1 << 6"
-            documentation: 1 << 6
-
-          PARTY_PRIVACY_VOICE_CHANNEL:
-            value: "1 << 7"
-            documentation: 1 << 7
-
-          EMBEDDED:
-            value: "1 << 8"
-            documentation: 1 << 8
-
-      - name: ActivityButtons
+      - name: VoiceServerUpdate
         defType: Class
-        documentation: "When received over the gateway, the buttons field is an array of
-          strings, which are the button labels. Bots cannot access a user's activity
-          button URLs. When sending, the buttons field must be an array of the below
-          object:"
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild's voice server is updated. This is sent when initially
+          connecting to voice, and when the current voice instance fails over to a new
+          server.
+        fields:
+          2.0.x:
+            token:
+              type: String
+              documentation: Voice connection token
+
+            guild_id:
+              type: GuildId
+              documentation: Guild this voice server update is for
+
+            endpoint:
+              type: String
+              withNull: true
+              documentation: Voice server host
+
+      - name: WebhooksUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a guild channel's webhook is created, updated, or deleted.
+        fields:
+          2.0.x:
+            guild_id:
+              type: GuildId
+              documentation: ID of the guild
+
+            channel_id:
+              type: GuildChannelId
+              documentation: ID of the channel
+
+      - name: InteractionCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a user uses an Application Command or Message Component. Inner
+          payload is an Interaction. This is intentionally a stub. A proper type can be found in the interactions module.
+        fields:
+          2.0.x: { }
+
+      - name: StageInstanceCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a Stage instance is created (i.e. the Stage is now "live"). Inner
+          payload is a Stage instance
+        fields:
+          2.0.x:
+            stage_instance:
+              type: StageInstance
+              isExtension: true
+
+      - name: StageInstanceUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a Stage instance has been updated. Inner payload is a Stage
+          instance
+        fields:
+          2.0.x:
+            stage_instance:
+              type: StageInstance
+              isExtension: true
+
+      - name: StageInstanceDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when a Stage instance has been deleted (i.e. the Stage has been
+          closed). Inner payload is a Stage instance
+        fields:
+          2.0.x:
+            stage_instance:
+              type: StageInstance
+              isExtension: true
+
+      - name: UnknownGatewayDispatchEvent
+        defType: Class
+        extends: [ GatewayDispatchEvent ]
         fields:
           2.0.x: {}
-
-  - name: TypingStart
-    defType: Class
-    documentation: >-
-      Sent when a user starts typing in a channel.
-    fields:
-      2.0.x:
-        channel_id:
-          type: TextChannelId
-          documentation: ID of the channel
-
-        guild_id:
-          type: GuildId
-          withUndefined: true
-          documentation: ID of the guild
-
-        user_id:
-          type: UserId
-          documentation: ID of the user
-
-        timestamp:
-          type: Int
-          documentation: Unix time (in seconds) of when the user started typing
-
-        member:
-          type: GuildMember
-          withUndefined: true
-          documentation: Member who started typing if this happened in a guild
-
-  - name: UserUpdate
-    defType: Class
-    documentation: >-
-      Sent when properties about the current bot's user change. Inner payload is a
-      user object.
-    fields:
-      2.0.x:
-        user:
-          type: User
-          isExtension: true
-
-  - name: VoiceStateUpdate
-    defType: Class
-    documentation: >-
-      Sent when someone joins/leaves/moves voice channels. Inner payload is a
-      voice state object.
-    fields:
-      2.0.x:
-        voice_state:
-          type: VoiceState
-          isExtension: true
-
-  - name: VoiceServerUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild's voice server is updated. This is sent when initially
-      connecting to voice, and when the current voice instance fails over to a new
-      server.
-    fields:
-      2.0.x:
-        token:
-          type: String
-          documentation: Voice connection token
-
-        guild_id:
-          type: GuildId
-          documentation: Guild this voice server update is for
-
-        endpoint:
-          type: String
-          withNull: true
-          documentation: Voice server host
-
-  - name: WebhooksUpdate
-    defType: Class
-    documentation: >-
-      Sent when a guild channel's webhook is created, updated, or deleted.
-    fields:
-      2.0.x:
-        guild_id:
-          type: GuildId
-          documentation: ID of the guild
-
-        channel_id:
-          type: GuildChannelId
-          documentation: ID of the channel
-
-  - name: InteractionCreate
-    defType: Class
-    documentation: >-
-      Sent when a user uses an Application Command or Message Component. Inner
-      payload is an Interaction. This is intentionally a stub. A proper type can be found in the interactions module.
-    fields:
-      2.0.x: {}
-
-  - name: StageInstanceCreate
-    defType: Class
-    documentation: >-
-      Sent when a Stage instance is created (i.e. the Stage is now "live"). Inner
-      payload is a Stage instance
-    fields:
-      2.0.x:
-        stage_instance:
-          type: StageInstance
-          isExtension: true
-
-  - name: StageInstanceUpdate
-    defType: Class
-    documentation: >-
-      Sent when a Stage instance has been updated. Inner payload is a Stage
-      instance
-    fields:
-      2.0.x:
-        stage_instance:
-          type: StageInstance
-          isExtension: true
-
-  - name: StageInstanceDelete
-    defType: Class
-    documentation: >-
-      Sent when a Stage instance has been deleted (i.e. the Stage has been
-      closed). Inner payload is a Stage instance
-    fields:
-      2.0.x:
-        stage_instance:
-          type: StageInstance
-          isExtension: true

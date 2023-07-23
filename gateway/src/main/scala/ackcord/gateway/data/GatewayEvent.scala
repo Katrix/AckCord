@@ -14,10 +14,12 @@ object GatewayEvent extends GatewayEventBase.TopMixin {
 
   class Dispatch(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
-      with GatewayEventBase[Json] {
+      with GatewayEventBase[GatewayDispatchEvent.UnknownGatewayDispatchEvent]
+      with GatewayEventBase.DispatchMixin {
     @inline def op: GatewayEventOp = selectDynamic[GatewayEventOp]("op")
 
-    @inline def d: Json = selectDynamic[Json]("d")
+    @inline def d: GatewayDispatchEvent.UnknownGatewayDispatchEvent =
+      selectDynamic[GatewayDispatchEvent.UnknownGatewayDispatchEvent]("d")
 
     @inline def s: Int = selectDynamic[Int]("s")
 
@@ -28,8 +30,12 @@ object GatewayEvent extends GatewayEventBase.TopMixin {
   object Dispatch extends DiscordObjectCompanion[Dispatch] with GatewayEventBase.GatewayEventCompanionMixin[Dispatch] {
     def makeRaw(json: Json, cache: Map[String, Any]): Dispatch = new Dispatch(json, cache)
 
-    def make20(op: GatewayEventOp = GatewayEventOp.Dispatch, d: Json, s: Int, t: GatewayDispatchType): Dispatch =
-      makeRawFromFields("op" := op, "d" := d, "s" := s, "t" := t)
+    def make20(
+        op: GatewayEventOp = GatewayEventOp.Dispatch,
+        d: GatewayDispatchEvent.UnknownGatewayDispatchEvent,
+        s: Int,
+        t: GatewayDispatchType
+    ): Dispatch = makeRawFromFields("op" := op, "d" := d, "s" := s, "t" := t)
 
     override def op: GatewayEventOp = GatewayEventOp.Dispatch
   }
@@ -213,8 +219,7 @@ object GatewayEvent extends GatewayEventBase.TopMixin {
           activities: Seq[GatewayDispatchEvent.Activity],
           status: Status,
           afk: Boolean
-      ): Data =
-        makeRawFromFields("since" := since, "activities" := activities, "status" := status, "afk" := afk)
+      ): Data = makeRawFromFields("since" := since, "activities" := activities, "status" := status, "afk" := afk)
 
     }
   }

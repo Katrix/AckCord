@@ -17,7 +17,8 @@ object EmojiRequests {
       guildId: GuildId
   ): Request[Unit, Seq[Emoji]] =
     Request.restRequest(
-      route = (Route.Empty / "emojis").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "emojis")
+        .toRequest(Method.GET)
     )
 
   def getGuildEmoji(
@@ -25,7 +26,9 @@ object EmojiRequests {
       emojiId: EmojiId
   ): Request[Unit, Emoji] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[EmojiId]("emojiId", emojiId)).toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "emojis" / Parameters[
+        EmojiId
+      ]("emojiId", emojiId)).toRequest(Method.GET)
     )
 
   class CreateGuildEmojiBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -62,7 +65,8 @@ object EmojiRequests {
       body: CreateGuildEmojiBody
   ): Request[CreateGuildEmojiBody, Emoji] =
     Request.restRequest(
-      route = (Route.Empty / "emojis").toRequest(Method.POST),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "emojis")
+        .toRequest(Method.POST),
       params = body
     )
 
@@ -96,7 +100,9 @@ object EmojiRequests {
       body: ModifyGuildEmojiBody
   ): Request[ModifyGuildEmojiBody, Emoji] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[EmojiId]("emojiId", emojiId)).toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "emojis" / Parameters[
+        EmojiId
+      ]("emojiId", emojiId)).toRequest(Method.PATCH),
       params = body
     )
 
@@ -105,7 +111,9 @@ object EmojiRequests {
       emojiId: EmojiId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[EmojiId]("emojiId", emojiId)).toRequest(Method.DELETE)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "emojis" / Parameters[
+        EmojiId
+      ]("emojiId", emojiId)).toRequest(Method.DELETE)
     )
 
 }

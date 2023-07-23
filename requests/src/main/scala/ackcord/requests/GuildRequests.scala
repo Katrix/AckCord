@@ -200,7 +200,7 @@ object GuildRequests {
       query: GetGuildQuery = GetGuildQuery.make20()
   ): Request[Unit, Guild] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[GuildId]("guildId", guildId, major = true) +? Parameters
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) +? Parameters
         .query("with_counts", query.withCounts)).toRequest(Method.GET)
     )
 
@@ -212,7 +212,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, GuildPreview] =
     Request.restRequest(
-      route = (Route.Empty / "preview").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "preview")
+        .toRequest(Method.GET)
     )
 
   class ModifyGuildBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -449,7 +450,7 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildBody, Guild] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -462,7 +463,7 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.DELETE)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.DELETE)
     )
 
   /** Returns a list of guild channel objects. Does not include threads. */
@@ -470,7 +471,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Seq[GuildChannel]] =
     Request.restRequest(
-      route = (Route.Empty / "channels").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "channels")
+        .toRequest(Method.GET)
     )
 
   class CreateGuildChannelBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -676,7 +678,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[CreateGuildChannelBody, GuildChannel] =
     Request.restRequest(
-      route = (Route.Empty / "channels").toRequest(Method.POST),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "channels")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -742,7 +745,8 @@ object GuildRequests {
       body: Seq[ModifyGuildChannelPositionsBody]
   ): Request[Seq[ModifyGuildChannelPositionsBody], Unit] =
     Request.restRequest(
-      route = (Route.Empty / "channels").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "channels")
+        .toRequest(Method.PATCH),
       params = body
     )
 
@@ -784,7 +788,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, ListActiveGuildThreadsResult] =
     Request.restRequest(
-      route = (Route.Empty / "active").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "threads" / "active")
+        .toRequest(Method.GET)
     )
 
   /** Returns a guild member object for the specified user. */
@@ -793,7 +798,9 @@ object GuildRequests {
       userId: UserId
   ): Request[Unit, GuildMember] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId)).toRequest(Method.GET)
     )
 
   class ListGuildMembersQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -828,9 +835,8 @@ object GuildRequests {
       query: ListGuildMembersQuery = ListGuildMembersQuery.make20()
   ): Request[Unit, Seq[GuildMember]] =
     Request.restRequest(
-      route =
-        (Route.Empty / "members" +? Parameters.query("limit", query.limit) +? Parameters.query("after", query.after))
-          .toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" +? Parameters
+        .query("limit", query.limit) +? Parameters.query("after", query.after)).toRequest(Method.GET)
     )
 
   class SearchGuildMembersQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -866,7 +872,11 @@ object GuildRequests {
       query: SearchGuildMembersQuery
   ): Request[Unit, Seq[GuildMember]] =
     Request.restRequest(
-      route = (Route.Empty / "search" +? Parameters.queryAlways("query", query.query) +? Parameters
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "members" / "search" +? Parameters.queryAlways("query", query.query) +? Parameters
         .query("limit", query.limit)).toRequest(Method.GET)
     )
 
@@ -941,7 +951,9 @@ object GuildRequests {
       body: AddGuildMemberBody
   ): Request[AddGuildMemberBody, Option[GuildMember]] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PUT),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId)).toRequest(Method.PUT),
       params = body,
       parseResponse = Some(new ParseResponse[Option[GuildMember], Any] {
         import sttp.client3._
@@ -1070,7 +1082,9 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildMemberBody, GuildMember] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId)).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1100,7 +1114,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyCurrentMemberBody, GuildMember] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / "@me")
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1117,7 +1132,9 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[RoleId]("roleId", roleId)).toRequest(Method.PUT),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId) / "roles" / Parameters[RoleId]("roleId", roleId)).toRequest(Method.PUT),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1133,7 +1150,9 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[RoleId]("roleId", roleId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId) / "roles" / Parameters[RoleId]("roleId", roleId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1147,7 +1166,9 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
+        UserId
+      ]("userId", userId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1192,8 +1213,11 @@ object GuildRequests {
       query: GetGuildBansQuery = GetGuildBansQuery.make20()
   ): Request[Unit, Seq[Ban]] =
     Request.restRequest(
-      route = (Route.Empty / "bans" +? Parameters.query("limit", query.limit) +? Parameters
-        .query("before", query.before) +? Parameters.query("after", query.after)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" +? Parameters.query(
+          "limit",
+          query.limit
+        ) +? Parameters.query("before", query.before) +? Parameters.query("after", query.after)).toRequest(Method.GET)
     )
 
   /**
@@ -1205,7 +1229,11 @@ object GuildRequests {
       userId: UserId
   ): Request[Unit, Ban] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" / Parameters[UserId](
+          "userId",
+          userId
+        )).toRequest(Method.GET)
     )
 
   class CreateGuildBanBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1243,7 +1271,11 @@ object GuildRequests {
       reason: Option[String]
   ): Request[CreateGuildBanBody, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PUT),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" / Parameters[UserId](
+          "userId",
+          userId
+        )).toRequest(Method.PUT),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1258,7 +1290,11 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" / Parameters[UserId](
+          "userId",
+          userId
+        )).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1267,7 +1303,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Seq[Role]] =
     Request.restRequest(
-      route = (Route.Empty / "roles").toRequest(Method.GET)
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles").toRequest(Method.GET)
     )
 
   class CreateGuildRoleBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1350,7 +1387,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[CreateGuildRoleBody, Role] =
     Request.restRequest(
-      route = (Route.Empty / "roles").toRequest(Method.POST),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1392,7 +1430,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Seq[ModifyGuildRolePositionsBody], Seq[Role]] =
     Request.restRequest(
-      route = (Route.Empty / "roles").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles")
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1477,7 +1516,11 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildRoleBody, Role] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[RoleId]("roleId", roleId)).toRequest(Method.PATCH),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles" / Parameters[RoleId](
+          "roleId",
+          roleId
+        )).toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1507,7 +1550,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildMFALevelBody, Guild.MFALevel] =
     Request.restRequest(
-      route = (Route.Empty / "mfa").toRequest(Method.POST),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "mfa").toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1522,7 +1566,11 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[RoleId]("roleId", roleId)).toRequest(Method.DELETE),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles" / Parameters[RoleId](
+          "roleId",
+          roleId
+        )).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1580,8 +1628,8 @@ object GuildRequests {
       query: GetGuildPruneCountQuery = GetGuildPruneCountQuery.make20()
   ): Request[Unit, GetGuildPruneCountResult] =
     Request.restRequest(
-      route = (Route.Empty / "prune" +? Parameters.query("days", query.days) +? Parameters
-        .query("include_roles", query.includeRoles)).toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "prune" +? Parameters
+        .query("days", query.days) +? Parameters.query("include_roles", query.includeRoles)).toRequest(Method.GET)
     )
 
   class BeginGuildPruneBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1643,7 +1691,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[BeginGuildPruneBody, BeginGuildPruneResult] =
     Request.restRequest(
-      route = (Route.Empty / "prune").toRequest(Method.POST),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "prune")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1656,7 +1705,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Seq[VoiceRegion]] =
     Request.restRequest(
-      route = (Route.Empty / "regions").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "regions")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -1667,7 +1717,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Seq[InviteMetadata]] =
     Request.restRequest(
-      route = (Route.Empty / "invites").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "invites")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -1678,7 +1729,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, Seq[Integration]] =
     Request.restRequest(
-      route = (Route.Empty / "integrations").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "integrations")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -1693,8 +1745,11 @@ object GuildRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route =
-        (Route.Empty / Parameters[Snowflake[Integration]]("integrationId", integrationId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "integrations" / Parameters[Snowflake[Integration]]("integrationId", integrationId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1706,7 +1761,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, GuildWidgetSettings] =
     Request.restRequest(
-      route = (Route.Empty / "widget").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -1720,7 +1776,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[GuildWidgetSettings, GuildWidgetSettings] =
     Request.restRequest(
-      route = (Route.Empty / "widget").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget")
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1730,7 +1787,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, GuildWidget] =
     Request.restRequest(
-      route = (Route.Empty / "widget.json").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget.json")
+        .toRequest(Method.GET)
     )
 
   class GetGuildVanityURLResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1757,7 +1815,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, GetGuildVanityURLResult] =
     Request.restRequest(
-      route = (Route.Empty / "vanity-url").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "vanity-url")
+        .toRequest(Method.GET)
     )
 
   class GetGuildWidgetImageQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1787,7 +1846,9 @@ object GuildRequests {
       query: GetGuildWidgetImageQuery = GetGuildWidgetImageQuery.make20()
   ): Request[Unit, Array[Byte]] =
     Request.restRequest(
-      route = (Route.Empty / "widget.png" +? Parameters.query("style", query.style)).toRequest(Method.GET),
+      route =
+        (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget.png" +? Parameters
+          .query("style", query.style)).toRequest(Method.GET),
       parseResponse = Some(new ParseResponse[Array[Byte], Any] {
         import sttp.client3._
         override def setSttpResponse[T, R1](
@@ -1842,7 +1903,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, WelcomeScreen] =
     Request.restRequest(
-      route = (Route.Empty / "welcome-screen").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "welcome-screen")
+        .toRequest(Method.GET)
     )
 
   class ModifyGuildWelcomeScreenBody(json: Json, cache: Map[String, Any] = Map.empty)
@@ -1892,7 +1954,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildWelcomeScreenBody, WelcomeScreen] =
     Request.restRequest(
-      route = (Route.Empty / "welcome-screen").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "welcome-screen")
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1902,7 +1965,8 @@ object GuildRequests {
       guildId: GuildId
   ): Request[Unit, GuildOnboarding] =
     Request.restRequest(
-      route = (Route.Empty / "onboarding").toRequest(Method.GET)
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "onboarding")
+        .toRequest(Method.GET)
     )
 
   class ModifyGuildOnboardingBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1961,7 +2025,8 @@ object GuildRequests {
       reason: Option[String]
   ): Request[ModifyGuildOnboardingBody, GuildOnboarding] =
     Request.restRequest(
-      route = (Route.Empty / "onboarding").toRequest(Method.PUT),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "onboarding")
+        .toRequest(Method.PUT),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -2014,7 +2079,8 @@ object GuildRequests {
       body: ModifyCurrentUserVoiceStateBody
   ): Request[ModifyCurrentUserVoiceStateBody, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "voice-states" / "@me")
+        .toRequest(Method.PATCH),
       params = body
     )
 
@@ -2055,7 +2121,11 @@ object GuildRequests {
       body: ModifyUserVoiceStateBody
   ): Request[ModifyUserVoiceStateBody, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PATCH),
+      route = (Route.Empty / "guilds" / Parameters[GuildId](
+        "guildId",
+        guildId,
+        major = true
+      ) / "voice-states" / Parameters[UserId]("userId", userId)).toRequest(Method.PATCH),
       params = body
     )
 

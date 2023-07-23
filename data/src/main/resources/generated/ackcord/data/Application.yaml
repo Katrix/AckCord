@@ -56,7 +56,7 @@ fields:
       documentation: The hex encoded key for verification in interactions and the GameSDK's GetTicket
 
     team:
-      type: Team
+      type: Application.Team
       withNull: true
       documentation: If the application belongs to a team, this will be a list of the members of that team
 
@@ -164,3 +164,66 @@ innerTypes:
         id: UserId
 
         username: String
+
+  - name: Team
+    defType: Class
+    fields:
+      2.0.x:
+        icon:
+          type: ImageHash
+          documentation: A hash of the image of the team's icon
+
+        id:
+          type: Snowflake[Team]
+          documentation: The unique id of the team
+
+        members:
+          type: Seq[Team.TeamMember]
+          documentation: The members of the team
+
+        name:
+          type: String
+          documentation: The name of the team
+
+        owner_user_id:
+          type: UserId
+          documentation: The user id of the current team owner
+
+    innerTypes:
+      - name: TeamMember
+        defType: Class
+        fields:
+          2.0.x:
+            membership_state:
+              type: Team.TeamMembershipState
+              documentation: The user's membership state on the team
+
+            permissions:
+              type: Seq[String]
+              documentation: Will always be ["*"]
+
+            team_id:
+              type: Snowflake[Team]
+              documentation: the id of the parent team of which they are a member
+
+            user:
+              type: Team.TeamUser
+              documentation: The avatar, discriminator, id, and username of the user
+
+      - name: TeamMembershipState
+        defType: Enum
+        type: Int
+        values:
+          INVITED: "1"
+          ACCEPTED: "2"
+
+      - name: TeamUser
+        defType: Class
+        fields:
+          2.0.x:
+            id: UserId
+            username: String
+            avatar:
+              type: ImageHash
+              withNull: true
+            discriminator: String

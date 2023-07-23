@@ -19,7 +19,7 @@ object VoiceRegionRequests {
     */
   val listVoiceRegions: Request[Unit, Seq[VoiceRegion]] =
     Request.restRequest(
-      route = (Route.Empty / "regions").toRequest(Method.GET)
+      route = (Route.Empty / "voice" / "regions").toRequest(Method.GET)
     )
 
 }

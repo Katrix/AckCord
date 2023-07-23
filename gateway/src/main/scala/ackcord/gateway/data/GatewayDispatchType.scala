@@ -14,7 +14,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
 
   val Ready: GatewayDispatchType   = GatewayDispatchType("READY")
   val Resumed: GatewayDispatchType = GatewayDispatchType("RESUMED")
-  val ApplicationCommandPermissionUpdate: GatewayDispatchType = GatewayDispatchType(
+  val ApplicationCommandPermissionsUpdate: GatewayDispatchType = GatewayDispatchType(
     "APPLICATION_COMMAND_PERMISSIONS_UPDATE"
   )
   val AutoModerationRuleCreate: GatewayDispatchType      = GatewayDispatchType("AUTO_MODERATION_RULE_CREATE")
@@ -37,7 +37,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
   val GuildAuditLogEntryCreate: GatewayDispatchType      = GatewayDispatchType("GUILD_AUDIT_LOG_ENTRY_CREATE")
   val GuildBanAdd: GatewayDispatchType                   = GatewayDispatchType("GUILD_BAN_ADD")
   val GuildBanRemove: GatewayDispatchType                = GatewayDispatchType("GUILD_BAN_REMOVE")
-  val GuildEmojiUpdate: GatewayDispatchType              = GatewayDispatchType("GUILD_EMOJI_UPDATE")
+  val GuildEmojisUpdate: GatewayDispatchType             = GatewayDispatchType("GUILD_EMOJIS_UPDATE")
   val GuildStickersUpdate: GatewayDispatchType           = GatewayDispatchType("GUILD_STICKERS_UPDATE")
   val GuildIntegrationsUpdate: GatewayDispatchType       = GatewayDispatchType("GUILD_INTEGRATIONS_UPDATE")
   val GuildMemberAdd: GatewayDispatchType                = GatewayDispatchType("GUILD_MEMBER_ADD")
@@ -70,7 +70,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
   val UserUpdate: GatewayDispatchType                    = GatewayDispatchType("USER_UPDATE")
   val VoiceStateUpdate: GatewayDispatchType              = GatewayDispatchType("VOICE_STATE_UPDATE")
   val VoiceServerUpdate: GatewayDispatchType             = GatewayDispatchType("VOICE_SERVER_UPDATE")
-  val WebhookUpdate: GatewayDispatchType                 = GatewayDispatchType("WEBHOOK_UPDATE")
+  val WebhooksUpdate: GatewayDispatchType                = GatewayDispatchType("WEBHOOKS_UPDATE")
   val InteractionCreate: GatewayDispatchType             = GatewayDispatchType("INTERACTION_CREATE")
   val StageInstanceCreate: GatewayDispatchType           = GatewayDispatchType("STAGE_INSTANCE_CREATE")
   val StageInstanceUpdate: GatewayDispatchType           = GatewayDispatchType("STAGE_INSTANCE_UPDATE")
@@ -81,7 +81,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
   def values: Seq[GatewayDispatchType] = Seq(
     Ready,
     Resumed,
-    ApplicationCommandPermissionUpdate,
+    ApplicationCommandPermissionsUpdate,
     AutoModerationRuleCreate,
     AutoModerationRuleUpdate,
     AutoModerationRuleDelete,
@@ -102,7 +102,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
     GuildAuditLogEntryCreate,
     GuildBanAdd,
     GuildBanRemove,
-    GuildEmojiUpdate,
+    GuildEmojisUpdate,
     GuildStickersUpdate,
     GuildIntegrationsUpdate,
     GuildMemberAdd,
@@ -135,7 +135,7 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
     UserUpdate,
     VoiceStateUpdate,
     VoiceServerUpdate,
-    WebhookUpdate,
+    WebhooksUpdate,
     InteractionCreate,
     StageInstanceCreate,
     StageInstanceUpdate,

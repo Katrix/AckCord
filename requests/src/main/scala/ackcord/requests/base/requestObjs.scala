@@ -4,7 +4,7 @@ import java.io.InputStream
 import java.nio.file.Path
 import java.util.UUID
 
-import ackcord.data.{CacheSnapshot, GuildChannelId, GuildId, Permissions}
+import ackcord.data.{GuildChannelId, GuildId, Permissions}
 import ackcord.requests.Request
 import cats.data.Ior
 import io.circe.{Decoder, Encoder, Json}
@@ -20,8 +20,6 @@ trait AckCordRequest[Response, -R] {
 
   def identifier: UUID
 
-  def hasPermissions(implicit c: CacheSnapshot): Boolean
-
   def toSttpRequest(base: Uri): RequestT[Identity, Either[Throwable, Either[String, Response]], R]
 }
 
@@ -29,16 +27,12 @@ case class ComplexRequest[Params, Response, -R1, -R2](
     route: RequestRoute,
     requestBody: EncodeBody[Params, R1],
     parseResponse: ParseResponse[Response, R2],
-    extraHeaders: Map[String, String] = Map.empty,
-    requiredPermissions: Permissions = Permissions.None,
-    permissionContext: Option[Ior[GuildId, GuildChannelId]] = None
+    extraHeaders: Map[String, String] = Map.empty
 ) extends AckCordRequest[Response, R1 with R2] {
 
   def bodyForLogging: String = requestBody.bodyForLogging
 
   val identifier: UUID = UUID.randomUUID()
-
-  def hasPermissions(implicit c: CacheSnapshot): Boolean = true //TODO
 
   def toSttpRequest(base: Uri): RequestT[Identity, Either[Throwable, Either[String, Response]], R1 with R2] = {
     val start            = basicRequest
@@ -54,8 +48,7 @@ object ComplexRequest {
       route: RequestRoute,
       requestBody: EncodeBody[Params, R1] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
-      extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permissions.None
+      extraHeaders: Map[String, String] = Map.empty
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = ComplexRequest(
@@ -67,20 +60,18 @@ object ComplexRequest {
         decoder => ParseResponse.AsJsonResponse()(decoder)
       )
     ),
-    extraHeaders,
-    requiredPermissions
+    extraHeaders
   )
 
   def baseRestRequest[Params, Response](
       route: RequestRoute,
       requestBody: EncodeBody[Params, Any] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
-      extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permissions.None
+      extraHeaders: Map[String, String] = Map.empty
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] =
-    complexBaseRestRequest(route, requestBody, parseResponse, extraHeaders, requiredPermissions)
+    complexBaseRestRequest(route, requestBody, parseResponse, extraHeaders)
 
   //noinspection ComparingUnrelatedTypes
   def complexRestRequest[Params: Encoder, Response: Decoder, R1, R2](
@@ -88,16 +79,14 @@ object ComplexRequest {
       params: Params = (),
       requestBody: Option[EncodeBody[Params, R1]] = None,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
-      extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permissions.None
+      extraHeaders: Map[String, String] = Map.empty
   ): ComplexRequest[Params, Response, R1, R2] = complexBaseRestRequest(
     route,
     requestBody.getOrElse(
       if (params == ()) EncodeBody.NoBody.asInstanceOf[EncodeBody[Params, R1]] else EncodeBody.EncodeJson(params)
     ),
     parseResponse,
-    extraHeaders,
-    requiredPermissions
+    extraHeaders
   )
 
   def restRequest[Params: Encoder, Response: Decoder](
@@ -105,15 +94,13 @@ object ComplexRequest {
       params: Params = (),
       requestBody: Option[EncodeBody[Params, Any]] = None,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
-      extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permissions.None
+      extraHeaders: Map[String, String] = Map.empty
   ): Request[Params, Response] = complexRestRequest(
     route,
     params,
     requestBody,
     parseResponse,
-    extraHeaders,
-    requiredPermissions
+    extraHeaders
   )
 
 }
@@ -157,7 +144,7 @@ object EncodeBody {
         extends Multipart[Params, Any] {
       override def bodyForLogging: String = s"$name: ${encoder(params).noSpaces}"
 
-      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, params).fileName(filename)
+      override def toSttpPart: Part[RequestBody[Any]] = multipart(name, params)
 
       override def withName(name: String): EncodeJson[Params] = copy(name = name)
 

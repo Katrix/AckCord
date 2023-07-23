@@ -12,6 +12,10 @@ object GatewayEventBase {
     def d: Unit = ()
   }
 
+  trait DispatchMixin { self: GatewayEvent.Dispatch =>
+    def event: GatewayDispatchEvent = GatewayDispatchEvent.makeFromType(d, t)
+  }
+
   trait TopMixin { self: GatewayEvent.type =>
 
     def tryDecode(js: Json): Either[DecodingFailure, GatewayEventBase[_]] =

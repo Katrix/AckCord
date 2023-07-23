@@ -561,6 +561,15 @@ object Guild extends DiscordObjectCompanion[Guild] {
       SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES
     )
 
+    implicit class SystemChannelFlagsBitFieldOps(private val here: SystemChannelFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(here.value | there.value)
+
+      def --(there: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   sealed case class GuildFeature private (value: String) extends DiscordEnum[String]
@@ -1124,6 +1133,15 @@ object GuildMember extends DiscordObjectCompanion[GuildMember] {
 
     def values: Seq[GuildMemberFlags] = Seq(DID_REJOIN, COMPLETED_ONBOARDING, BYPASSES_VERIFICATION, STARTED_ONBOARDING)
 
+    implicit class GuildMemberFlagsBitFieldOps(private val here: GuildMemberFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: GuildMemberFlags): GuildMemberFlags = GuildMemberFlags(here.value | there.value)
+
+      def --(there: GuildMemberFlags): GuildMemberFlags = GuildMemberFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 }
 

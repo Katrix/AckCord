@@ -1,5 +1,7 @@
 name: ApplicationCommand
 defType: Class
+imports:
+  - ackcord.data._
 fields:
   2.0.x:
     id: Snowflake[ApplicationCommand]
@@ -103,7 +105,7 @@ innerTypes:
           withUndefined: true
 
         channel_types:
-          type: Seq[ChannelType]
+          type: Seq[Channel.ChannelType]
           withUndefined: true
 
         min_value:

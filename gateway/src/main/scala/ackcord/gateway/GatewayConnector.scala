@@ -112,7 +112,8 @@ object GatewayConnector {
 
   class NormalGatewayConnector[F[_], Handler <: GatewayHandler.NormalGatewayHandler[F]](
       requests: Requests[F, WebSockets],
-      val handlerFactory: GatewayHandlerFactory.GatewayHandlerNormalFactory[F, Handler]
+      val handlerFactory: GatewayHandlerFactory.GatewayHandlerNormalFactory[F, Handler],
+      logMessages: Boolean
   )(implicit handleReconnect: HandleReconnect[F], logFactory: LoggerFactory[F])
       extends GatewayConnector[F, Handler] {
     import requests.F
@@ -131,7 +132,7 @@ object GatewayConnector {
           parseResponse = new ParseResponseAsWebsocket((ws: WebSocket[F]) => {
             for {
               _           <- log.info("Connected with Websockets. Making handler")
-              handler     <- handlerFactory.create(ws, identifyData, resumeData, handle)
+              handler     <- handlerFactory.create(ws, identifyData, resumeData, handle, logMessages)
               _           <- log.info("Handler callback")
               _           <- handle.onCreateHandler(Context.empty.add(handlerFactory.handlerContextKey, handler))
               _           <- log.info("Running connection")

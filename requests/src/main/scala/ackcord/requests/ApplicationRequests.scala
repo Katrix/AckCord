@@ -15,7 +15,7 @@ object ApplicationRequests {
 
   val getCurrentApplication: Request[Unit, Application] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.GET)
+      route = (Route.Empty / "applications" / "@me").toRequest(Method.GET)
     )
 
 }

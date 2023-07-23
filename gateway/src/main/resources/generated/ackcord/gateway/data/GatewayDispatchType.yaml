@@ -6,7 +6,7 @@ values:
   Resumed: "RESUMED"
 
   #Application commands
-  ApplicationCommandPermissionUpdate: "APPLICATION_COMMAND_PERMISSIONS_UPDATE"
+  ApplicationCommandPermissionsUpdate: "APPLICATION_COMMAND_PERMISSIONS_UPDATE"
 
   #Auto moderation
   AutoModerationRuleCreate: "AUTO_MODERATION_RULE_CREATE"
@@ -33,7 +33,7 @@ values:
   GuildAuditLogEntryCreate: "GUILD_AUDIT_LOG_ENTRY_CREATE"
   GuildBanAdd: "GUILD_BAN_ADD"
   GuildBanRemove: "GUILD_BAN_REMOVE"
-  GuildEmojiUpdate: "GUILD_EMOJI_UPDATE"
+  GuildEmojisUpdate: "GUILD_EMOJIS_UPDATE"
   GuildStickersUpdate: "GUILD_STICKERS_UPDATE"
   GuildIntegrationsUpdate: "GUILD_INTEGRATIONS_UPDATE"
   GuildMemberAdd: "GUILD_MEMBER_ADD"
@@ -78,7 +78,7 @@ values:
   VoiceServerUpdate: "VOICE_SERVER_UPDATE"
 
   #Webhooks
-  WebhookUpdate: "WEBHOOK_UPDATE"
+  WebhooksUpdate: "WEBHOOKS_UPDATE"
 
   #Interactions
   InteractionCreate: "INTERACTION_CREATE"

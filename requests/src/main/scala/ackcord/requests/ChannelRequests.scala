@@ -23,7 +23,8 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Channel] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.GET)
+      route =
+        (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.GET)
     )
 
   /**
@@ -36,7 +37,8 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[ModifyChannelBody, Channel] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.PATCH),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true))
+        .toRequest(Method.PATCH),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -490,7 +492,8 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.DELETE),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true))
+        .toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -507,7 +510,11 @@ object ChannelRequests {
       messageId: MessageId
   ): Request[Unit, Message] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[MessageId]("messageId", messageId)).toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId)).toRequest(Method.GET)
     )
 
   class CreateMessageBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -646,7 +653,8 @@ object ChannelRequests {
       parts: Seq[EncodeBody.Multipart[_, MPR]] = Nil
   ): ComplexRequest[CreateMessageBody, Message, MPR, Any] =
     Request.complexRestRequest(
-      route = (Route.Empty / "messages").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "messages")
+        .toRequest(Method.POST),
       params = body,
       requestBody = Some(
         EncodeBody.MultipartBody(
@@ -795,7 +803,11 @@ object ChannelRequests {
       messageId: MessageId
   ): Request[Unit, Message] =
     Request.restRequest(
-      route = (Route.Empty / "crosspost").toRequest(Method.POST)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "crosspost").toRequest(Method.POST)
     )
 
   /**
@@ -814,7 +826,14 @@ object ChannelRequests {
       emoji: Emoji
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.PUT)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions" / Parameters[Emoji](
+        "emoji",
+        emoji
+      ) / "@me").toRequest(Method.PUT)
     )
 
   /**
@@ -830,7 +849,14 @@ object ChannelRequests {
       emoji: Emoji
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions" / Parameters[Emoji](
+        "emoji",
+        emoji
+      ) / "@me").toRequest(Method.DELETE)
     )
 
   /**
@@ -848,7 +874,14 @@ object ChannelRequests {
       userId: UserId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions" / Parameters[Emoji](
+        "emoji",
+        emoji
+      ) / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
     )
 
   class GetReactionsQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -890,8 +923,14 @@ object ChannelRequests {
       query: GetReactionsQuery = GetReactionsQuery.make20()
   ): Request[Unit, Seq[User]] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Emoji]("emoji", emoji) +? Parameters.query("after", query.after) +? Parameters
-        .query("limit", query.limit)).toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions" / Parameters[Emoji](
+        "emoji",
+        emoji
+      ) +? Parameters.query("after", query.after) +? Parameters.query("limit", query.limit)).toRequest(Method.GET)
     )
 
   /**
@@ -904,7 +943,11 @@ object ChannelRequests {
       messageId: MessageId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "reactions").toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions").toRequest(Method.DELETE)
     )
 
   /**
@@ -921,7 +964,12 @@ object ChannelRequests {
       emoji: Emoji
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Emoji]("emoji", emoji)).toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "reactions" / Parameters[Emoji]("emoji", emoji))
+        .toRequest(Method.DELETE)
     )
 
   class EditMessageBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1023,7 +1071,11 @@ object ChannelRequests {
       parts: Seq[EncodeBody.Multipart[_, MPR]] = Nil
   ): ComplexRequest[EditMessageBody, Message, MPR, Any] =
     Request.complexRestRequest(
-      route = (Route.Empty / Parameters[MessageId]("messageId", messageId)).toRequest(Method.PATCH),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId)).toRequest(Method.PATCH),
       params = body,
       requestBody = Some(
         EncodeBody.MultipartBody(
@@ -1045,7 +1097,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[MessageId]("messageId", messageId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1079,7 +1135,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[BulkDeleteMessagesBody, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "bulk-delete").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / "bulk-delete").toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1133,7 +1193,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[EditChannelPermissionsBody, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[UserOrRoleId]]("overwriteId", overwriteId)).toRequest(Method.PUT),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "permissions" / Parameters[Snowflake[UserOrRoleId]]("overwriteId", overwriteId)).toRequest(Method.PUT),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1146,7 +1210,8 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Seq[Invite]] =
     Request.restRequest(
-      route = (Route.Empty / "invites").toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "invites")
+        .toRequest(Method.GET)
     )
 
   class CreateChannelInviteBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1253,7 +1318,8 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[CreateChannelInviteBody, Invite] =
     Request.restRequest(
-      route = (Route.Empty / "invites").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "invites")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1270,7 +1336,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[Snowflake[UserOrRoleId]]("overwriteId", overwriteId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "permissions" / Parameters[Snowflake[UserOrRoleId]]("overwriteId", overwriteId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1304,7 +1374,8 @@ object ChannelRequests {
       body: FollowAnnouncementChannelBody
   ): Request[FollowAnnouncementChannelBody, FollowedChannel] =
     Request.restRequest(
-      route = (Route.Empty / "followers").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "followers")
+        .toRequest(Method.POST),
       params = body
     )
 
@@ -1319,7 +1390,8 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "typing").toRequest(Method.POST)
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "typing")
+        .toRequest(Method.POST)
     )
 
   /**
@@ -1329,7 +1401,8 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Seq[Message]] =
     Request.restRequest(
-      route = (Route.Empty / "pins").toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "pins")
+        .toRequest(Method.GET)
     )
 
   /**
@@ -1343,7 +1416,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[MessageId]("messageId", messageId)).toRequest(Method.PUT),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "pins" / Parameters[MessageId]("messageId", messageId)).toRequest(Method.PUT),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1358,7 +1435,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[MessageId]("messageId", messageId)).toRequest(Method.DELETE),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "pins" / Parameters[MessageId]("messageId", messageId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
@@ -1393,7 +1474,11 @@ object ChannelRequests {
       body: GroupDMAddRecipientBody
   ): Request[GroupDMAddRecipientBody, Json] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PUT),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "recipients" / Parameters[UserId]("userId", userId)).toRequest(Method.PUT),
       params = body
     )
 
@@ -1403,7 +1488,11 @@ object ChannelRequests {
       userId: UserId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "recipients" / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
     )
 
   class StartThreadfromMessageBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1471,7 +1560,11 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[StartThreadfromMessageBody, Channel] =
     Request.restRequest(
-      route = (Route.Empty / "threads").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "messages" / Parameters[MessageId]("messageId", messageId) / "threads").toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1554,7 +1647,8 @@ object ChannelRequests {
       reason: Option[String]
   ): Request[StartThreadwithoutMessageBody, Channel] =
     Request.restRequest(
-      route = (Route.Empty / "threads").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "threads")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
@@ -1653,7 +1747,8 @@ object ChannelRequests {
       parts: Seq[EncodeBody.Multipart[_, MPR]] = Nil
   ): ComplexRequest[StartThreadInForumChannelBody, Channel, MPR, Any] =
     Request.complexRestRequest(
-      route = (Route.Empty / "threads").toRequest(Method.POST),
+      route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "threads")
+        .toRequest(Method.POST),
       params = body,
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r)),
       requestBody = Some(
@@ -1752,7 +1847,11 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.PUT)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" / "@me").toRequest(Method.PUT)
     )
 
   /**
@@ -1766,7 +1865,11 @@ object ChannelRequests {
       userId: UserId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.PUT)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" / Parameters[UserId]("userId", userId)).toRequest(Method.PUT)
     )
 
   /**
@@ -1778,7 +1881,11 @@ object ChannelRequests {
       channelId: ChannelId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / "@me").toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" / "@me").toRequest(Method.DELETE)
     )
 
   /**
@@ -1792,7 +1899,11 @@ object ChannelRequests {
       userId: UserId
   ): Request[Unit, Unit] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" / Parameters[UserId]("userId", userId)).toRequest(Method.DELETE)
     )
 
   class GetThreadMemberQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1828,7 +1939,11 @@ object ChannelRequests {
       query: GetThreadMemberQuery = GetThreadMemberQuery.make20()
   ): Request[Unit, Channel.ThreadMember] =
     Request.restRequest(
-      route = (Route.Empty / Parameters[UserId]("userId", userId) +? Parameters.query("with_member", query.withMember))
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" / Parameters[UserId]("userId", userId) +? Parameters.query("with_member", query.withMember))
         .toRequest(Method.GET)
     )
 
@@ -1874,7 +1989,11 @@ object ChannelRequests {
       query: ListThreadMembersQuery = ListThreadMembersQuery.make20()
   ): Request[Unit, Seq[Channel.ThreadMember]] =
     Request.restRequest(
-      route = (Route.Empty / "thread-members" +? Parameters.query("with_member", query.withMember) +? Parameters
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "thread-members" +? Parameters.query("with_member", query.withMember) +? Parameters
         .query("after", query.after) +? Parameters.query("limit", query.limit)).toRequest(Method.GET)
     )
 
@@ -1961,9 +2080,12 @@ object ChannelRequests {
       query: ListPublicArchivedThreadsQuery = ListPublicArchivedThreadsQuery.make20()
   ): Request[Unit, ListPublicArchivedThreadsResult] =
     Request.restRequest(
-      route =
-        (Route.Empty / "public" +? Parameters.query("before", query.before) +? Parameters.query("limit", query.limit))
-          .toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "threads" / "archived" / "public" +? Parameters.query("before", query.before) +? Parameters
+        .query("limit", query.limit)).toRequest(Method.GET)
     )
 
   class ListPrivateArchivedThreadsQuery(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2047,9 +2169,12 @@ object ChannelRequests {
       query: ListPrivateArchivedThreadsQuery = ListPrivateArchivedThreadsQuery.make20()
   ): Request[Unit, ListPrivateArchivedThreadsResult] =
     Request.restRequest(
-      route =
-        (Route.Empty / "private" +? Parameters.query("before", query.before) +? Parameters.query("limit", query.limit))
-          .toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "threads" / "archived" / "private" +? Parameters.query("before", query.before) +? Parameters
+        .query("limit", query.limit)).toRequest(Method.GET)
     )
 
   class ListJoinedPrivateArchivedThreadsQuery(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2133,9 +2258,12 @@ object ChannelRequests {
       query: ListJoinedPrivateArchivedThreadsQuery = ListJoinedPrivateArchivedThreadsQuery.make20()
   ): Request[Unit, ListJoinedPrivateArchivedThreadsResult] =
     Request.restRequest(
-      route =
-        (Route.Empty / "private" +? Parameters.query("before", query.before) +? Parameters.query("limit", query.limit))
-          .toRequest(Method.GET)
+      route = (Route.Empty / "channels" / Parameters[ChannelId](
+        "channelId",
+        channelId,
+        major = true
+      ) / "users" / "@me" / "threads" / "archived" / "private" +? Parameters.query("before", query.before) +? Parameters
+        .query("limit", query.limit)).toRequest(Method.GET)
     )
 
 }

@@ -1059,6 +1059,15 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def values: Seq[ChannelFlags] = Seq(PINNED, REQUIRE_TAG)
 
+    implicit class ChannelFlagsBitFieldOps(private val here: ChannelFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: ChannelFlags): ChannelFlags = ChannelFlags(here.value | there.value)
+
+      def --(there: ChannelFlags): ChannelFlags = ChannelFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   sealed case class ForumSortOrder private (value: Int) extends DiscordEnum[Int]
@@ -2032,6 +2041,15 @@ object Message extends DiscordObjectCompanion[Message] {
         GUILD_APPLICATION_PREMIUM_SUBSCRIPTION
       )
 
+      implicit class MessageTypeBitFieldOps(private val here: MessageType) extends AnyVal {
+        def toInt: Int = here.value
+
+        def ++(there: MessageType): MessageType = MessageType(here.value | there.value)
+
+        def --(there: MessageType): MessageType = MessageType(here.value & ~there.value)
+
+        def isNone: Boolean = here.value == 0
+      }
     }
 
     class MessageInteractionStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2197,6 +2215,15 @@ object Message extends DiscordObjectCompanion[Message] {
         IS_VOICE_MESSAGE
       )
 
+      implicit class MessageFlagsBitFieldOps(private val here: MessageFlags) extends AnyVal {
+        def toInt: Int = here.value
+
+        def ++(there: MessageFlags): MessageFlags = MessageFlags(here.value | there.value)
+
+        def --(there: MessageFlags): MessageFlags = MessageFlags(here.value & ~there.value)
+
+        def isNone: Boolean = here.value == 0
+      }
     }
 
     class RoleSubscriptionData(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2321,6 +2348,15 @@ object Message extends DiscordObjectCompanion[Message] {
       GUILD_APPLICATION_PREMIUM_SUBSCRIPTION
     )
 
+    implicit class MessageTypeBitFieldOps(private val here: MessageType) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: MessageType): MessageType = MessageType(here.value | there.value)
+
+      def --(there: MessageType): MessageType = MessageType(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   class MessageInteractionStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2482,6 +2518,15 @@ object Message extends DiscordObjectCompanion[Message] {
       IS_VOICE_MESSAGE
     )
 
+    implicit class MessageFlagsBitFieldOps(private val here: MessageFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: MessageFlags): MessageFlags = MessageFlags(here.value | there.value)
+
+      def --(there: MessageFlags): MessageFlags = MessageFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 
   class RoleSubscriptionData(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -3146,6 +3191,15 @@ object Attachment extends DiscordObjectCompanion[Attachment] {
 
     def values: Seq[AttachmentFlags] = Seq(IS_REMIX)
 
+    implicit class AttachmentFlagsBitFieldOps(private val here: AttachmentFlags) extends AnyVal {
+      def toInt: Int = here.value
+
+      def ++(there: AttachmentFlags): AttachmentFlags = AttachmentFlags(here.value | there.value)
+
+      def --(there: AttachmentFlags): AttachmentFlags = AttachmentFlags(here.value & ~there.value)
+
+      def isNone: Boolean = here.value == 0
+    }
   }
 }
 
