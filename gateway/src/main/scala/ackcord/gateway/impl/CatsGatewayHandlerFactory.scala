@@ -6,6 +6,7 @@ import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
 import ackcord.gateway.GatewayProcess.{Context, ContextKey}
 import ackcord.gateway.data.{GatewayDispatchType, GatewayEvent}
 import ackcord.gateway.{DisconnectBehavior, GatewayProcess, IdentifyData, Inflate, ResumeData}
+import cats.Applicative
 import cats.data.OptionT
 import cats.effect.kernel._
 import cats.effect.std.{Queue, Supervisor}
@@ -93,6 +94,7 @@ object CatsGatewayHandlerFactory {
       case Some(WebSocketFrame.Close(4012, _)) => fatalExit("Invalid API version")
       case Some(WebSocketFrame.Close(4013, _)) => fatalExit("Invalid intents")
       case Some(WebSocketFrame.Close(4014, _)) => fatalExit("Disallowed intents")
+      case Some(WebSocketFrame.Close(_, _))    => reconnect(false)
       case None                                => log.warn("Received close without close code") *> reconnect(true)
     }
 
@@ -149,6 +151,7 @@ object CatsGatewayHandlerFactory {
 
                 case GatewayEvent.Heartbeat(_)    => heartbeatNowQueue.offer(())
                 case GatewayEvent.HeartbeatACK(_) => receivedHeartbeatAckRef.set(true)
+                case _                            => Applicative[F].unit
               }
 
               Concurrent[F].uncancelable(p => p(actOnEvent) *> handleExternally)

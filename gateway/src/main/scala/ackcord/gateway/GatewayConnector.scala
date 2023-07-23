@@ -124,23 +124,24 @@ object GatewayConnector {
         resumeData: Option[ResumeData],
         wsUrl: String
     ): F[(DisconnectBehavior, Option[ResumeData])] = {
-      val request = ComplexRequest(
-        route = RequestRoute(wsUrl, wsUrl, Uri.unsafeParse(wsUrl), Method.GET),
-        requestBody = EncodeBody.NoBody,
-        parseResponse = new ParseResponseAsWebsocket((ws: WebSocket[F]) => {
-          for {
-            _           <- log.info("Connected with Websockets. Making handler")
-            handler     <- handlerFactory.create(ws, identifyData, resumeData, handle)
-            _           <- log.info("Handler callback")
-            _           <- handle.onCreateHandler(Context.empty.add(handlerFactory.handlerContextKey, handler))
-            _           <- log.info("Running connection")
-            behavior    <- handler.run
-            _           <- log.info("Disconnected")
-            newBehavior <- handle.onDisconnected(behavior)
-            resume      <- handler.resumeData
-          } yield (newBehavior, resume)
-        })
-      )
+      val request: ComplexRequest[Unit, (DisconnectBehavior, Option[ResumeData]), Any, Effect[F] with WebSockets] =
+        ComplexRequest(
+          route = RequestRoute(wsUrl, wsUrl, Uri.unsafeParse(wsUrl), Method.GET),
+          requestBody = EncodeBody.NoBody,
+          parseResponse = new ParseResponseAsWebsocket((ws: WebSocket[F]) => {
+            for {
+              _           <- log.info("Connected with Websockets. Making handler")
+              handler     <- handlerFactory.create(ws, identifyData, resumeData, handle)
+              _           <- log.info("Handler callback")
+              _           <- handle.onCreateHandler(Context.empty.add(handlerFactory.handlerContextKey, handler))
+              _           <- log.info("Running connection")
+              behavior    <- handler.run
+              _           <- log.info("Disconnected")
+              newBehavior <- handle.onDisconnected(behavior)
+              resume      <- handler.resumeData
+            } yield (newBehavior, resume)
+          })
+        )
 
       requests.runRequest(request)
     }

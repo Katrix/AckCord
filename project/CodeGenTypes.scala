@@ -9,6 +9,7 @@ object CodeGenTypes {
       documentation: Option[String],
       innerTypes: Seq[TypeDef],
       allUndefined: Boolean,
+      makePartial: Boolean,
       customMakeRaw: Boolean,
       fields: ListMap[String, ListMap[String, FieldDef]],
       `extends`: Seq[String],
@@ -34,6 +35,7 @@ object CodeGenTypes {
         documentation <- c.get[Option[String]]("documentation")
         innerTypes    <- c.getOrElse[Seq[TypeDef]]("innerTypes")(Nil)
         allUndefined  <- c.getOrElse[Boolean]("allUndefined")(false)
+        makePartial   <- c.getOrElse[Boolean]("makePartial")(false)
         customMakeRaw <- c.getOrElse[Boolean]("customMakeRaw")(false)
         fieldsMap     <- c.get[ListMap[String, ListMap[String, Either[String, FieldDef]]]]("fields")
         extend        <- c.getOrElse[Seq[String]]("extends")(Nil)
@@ -43,6 +45,7 @@ object CodeGenTypes {
         documentation,
         innerTypes,
         allUndefined,
+        makePartial,
         customMakeRaw,
         fieldsMap.map { case (k1, v1) =>
           k1 -> v1.map { case (k2, v2) =>
@@ -55,6 +58,7 @@ object CodeGenTypes {
                 withUndefined = false,
                 withNull = false,
                 isExtension = false,
+                alwaysPresent = false,
                 overrides = false,
                 None
               )
@@ -241,6 +245,7 @@ object CodeGenTypes {
       withUndefined: Boolean,
       withNull: Boolean,
       isExtension: Boolean,
+      alwaysPresent: Boolean,
       overrides: Boolean,
       verification: Option[FieldVerification]
   )
@@ -256,6 +261,7 @@ object CodeGenTypes {
         withUndefined <- c.getOrElse[Boolean]("withUndefined")(false)
         withNull      <- c.getOrElse[Boolean]("withNull")(false)
         isExtension   <- c.getOrElse[Boolean]("isExtension")(false)
+        alwaysPresent <- c.getOrElse[Boolean]("alwaysPresent")(false)
         overrides     <- c.getOrElse[Boolean]("override")(false)
         verification  <- c.get[Option[FieldVerification]]("verification")
       } yield FieldDef(
@@ -266,6 +272,7 @@ object CodeGenTypes {
         withUndefined,
         withNull,
         isExtension,
+        alwaysPresent,
         overrides,
         verification
       )

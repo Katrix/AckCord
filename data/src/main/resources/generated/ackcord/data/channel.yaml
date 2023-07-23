@@ -805,14 +805,17 @@ innerTypes:
   - name: Message
     defType: Class
     documentation: Represents a message sent in a channel within Discord.
+    makePartial: true
     fields:
       2.0.x:
         id:
           type: MessageId
+          alwaysPresent: true
           documentation: Id of the message
 
         channel_id:
           type: TextChannelId
+          alwaysPresent: true
           documentation: Id of the channel the message was sent in
 
         author:

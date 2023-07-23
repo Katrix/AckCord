@@ -7,6 +7,12 @@ import io.circe._
 
 object AckCordCodeGen {
 
+  def isUndefined(allUndefined: Boolean, withUndefined: Boolean, alwaysPresent: Boolean): Boolean =
+    !alwaysPresent && (allUndefined || withUndefined)
+
+  def isFieldUndefined(field: FieldDef, allUndefined: Boolean): Boolean =
+    isUndefined(allUndefined, field.withUndefined, field.alwaysPresent)
+
   def generateCodeFromFile(generatedRoot: Path, yamlFile: Path): String = {
     val relativeYamlPath = generatedRoot.relativize(yamlFile).iterator.asScala.map(_.toString).toList.init
 
@@ -65,7 +71,7 @@ object AckCordCodeGen {
 
     val fieldsWithTypes = classTypeDef.anonPart.fields.map { case (version, fields) =>
       version -> fields.map { case (name, field) =>
-        val fieldType = (allUndefined || field.withUndefined, field.withNull) match {
+        val fieldType = (isFieldUndefined(field, allUndefined), field.withNull) match {
           case (true, true)   => s"JsonOption[${field.tpe}]"
           case (true, false)  => s"UndefOr[${field.tpe}]"
           case (false, true)  => s"Option[${field.tpe}]"
@@ -84,7 +90,7 @@ object AckCordCodeGen {
       val defName = s"make${version.replace("x", "").replace(".", "")}"
 
       val params = fields.map { case (field, FieldWithType(fieldInfo, tpe)) =>
-        val undef       = allUndefined || fieldInfo.withUndefined
+        val undef       = isFieldUndefined(fieldInfo, allUndefined)
         val realDefault = if (undef) fieldInfo.default.orElse(Some("undefined")) else fieldInfo.default
 
         val defaultStr = realDefault.fold("") { s =>
@@ -108,7 +114,7 @@ object AckCordCodeGen {
         if (fieldInfo.isExtension) {
           s"DiscordObjectFrom.FromExtension($fieldLit, ${camelCase(field)})"
         } else {
-          if (fieldInfo.withUndefined || allUndefined) s"$fieldLit :=? ${camelCase(field)}"
+          if (isFieldUndefined(fieldInfo, allUndefined)) s"$fieldLit :=? ${camelCase(field)}"
           else s"$fieldLit := ${camelCase(field)}"
         }
       }
@@ -168,6 +174,12 @@ object AckCordCodeGen {
     val withs    = classTypeDef.anonPart.`extends`.map(w => s"with $w").mkString(" ")
     val objWiths = classTypeDef.anonPart.objectExtends.map(w => s"with $w").mkString(" ")
 
+    val partialDef =
+      if (classTypeDef.anonPart.makePartial)
+        List(classTypeDef.anonPart.copy(allUndefined = true, makePartial = false).named("Partial"))
+      else Nil
+    val allInnerTypes = partialDef ++ classTypeDef.anonPart.innerTypes
+
     val tpeCode =
       s"""|class $tpeName(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) $withs {
           |   ${classDefs.mkString("\n\n")}
@@ -179,7 +191,7 @@ object AckCordCodeGen {
           |
           |  ${makeDefs.mkString("\n\n")}
           |
-          |  ${classTypeDef.anonPart.innerTypes.flatMap(codeFromTypeDef(_)).mkString("\n\n")}
+          |  ${allInnerTypes.flatMap(codeFromTypeDef(_)).mkString("\n\n")}
           |}""".stripMargin
 
     (classTypeDef.anonPart.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
@@ -236,11 +248,11 @@ object AckCordCodeGen {
           |object $tpeName extends DiscordEnumCompanion[$underlyingType, $tpeName] $objWiths {
           |
           |  $values
-          |  
+          |
           |  def unknown(value: $underlyingType): $tpeName = new $tpeName(value)
-          |  
+          |
           |  def values: Seq[$tpeName] = Seq(${enumTypeDef.values.keys.mkString(", ")})
-          |  
+          |
           |  ${(bitfieldMembers ++ enumTypeDef.innerTypes.flatMap(codeFromTypeDef(_))).mkString("\n\n")}
           |}""".stripMargin
 
@@ -400,7 +412,7 @@ object AckCordCodeGen {
         .fields(highestVersion)
         .map { case (k, v) =>
           val queryParam =
-            if (q.allUndefined || v.withUndefined) s"""Parameters.query("$k", query.${camelCase(k)})"""
+            if (isFieldUndefined(v, q.allUndefined)) s"""Parameters.query("$k", query.${camelCase(k)})"""
             else s"""Parameters.queryAlways("$k", query.${camelCase(k)})"""
 
           s" +? $queryParam"

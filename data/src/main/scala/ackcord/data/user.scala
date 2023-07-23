@@ -226,6 +226,270 @@ object User extends DiscordObjectCompanion[User] {
     "avatar_decoration" :=? avatarDecoration
   )
 
+  /**
+    * Users in Discord are generally considered the base entity. Users can spawn
+    * across the entire platform, be members of guilds, participate in text and
+    * voice chat, and much more. Users are separated by a distinction of "bot"
+    * vs "normal." Although they are similar, bot users are automated users that
+    * are "owned" by another user. Unlike normal users, bot users do not have a
+    * limitation on the number of Guilds they can be a part of.
+    */
+  class Partial(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with UserOrRole
+      with MessageAuthor {
+
+    /** The user's id */
+    @inline def id: UserId = selectDynamic[UserId]("id")
+
+    /** The user's username, not unique across the platform */
+    @inline def username: UndefOr[String] = selectDynamic[UndefOr[String]]("username")
+
+    /** The user's Discord-tag */
+    @inline def discriminator: UndefOr[String] = selectDynamic[UndefOr[String]]("discriminator")
+
+    /**
+      * The user's display name, if it is set. For bots, this is the application
+      * name
+      */
+    @inline def globalName: JsonOption[String] = selectDynamic[JsonOption[String]]("global_name")
+
+    /** The user's avatar hash */
+    @inline def avatar: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar")
+
+    /** Whether the user belongs to an OAuth2 application */
+    @inline def bot: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("bot")
+
+    /**
+      * Whether the user is an Official Discord System user (part of the urgent
+      * message system)
+      */
+    @inline def system: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("system")
+
+    /** Whether the user has two factor enabled on their account */
+    @inline def mfaEnabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mfa_enabled")
+
+    /** The user's banner hash */
+    @inline def banner: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("banner")
+
+    /**
+      * The user's banner color encoded as an integer representation of
+      * hexadecimal color code
+      */
+    @inline def accentColor: JsonOption[Int] = selectDynamic[JsonOption[Int]]("accent_color")
+
+    /** The user's chosen language option */
+    @inline def locale: UndefOr[String] = selectDynamic[UndefOr[String]]("locale")
+
+    /** Whether the email on this account has been verified */
+    @inline def verified: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("verified")
+
+    /** The user's email */
+    @inline def email: JsonOption[String] = selectDynamic[JsonOption[String]]("email")
+
+    /** The flags on a user's account */
+    @inline def flags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("flags")
+
+    /** The type of Nitro subscription on a user's account */
+    @inline def premiumType: UndefOr[User.PremiumType] = selectDynamic[UndefOr[User.PremiumType]]("premium_type")
+
+    /** The public flags on a user's account */
+    @inline def publicFlags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("public_flags")
+
+    /** The user's avatar decoration hash */
+    @inline def avatarDecoration: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar_decoration")
+
+    override def values: Seq[() => Any] = Seq(
+      () => id,
+      () => username,
+      () => discriminator,
+      () => globalName,
+      () => avatar,
+      () => bot,
+      () => system,
+      () => mfaEnabled,
+      () => banner,
+      () => accentColor,
+      () => locale,
+      () => verified,
+      () => email,
+      () => flags,
+      () => premiumType,
+      () => publicFlags,
+      () => avatarDecoration
+    )
+  }
+  object Partial extends DiscordObjectCompanion[Partial] {
+    def makeRaw(json: Json, cache: Map[String, Any]): Partial = new Partial(json, cache)
+
+    /**
+      * @param id
+      *   The user's id
+      * @param username
+      *   The user's username, not unique across the platform
+      * @param discriminator
+      *   The user's Discord-tag
+      * @param globalName
+      *   The user's display name, if it is set. For bots, this is the
+      *   application name
+      * @param avatar
+      *   The user's avatar hash
+      * @param bot
+      *   Whether the user belongs to an OAuth2 application
+      * @param system
+      *   Whether the user is an Official Discord System user (part of the
+      *   urgent message system)
+      * @param mfaEnabled
+      *   Whether the user has two factor enabled on their account
+      * @param banner
+      *   The user's banner hash
+      * @param accentColor
+      *   The user's banner color encoded as an integer representation of
+      *   hexadecimal color code
+      * @param locale
+      *   The user's chosen language option
+      * @param verified
+      *   Whether the email on this account has been verified
+      * @param email
+      *   The user's email
+      * @param flags
+      *   The flags on a user's account
+      * @param premiumType
+      *   The type of Nitro subscription on a user's account
+      * @param publicFlags
+      *   The public flags on a user's account
+      * @param avatarDecoration
+      *   The user's avatar decoration hash
+      */
+    def make20(
+        id: UserId,
+        username: UndefOr[String] = UndefOrUndefined,
+        discriminator: UndefOr[String] = UndefOrUndefined,
+        globalName: JsonOption[String] = JsonUndefined,
+        avatar: JsonOption[ImageHash] = JsonUndefined,
+        bot: UndefOr[Boolean] = UndefOrUndefined,
+        system: UndefOr[Boolean] = UndefOrUndefined,
+        mfaEnabled: UndefOr[Boolean] = UndefOrUndefined,
+        banner: JsonOption[ImageHash] = JsonUndefined,
+        accentColor: JsonOption[Int] = JsonUndefined,
+        locale: UndefOr[String] = UndefOrUndefined,
+        verified: UndefOr[Boolean] = UndefOrUndefined,
+        email: JsonOption[String] = JsonUndefined,
+        flags: UndefOr[User.UserFlags] = UndefOrUndefined,
+        premiumType: UndefOr[User.PremiumType] = UndefOrUndefined,
+        publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined,
+        avatarDecoration: JsonOption[ImageHash] = JsonUndefined
+    ): Partial = makeRawFromFields(
+      "id"                 := id,
+      "username"          :=? username,
+      "discriminator"     :=? discriminator,
+      "global_name"       :=? globalName,
+      "avatar"            :=? avatar,
+      "bot"               :=? bot,
+      "system"            :=? system,
+      "mfa_enabled"       :=? mfaEnabled,
+      "banner"            :=? banner,
+      "accent_color"      :=? accentColor,
+      "locale"            :=? locale,
+      "verified"          :=? verified,
+      "email"             :=? email,
+      "flags"             :=? flags,
+      "premium_type"      :=? premiumType,
+      "public_flags"      :=? publicFlags,
+      "avatar_decoration" :=? avatarDecoration
+    )
+
+    sealed case class UserFlags private (value: Int) extends DiscordEnum[Int]
+    object UserFlags                                 extends DiscordEnumCompanion[Int, UserFlags] {
+
+      /** Discord Employee */
+      val STAFF: UserFlags = UserFlags(1 << 0)
+
+      /** Partnered Server Owner */
+      val PARTNER: UserFlags = UserFlags(1 << 1)
+
+      /** HypeSquad Events Member */
+      val HYPESQUAD: UserFlags = UserFlags(1 << 2)
+
+      /** Bug Hunter Level 1 */
+      val BUG_HUNTER_LEVEL_1: UserFlags = UserFlags(1 << 3)
+
+      /** House Bravery Member */
+      val HYPESQUAD_ONLINE_HOUSE_1: UserFlags = UserFlags(1 << 6)
+
+      /** House Brilliance Member */
+      val HYPESQUAD_ONLINE_HOUSE_2: UserFlags = UserFlags(1 << 7)
+
+      /** House Balance Member */
+      val HYPESQUAD_ONLINE_HOUSE_3: UserFlags = UserFlags(1 << 8)
+
+      /** Early Nitro Supporter */
+      val PREMIUM_EARLY_SUPPORTER: UserFlags = UserFlags(1 << 9)
+
+      /** User is a team */
+      val TEAM_PSEUDO_USER: UserFlags = UserFlags(1 << 10)
+
+      /** Bug Hunter Level 2 */
+      val BUG_HUNTER_LEVEL_2: UserFlags = UserFlags(1 << 14)
+
+      /** Verified Bot */
+      val VERIFIED_BOT: UserFlags = UserFlags(1 << 16)
+
+      /** Early Verified Bot Developer */
+      val VERIFIED_DEVELOPER: UserFlags = UserFlags(1 << 17)
+
+      /** Moderator Programs Alumni */
+      val CERTIFIED_MODERATOR: UserFlags = UserFlags(1 << 18)
+
+      /**
+        * Bot uses only HTTP interactions and is shown in the online member list
+        */
+      val BOT_HTTP_INTERACTIONS: UserFlags = UserFlags(1 << 19)
+
+      /** User is an Active Developer */
+      val ACTIVE_DEVELOPER: UserFlags = UserFlags(1 << 22)
+
+      def unknown(value: Int): UserFlags = new UserFlags(value)
+
+      def values: Seq[UserFlags] = Seq(
+        STAFF,
+        PARTNER,
+        HYPESQUAD,
+        BUG_HUNTER_LEVEL_1,
+        HYPESQUAD_ONLINE_HOUSE_1,
+        HYPESQUAD_ONLINE_HOUSE_2,
+        HYPESQUAD_ONLINE_HOUSE_3,
+        PREMIUM_EARLY_SUPPORTER,
+        TEAM_PSEUDO_USER,
+        BUG_HUNTER_LEVEL_2,
+        VERIFIED_BOT,
+        VERIFIED_DEVELOPER,
+        CERTIFIED_MODERATOR,
+        BOT_HTTP_INTERACTIONS,
+        ACTIVE_DEVELOPER
+      )
+
+    }
+
+    /**
+      * Premium types denote the level of premium a user has. Visit the Nitro
+      * page to learn more about the premium plans we currently offer.
+      */
+    sealed case class PremiumType private (value: Int) extends DiscordEnum[Int]
+    object PremiumType extends DiscordEnumCompanion[Int, PremiumType] {
+
+      val None: PremiumType         = PremiumType(0)
+      val NitroClassic: PremiumType = PremiumType(1)
+      val Nitro: PremiumType        = PremiumType(2)
+      val NitroBasic: PremiumType   = PremiumType(3)
+
+      def unknown(value: Int): PremiumType = new PremiumType(value)
+
+      def values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
+
+    }
+  }
+
   sealed case class UserFlags private (value: Int) extends DiscordEnum[Int]
   object UserFlags                                 extends DiscordEnumCompanion[Int, UserFlags] {
 

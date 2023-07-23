@@ -142,6 +142,10 @@
           "type": "boolean",
           "default": false
         },
+        "makePartial": {
+          "type": "boolean",
+          "description": "If a partial version of this should be made. A partial version is a copy of this, but with allUndefined: true"
+        },
         "customMakeRaw": {
           "type": "boolean",
           "description": "Avoid generating the makeRaw function to allow for a custom implementation"
@@ -211,6 +215,8 @@
             "imports": true,
             "innerTypes": true,
             "allUndefined": true,
+            "makePartial": true,
+            "customMakeRaw": true,
             "fields": true,
             "extends": true,
             "objectExtends": true
@@ -233,6 +239,8 @@
             "imports": true,
             "innerTypes": true,
             "allUndefined": true,
+            "makePartial": true,
+            "customMakeRaw": true,
             "fields": true,
             "extends": true,
             "objectExtends": true,
@@ -282,6 +290,11 @@
         "isExtension": {
           "type": "boolean",
           "description": "This object extends another object with more fields",
+          "default": false
+        },
+        "alwaysPresent": {
+          "type": "boolean",
+          "description": "Opposite of withUndefined. Makes this field never undefined",
           "default": false
         },
         "override": {

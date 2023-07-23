@@ -1,5 +1,7 @@
 name: GatewayEvent
 defType: ObjectOnly
+imports:
+  - ackcord.data._
 objectExtends: [ "GatewayEventBase.TopMixin" ]
 innerTypes:
   - name: Dispatch
@@ -103,7 +105,7 @@ innerTypes:
               withNull: true
               documentation: Unix time (millis) of when client went idle, or null if client is not idle
             activities:
-              type: Seq[Activity]
+              type: Seq[GatewayDispatchEvent.Activity]
               documentation: Client's activities
             status:
               type: Status

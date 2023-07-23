@@ -1,5 +1,8 @@
 name: GatewayDispatchEvent
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - java.time.OffsetDateTime
 innerTypes:
   - name: Ready
     defType: Class
@@ -59,8 +62,14 @@ innerTypes:
     fields:
       2.0.x:
         data:
-          type: ApplicationCommandPermission
+          type: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub
           isExtension: true
+
+    innerTypes:
+      - name: ApplicationCommandPermissionsStub
+        defType: Class
+        fields:
+          2.0.x: {}
 
   - name: AutoModerationRuleCreate
     defType: Class
@@ -69,7 +78,7 @@ innerTypes:
     fields:
       2.0.x:
         data:
-          type: AutoModeration.AutoModerationRule
+          type: AutoModerationRule
           isExtension: true
 
   - name: AutoModerationRuleUpdate
@@ -79,7 +88,7 @@ innerTypes:
     fields:
       2.0.x:
         data:
-          type: AutoModeration.AutoModerationRule
+          type: AutoModerationRule
           isExtension: true
 
   - name: AutoModerationRuleDelete
@@ -89,7 +98,7 @@ innerTypes:
     fields:
       2.0.x:
         data:
-          type: AutoModeration.AutoModerationRule
+          type: AutoModerationRule
           isExtension: true
 
   - name: AutoModerationActionExecution
@@ -103,19 +112,19 @@ innerTypes:
           documentation: ID of the guild in which action was executed
 
         action:
-          type: AutoModeration.AutoModerationAction
+          type: AutoModerationRule.AutoModerationRuleAction
           documentation: Action which was executed
 
         rule_id:
-          type: Snowflake[AutoModeration.AutoModerationRule]
+          type: Snowflake[AutoModerationRule]
           documentation: ID of the rule which action belongs to
 
         rule_trigger_type:
-          type: AutoModeration.AutoModerationRuleTriggerType
+          type: AutoModerationRule.AutoModerationRuleTriggerType
           documentation: Trigger type of rule which was triggered
 
         user_id:
-          type: UserID
+          type: UserId
           documentation: ID of the user which generated the content which triggered the rule
 
         channel_id:
@@ -201,7 +210,7 @@ innerTypes:
           type: ThreadChannel
           isExtension: true
 
-  - name: Thread Delete
+  - name: ThreadDelete
     defType: Class
     documentation: >-
       Sent when a thread relevant to the current user is deleted. The inner payload is a subset of the channel object, containing just the id, guild_id, parent_id, and type.
@@ -316,7 +325,7 @@ innerTypes:
     fields:
       2.0.x:
         guild:
-          type: GuildCreateGuild
+          type: GuildCreate.GuildCreateGuild
           isExtension: true
 
     innerTypes:
@@ -325,17 +334,18 @@ innerTypes:
           sealed trait GuildCreateGuild extends DiscordObject
           
           object GuildCreateGuild extends DiscordObjectCompanion[GuildCreateGuild] {
-            override def makeRaw(json: Json, cache: Map[String, Any]): Obj = {
-              if (json.hcursor.getOrElse[Boolean]("unavailable")(false)) {
-                AvailableGuild.makeRaw(json, cache)
-              } else {
+            override def makeRaw(json: Json, cache: Map[String, Any]): GuildCreateGuild = {
+              if (json.hcursor.getOrElse[Boolean]("unavailable")(false).contains(true)) {
                 GuildCreateUnavailableGuild.makeRaw(json, cache)
+              } else {
+                AvailableGuild.makeRaw(json, cache)
               }
             }
           }
 
       - name: AvailableGuild
         defType: Class
+        extends: [GuildCreateGuild]
         fields:
           2.0.x:
             guild:
@@ -394,6 +404,7 @@ innerTypes:
 
       - name: GuildCreateUnavailableGuild
         defType: Class
+        extends: [GuildCreateGuild]
         fields:
           2.0.x:
             guild:
@@ -427,7 +438,7 @@ innerTypes:
     fields:
       2.0.x:
         audit_log_entry:
-          type: AuditLogEntry
+          type: AuditLog.AuditLogEntry
           isExtension: true
 
   - name: GuildBanAdd
@@ -621,7 +632,7 @@ innerTypes:
             returned here
 
         presences:
-          type: Seq[Presence]
+          type: Seq[PresenceUpdate]
           withUndefined: true
           documentation: When passing true to REQUEST_GUILD_MEMBERS, presences of the
             returned members will be here
@@ -886,6 +897,10 @@ innerTypes:
           withUndefined: true
           documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
 
+        mentions:
+          type: Seq[User]
+          documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
+
     innerTypes:
       - name: MessageCreateGuildMember
         defType: Class
@@ -900,8 +915,11 @@ innerTypes:
     fields:
       2.0.x:
         message:
-          type: PartialMessage
+          type: Message.Partial
           isExtension: true
+
+        id: MessageId
+        channel_id: TextChannelId
 
         guild_id:
           type: GuildId
@@ -912,6 +930,11 @@ innerTypes:
           type: MessageCreate.MessageCreateGuildMember
           withUndefined: true
           documentation: Member properties for this message's author. Missing for ephemeral messages and messages from webhooks
+
+        mentions:
+          type: Seq[User]
+          withUndefined: true
+          documentation: Users specifically mentioned in the message. Array of user objects, with an additional partial member field
 
   - name: MessageDelete
     defType: Class
@@ -958,7 +981,7 @@ innerTypes:
     fields:
       2.0.x:
         user_id:
-          type: UserID
+          type: UserId
           documentation: ID of the user
 
         channel_id:
@@ -1063,27 +1086,31 @@ innerTypes:
     documentation: >-
       A user's presence is their current state on a guild. This event is sent when
       a user's presence or info, such as name or avatar, is updated.
-    allUndefined: true
     fields:
       2.0.x:
         user:
-          type: PartialUser
+          type: User.Partial
+          isExtension: true
           documentation: User whose presence is being updated
 
         guild_id:
           type: GuildId
+          withUndefined: true
           documentation: ID of the guild
 
         status:
           type: Status
+          withUndefined: true
           documentation: Either "idle", "dnd", "online", or "offline"
 
         activities:
           type: Seq[Activity]
+          withUndefined: true
           documentation: User's current activities
 
         client_status:
-          type: Client_status
+          type: PresenceUpdate.ClientStatus
+          withUndefined: true
           documentation: User's platform-dependent status
 
     innerTypes:
@@ -1116,7 +1143,8 @@ innerTypes:
           type: String
           documentation: Activity's name
 
-        type:
+        tpe:
+          jsonName: type
           type: Activity.ActivityType
           documentation: Activity type
 
@@ -1185,7 +1213,7 @@ innerTypes:
           documentation: Activity flags ORd together, describes what the payload includes
 
         buttons:
-          type: Seq[Activity.ActivityButton]
+          type: Seq[Activity.ActivityButtons]
           withUndefined: true
           documentation: Custom buttons shown in the Rich Presence (max 2)
 
@@ -1292,17 +1320,18 @@ innerTypes:
         defType: Class
         fields:
           2.0.x:
-            join?:
+            join:
               type: String
               withUndefined: true
               documentation: Secret for joining a party
 
-            spectate?:
+            spectate:
               type: String
               withUndefined: true
               documentation: Secret for spectating a game
 
-            match?:
+            matchSecret:
+              jsonName: match
               type: String
               withUndefined: true
               documentation: Secret for a specific instanced match
