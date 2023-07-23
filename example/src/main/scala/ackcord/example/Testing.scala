@@ -63,35 +63,39 @@ object Testing extends ResourceApp {
 
         val log = settings.loggerFactory.getLoggerFromClass(this.getClass)
 
-        settings.use(
-          new PrintlnProcessor(console, settings.handlerFactory.handlerContextKey),
-          new StringCommandProcessor(
-            Map(
-              "!info" -> ((_, channelId) => {
-                req
-                  .runRequest(
-                    ChannelRequests.createMessage(
-                      channelId,
-                      ChannelRequests.CreateMessageBody.make20(content = UndefOrSome("Hello from AckCord 2.0"))
+        settings
+          .useEventListenerNoContext { case _: GatewayDispatchEvent.Ready =>
+            console.println("Ready")
+          }
+          .use(
+            new PrintlnProcessor(console, settings.handlerFactory.handlerContextKey),
+            new StringCommandProcessor(
+              Map(
+                "!info" -> ((_, channelId) => {
+                  req
+                    .runRequest(
+                      ChannelRequests.createMessage(
+                        channelId,
+                        ChannelRequests.CreateMessageBody.make20(content = UndefOrSome("Hello from AckCord 2.0"))
+                      )
                     )
-                  )
-                  .void
-              }),
-              "!ratelimitTest " -> ((content, channelId) => {
-                List
-                  .tabulate(content.substring("!ratelimitTest ".length).toInt)(i =>
-                    ChannelRequests.createMessage(
-                      channelId,
-                      ChannelRequests.CreateMessageBody.make20(content = UndefOrSome(s"Ratelimit message ${i + 1}"))
+                    .void
+                }),
+                "!ratelimitTest " -> ((content, channelId) => {
+                  List
+                    .tabulate(content.substring("!ratelimitTest ".length).toInt)(i =>
+                      ChannelRequests.createMessage(
+                        channelId,
+                        ChannelRequests.CreateMessageBody.make20(content = UndefOrSome(s"Ratelimit message ${i + 1}"))
+                      )
                     )
-                  )
-                  .traverse_(req.runRequest)
-                  .void
-              })
-            ),
-            log
+                    .traverse_(req.runRequest)
+                    .void
+                })
+              ),
+              log
+            )
           )
-        )
       }
       .flatMap(_.startResource)
   }

@@ -2,9 +2,17 @@ package ackcord
 
 import ackcord.gateway.GatewayConnector.HandleReconnect
 import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
-import ackcord.gateway.data.GatewayIntents
+import ackcord.gateway.data.{GatewayDispatchEvent, GatewayIntents}
 import ackcord.gateway.impl.CatsGatewayHandlerFactory
-import ackcord.gateway.{GatewayConnector, GatewayHandler, GatewayProcess, IdentifyData, Inflate}
+import ackcord.gateway.{
+  Context,
+  DispatchEventProcess,
+  GatewayConnector,
+  GatewayHandler,
+  GatewayProcess,
+  IdentifyData,
+  Inflate
+}
 import ackcord.requests.{RequestSettings, Requests}
 import cats.Monad
 import cats.effect.ExitCode
@@ -59,6 +67,31 @@ object BotSettings {
 
     def useResource(newProcessors: Resource[F, GatewayProcess[F]]*): Resource[F, NormalBotSettings[F, P, Handler]] =
       newProcessors.sequence.map(ps => use(ps: _*))
+
+    def useEventListener(
+        f: gateway.Context => PartialFunction[GatewayDispatchEvent, F[gateway.Context]]
+    ): NormalBotSettings[F, P, Handler] =
+      use(new DispatchEventProcess[F] {
+        override def name: String = "AnonymousEventListener"
+
+        override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] = {
+          val f2 = f(context)
+
+          if (f2.isDefinedAt(event)) f2(event)
+          else context.pure
+        }
+      })
+
+    def useEventListenerNoContext(
+        f: PartialFunction[GatewayDispatchEvent, F[Unit]]
+    ): NormalBotSettings[F, P, Handler] =
+      use(new DispatchEventProcess[F] {
+        override def name: String = "AnonymousEventListener"
+
+        override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] =
+          if (f.isDefinedAt(event)) f(event).as(context)
+          else context.pure
+      })
 
     def assembledProcessor: GatewayProcess[F] = {
       val log = loggerFactory.getLoggerFromClass(classOf[GatewayProcess[F]])
