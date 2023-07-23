@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -37,7 +37,7 @@ object Status extends DiscordEnumCompanion[String, Status] {
 class WebhookAuthor(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with MessageAuthor {
-  @inline def id: Snowflake[Webhook] = selectDynamic[Snowflake[Webhook]]("id")
+  @inline def id: WebhookId = selectDynamic[WebhookId]("id")
 
   @inline def username: String = selectDynamic[String]("username")
 
@@ -48,7 +48,7 @@ class WebhookAuthor(json: Json, cache: Map[String, Any] = Map.empty)
 object WebhookAuthor extends DiscordObjectCompanion[WebhookAuthor] {
   def makeRaw(json: Json, cache: Map[String, Any]): WebhookAuthor = new WebhookAuthor(json, cache)
 
-  def make20(id: Snowflake[Webhook], username: String, avatar: Option[ImageHash]): WebhookAuthor =
+  def make20(id: WebhookId, username: String, avatar: Option[ImageHash]): WebhookAuthor =
     makeRawFromFields("id" := id, "username" := username, "avatar" := avatar)
 
 }
@@ -194,18 +194,18 @@ object User extends DiscordObjectCompanion[User] {
       discriminator: String,
       globalName: Option[String],
       avatar: Option[ImageHash],
-      bot: UndefOr[Boolean],
-      system: UndefOr[Boolean],
-      mfaEnabled: UndefOr[Boolean],
-      banner: JsonOption[ImageHash],
-      accentColor: JsonOption[Int],
-      locale: UndefOr[String],
-      verified: UndefOr[Boolean],
-      email: JsonOption[String],
-      flags: UndefOr[User.UserFlags],
-      premiumType: UndefOr[User.PremiumType],
-      publicFlags: UndefOr[User.UserFlags],
-      avatarDecoration: JsonOption[ImageHash]
+      bot: UndefOr[Boolean] = UndefOrUndefined,
+      system: UndefOr[Boolean] = UndefOrUndefined,
+      mfaEnabled: UndefOr[Boolean] = UndefOrUndefined,
+      banner: JsonOption[ImageHash] = JsonUndefined,
+      accentColor: JsonOption[Int] = JsonUndefined,
+      locale: UndefOr[String] = UndefOrUndefined,
+      verified: UndefOr[Boolean] = UndefOrUndefined,
+      email: JsonOption[String] = JsonUndefined,
+      flags: UndefOr[User.UserFlags] = UndefOrUndefined,
+      premiumType: UndefOr[User.PremiumType] = UndefOrUndefined,
+      publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined,
+      avatarDecoration: JsonOption[ImageHash] = JsonUndefined
   ): User = makeRawFromFields(
     "id"                 := id,
     "username"           := username,
@@ -397,8 +397,8 @@ object Connection extends DiscordObjectCompanion[Connection] {
       id: String,
       name: String,
       tpe: Connection.ConnectionServiceType,
-      revoked: UndefOr[Boolean],
-      integrations: UndefOr[Seq[Connection.ConnectionIntegration]],
+      revoked: UndefOr[Boolean] = UndefOrUndefined,
+      integrations: UndefOr[Seq[Connection.ConnectionIntegration]] = UndefOrUndefined,
       verified: Boolean,
       friendSync: Boolean,
       showActivity: Boolean,
@@ -665,8 +665,8 @@ object Role extends DiscordObjectCompanion[Role] {
       name: String,
       color: Int,
       hoist: Boolean,
-      icon: JsonOption[ImageHash],
-      unicodeEmoji: JsonOption[String],
+      icon: JsonOption[ImageHash] = JsonUndefined,
+      unicodeEmoji: JsonOption[String] = JsonUndefined,
       position: Int,
       permissions: Permissions,
       managed: Boolean,
@@ -695,22 +695,24 @@ object Role extends DiscordObjectCompanion[Role] {
   class RoleTag(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
     /** The id of the bot this role belongs to */
-    @inline def botId: UserId = selectDynamic[UserId]("bot_id")
+    @inline def botId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("bot_id")
 
     /** The id of the integration this role belongs to */
-    @inline def integrationId: Snowflake[Integration] = selectDynamic[Snowflake[Integration]]("integration_id")
+    @inline def integrationId: UndefOr[Snowflake[Integration]] =
+      selectDynamic[UndefOr[Snowflake[Integration]]]("integration_id")
 
     /** Whether this is the guild's Booster role */
-    @inline def premiumSubscriber: Option[Unit] = selectDynamic[Option[Unit]]("premium_subscriber")
+    @inline def premiumSubscriber: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("premium_subscriber")
 
     /** The id of this role's subscription sku and listing */
-    @inline def subscriptionListingId: RawSnowflake = selectDynamic[RawSnowflake]("subscription_listing_id")
+    @inline def subscriptionListingId: UndefOr[RawSnowflake] =
+      selectDynamic[UndefOr[RawSnowflake]]("subscription_listing_id")
 
     /** Whether this role is available for purchase */
-    @inline def availableForPurchase: Option[Unit] = selectDynamic[Option[Unit]]("available_for_purchase")
+    @inline def availableForPurchase: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("available_for_purchase")
 
     /** Whether this role is a guild's linked role */
-    @inline def guildConnections: Option[Unit] = selectDynamic[Option[Unit]]("guild_connections")
+    @inline def guildConnections: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("guild_connections")
 
     override def values: Seq[() => Any] = Seq(
       () => botId,
@@ -739,19 +741,19 @@ object Role extends DiscordObjectCompanion[Role] {
       *   Whether this role is a guild's linked role
       */
     def make20(
-        botId: UserId,
-        integrationId: Snowflake[Integration],
-        premiumSubscriber: Option[Unit],
-        subscriptionListingId: RawSnowflake,
-        availableForPurchase: Option[Unit],
-        guildConnections: Option[Unit]
+        botId: UndefOr[UserId] = UndefOrUndefined,
+        integrationId: UndefOr[Snowflake[Integration]] = UndefOrUndefined,
+        premiumSubscriber: JsonOption[Unit] = JsonUndefined,
+        subscriptionListingId: UndefOr[RawSnowflake] = UndefOrUndefined,
+        availableForPurchase: JsonOption[Unit] = JsonUndefined,
+        guildConnections: JsonOption[Unit] = JsonUndefined
     ): RoleTag = makeRawFromFields(
-      "bot_id"                  := botId,
-      "integration_id"          := integrationId,
-      "premium_subscriber"      := premiumSubscriber,
-      "subscription_listing_id" := subscriptionListingId,
-      "available_for_purchase"  := availableForPurchase,
-      "guild_connections"       := guildConnections
+      "bot_id"                  :=? botId,
+      "integration_id"          :=? integrationId,
+      "premium_subscriber"      :=? premiumSubscriber,
+      "subscription_listing_id" :=? subscriptionListingId,
+      "available_for_purchase"  :=? availableForPurchase,
+      "guild_connections"       :=? guildConnections
     )
 
   }

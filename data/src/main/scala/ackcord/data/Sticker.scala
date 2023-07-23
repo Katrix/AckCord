@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -93,16 +93,16 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
     */
   def make20(
       id: Snowflake[Sticker],
-      packId: UndefOr[Snowflake[Sticker.StickerPack]],
+      packId: UndefOr[Snowflake[Sticker.StickerPack]] = UndefOrUndefined,
       name: String,
       description: Option[String],
       tags: String,
       tpe: Sticker.StickerType,
       formatType: Sticker.StickerFormatType,
-      available: UndefOr[Boolean],
-      guildId: UndefOr[GuildId],
-      user: UndefOr[User],
-      sortValue: UndefOr[Int]
+      available: UndefOr[Boolean] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      user: UndefOr[User] = UndefOrUndefined,
+      sortValue: UndefOr[Int] = UndefOrUndefined
   ): Sticker = makeRawFromFields(
     "id"          := id,
     "pack_id"    :=? packId,
@@ -241,9 +241,9 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
         stickers: Seq[Sticker],
         name: String,
         skuId: RawSnowflake,
-        coverStickerId: UndefOr[Snowflake[Sticker]],
+        coverStickerId: UndefOr[Snowflake[Sticker]] = UndefOrUndefined,
         description: String,
-        bannerAssetId: UndefOr[RawSnowflake]
+        bannerAssetId: UndefOr[RawSnowflake] = UndefOrUndefined
     ): StickerPack = makeRawFromFields(
       "id"                := id,
       "stickers"          := stickers,

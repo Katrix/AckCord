@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -192,12 +192,12 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       */
     def make20(
         targetId: Option[String],
-        changes: UndefOr[Seq[AuditLog.AuditLogChange]],
+        changes: UndefOr[Seq[AuditLog.AuditLogChange]] = UndefOrUndefined,
         userId: Option[UserId],
         id: Snowflake[AuditLogEntry],
         actionType: AuditLog.AuditLogEvent,
-        options: UndefOr[AuditLog.AuditEntryInfo],
-        reason: UndefOr[String]
+        options: UndefOr[AuditLog.AuditEntryInfo] = UndefOrUndefined,
+        reason: UndefOr[String] = UndefOrUndefined
     ): AuditLogEntry = makeRawFromFields(
       "target_id"   := targetId,
       "changes"    :=? changes,
@@ -213,37 +213,38 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
   class AuditEntryInfo(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
     /** ID of the app whose permissions were targeted */
-    @inline def applicationId: ApplicationId = selectDynamic[ApplicationId]("application_id")
+    @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
 
     /** Name of the Auto Moderation rule that was triggered */
-    @inline def autoModerationRuleName: String = selectDynamic[String]("auto_moderation_rule_name")
+    @inline def autoModerationRuleName: UndefOr[String] = selectDynamic[UndefOr[String]]("auto_moderation_rule_name")
 
     /** Trigger type of the Auto Moderation rule that was triggered */
-    @inline def autoModerationRuleTriggerType: String = selectDynamic[String]("auto_moderation_rule_trigger_type")
+    @inline def autoModerationRuleTriggerType: UndefOr[String] =
+      selectDynamic[UndefOr[String]]("auto_moderation_rule_trigger_type")
 
     /** Channel in which the entities were targeted */
-    @inline def channelId: ChannelId = selectDynamic[ChannelId]("channel_id")
+    @inline def channelId: UndefOr[ChannelId] = selectDynamic[UndefOr[ChannelId]]("channel_id")
 
     /** Number of entities that were targeted */
-    @inline def count: String = selectDynamic[String]("count")
+    @inline def count: UndefOr[String] = selectDynamic[UndefOr[String]]("count")
 
     /** Number of days after which inactive members were kicked */
-    @inline def deleteMemberDays: String = selectDynamic[String]("delete_member_days")
+    @inline def deleteMemberDays: UndefOr[String] = selectDynamic[UndefOr[String]]("delete_member_days")
 
     /** ID of the overwritten entity */
-    @inline def id: RawSnowflake = selectDynamic[RawSnowflake]("id")
+    @inline def id: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("id")
 
     /** Number of members removed by the prune */
-    @inline def membersRemoved: String = selectDynamic[String]("members_removed")
+    @inline def membersRemoved: UndefOr[String] = selectDynamic[UndefOr[String]]("members_removed")
 
     /** ID of the message that was targeted */
-    @inline def messageId: MessageId = selectDynamic[MessageId]("message_id")
+    @inline def messageId: UndefOr[MessageId] = selectDynamic[UndefOr[MessageId]]("message_id")
 
     /** Name of the role if type is "0" (not present if type is "1") */
-    @inline def roleName: String = selectDynamic[String]("role_name")
+    @inline def roleName: UndefOr[String] = selectDynamic[UndefOr[String]]("role_name")
 
     /** Type of overwritten entity - role ("0") or member ("1") */
-    @inline def tpe: String = selectDynamic[String]("type")
+    @inline def tpe: UndefOr[String] = selectDynamic[UndefOr[String]]("type")
 
     override def values: Seq[() => Any] = Seq(
       () => applicationId,
@@ -287,29 +288,29 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       *   Type of overwritten entity - role ("0") or member ("1")
       */
     def make20(
-        applicationId: ApplicationId,
-        autoModerationRuleName: String,
-        autoModerationRuleTriggerType: String,
-        channelId: ChannelId,
-        count: String,
-        deleteMemberDays: String,
-        id: RawSnowflake,
-        membersRemoved: String,
-        messageId: MessageId,
-        roleName: String,
-        tpe: String
+        applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
+        autoModerationRuleName: UndefOr[String] = UndefOrUndefined,
+        autoModerationRuleTriggerType: UndefOr[String] = UndefOrUndefined,
+        channelId: UndefOr[ChannelId] = UndefOrUndefined,
+        count: UndefOr[String] = UndefOrUndefined,
+        deleteMemberDays: UndefOr[String] = UndefOrUndefined,
+        id: UndefOr[RawSnowflake] = UndefOrUndefined,
+        membersRemoved: UndefOr[String] = UndefOrUndefined,
+        messageId: UndefOr[MessageId] = UndefOrUndefined,
+        roleName: UndefOr[String] = UndefOrUndefined,
+        tpe: UndefOr[String] = UndefOrUndefined
     ): AuditEntryInfo = makeRawFromFields(
-      "application_id"                    := applicationId,
-      "auto_moderation_rule_name"         := autoModerationRuleName,
-      "auto_moderation_rule_trigger_type" := autoModerationRuleTriggerType,
-      "channel_id"                        := channelId,
-      "count"                             := count,
-      "delete_member_days"                := deleteMemberDays,
-      "id"                                := id,
-      "members_removed"                   := membersRemoved,
-      "message_id"                        := messageId,
-      "role_name"                         := roleName,
-      "type"                              := tpe
+      "application_id"                    :=? applicationId,
+      "auto_moderation_rule_name"         :=? autoModerationRuleName,
+      "auto_moderation_rule_trigger_type" :=? autoModerationRuleTriggerType,
+      "channel_id"                        :=? channelId,
+      "count"                             :=? count,
+      "delete_member_days"                :=? deleteMemberDays,
+      "id"                                :=? id,
+      "members_removed"                   :=? membersRemoved,
+      "message_id"                        :=? messageId,
+      "role_name"                         :=? roleName,
+      "type"                              :=? tpe
     )
 
   }
@@ -338,8 +339,11 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       * @param key
       *   Name of the changed entity, with a few exceptions
       */
-    def make20(newValue: UndefOr[Json], oldValue: UndefOr[Json], key: String): AuditLogChange =
-      makeRawFromFields("new_value" :=? newValue, "old_value" :=? oldValue, "key" := key)
+    def make20(
+        newValue: UndefOr[Json] = UndefOrUndefined,
+        oldValue: UndefOr[Json] = UndefOrUndefined,
+        key: String
+    ): AuditLogChange = makeRawFromFields("new_value" :=? newValue, "old_value" :=? oldValue, "key" := key)
 
   }
 

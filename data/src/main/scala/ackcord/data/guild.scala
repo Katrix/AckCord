@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -335,16 +335,16 @@ object Guild extends DiscordObjectCompanion[Guild] {
       id: GuildId,
       name: String,
       icon: Option[ImageHash],
-      iconHash: JsonOption[ImageHash],
+      iconHash: JsonOption[ImageHash] = JsonUndefined,
       splash: Option[ImageHash],
       discoverySplash: Option[ImageHash],
-      owner: UndefOr[Boolean],
+      owner: UndefOr[Boolean] = UndefOrUndefined,
       ownerId: UserId,
-      permissions: UndefOr[Permissions],
+      permissions: UndefOr[Permissions] = UndefOrUndefined,
       afkChannelId: Option[VoiceGuildChannelId],
       afkTimeout: Int,
-      widgetEnabled: UndefOr[Boolean],
-      widgetChannelId: JsonOption[GuildChannelId],
+      widgetEnabled: UndefOr[Boolean] = UndefOrUndefined,
+      widgetChannelId: JsonOption[GuildChannelId] = JsonUndefined,
       verificationLevel: Guild.VerificationLevel,
       defaultMessageNotifications: Guild.MessageNotificationLevel,
       explicitContentFilter: Guild.ExplicitContentFilterLevel,
@@ -356,22 +356,22 @@ object Guild extends DiscordObjectCompanion[Guild] {
       systemChannelId: Option[TextGuildChannelId],
       systemChannelFlags: Guild.SystemChannelFlags,
       rulesChannelId: Option[TextGuildChannelId],
-      maxPresences: JsonOption[Int],
-      maxMembers: UndefOr[Int],
+      maxPresences: JsonOption[Int] = JsonUndefined,
+      maxMembers: UndefOr[Int] = UndefOrUndefined,
       vanityUrlCode: Option[String],
       description: Option[String],
       banner: Option[ImageHash],
       premiumTier: Guild.PremiumTier,
-      premiumSubscriptionCount: UndefOr[Int],
+      premiumSubscriptionCount: UndefOr[Int] = UndefOrUndefined,
       preferredLocale: String,
       publicUpdatesChannelId: Option[TextGuildChannelId],
-      maxVideoChannelUsers: UndefOr[Int],
-      maxStageVideoChannelUsers: UndefOr[Int],
-      approximateMemberCount: UndefOr[Int],
-      approximatePresenceCount: UndefOr[Int],
-      welcomeScreen: UndefOr[WelcomeScreen],
+      maxVideoChannelUsers: UndefOr[Int] = UndefOrUndefined,
+      maxStageVideoChannelUsers: UndefOr[Int] = UndefOrUndefined,
+      approximateMemberCount: UndefOr[Int] = UndefOrUndefined,
+      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined,
+      welcomeScreen: UndefOr[WelcomeScreen] = UndefOrUndefined,
       nsfwLevel: Guild.GuildNSFWLevel,
-      stickers: UndefOr[Seq[Sticker]],
+      stickers: UndefOr[Seq[Sticker]] = UndefOrUndefined,
       premiumProgressBarEnabled: Boolean,
       safetyAlertsChannelId: Option[TextGuildChannelId]
   ): Guild = makeRawFromFields(
@@ -1078,18 +1078,18 @@ object GuildMember extends DiscordObjectCompanion[GuildMember] {
     *   is not timed out
     */
   def make20(
-      user: UndefOr[User],
-      nick: JsonOption[String],
-      avatar: JsonOption[ImageHash],
+      user: UndefOr[User] = UndefOrUndefined,
+      nick: JsonOption[String] = JsonUndefined,
+      avatar: JsonOption[ImageHash] = JsonUndefined,
       roles: Seq[RoleId],
       joinedAt: OffsetDateTime,
-      premiumSince: JsonOption[OffsetDateTime],
+      premiumSince: JsonOption[OffsetDateTime] = JsonUndefined,
       deaf: Boolean,
       mute: Boolean,
       flags: GuildMember.GuildMemberFlags,
-      pending: UndefOr[Boolean],
-      permissions: UndefOr[Permissions],
-      communicationDisabledUntil: JsonOption[OffsetDateTime]
+      pending: UndefOr[Boolean] = UndefOrUndefined,
+      permissions: UndefOr[Permissions] = UndefOrUndefined,
+      communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined
   ): GuildMember = makeRawFromFields(
     "user"                         :=? user,
     "nick"                         :=? nick,
@@ -1243,18 +1243,18 @@ object Integration extends DiscordObjectCompanion[Integration] {
       name: String,
       tpe: String,
       enabled: Boolean,
-      syncing: UndefOr[Boolean],
-      roleId: UndefOr[RoleId],
-      enableEmoticons: UndefOr[Boolean],
-      expireBehavior: UndefOr[Integration.IntegrationExpireBehavior],
-      expireGracePeriod: UndefOr[Int],
-      user: UndefOr[User],
+      syncing: UndefOr[Boolean] = UndefOrUndefined,
+      roleId: UndefOr[RoleId] = UndefOrUndefined,
+      enableEmoticons: UndefOr[Boolean] = UndefOrUndefined,
+      expireBehavior: UndefOr[Integration.IntegrationExpireBehavior] = UndefOrUndefined,
+      expireGracePeriod: UndefOr[Int] = UndefOrUndefined,
+      user: UndefOr[User] = UndefOrUndefined,
       account: Integration.IntegrationAccount,
-      syncedAt: UndefOr[OffsetDateTime],
-      subscriberCount: UndefOr[Int],
-      revoked: UndefOr[Boolean],
-      application: UndefOr[Application],
-      scopes: UndefOr[Seq[OAuth2Scope]]
+      syncedAt: UndefOr[OffsetDateTime] = UndefOrUndefined,
+      subscriberCount: UndefOr[Int] = UndefOrUndefined,
+      revoked: UndefOr[Boolean] = UndefOrUndefined,
+      application: UndefOr[Application] = UndefOrUndefined,
+      scopes: UndefOr[Seq[OAuth2Scope]] = UndefOrUndefined
   ): Integration = makeRawFromFields(
     "id"                   := id,
     "name"                 := name,
@@ -1351,7 +1351,7 @@ object Integration extends DiscordObjectCompanion[Integration] {
         name: String,
         icon: Option[ImageHash],
         description: String,
-        bot: UndefOr[User]
+        bot: UndefOr[User] = UndefOrUndefined
     ): IntegrationApplication =
       makeRawFromFields("id" := id, "name" := name, "icon" := icon, "description" := description, "bot" :=? bot)
 

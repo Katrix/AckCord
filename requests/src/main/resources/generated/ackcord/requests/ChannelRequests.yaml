@@ -1,5 +1,9 @@
 name: ChannelRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
+  - java.time.OffsetDateTime
 innerTypes:
   - name: getChannel
     defType: Request
@@ -18,15 +22,17 @@ innerTypes:
     return: Channel
 
   - defType: Freeform
-    content: "sealed trait ModifyChannelBody"
+    content: "sealed trait ModifyChannelBody extends DiscordObject"
 
   - name: ModifyChannelBody
     defType: ObjectOnly
     innerTypes:
       - defType: Freeform
         content: |-
+          import io.circe.{Codec, HCursor}
+          import io.circe.syntax._
           implicit val codec: Codec[ModifyChannelBody] = Codec.from(
-            Codec[ModifyGroupDMBody].or(Codec[ModifyGuildChannelBody]).or(Codec[ModifyThreadChannelBody]),
+            (c: HCursor) => c.as[ModifyGroupDMBody].orElse(c.as[ModifyGuildChannelBody]).orElse(c.as[ModifyThreadChannelBody]),
             {
               case m: ModifyGroupDMBody => m.asJson
               case m: ModifyGuildChannelBody => m.asJson
@@ -270,7 +276,7 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.EncodeJson(params, "payload_json"), 
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
         parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
       )
     body:
@@ -410,14 +416,14 @@ innerTypes:
     documentation: |-
       Create a reaction for the message. This endpoint requires the READ_MESSAGE_HISTORY permission to be present on the current user. Additionally, if nobody else has reacted to the message using this emoji, this endpoint requires the ADD_REACTIONS permission to be present on the current user. Returns a 204 empty response on success. Fires a Message Reaction Add Gateway event. The emoji must be URL Encoded or the request will fail with 10014: Unknown Emoji. To use custom emoji, you must encode it in the format name:id with the emoji name and emoji id.
     method: PUT
-    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}, reactions, {argOf: Emoji}, @me]
+    path: [channels, {argOf: ChannelId}, messages, {argOf: MessageId}, reactions, {argOf: Emoji}, '@me']
 
   - name: deleteOwnReaction
     defType: Request
     documentation: |-
       Delete a reaction the current user has made for the message. Returns a 204 empty response on success. Fires a Message Reaction Remove Gateway event. The emoji must be URL Encoded or the request will fail with 10014: Unknown Emoji. To use custom emoji, you must encode it in the format name:id with the emoji name and emoji id.
     method: DELETE
-    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions, { argOf: Emoji }, @me ]
+    path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, reactions, { argOf: Emoji }, '@me' ]
 
   - name: deleteUserReaction
     defType: Request
@@ -490,7 +496,7 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.EncodeJson(params, "payload_json"), 
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
         parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
       )
     body:
@@ -550,7 +556,7 @@ innerTypes:
       fields:
         2.0.x:
           messages:
-            type: Seq[Snowflake]
+            type: Seq[MessageId]
             documentation: An array of message ids to delete (2-100)
 
   - name: editChannelPermissions
@@ -580,8 +586,9 @@ innerTypes:
             withNull: true
             documentation: The bitwise value of all disallowed permissions (default "0")
 
-          type:
-            type: PermissionOverwrite.PermissionOverwriteType
+          tpe:
+            jsonName: type
+            type: Channel.PermissionOverwrite.PermissionOverwriteType
             documentation: 0 for a role or 1 for a member
 
   - name: getChannelInvites
@@ -794,7 +801,8 @@ innerTypes:
               auto_archive_duration minutes of inactivity, can be set to: 60,
               1440, 4320, 10080"
 
-          type:
+          tpe:
+            jsonName: type
             type: Channel.ChannelType
             withUndefined: true
             documentation: The type of thread to create
@@ -841,7 +849,7 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.EncodeJson(params, "payload_json"), 
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
         parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
       )
     body:
@@ -920,7 +928,7 @@ innerTypes:
       Returns a 204 empty response on success. Fires a Thread Members Update and a
       Thread Create Gateway event.
     method: PUT
-    path: [ channels, { argOf: ChannelId }, thread-members, @me ]
+    path: [ channels, { argOf: ChannelId }, thread-members, '@me' ]
 
   - name: addThreadMember
     defType: Request
@@ -939,7 +947,7 @@ innerTypes:
       archived. Returns a 204 empty response on success. Fires a Thread Members
       Update Gateway event.
     method: DELETE
-    path: [ channels, { argOf: ChannelId }, thread-members, @me ]
+    path: [ channels, { argOf: ChannelId }, thread-members, '@me' ]
 
   - name: removeThreadMember
     defType: Request
@@ -1074,7 +1082,7 @@ innerTypes:
       the user has joined. Threads are ordered by their id, in descending order.
       Requires the READ_MESSAGE_HISTORY permission.
     method: GET
-    path:  [ channels, { argOf: ChannelId }, users, @me, threads, archived, private ]
+    path:  [ channels, { argOf: ChannelId }, users, '@me', threads, archived, private ]
     query:
       allUndefined: true
       fields:

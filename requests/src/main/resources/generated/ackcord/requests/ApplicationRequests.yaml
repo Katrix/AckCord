@@ -1,8 +1,11 @@
 name: ApplicationRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getCurrentApplication
     defType: Request
     method: GET
-    path: [applications, @me]
+    path: [applications, '@me']
     return: Application

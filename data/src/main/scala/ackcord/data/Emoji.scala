@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -74,12 +74,12 @@ object Emoji extends DiscordObjectCompanion[Emoji] {
   def make20(
       id: Option[EmojiId],
       name: Option[String],
-      roles: UndefOr[Seq[RoleId]],
-      user: UndefOr[User],
-      requireColons: UndefOr[Boolean],
-      managed: UndefOr[Boolean],
-      animated: UndefOr[Boolean],
-      available: UndefOr[Boolean]
+      roles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
+      user: UndefOr[User] = UndefOrUndefined,
+      requireColons: UndefOr[Boolean] = UndefOrUndefined,
+      managed: UndefOr[Boolean] = UndefOrUndefined,
+      animated: UndefOr[Boolean] = UndefOrUndefined,
+      available: UndefOr[Boolean] = UndefOrUndefined
   ): Emoji = makeRawFromFields(
     "id"              := id,
     "name"            := name,

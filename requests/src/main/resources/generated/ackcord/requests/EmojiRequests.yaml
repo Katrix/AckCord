@@ -2,14 +2,19 @@
 
 name: EmojiRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getGuildEmojis
     defType: Request
+    method: GET
     path: [ guilds, { argOf: GuildId }, emojis ]
     return: Seq[Emoji]
 
   - name: getGuildEmoji
     defType: Request
+    method: GET
     path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
     return: Emoji
 

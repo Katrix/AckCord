@@ -19,19 +19,17 @@ object Parameters {
     implicit def printableToString[A]: ParameterPrintable[A] = (a: A) => a.toString
   }
 
-  case class MajorParameter[A](name: String, value: A)(implicit printable: ParameterPrintable[A]) {
+  case class NormalParameter[A](name: String, value: A, major: Boolean = false)(
+      implicit printable: ParameterPrintable[A]
+  ) {
     def print: String = printable.print(value)
   }
 
-  case class MinorParameter[A](name: String, value: A)(implicit printable: ParameterPrintable[A]) {
-    def print: String = printable.print(value)
-  }
-
-  case class QueryParameter[A](name: String, value: Option[A])(implicit printable: ParameterPrintable[A]) {
+  case class QueryParameter[A](name: String, value: UndefOr[A])(implicit printable: ParameterPrintable[A]) {
     def print(a: A): String = printable.print(a)
   }
 
-  case class SeqQueryParameter[A](name: String, value: Option[Seq[A]])(implicit printable: ParameterPrintable[A]) {
+  case class SeqQueryParameter[A](name: String, value: UndefOr[Seq[A]])(implicit printable: ParameterPrintable[A]) {
     def print(a: A): String = printable.print(a)
   }
 
@@ -39,12 +37,11 @@ object Parameters {
     def print: String = printable.print(value)
   }
 
-  def ofGuildId(guildId: GuildId): MajorParameter[GuildId] = new MajorParameter[GuildId]("guildId", guildId)
+  def apply[A](name: String, value: A, major: Boolean = false): NormalParameter[A] = NormalParameter(name, value, major)
 
-  def ofChannelId(channelId: ChannelId): MinorParameter[ChannelId] =
-    new MinorParameter[ChannelId]("channelId", channelId)
-
-  def query[A](name: String, value: Option[A]): QueryParameter[A] =
+  def query[A](name: String, value: UndefOr[A]): QueryParameter[A] =
     QueryParameter(name, value)
+
+  def queryAlways[A](name: String, value: A): QueryParameter[A] = query(name, UndefOrSome(value))
 
 }

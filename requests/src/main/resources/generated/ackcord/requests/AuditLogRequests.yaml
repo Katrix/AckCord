@@ -1,5 +1,8 @@
 name: AuditLogRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getGuildAuditLog
     defType: Request

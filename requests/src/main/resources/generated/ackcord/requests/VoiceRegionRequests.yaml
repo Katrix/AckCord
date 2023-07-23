@@ -1,5 +1,8 @@
 name: VoiceRegionRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: listVoiceRegions
     defType: Request

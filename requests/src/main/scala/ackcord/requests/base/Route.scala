@@ -1,6 +1,7 @@
 package ackcord.requests.base
 
 import Parameters._
+import ackcord.data.{UndefOrSome, UndefOrUndefined}
 import sttp.client3.UriContext
 import sttp.model.{Method, Uri}
 
@@ -29,19 +30,10 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
     if (next.isEmpty) this
     else Route(s"$uriWithMajor/$next", s"$uriWithoutMajor/$next", uri"$applied/$next", queryParts)
 
-  /** Adds a minor parameter as a path segment to the route. */
-  def /[A](parameter: MinorParameter[A]): Route =
+  /** Adds a parameter as a path segment to the route. */
+  def /[A](parameter: NormalParameter[A]): Route =
     Route(
-      s"$uriWithMajor/${parameter.name}",
-      s"$uriWithoutMajor/${parameter.name}",
-      uri"$applied/${parameter.print}",
-      queryParts
-    )
-
-  /** Adds a major parameter as a path segment to the route. */
-  def /[A](parameter: MajorParameter[A]): Route =
-    Route(
-      s"$uriWithMajor/${parameter.print}",
+      if (parameter.major) s"$uriWithMajor/${parameter.print}" else s"$uriWithMajor/${parameter.name}",
       s"$uriWithoutMajor/${parameter.name}",
       uri"$applied/${parameter.print}",
       queryParts
@@ -84,14 +76,14 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
   /** Adds a new query parameter to this route if it has a value. */
   def +?[A](query: QueryParameter[A]): Route =
     query.value match {
-      case Some(value) =>
+      case UndefOrSome(value) =>
         Route(
           uriWithMajor,
           uriWithoutMajor,
           applied,
           queryParts.appended((query.name, query.print(value)))
         )
-      case None =>
+      case UndefOrUndefined =>
         this
     }
 
@@ -100,8 +92,8 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
     */
   def ++?[A](query: SeqQueryParameter[A]): Route =
     query.value match {
-      case None | Some(Nil) => Route(uriWithMajor, uriWithoutMajor, applied, queryParts)
-      case Some(values) =>
+      case UndefOrUndefined | UndefOrSome(Nil) => Route(uriWithMajor, uriWithoutMajor, applied, queryParts)
+      case UndefOrSome(values) =>
         Route(
           uriWithMajor,
           uriWithoutMajor,

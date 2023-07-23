@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -62,9 +62,9 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
       tpe: ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType,
       key: String,
       name: String,
-      nameLocalizations: UndefOr[Map[String, String]],
+      nameLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined,
       description: String,
-      descriptionLocalizations: UndefOr[Map[String, String]]
+      descriptionLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined
   ): ApplicationRoleConnectionMetadata = makeRawFromFields(
     "type"                       := tpe,
     "key"                        := key,

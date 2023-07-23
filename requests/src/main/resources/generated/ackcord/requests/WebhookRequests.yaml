@@ -1,5 +1,8 @@
 name: WebhookRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: createWebhook
     defType: Request
@@ -52,7 +55,7 @@ innerTypes:
     documentation: >-
       Returns the new webhook object for the given id.
     method: GET
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" } ]
+    path: [ webhooks, {argOf: WebhookId, major: true} ]
     return: Webhook
 
   - name: getWebhookwithToken
@@ -61,7 +64,7 @@ innerTypes:
       Same as above, except this call does not require authentication and returns
       no user in the webhook object.
     method: GET
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true} ]
     return: Webhook
 
   - name: modifyWebhook
@@ -70,7 +73,7 @@ innerTypes:
       Modify a webhook. Requires the MANAGE_WEBHOOKS permission. Returns the
       updated webhook object on success. Fires a Webhooks Update Gateway event.
     method: PATCH
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" } ]
+    path: [ webhooks, {argOf: WebhookId, major: true} ]
     allowsReason: true
     body:
       allUndefined: true
@@ -97,7 +100,7 @@ innerTypes:
       accept a channel_id parameter in the body, and does not return a user in the
       webhook object.
     method: PATCH
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true} ]
     allowsReason: true
     body:
       allUndefined: true
@@ -121,7 +124,7 @@ innerTypes:
       Returns a 204 No Content response on success. Fires a Webhooks Update
       Gateway event.
     method: DELETE
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" } ]
+    path: [ webhooks, {argOf: WebhookId, major: true} ]
     allowsReason: true
 
   - name: deleteWebhookwithToken
@@ -129,7 +132,7 @@ innerTypes:
     documentation: >-
       Same as above, except this call does not require authentication.
     method: DELETE
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true} ]
     allowsReason: true
 
   - name: executeWebhook
@@ -139,12 +142,13 @@ innerTypes:
       requests. Returns a message or 204 No Content depending on the wait query
       parameter.
     method: POST
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" },{ name: webhookToken, customArgType: String } ]
+    path: [ webhooks, {argOf: WebhookId, major: true},{argOf: webhookToken, major: true} ]
     query:
       allUndefined: true
       fields:
         2.0.x:
-          wait:
+          doWait:
+            jsonName: wait
             type: Boolean
             documentation: Waits for server confirmation of message send before response,
               and returns the created message body (defaults to false; when false
@@ -163,7 +167,7 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.EncodeJson(params, "payload_json"), 
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
         parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
       )
     body:
@@ -203,7 +207,7 @@ innerTypes:
             documentation: Components to include with the message
 
           attachments:
-            type: Seq[MessageCreateEditAttachment]
+            type: Seq[ChannelRequests.MessageCreateEditAttachment]
             documentation: Attachment objects with filename and description
 
           flags:
@@ -215,17 +219,17 @@ innerTypes:
             documentation: Name of thread to create (requires the webhook channel to be a forum channel)
 
     parseResponse: |-
-      if (query.wait) Some(ParseResponse.AsJsonResponse[Message]().map(Some(_)))
-      else Some(ParseResponse.ExpectNoBody.map(_ => None))
+      if (query.doWait.contains(true)) ParseResponse.AsJsonResponse[Message]().map(Some(_))
+      else ParseResponse.ExpectNoBody.map(_ => None)
     return: Option[Message]
 
-  - name: executeSlack-CompatibleWebhook
+  - name: executeSlackCompatibleWebhook
     defType: Request
     documentation: >-
       Refer to Slack's documentation for more information. We do not support
       Slack's channel, icon_emoji, mrkdwn, or mrkdwn_in properties.
     method: POST
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String }, slack ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true}, slack ]
     query:
       allUndefined: true
       fields:
@@ -234,17 +238,18 @@ innerTypes:
             type: ThreadChannelId
             documentation: Id of the thread to send the message in
 
-          wait:
+          doWait:
+            jsonName: wait
             type: Boolean
             documentation: Waits for server confirmation of message send before response
               (defaults to true; when false a message that is not saved does not
               return an error)
     parseResponse: |-
-      if (query.wait) Some(ParseResponse.AsJsonResponse[Message]().map(Some(_)))
-      else Some(ParseResponse.ExpectNoBody.map(_ => None))
+      if (query.doWait.contains(true)) ParseResponse.AsJsonResponse[Message]().map(Some(_))
+      else ParseResponse.ExpectNoBody.map(_ => None)
     return: Option[Message]
 
-  - name: executeGitHub-CompatibleWebhook
+  - name: executeGitHubCompatibleWebhook
     defType: Request
     documentation: >-
       Add a new webhook to your GitHub repo (in the repo's settings), and use this
@@ -252,7 +257,7 @@ innerTypes:
       channel receives by choosing the "Let me select individual events" option
       and selecting individual events for the new webhook you're configuring.
     method: POST
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String }, github ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true}, github ]
     query:
       allUndefined: true
       fields:
@@ -261,14 +266,15 @@ innerTypes:
             type: ThreadChannelId
             documentation: Id of the thread to send the message in
 
-          wait:
+          doWait:
+            jsonName: wait
             type: Boolean
             documentation: Waits for server confirmation of message send before response
               (defaults to true; when false a message that is not saved does not
               return an error)
     parseResponse: |- 
-      if (query.wait) Some(ParseResponse.AsJsonResponse[Message]().map(Some(_))) 
-      else Some(ParseResponse.ExpectNoBody.map(_ => None))
+      if (query.doWait.contains(true)) ParseResponse.AsJsonResponse[Message]().map(Some(_)) 
+      else ParseResponse.ExpectNoBody.map(_ => None)
     return: Option[Message]
 
   - name: getWebhookMessage
@@ -277,7 +283,7 @@ innerTypes:
       Returns a previously-sent webhook message from the same token. Returns a
       message object on success.
     method: GET
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String }, messages, { argOf: MessageId } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true}, messages, { argOf: MessageId } ]
     query:
       allUndefined: true
       fields:
@@ -296,7 +302,7 @@ innerTypes:
 
       Refer to Uploading Files for details on attachments and multipart/form-data requests. Any provided files will be appended to the message. To remove or replace files you will have to supply the attachments field which specifies the files to retain on the message after edit.
     method: PATCH
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String }, messages, { argOf: MessageId } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true}, messages, { argOf: MessageId } ]
     query:
       allUndefined: true
       fields:
@@ -313,7 +319,7 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.EncodeJson(params, "payload_json"), 
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
         parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
       )
     body:
@@ -341,7 +347,7 @@ innerTypes:
             documentation: Components to include with the message
 
           attachments:
-            type: Seq[MessageCreateEditAttachment]
+            type: Seq[ChannelRequests.MessageCreateEditAttachment]
             documentation: Attachment objects with filename and description
 
     return: Message
@@ -352,7 +358,7 @@ innerTypes:
       Deletes a message that was created by the webhook. Returns a 204 No Content
       response on success.
     method: DELETE
-    path: [ webhooks, { name: webhookId, customArgType: "Snowflake[Webhook]" }, { name: webhookToken, customArgType: String }, messages, { argOf: MessageId } ]
+    path: [ webhooks, {argOf: WebhookId, major: true}, {argOf: webhookToken, major: true}, messages, { argOf: MessageId } ]
     query:
       allUndefined: true
       fields:

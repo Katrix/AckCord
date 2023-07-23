@@ -1,5 +1,8 @@
 name: StickerRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getSticker
     defType: Request
@@ -55,10 +58,11 @@ innerTypes:
       R1: MPR
     encodeBody: |-
       EncodeBody.MultipartBody(
-        EncodeBody.StringPart(params.name, "name"),
-        EncodeBody.StringPart(params.description, "description"),
-        EncodeBody.StringPart(params.tags, "tags"),
-        file.withName("file")
+        EncodeBody.Multipart.StringPart(body.name, "name"),
+        Seq(
+          EncodeBody.Multipart.StringPart(body.tags, "tags"),
+          file.withName("file")
+        ) ++ body.description.toList.map(d => EncodeBody.Multipart.StringPart(d, "description"))
       )
     body:
       fields:

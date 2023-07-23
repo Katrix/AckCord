@@ -1,4 +1,9 @@
-defType: Multiple
+name: GuildRequests
+defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.{Method, StatusCode}
+  - java.time.OffsetDateTime
 innerTypes:
   - name: createGuild
     defType: Request
@@ -33,7 +38,7 @@ innerTypes:
             documentation: Default message notification level
 
           explicit_content_filter:
-            type: Guild.ExplicitContentFilter
+            type: Guild.ExplicitContentFilterLevel
             withUndefined: true
             documentation: Explicit content filter level
 
@@ -265,7 +270,8 @@ innerTypes:
               min_length: 1
               max_length: 100
 
-          type:
+          tpe:
+            jsonName: type
             type: Channel.ChannelType
             withUndefined: true
             withNull: true
@@ -306,7 +312,7 @@ innerTypes:
             documentation: Sorting position of the channel
 
           permission_overwrites:
-            type: Seq[EditChannelPartialOverwrite]
+            type: Seq[ChannelRequests.ModifyChannelBody.ModifyGuildChannelBody.EditChannelPartialOverwrite]
             withUndefined: true
             withNull: true
             documentation: The channel's permission overwrites
@@ -420,7 +426,7 @@ innerTypes:
             documentation: The active threads
 
           members:
-            type: Seq[ThreadMember]
+            type: Seq[Channel.ThreadMember]
             documentation: A thread member object for each returned thread the current user
               has joined
 
@@ -508,15 +514,17 @@ innerTypes:
             documentation: Whether the user is deafened in voice channels
     parseResponse: |-
       new ParseResponse[Option[GuildMember], Any] {
+        import sttp.client3._
+        import sttp.client3.circe._
         def setSttpResponse[T, R1](
           request: RequestT[Identity, T, R1]
-        ): RequestT[Identity, Either[Throwable, Either[String, Response]], R1] = {
+        ): RequestT[Identity, Either[Throwable, Either[String, Option[GuildMember]]], R1] = {
           request.response(
             asEither(
               asStringAlways,
-              fromMetadata(
-                asJsonAlways[GuildMember].map(json => Some(json)),
-                ConditionalResponseAs(_.code == StatusCode.NoContent, ignore.map(_ => None))
+              fromMetadata[Either[DeserializationException[io.circe.Error], Option[GuildMember]], Any](
+                asJsonAlways[GuildMember].map(_.map(Some(_))),
+                ConditionalResponseAs(_.code == StatusCode.NoContent, ignore.map(_ => Right(None)))
               ),
             ).map {
               case Right(Right(ret)) => Right(Right(ret))
@@ -915,7 +923,7 @@ innerTypes:
       Requires the MANAGE_GUILD permission.
     method: GET
     path: [ guilds, { argOf: GuildId }, invites ]
-    return: Seq[InviteWithMetadata]
+    return: Seq[InviteMetadata]
 
   - name: getGuildIntegrations
     defType: Request
@@ -998,9 +1006,10 @@ innerTypes:
             documentation: Style of the widget image returned (see below)
     parseResponse: |-
       new ParseResponse[Array[Byte], Any] {
+        import sttp.client3._
         override def setSttpResponse[T, R1](
           request: RequestT[Identity, T, R1]
-        ): RequestT[Identity, Either[Throwable, Either[String, Unit]], R1] =
+        ): RequestT[Identity, Either[Throwable, Either[String, Array[Byte]]], R1] =
           request.response(asEither(asStringAlways, asByteArrayAlways).map(Right(_)))
       }
     return: Array[Byte]
@@ -1116,7 +1125,7 @@ innerTypes:
       fields:
         2.0.x:
           channel_id:
-            type: StageGuildChannelId
+            type: StageChannelId
             documentation: The id of the channel the user is currently in
 
           suppress:
@@ -1139,7 +1148,7 @@ innerTypes:
       fields:
         2.0.x:
           channel_id:
-            type: StageGuildChannelId
+            type: StageChannelId
             documentation: The id of the channel the user is currently in
 
           suppress:

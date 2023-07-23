@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -116,16 +116,16 @@ object Invite extends DiscordObjectCompanion[Invite] {
     */
   def make20(
       code: String,
-      guild: UndefOr[Invite.InviteGuild],
+      guild: UndefOr[Invite.InviteGuild] = UndefOrUndefined,
       channel: Option[Invite.InviteChannel],
-      inviter: UndefOr[User],
-      targetType: UndefOr[Invite.InviteTargetType],
-      targetUser: UndefOr[User],
-      targetApplication: UndefOr[Invite.InviteApplication],
-      approximatePresenceCount: UndefOr[Int],
-      approximateMemberCount: UndefOr[Int],
-      expiresAt: JsonOption[OffsetDateTime],
-      guildScheduledEvent: UndefOr[GuildScheduledEvent]
+      inviter: UndefOr[User] = UndefOrUndefined,
+      targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined,
+      targetUser: UndefOr[User] = UndefOrUndefined,
+      targetApplication: UndefOr[Invite.InviteApplication] = UndefOrUndefined,
+      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined,
+      approximateMemberCount: UndefOr[Int] = UndefOrUndefined,
+      expiresAt: JsonOption[OffsetDateTime] = JsonUndefined,
+      guildScheduledEvent: UndefOr[GuildScheduledEvent] = UndefOrUndefined
   ): Invite = makeRawFromFields(
     "code"                        := code,
     "guild"                      :=? guild,

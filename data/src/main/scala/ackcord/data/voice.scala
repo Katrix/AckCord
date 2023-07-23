@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -102,16 +102,16 @@ object VoiceState extends DiscordObjectCompanion[VoiceState] {
     *   The time at which the user requested to speak
     */
   def make20(
-      guildId: UndefOr[GuildId],
+      guildId: UndefOr[GuildId] = UndefOrUndefined,
       channelId: Option[VoiceGuildChannelId],
       userId: UserId,
-      member: UndefOr[GuildMember],
+      member: UndefOr[GuildMember] = UndefOrUndefined,
       sessionId: String,
       deaf: Boolean,
       mute: Boolean,
       selfDeaf: Boolean,
       selfMute: Boolean,
-      selfStream: UndefOr[Boolean],
+      selfStream: UndefOr[Boolean] = UndefOrUndefined,
       selfVideo: Boolean,
       suppress: Boolean,
       requestToSpeakTimestamp: Option[OffsetDateTime]

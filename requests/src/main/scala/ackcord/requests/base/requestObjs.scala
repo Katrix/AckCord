@@ -30,7 +30,7 @@ case class ComplexRequest[Params, Response, -R1, -R2](
     requestBody: EncodeBody[Params, R1],
     parseResponse: ParseResponse[Response, R2],
     extraHeaders: Map[String, String] = Map.empty,
-    requiredPermissions: Permissions = Permission.None,
+    requiredPermissions: Permissions = Permissions.None,
     permissionContext: Option[Ior[GuildId, GuildChannelId]] = None
 ) extends AckCordRequest[Response, R1 with R2] {
 
@@ -55,7 +55,7 @@ object ComplexRequest {
       requestBody: EncodeBody[Params, R1] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permission.None
+      requiredPermissions: Permissions = Permissions.None
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = ComplexRequest(
@@ -64,7 +64,7 @@ object ComplexRequest {
     parseResponse.getOrElse(
       ev.fold(
         ev => ev(ParseResponse.ExpectNoBody),
-        decoder => ParseResponse.AsJsonReponse()(decoder)
+        decoder => ParseResponse.AsJsonResponse()(decoder)
       )
     ),
     extraHeaders,
@@ -76,7 +76,7 @@ object ComplexRequest {
       requestBody: EncodeBody[Params, Any] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permission.None
+      requiredPermissions: Permissions = Permissions.None
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] =
@@ -89,7 +89,7 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, R1]] = None,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permission.None
+      requiredPermissions: Permissions = Permissions.None
   ): ComplexRequest[Params, Response, R1, R2] = complexBaseRestRequest(
     route,
     requestBody.getOrElse(
@@ -106,7 +106,7 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, Any]] = None,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permissions = Permission.None
+      requiredPermissions: Permissions = Permissions.None
   ): Request[Params, Response] = complexRestRequest(
     route,
     params,
@@ -143,7 +143,7 @@ object EncodeBody {
       request.body(data)
   }
 
-  trait Multipart[A, -R] {
+  trait Multipart[+A, -R] {
     def filename: String
 
     def withName(name: String): Multipart[A, R]
@@ -232,8 +232,8 @@ trait ParseResponse[Response, -R] { self =>
     override def setSttpResponse[T, R1](
         request: RequestT[Identity, T, R1]
     ): RequestT[Identity, Either[Throwable, Either[String, NewResponse]], R1 with R] = {
-      val request = self.setSttpResponse(request)
-      request.response(request.response.map(_.map(_.map(f))))
+      val selfRequest = self.setSttpResponse(request)
+      selfRequest.response(selfRequest.response.map(_.map(_.map(f))))
     }
   }
 }
@@ -255,7 +255,7 @@ object ParseResponse {
       })
   }
 
-  case class AsJsonReponse[A]()(implicit decoder: Decoder[A]) extends ParseResponse[A, Any] {
+  case class AsJsonResponse[A]()(implicit decoder: Decoder[A]) extends ParseResponse[A, Any] {
     override def setSttpResponse[T, R1](
         request: RequestT[Identity, T, R1]
     ): RequestT[Identity, Either[Throwable, Either[String, A]], R1 with Any] =

@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -136,11 +136,11 @@ object Component extends DiscordObjectCompanion[Component] {
     def make20(
         tpe: ComponentType = ComponentType.Button,
         style: Button.ButtonStyle,
-        label: UndefOr[String],
-        emoji: UndefOr[ComponentEmoji],
-        customId: UndefOr[String],
-        url: UndefOr[String],
-        disabled: UndefOr[Boolean]
+        label: UndefOr[String] = UndefOrUndefined,
+        emoji: UndefOr[ComponentEmoji] = UndefOrUndefined,
+        customId: UndefOr[String] = UndefOrUndefined,
+        url: UndefOr[String] = UndefOrUndefined,
+        disabled: UndefOr[Boolean] = UndefOrUndefined
     ): Button = makeRawFromFields(
       "type"       := tpe,
       "style"      := style,
@@ -207,7 +207,7 @@ object Component extends DiscordObjectCompanion[Component] {
       * @param animated
       *   Whether this emoji is animated
       */
-    def make20(id: Option[EmojiId], name: String, animated: UndefOr[Boolean]): ComponentEmoji =
+    def make20(id: Option[EmojiId], name: String, animated: UndefOr[Boolean] = UndefOrUndefined): ComponentEmoji =
       makeRawFromFields("id" := id, "name" := name, "animated" :=? animated)
 
   }
@@ -313,12 +313,12 @@ object Component extends DiscordObjectCompanion[Component] {
     def make20(
         tpe: ComponentType,
         customId: String,
-        options: UndefOr[Seq[SelectOption]],
-        channelTypes: UndefOr[Seq[Channel.ChannelType]],
-        placeholder: UndefOr[String],
-        minValues: UndefOr[Int],
-        maxValues: UndefOr[Int],
-        disabled: UndefOr[Boolean]
+        options: UndefOr[Seq[SelectOption]] = UndefOrUndefined,
+        channelTypes: UndefOr[Seq[Channel.ChannelType]] = UndefOrUndefined,
+        placeholder: UndefOr[String] = UndefOrUndefined,
+        minValues: UndefOr[Int] = UndefOrUndefined,
+        maxValues: UndefOr[Int] = UndefOrUndefined,
+        disabled: UndefOr[Boolean] = UndefOrUndefined
     ): SelectMenu = makeRawFromFields(
       "type"           := tpe,
       "custom_id"      := customId,
@@ -369,9 +369,9 @@ object Component extends DiscordObjectCompanion[Component] {
     def make20(
         label: String,
         value: String,
-        description: UndefOr[String],
-        emoji: UndefOr[ComponentEmoji],
-        default: UndefOr[Boolean]
+        description: UndefOr[String] = UndefOrUndefined,
+        emoji: UndefOr[ComponentEmoji] = UndefOrUndefined,
+        default: UndefOr[Boolean] = UndefOrUndefined
     ): SelectOption = makeRawFromFields(
       "label"        := label,
       "value"        := value,
@@ -451,11 +451,11 @@ object Component extends DiscordObjectCompanion[Component] {
         customId: String,
         style: TextInput.TextInputStyle,
         label: String,
-        minLength: UndefOr[Int],
-        maxLength: UndefOr[Int],
-        required: UndefOr[Boolean],
-        value: UndefOr[String],
-        placeholder: UndefOr[String]
+        minLength: UndefOr[Int] = UndefOrUndefined,
+        maxLength: UndefOr[Int] = UndefOrUndefined,
+        required: UndefOr[Boolean] = UndefOrUndefined,
+        value: UndefOr[String] = UndefOrUndefined,
+        placeholder: UndefOr[String] = UndefOrUndefined
     ): TextInput = makeRawFromFields(
       "type"         := tpe,
       "custom_id"    := customId,

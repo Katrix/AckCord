@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -133,9 +133,9 @@ object GuildScheduledEvent extends DiscordObjectCompanion[GuildScheduledEvent] {
       id: Snowflake[GuildScheduledEvent],
       guildId: GuildId,
       channelId: Option[ChannelId],
-      creatorId: JsonOption[UserId],
+      creatorId: JsonOption[UserId] = JsonUndefined,
       name: String,
-      description: JsonOption[String],
+      description: JsonOption[String] = JsonUndefined,
       scheduledStartTime: OffsetDateTime,
       scheduledEndTime: Option[OffsetDateTime],
       privacyLevel: GuildScheduledEvent.GuildScheduledEventPrivacyLevel,
@@ -143,9 +143,9 @@ object GuildScheduledEvent extends DiscordObjectCompanion[GuildScheduledEvent] {
       entityType: GuildScheduledEvent.GuildScheduledEventEntityType,
       entityId: Option[RawSnowflake],
       entityMetadata: Option[GuildScheduledEvent.GuildScheduledEventEntityMetadata],
-      creator: UndefOr[User],
-      userCount: UndefOr[Int],
-      image: JsonOption[String]
+      creator: UndefOr[User] = UndefOrUndefined,
+      userCount: UndefOr[Int] = UndefOrUndefined,
+      image: JsonOption[String] = JsonUndefined
   ): GuildScheduledEvent = makeRawFromFields(
     "id"                   := id,
     "guild_id"             := guildId,

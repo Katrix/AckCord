@@ -4,7 +4,7 @@ documentation: Webhooks are a low-effort way to post messages to channels in Dis
 fields:
   2.0.x:
     id:
-      type: Snowflake[Webhook]
+      type: WebhookId
       documentation: The id of the webhook
 
     tpe:

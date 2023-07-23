@@ -478,12 +478,17 @@
                       "MessageId",
                       "UserId",
                       "Emoji",
-                      "RoleId"
+                      "RoleId",
+                      "WebhookId",
+                      "webhookToken"
                     ]
                   },
                   "name": {
                     "type": "string",
                     "description": "Name of the parameter"
+                  },
+                  "major": {
+                    "type": "boolean"
                   },
                   "documentation": {
                     "type": "string",
@@ -505,7 +510,7 @@
                     "type": "string",
                     "description": "Name of the parameter"
                   },
-                  "customArgMajorParameter": {
+                  "major": {
                     "type": "boolean"
                   },
                   "documentation": {

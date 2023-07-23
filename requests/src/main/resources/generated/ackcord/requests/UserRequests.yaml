@@ -1,5 +1,8 @@
 name: UserRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getCurrentUser
     defType: Request
@@ -114,7 +117,7 @@ innerTypes:
       fields:
         2.0.x:
           recipient_id:
-            type: UserID
+            type: UserId
             documentation: The recipient to open a DM channel with
     return: DMChannel
 

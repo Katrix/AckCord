@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -140,32 +140,33 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       extends DiscordObject(json, cache) {
 
     /** Substrings which will be searched for in content (Maximum of 1000) */
-    @inline def keywordFilter: Seq[String] = selectDynamic[Seq[String]]("keyword_filter")
+    @inline def keywordFilter: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("keyword_filter")
 
     /**
       * Regular expression patterns which will be matched against content
       * (Maximum of 10)
       */
-    @inline def regexPatterns: Seq[String] = selectDynamic[Seq[String]]("regex_patterns")
+    @inline def regexPatterns: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("regex_patterns")
 
     /**
       * The internally pre-defined wordsets which will be searched for in
       * content
       */
-    @inline def presets: Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType] =
-      selectDynamic[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]]("presets")
+    @inline def presets: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]] =
+      selectDynamic[UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]]]("presets")
 
     /** Substrings which should not trigger the rule (Maximum of 100 or 1000) */
-    @inline def allowList: Seq[String] = selectDynamic[Seq[String]]("allow_list")
+    @inline def allowList: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("allow_list")
 
     /**
       * Total number of unique role and user mentions allowed per message
       * (Maximum of 50)
       */
-    @inline def mentionTotalLimit: Int = selectDynamic[Int]("mention_total_limit")
+    @inline def mentionTotalLimit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("mention_total_limit")
 
     /** Whether to automatically detect mention raids */
-    @inline def mentionRaidProtectionEnabled: Boolean = selectDynamic[Boolean]("mention_raid_protection_enabled")
+    @inline def mentionRaidProtectionEnabled: UndefOr[Boolean] =
+      selectDynamic[UndefOr[Boolean]]("mention_raid_protection_enabled")
 
     override def values: Seq[() => Any] = Seq(
       () => keywordFilter,
@@ -198,19 +199,19 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       *   Whether to automatically detect mention raids
       */
     def make20(
-        keywordFilter: Seq[String],
-        regexPatterns: Seq[String],
-        presets: Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType],
-        allowList: Seq[String],
-        mentionTotalLimit: Int,
-        mentionRaidProtectionEnabled: Boolean
+        keywordFilter: UndefOr[Seq[String]] = UndefOrUndefined,
+        regexPatterns: UndefOr[Seq[String]] = UndefOrUndefined,
+        presets: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]] = UndefOrUndefined,
+        allowList: UndefOr[Seq[String]] = UndefOrUndefined,
+        mentionTotalLimit: UndefOr[Int] = UndefOrUndefined,
+        mentionRaidProtectionEnabled: UndefOr[Boolean] = UndefOrUndefined
     ): AutoModerationRuleTriggerMetadata = makeRawFromFields(
-      "keyword_filter"                  := keywordFilter,
-      "regex_patterns"                  := regexPatterns,
-      "presets"                         := presets,
-      "allow_list"                      := allowList,
-      "mention_total_limit"             := mentionTotalLimit,
-      "mention_raid_protection_enabled" := mentionRaidProtectionEnabled
+      "keyword_filter"                  :=? keywordFilter,
+      "regex_patterns"                  :=? regexPatterns,
+      "presets"                         :=? presets,
+      "allow_list"                      :=? allowList,
+      "mention_total_limit"             :=? mentionTotalLimit,
+      "mention_raid_protection_enabled" :=? mentionRaidProtectionEnabled
     )
 
   }
@@ -273,7 +274,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       */
     def make20(
         tpe: AutoModerationRule.AutoModerationRuleActionType,
-        metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata]
+        metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata] = UndefOrUndefined
     ): AutoModerationRuleAction = makeRawFromFields("type" := tpe, "metadata" :=? metadata)
 
   }
@@ -304,16 +305,16 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       extends DiscordObject(json, cache) {
 
     /** Channel to which user content should be logged */
-    @inline def channelId: ChannelId = selectDynamic[ChannelId]("channel_id")
+    @inline def channelId: UndefOr[ChannelId] = selectDynamic[UndefOr[ChannelId]]("channel_id")
 
     /** Timeout duration in seconds */
-    @inline def durationSeconds: Int = selectDynamic[Int]("duration_seconds")
+    @inline def durationSeconds: UndefOr[Int] = selectDynamic[UndefOr[Int]]("duration_seconds")
 
     /**
       * Additional explanation that will be shown to members whenever their
       * message is blocked
       */
-    @inline def customMessage: String = selectDynamic[String]("custom_message")
+    @inline def customMessage: UndefOr[String] = selectDynamic[UndefOr[String]]("custom_message")
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => durationSeconds, () => customMessage)
   }
@@ -330,12 +331,15 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       *   Additional explanation that will be shown to members whenever their
       *   message is blocked
       */
-    def make20(channelId: ChannelId, durationSeconds: Int, customMessage: String): AutoModerationRuleActionMetadata =
-      makeRawFromFields(
-        "channel_id"       := channelId,
-        "duration_seconds" := durationSeconds,
-        "custom_message"   := customMessage
-      )
+    def make20(
+        channelId: UndefOr[ChannelId] = UndefOrUndefined,
+        durationSeconds: UndefOr[Int] = UndefOrUndefined,
+        customMessage: UndefOr[String] = UndefOrUndefined
+    ): AutoModerationRuleActionMetadata = makeRawFromFields(
+      "channel_id"       :=? channelId,
+      "duration_seconds" :=? durationSeconds,
+      "custom_message"   :=? customMessage
+    )
 
   }
 }

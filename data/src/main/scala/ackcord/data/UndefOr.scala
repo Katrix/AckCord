@@ -2,7 +2,7 @@ package ackcord.data
 
 import io.circe.{Decoder, HCursor}
 
-trait UndefOr[+A] {
+sealed trait UndefOr[+A] {
   def isUndefined: Boolean
   def isEmpty: Boolean  = isUndefined
   def nonEmpty: Boolean = !isEmpty

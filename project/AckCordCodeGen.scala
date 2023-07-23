@@ -14,7 +14,7 @@ object AckCordCodeGen {
       yaml.parser.parse(Files.readAllLines(yamlFile).asScala.mkString("\n")).flatMap(_.as[TypeDef]).toTry.get
 
     val packagePath = relativeYamlPath.mkString(".")
-    val packageLine = s"//noinspection ScalaWeakerAccess, ScalaUnusedSymbol\npackage $packagePath"
+    val packageLine = s"//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode\npackage $packagePath"
     val disclaimer =
       s"""// THIS FILE IS MACHINE GENERATED!
          |//
@@ -65,7 +65,7 @@ object AckCordCodeGen {
 
     val fieldsWithTypes = classTypeDef.anonPart.fields.map { case (version, fields) =>
       version -> fields.map { case (name, field) =>
-        val fieldType = (field.withUndefined, field.withNull) match {
+        val fieldType = (allUndefined || field.withUndefined, field.withNull) match {
           case (true, true)   => s"JsonOption[${field.tpe}]"
           case (true, false)  => s"UndefOr[${field.tpe}]"
           case (false, true)  => s"Option[${field.tpe}]"
@@ -84,8 +84,11 @@ object AckCordCodeGen {
       val defName = s"make${version.replace("x", "").replace(".", "")}"
 
       val params = fields.map { case (field, FieldWithType(fieldInfo, tpe)) =>
-        val defaultStr = fieldInfo.default.fold("") { s =>
-          (s, allUndefined || fieldInfo.withUndefined, fieldInfo.withNull) match {
+        val undef       = allUndefined || fieldInfo.withUndefined
+        val realDefault = if (undef) fieldInfo.default.orElse(Some("undefined")) else fieldInfo.default
+
+        val defaultStr = realDefault.fold("") { s =>
+          (s, undef, fieldInfo.withNull) match {
             case ("null", true, true)       => "= JsonNull"
             case ("undefined", true, true)  => "= JsonUndefined"
             case ("null", false, true)      => "= None"
@@ -105,7 +108,7 @@ object AckCordCodeGen {
         if (fieldInfo.isExtension) {
           s"DiscordObjectFrom.FromExtension($fieldLit, ${camelCase(field)})"
         } else {
-          if (fieldInfo.withUndefined) s"$fieldLit :=? ${camelCase(field)}"
+          if (fieldInfo.withUndefined || allUndefined) s"$fieldLit :=? ${camelCase(field)}"
           else s"$fieldLit := ${camelCase(field)}"
         }
       }
@@ -263,25 +266,34 @@ object AckCordCodeGen {
     (opaqueTypeDef.documentation.map(docString(_)).toList :+ tpeCode).mkString("\n")
   }
 
-  def knownArgPathElemToCustom(elem: PathElem.ArgPathElem): PathElem.CustomArgPathElem = elem.argOf match {
-    case "GuildId" =>
+  def knownArgPathElemToCustom(elem: PathElem.ArgPathElem): PathElem.CustomArgPathElem = {
+    def custom(tpe: String, name: Option[String] = None, majorParameter: Boolean = false) =
       PathElem.CustomArgPathElem(
-        elem.name.getOrElse("guildId"),
-        "GuildId",
-        majorParameter = true,
+        elem.name.orElse(name).getOrElse(tpe.charAt(0).toLower.toString + tpe.substring(1)),
+        tpe,
+        majorParameter,
         elem.documentation
       )
 
-    case "ChannelId" =>
-      PathElem.CustomArgPathElem(
-        elem.name.getOrElse("channelId"),
-        "ChannelId",
-        majorParameter = false,
-        elem.documentation
-      )
+    val allowedNormal = Set(
+      "GuildId",
+      "ChannelId",
+      "ApplicationId",
+      "CommandId",
+      "EmojiId",
+      "MessageId",
+      "UserId",
+      "Emoji",
+      "RoleId",
+      "WebhookId"
+    )
 
-    case _ =>
-      sys.error(s"Unknown path arg element ${elem.argOf}")
+    elem.argOf match {
+      case "webhookToken"                 => custom("String", Some("webhookToken"))
+      case s if allowedNormal.contains(s) => custom(s)
+      case _ =>
+        sys.error(s"Unknown path arg element ${elem.argOf}")
+    }
   }
 
   def codeFromRequestDef(requestDef: TypeDef.RequestDef): List[String] = {
@@ -330,7 +342,12 @@ object AckCordCodeGen {
       .mkString("\n")
 
     val queryParam =
-      if (requestDef.query.isDefined) s"query: ${capitalizedName}Query = ${capitalizedName}Query(), " else ""
+      if (requestDef.query.isDefined) {
+        val highestVersion = requestDef.query.get.fields.keys.map(_.replace(".", "").replace("x", "").toInt).max
+        val queryDefault =
+          if (requestDef.query.get.allUndefined) s"= ${capitalizedName}Query.make$highestVersion()" else ""
+        s"query: ${capitalizedName}Query$queryDefault, "
+      } else ""
 
     val paramsType = {
       val tpe = requestDef.body.fold("Unit") {
@@ -360,46 +377,67 @@ object AckCordCodeGen {
       else s"ComplexRequest[$paramsType, $returnTpe, ${requestDef.complexType.r1}, ${requestDef.complexType.r2}]"
 
     val pathArg = requestDef.path
-      .map {
-        case arg @ PathElem.ArgPathElem(_, argOf, _) =>
-          val custom = knownArgPathElemToCustom(arg)
-          s"Parameters.of${argOf.capitalize}(${custom.name})"
-        case PathElem.StringPathElem(elem) => s""""$elem""""
-        case PathElem.CustomArgPathElem(name, tpe, majorParameter, documentation) =>
-          if (majorParameter) s"""Parameters.MajorParameter[$tpe]("$name", $name)"""
-          else s"""Parameters.MinorParameter[$tpe]("$name", $name)"""
+      .foldLeft(("", true)) { case ((acc, firstArg), arg) =>
+        def handleCustom(custom: PathElem.CustomArgPathElem): (String, Boolean) = {
+          val name       = custom.name
+          val majorTypes = Set("GuildId", "ChannelId", "WebhookId")
+          val major =
+            if (custom.major || (majorTypes.contains(custom.tpe) && firstArg)) ", major = true" else ""
+          (s"""/ Parameters[${custom.tpe}]("$name", $name$major)""", false)
+        }
+
+        arg match {
+          case PathElem.StringPathElem(elem)      => (s"""/ "$elem"""", firstArg)
+          case arg: PathElem.ArgPathElem          => handleCustom(knownArgPathElemToCustom(arg))
+          case custom: PathElem.CustomArgPathElem => handleCustom(custom)
+        }
       }
-      .mkString(" / ")
+      ._1
 
     val queryArg = requestDef.query.filter(_.fields.nonEmpty).fold("") { q =>
       val highestVersion = q.fields.keys.maxBy(_.replace(".", "").replace("x", "").toInt)
       q
         .fields(highestVersion)
         .map { case (k, v) =>
-          s""" +? Parameters.query("$k", query.$k)"""
+          val queryParam =
+            if (q.allUndefined || v.withUndefined) s"""Parameters.query("$k", query.${camelCase(k)})"""
+            else s"""Parameters.queryAlways("$k", query.${camelCase(k)})"""
+
+          s" +? $queryParam"
         }
         .mkString
     }
 
-    val pathArgWithQuery = "Route.Empty" + (if (pathArg.isEmpty) "" else s"/ $pathArg") + queryArg
+    val pathArgWithQuery = s"Route.Empty $pathArg$queryArg"
 
     val extraHeaders =
-      if (requestDef.allowsReason) """extraHeaders = reason.fold(Map.empty)(r => Map("X-Audit-Log-Reason" -> r)),"""
+      if (requestDef.allowsReason)
+        """extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r)),"""
+      else ""
+
+    val hasParams     = Seq(pathParams, queryParam, bodyParam, reasonParam, additionalParams).exists(_.nonEmpty)
+    val hasTypeParams = typeParams.nonEmpty
+
+    val defDocs  = requestDef.documentation.fold("")(docString(_, pathDocs) + "\n")
+    val valOrDef = if (!hasParams && !hasTypeParams) "val" else "def"
+    val params =
+      if (hasParams)
+        s"""|(
+            |  $pathParams
+            |  $queryParam
+            |  $bodyParam
+            |  $reasonParam
+            |  $additionalParams
+            |)""".stripMargin
       else ""
 
     val requestDefDef =
-      s"""|${requestDef.documentation.fold("")(docString(_, pathDocs) + "\n")} def $uncapitalizedName$typeParams(
-          |  $pathParams
-          |  $queryParam
-          |  $bodyParam
-          |  $reasonParam
-          |  $additionalParams
-          |): $requestType =
-          |  Request.complexRestRequest(
+      s"""|$defDocs $valOrDef $uncapitalizedName$typeParams$params: $requestType =
+          |  Request.${if (requestDef.complexType.isEmpty) "restRequest" else "complexRestRequest"}(
           |    route = ($pathArgWithQuery).toRequest(Method.${requestDef.method}),
-          |    ${if (bodyParam.nonEmpty) "params = body," else ""},
-          |    $extraHeaders,
-          |    ${requestDef.encodeBody.fold("")(e => s"encodeBody = Some($e),")}
+          |    ${if (bodyParam.nonEmpty) "params = body," else ""}
+          |    $extraHeaders
+          |    ${requestDef.encodeBody.fold("")(e => s"requestBody = Some($e),")}
           |    ${requestDef.parseResponse.fold("")(r => s"parseResponse = Some($r),")}
           |  )
           |""".stripMargin

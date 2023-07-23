@@ -71,6 +71,9 @@ trait SnowflakeDefs {
 
   type ApplicationId = Snowflake[Application]
   object ApplicationId extends SnowflakeCompanion[Application]
+
+  type WebhookId = Snowflake[Webhook]
+  object WebhookId extends SnowflakeCompanion[Webhook]
 }
 
 object Snowflake {

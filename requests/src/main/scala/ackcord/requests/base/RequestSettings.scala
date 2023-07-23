@@ -3,8 +3,8 @@ package ackcord.requests.base
 import scala.concurrent.duration.FiniteDuration
 
 import ackcord.requests.base.ratelimiter.{CatsEffectDiscordRatelimiter, Ratelimiter}
+import cats.effect.Resource
 import cats.effect.kernel.Async
-import cats.effect.{IO, Resource}
 import cats.syntax.all._
 import org.typelevel.log4cats.{Logger, LoggerFactory}
 import sttp.client3.impl.cats.implicits._

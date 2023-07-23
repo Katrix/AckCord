@@ -2,8 +2,6 @@ package ackcord.requests.base
 
 import java.util.UUID
 
-import scala.concurrent.duration._
-
 import ackcord.requests.base.ratelimiter.RatelimitInfo
 
 /** Sent as a response to a request. */
@@ -73,6 +71,6 @@ object FailedRequest {
   case class RequestDropped(route: RequestRoute, identifier: UUID) extends FailedRequest {
     override def asException: DroppedRequestException = DroppedRequestException(route.uri)
 
-    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", false)
+    override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1, -1, -1, -1, "", isGlobal = false)
   }
 }

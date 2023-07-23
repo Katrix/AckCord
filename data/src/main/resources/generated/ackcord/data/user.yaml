@@ -28,7 +28,7 @@ innerTypes:
     extends: [ MessageAuthor ]
     fields:
       2.0.x:
-        id: Snowflake[Webhook]
+        id: WebhookId
         username: String
         avatar:
           type: ImageHash

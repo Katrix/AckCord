@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -199,25 +199,25 @@ object Application extends DiscordObjectCompanion[Application] {
       name: String,
       icon: Option[ImageHash],
       description: String,
-      rpcOrigins: UndefOr[Seq[String]],
+      rpcOrigins: UndefOr[Seq[String]] = UndefOrUndefined,
       botPublic: Boolean,
       botRequireCodeGrant: Boolean,
-      termsOfServiceUrl: UndefOr[String],
-      privacyPolicyUrl: UndefOr[String],
-      owner: UndefOr[Application.ApplicationOwner],
+      termsOfServiceUrl: UndefOr[String] = UndefOrUndefined,
+      privacyPolicyUrl: UndefOr[String] = UndefOrUndefined,
+      owner: UndefOr[Application.ApplicationOwner] = UndefOrUndefined,
       verifyKey: String,
       team: Option[Team],
-      guildId: UndefOr[GuildId],
-      guild: UndefOr[Application.ApplicationGuild],
-      primarySkuId: UndefOr[RawSnowflake],
-      slug: UndefOr[String],
-      coverImage: UndefOr[ImageHash],
-      flags: UndefOr[Application.Flags],
-      approximateGuildCount: UndefOr[Int],
-      tags: UndefOr[Seq[String]],
-      installParams: UndefOr[Application.InstallParams],
-      customInstallUrl: UndefOr[String],
-      roleConnectionsVerificationUrl: UndefOr[String]
+      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guild: UndefOr[Application.ApplicationGuild] = UndefOrUndefined,
+      primarySkuId: UndefOr[RawSnowflake] = UndefOrUndefined,
+      slug: UndefOr[String] = UndefOrUndefined,
+      coverImage: UndefOr[ImageHash] = UndefOrUndefined,
+      flags: UndefOr[Application.Flags] = UndefOrUndefined,
+      approximateGuildCount: UndefOr[Int] = UndefOrUndefined,
+      tags: UndefOr[Seq[String]] = UndefOrUndefined,
+      installParams: UndefOr[Application.InstallParams] = UndefOrUndefined,
+      customInstallUrl: UndefOr[String] = UndefOrUndefined,
+      roleConnectionsVerificationUrl: UndefOr[String] = UndefOrUndefined
   ): Application = makeRawFromFields(
     "id"                                 := id,
     "name"                               := name,

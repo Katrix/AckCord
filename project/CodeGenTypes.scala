@@ -289,12 +289,13 @@ object CodeGenTypes {
   object PathElem {
     case class StringPathElem(elem: String) extends PathElem
 
-    case class ArgPathElem(name: Option[String], argOf: String, documentation: Option[String]) extends PathElem
+    case class ArgPathElem(name: Option[String], argOf: String, major: Boolean, documentation: Option[String])
+        extends PathElem
 
     case class CustomArgPathElem(
         name: String,
         tpe: String,
-        majorParameter: Boolean,
+        major: Boolean,
         documentation: Option[String]
     ) extends PathElem
 
@@ -306,8 +307,9 @@ object CodeGenTypes {
           for {
             name          <- c.get[Option[String]]("name")
             argOf         <- c.get[String]("argOf")
+            major         <- c.getOrElse[Boolean]("major")(false)
             documentation <- c.get[Option[String]]("documentation")
-          } yield ArgPathElem(name, argOf, documentation)
+          } yield ArgPathElem(name, argOf, major, documentation)
         }
         .swap
         .joinLeft
@@ -316,9 +318,9 @@ object CodeGenTypes {
           for {
             name          <- c.get[String]("name")
             tpe           <- c.get[String]("customArgType")
-            majorParam    <- c.getOrElse[Boolean]("customArgMajorParameter")(false)
+            major         <- c.getOrElse[Boolean]("major")(false)
             documentation <- c.get[Option[String]]("documentation")
-          } yield CustomArgPathElem(name, tpe, majorParam, documentation)
+          } yield CustomArgPathElem(name, tpe, major, documentation)
         }
         .swap
         .joinLeft

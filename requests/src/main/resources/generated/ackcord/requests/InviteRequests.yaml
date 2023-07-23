@@ -1,5 +1,8 @@
 name: InviteRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: getInvite
     defType: Request
@@ -20,7 +23,7 @@ innerTypes:
             documentation: Whether the invite should contain the expiration date
 
           guild_scheduled_event_id:
-            type: Snowflake[GuildScheduledId]
+            type: Snowflake[GuildScheduledEvent]
             documentation: The guild scheduled event to include with the invite
     return: Invite
 

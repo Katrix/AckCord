@@ -2,8 +2,6 @@ package ackcord.requests.base
 
 import java.util.UUID
 
-import scala.concurrent.duration.FiniteDuration
-
 import sttp.model.{Method, StatusCode, Uri}
 
 /** An exception for Http errors. */

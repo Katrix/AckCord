@@ -1,5 +1,8 @@
 name: AutoModerationRequests
 defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
 innerTypes:
   - name: listAutoModerationRulesForGuild
     defType: Request
@@ -10,7 +13,7 @@ innerTypes:
   - name: getAutoModerationRule
     defType: Request
     method: GET
-    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: "Snowflake[AutoModerationRule]" } ]
     return: AutoModerationRule
 
   - name: createAutoModerationRule
@@ -63,7 +66,7 @@ innerTypes:
   - name: ModifyAutoModerationRule
     defType: Request
     method: PATCH
-    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: "Snowflake[AutoModerationRule]" } ]
     allowsReason: true
     body:
       allUndefined: true
@@ -106,5 +109,5 @@ innerTypes:
   - name: DeleteAutoModerationRule
     defType: Request
     method: DELETE
-    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: Snowflake[ AutoModerationRule ] } ]
+    path: [ guilds, { argOf: GuildId }, auto-moderation, rules, { name: autoModerationRuleId, customArgType: "Snowflake[AutoModerationRule]" } ]
     allowsReason: true

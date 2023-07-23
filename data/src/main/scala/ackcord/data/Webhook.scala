@@ -1,4 +1,4 @@
-//noinspection ScalaWeakerAccess, ScalaUnusedSymbol
+//noinspection ScalaWeakerAccess, ScalaUnusedSymbol, DuplicatedCode
 package ackcord.data
 
 // THIS FILE IS MACHINE GENERATED!
@@ -16,7 +16,7 @@ import io.circe.Json
 class Webhook(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
   /** The id of the webhook */
-  @inline def id: Snowflake[Webhook] = selectDynamic[Snowflake[Webhook]]("id")
+  @inline def id: WebhookId = selectDynamic[WebhookId]("id")
 
   /** The type of the webhook */
   @inline def tpe: Webhook.WebhookType = selectDynamic[Webhook.WebhookType]("type")
@@ -113,18 +113,18 @@ object Webhook extends DiscordObjectCompanion[Webhook] {
     *   flow)
     */
   def make20(
-      id: Snowflake[Webhook],
+      id: WebhookId,
       tpe: Webhook.WebhookType,
-      guildId: JsonOption[GuildId],
+      guildId: JsonOption[GuildId] = JsonUndefined,
       channelId: Option[TextGuildChannelId],
-      user: UndefOr[User],
+      user: UndefOr[User] = UndefOrUndefined,
       name: Option[String],
       avatar: Option[ImageHash],
-      token: UndefOr[String],
+      token: UndefOr[String] = UndefOrUndefined,
       applicationId: Option[ApplicationId],
-      sourceGuild: UndefOr[Webhook.WebhookGuild],
-      sourceChannel: UndefOr[Webhook.WebhookChannel],
-      url: UndefOr[String]
+      sourceGuild: UndefOr[Webhook.WebhookGuild] = UndefOrUndefined,
+      sourceChannel: UndefOr[Webhook.WebhookChannel] = UndefOrUndefined,
+      url: UndefOr[String] = UndefOrUndefined
   ): Webhook = makeRawFromFields(
     "id"              := id,
     "type"            := tpe,
