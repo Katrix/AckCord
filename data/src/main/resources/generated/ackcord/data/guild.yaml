@@ -1,4 +1,6 @@
 defType: Multiple
+imports:
+  - java.time.OffsetDateTime
 innerTypes:
   - name: Guild
     defType: Class
@@ -79,11 +81,11 @@ innerTypes:
           documentation: Verification level required for the guild
 
         default_message_notifications:
-          type: Guild.MessageNotificationsLevel
+          type: Guild.MessageNotificationLevel
           documentation: Default message notifications level
 
         explicit_content_filter:
-          type: Guild.ExplicitContentFilterLEvel
+          type: Guild.ExplicitContentFilterLevel
           documentation: Explicit content filter level
 
         roles:
@@ -351,7 +353,7 @@ innerTypes:
             value: "1 << 5"
             documentation: Hide role subscription sticker reply buttons
 
-      - name: GuildFeatures
+      - name: GuildFeature
         defType: Enum
         type: String
         values:
@@ -467,7 +469,7 @@ innerTypes:
             value: "WELCOME_SCREEN_ENABLED"
             documentation: Guild has enabled the welcome screen
 
-      - name: MutableGuildFeatures
+      - name: MutableGuildFeature
         defType: Enum
         type: String
         values:
@@ -620,7 +622,7 @@ innerTypes:
             avatar:
               type: ImageHash
               withNull: true
-            status: GatewayEvent.UpdatePresence.Status #TODO: Move this to data
+            status: Status
             avatar_url: String
 
   - name: GuildMember
@@ -724,7 +726,8 @@ innerTypes:
           type: String
           documentation: Integration name
 
-        type:
+        tpe:
+          jsonName: type
           type: String
           documentation: Integration type (twitch, youtube, discord, or guild_subscription)
 
@@ -793,7 +796,7 @@ innerTypes:
           documentation: The scopes the application has been authorized for
 
     innerTypes:
-      - name: IntegrationExpireBehaviors
+      - name: IntegrationExpireBehavior
         defType: Enum
         type: Int
         values:
@@ -853,7 +856,7 @@ innerTypes:
           documentation: The reason for the ban
 
         user:
-          type: UserObject
+          type: User
           documentation: The banned user
 
   - name: WelcomeScreen
@@ -928,7 +931,8 @@ innerTypes:
               type: Snowflake[OnboardingPrompt]
               documentation: ID of the prompt
 
-            type:
+            tpe:
+              jsonName: type
               type: GuildOnboarding.PromptType
               documentation: Type of prompt
 
@@ -998,7 +1002,7 @@ innerTypes:
             value: "1"
             documentation: Counts Default Channels and Questions towards constraints
 
-      - name: PromptTypes
+      - name: PromptType
         defType: Enum
         type: Int
         values:

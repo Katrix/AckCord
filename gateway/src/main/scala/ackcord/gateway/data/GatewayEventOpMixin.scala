@@ -1,8 +1,8 @@
 package ackcord.gateway.data
 
-import ackcord.gateway.data.GatewayEventOpMixin.GatewayEventOpOperations
-
 import scala.language.implicitConversions
+
+import ackcord.gateway.data.GatewayEventOpMixin.GatewayEventOpOperations
 
 trait GatewayEventOpMixin { self: GatewayEventOp.type =>
 

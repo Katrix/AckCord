@@ -7,8 +7,8 @@ innerTypes:
       Creates a new webhook and returns a webhook object on success. Requires the MANAGE_WEBHOOKS permission. Fires a Webhooks Update Gateway event.
 
       An error will be returned if a webhook name (name) is not valid. A webhook name is valid if:
-      * It does not contain the substrings clyde or discord (case-insensitive)
-      * It follows the nickname guidelines in the Usernames and Nicknames documentation, with an exception that webhook names can be up to 80 characters
+      - It does not contain the substrings clyde or discord (case-insensitive)
+      - It follows the nickname guidelines in the Usernames and Nicknames documentation, with an exception that webhook names can be up to 80 characters
     method: POST
     path: [ channels, { argOf: ChannelId }, webhooks ]
     allowsReason: true
@@ -199,7 +199,7 @@ innerTypes:
             documentation: Allowed mentions for the message
 
           components:
-            type: Seq[MessageComponent]
+            type: Seq[Component]
             documentation: Components to include with the message
 
           attachments:
@@ -337,7 +337,7 @@ innerTypes:
             documentation: Allowed mentions for the message
 
           components:
-            type: Seq[MessageComponent]
+            type: Seq[Component]
             documentation: Components to include with the message
 
           attachments:

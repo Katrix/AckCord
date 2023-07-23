@@ -1,8 +1,11 @@
 package ackcord.data.base
 
-import io.circe.Codec
+import io.circe.{Codec, Decoder, Encoder}
 
-abstract class DiscordOpaqueCompanion[Underlying](implicit underlyingCodec: Codec[Underlying]) {
+abstract class DiscordOpaqueCompanion[Underlying](
+    implicit underlyingEncoder: Encoder[Underlying],
+    underlyingDecoder: Decoder[Underlying]
+) {
   private[data] type Base
   private[data] trait Tag extends Any
 
@@ -13,6 +16,8 @@ abstract class DiscordOpaqueCompanion[Underlying](implicit underlyingCodec: Code
   def underlying(opaque: OpaqueType): Underlying = opaque.asInstanceOf[Underlying]
 
   implicit val opaqueCodec: Codec[OpaqueType] =
-    underlyingCodec.iemap[OpaqueType](u => Right(u.asInstanceOf[OpaqueType]))(o => o.asInstanceOf[Underlying])
+    Codec
+      .from(underlyingDecoder, underlyingEncoder)
+      .iemap[OpaqueType](u => Right(u.asInstanceOf[OpaqueType]))(o => o.asInstanceOf[Underlying])
 
 }

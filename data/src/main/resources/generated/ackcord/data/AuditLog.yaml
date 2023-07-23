@@ -3,7 +3,7 @@ defType: Class
 fields:
   2.0.x:
     application_commands:
-      type: Seq[ApplicationCommand]
+      type: Seq[AuditLog.AuditLogApplicationCommandStub]
       documentation: List of application commands referenced in the audit log
 
     audit_log_entries:
@@ -35,13 +35,20 @@ fields:
       documentation: List of webhooks referenced in the audit log
 
 innerTypes:
+  - name: AuditLogApplicationCommandStub
+    defType: Class
+    fields:
+      2.0.x: {}
+
   - name: AuditLogIntegration
     defType: Class
     fields:
       2.0.x:
         id: Snowflake[Integration]
         name: String
-        type: String
+        tpe:
+          jsonName: type
+          type: String
         account: AuditLogIntegration.AuditLogIntegrationAccount
         application_id: ApplicationId
     innerTypes:
@@ -133,7 +140,8 @@ innerTypes:
           type: String
           documentation: Name of the role if type is "0" (not present if type is "1")
 
-        type:
+        tpe:
+          jsonName: type
           type: String
           documentation: Type of overwritten entity - role ("0") or member ("1")
 

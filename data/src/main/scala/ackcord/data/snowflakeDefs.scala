@@ -1,7 +1,5 @@
 package ackcord.data
 
-import scala.language.implicitConversions
-
 import java.lang.{Long => JLong}
 import java.time.Instant
 
@@ -13,6 +11,66 @@ trait SnowflakeDefs {
 
   type RawSnowflake = Snowflake[Any]
   object RawSnowflake extends SnowflakeCompanion[Any]
+
+  type GuildId = Snowflake[Guild]
+  object GuildId extends SnowflakeCompanion[Guild]
+
+  type ChannelId = Snowflake[Channel]
+  object ChannelId extends SnowflakeCompanion[Channel]
+
+  type TextChannelId = Snowflake[TextChannel]
+  object TextChannelId extends SnowflakeCompanion[TextChannel]
+
+  type GuildChannelId = Snowflake[GuildChannel]
+  object GuildChannelId extends SnowflakeCompanion[GuildChannel]
+
+  type TextGuildChannelId = Snowflake[TextGuildChannel]
+  object TextGuildChannelId extends SnowflakeCompanion[TextGuildChannel]
+
+  type VoiceGuildChannelId = Snowflake[VoiceGuildChannel]
+  object VoiceGuildChannelId extends SnowflakeCompanion[VoiceGuildChannel]
+
+  type TopLevelTextGuildChannelId = Snowflake[TopLevelTextGuildChannel]
+  object TopLevelTextGuildChannelId extends SnowflakeCompanion[TopLevelTextGuildChannel]
+
+  type NormalVoiceGuildChannelId = Snowflake[NormalVoiceGuildChannel]
+  object NormalVoiceGuildChannelId extends SnowflakeCompanion[NormalVoiceGuildChannel]
+
+  type GuildCategoryId = Snowflake[GuildCategory]
+  object GuildCategoryId extends SnowflakeCompanion[GuildCategory]
+
+  type ThreadChannelId = Snowflake[ThreadChannel]
+  object ThreadChannelId extends SnowflakeCompanion[ThreadChannel]
+
+  type StageChannelId = Snowflake[StageChannel]
+  object StageChannelId extends SnowflakeCompanion[StageChannel]
+
+  type ForumChannelId = Snowflake[ForumChannel]
+  object ForumChannelId extends SnowflakeCompanion[ForumChannel]
+
+  type DMChannelId = Snowflake[DMChannel]
+  object DMChannelId extends SnowflakeCompanion[DMChannel]
+
+  type GroupDMChannelId = Snowflake[GroupDMChannel]
+  object GroupDMChannelId extends SnowflakeCompanion[GroupDMChannel]
+
+  type MessageId = Snowflake[Message]
+  object MessageId extends SnowflakeCompanion[Message]
+
+  type UserId = Snowflake[User]
+  object UserId extends SnowflakeCompanion[User]
+
+  type RoleId = Snowflake[Role]
+  object RoleId extends SnowflakeCompanion[Role]
+
+  type UserOrRoleId = Snowflake[UserOrRole]
+  object UserOrRoleId extends SnowflakeCompanion[UserOrRole]
+
+  type EmojiId = Snowflake[Emoji]
+  object EmojiId extends SnowflakeCompanion[Emoji]
+
+  type ApplicationId = Snowflake[Application]
+  object ApplicationId extends SnowflakeCompanion[Application]
 }
 
 object Snowflake {
@@ -72,7 +130,7 @@ object Snowflake {
 }
 
 private[data] trait SnowflakeCompanion[Type] {
-  def apply(content: String): Snowflake[Type] = JLong.parseUnsignedLong(content).asInstanceOf[Snowflake[Type]]
-  def apply(long: Long): Snowflake[Type]      = long.asInstanceOf[Snowflake[Type]]
+  def apply(content: String): Snowflake[Type]     = JLong.parseUnsignedLong(content).asInstanceOf[Snowflake[Type]]
+  def apply(long: Long): Snowflake[Type]          = long.asInstanceOf[Snowflake[Type]]
   def apply(other: Snowflake[_]): Snowflake[Type] = other.asInstanceOf[Snowflake[Type]]
 }

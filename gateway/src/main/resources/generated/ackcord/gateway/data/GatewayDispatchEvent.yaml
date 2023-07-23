@@ -183,8 +183,8 @@ innerTypes:
     defType: Class
     documentation: |-
       Sent when a thread is created, relevant to the current user, or when the current user is added to a thread. The inner payload is a channel object.
-      * When a thread is created, includes an additional newly_created boolean field.
-      * When being added to an existing private thread, includes a thread member object.
+      - When a thread is created, includes an additional newly_created boolean field.
+      - When being added to an existing private thread, includes a thread member object.
     fields:
       2.0.x:
         data:

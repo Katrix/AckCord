@@ -1,7 +1,10 @@
 defType: Multiple
+imports:
+  - java.time.OffsetDateTime
 innerTypes:
-  - name: Channel
+  - name: RawChannel
     defType: Class
+    extends: [Channel]
     documentation: Represents a guild or DM channel within Discord.
     fields:
       2.0.x:
@@ -25,7 +28,7 @@ innerTypes:
           documentation: Sorting position of the channel
 
         permission_overwrites:
-          type: Seq[PermissionOverwrite]
+          type: Seq[Channel.PermissionOverwrite]
           withUndefined: true
           documentation: Explicit permission overwrites for members and roles
 
@@ -52,7 +55,7 @@ innerTypes:
           documentation: Whether the channel is nsfw
 
         last_message_id:
-          type: Raw
+          type: MessageId
           withUndefined: true
           withNull: true
           documentation: The id of the last message sent in this channel (or thread for GUILD_FORUM channels) (may not point to an existing or valid message or thread)
@@ -161,12 +164,12 @@ innerTypes:
           documentation: Number of messages ever sent in a thread, it's similar to message_count on message creation, but will not decrement the number when a message is deleted
 
         available_tags:
-          type: Seq[Channel.Tag]
+          type: Seq[Channel.ForumTag]
           withUndefined: true
           documentation: The set of tags that can be used in a GUILD_FORUM channel
 
         applied_tags:
-          type: Seq[Snowflake[Channel.Tag]]
+          type: Seq[Snowflake[Channel.ForumTag]]
           withUndefined: true
           documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel
 
@@ -192,7 +195,360 @@ innerTypes:
           withUndefined: true
           documentation: The default forum layout view used to display posts in GUILD_FORUM channels. Defaults to 0, which indicates a layout view has not been set by a channel admin
 
+  - defType: Freeform
+    content: |-
+      sealed trait Channel extends DiscordObject {
+        def asRawChannel: RawChannel = retype(RawChannel)
+        
+        def id: ChannelId
+      }
+
+  - defType: Freeform
+    content: |-
+      sealed trait TextChannel extends Channel {
+        override def id: TextChannelId
+        
+        def lastMessageId: Option[MessageId]
+      }
+
+  - defType: Freeform
+    content: |-
+      sealed trait GuildChannel extends Channel {
+        override def id: GuildChannelId
+        
+        def guildId: UndefOr[GuildId]
+        
+        def position: Int
+        
+        def permissionOverwrites: Seq[Channel.PermissionOverwrite]
+        
+        def name: String
+      
+        def parentId: Option[GuildChannelId]
+      }
+
+  - defType: Freeform
+    content: |-
+      sealed trait TextGuildChannel extends GuildChannel with TextChannel {
+        override def id: TextGuildChannelId
+        
+        def rateLimitPerUser: UndefOr[Int]
+      }
+
+  - defType: Freeform
+    content: |-
+      sealed trait VoiceGuildChannel extends GuildChannel {
+        override def id: VoiceGuildChannelId
+        
+        def bitrate: Int
+        def userLimit: Int
+        def rtcRegion: Option[String]
+        def videoQualityMode: Channel.VideoQualityMode
+      }
+
+  - name: TopLevelTextGuildChannel
+    defType: Class
+    extends: [TextGuildChannel]
+    fields:
+      2.0.x:
+        id:
+          type: TopLevelTextGuildChannelId
+          override: true
+
+        last_message_id:
+          type: MessageId
+          withNull: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        position: Int
+
+        permission_overwrites: Seq[Channel.PermissionOverwrite]
+
+        name: String
+
+        parent_id:
+          type: GuildChannelId
+          withNull: true
+
+        topic:
+          type: String
+          withNull: true
+
+        last_pin_timestamp:
+          type: OffsetDateTime
+          withNull: true
+
+        default_auto_archive_duration: Int
+
+        rate_limit_per_user:
+          type: Int
+          withUndefined: true
+
+        default_thread_rate_limit_per_user: Int
+
+  - name: NormalVoiceGuildChannel
+    defType: Class
+    extends: [TextGuildChannel]
+    fields:
+      2.0.x:
+        id:
+          type: NormalVoiceGuildChannelId
+          override: true
+
+        last_message_id:
+          type: MessageId
+          withNull: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        position: Int
+
+        permission_overwrites: Seq[Channel.PermissionOverwrite]
+
+        name: String
+
+        parent_id:
+          type: GuildChannelId
+          withNull: true
+
+        rate_limit_per_user:
+          type: Int
+          withUndefined: true
+
+        bitrate: Int
+
+        user_limit: Int
+
+        rtc_region:
+          type: String
+          withNull: true
+
+        video_quality_mode: Channel.VideoQualityMode
+
+  - name: GuildCategory
+    defType: Class
+    extends: [GuildChannel]
+    fields:
+      2.0.x:
+        id:
+          type: GuildCategoryId
+          override: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        position: Int
+
+        permission_overwrites: Seq[Channel.PermissionOverwrite]
+
+        name: String
+
+        # Always null, but easier to just include it
+        parent_id:
+          type: GuildChannelId
+          withNull: true
+
+
+  - name: ThreadChannel
+    defType: Class
+    extends: [TextChannel]
+    fields:
+      2.0.x:
+        id:
+          type: ThreadChannelId
+          override: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        name: String
+
+        last_message_id:
+          type: MessageId
+          withNull: true
+
+        last_pin_timestamp:
+          type: OffsetDateTime
+          withNull: true
+
+        rate_limit_per_user:
+          type: Int
+          withNull: true
+
+        owner_id: UserId
+
+        member_count: Int
+
+        message_count: Int
+
+        total_message_sent: Int
+
+        thread_metadata: Channel.ThreadMetadata
+
+  - name: StageChannel
+    defType: Class
+    extends: [VoiceGuildChannel]
+    fields:
+      2.0.x:
+        id:
+          type: StageChannelId
+          override: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        position: Int
+
+        permission_overwrites: Seq[Channel.PermissionOverwrite]
+
+        name: String
+
+        parent_id:
+          type: GuildChannelId
+          withNull: true
+
+        bitrate: Int
+
+        user_limit: Int
+
+        rtc_region:
+          type: String
+          withNull: true
+
+        video_quality_mode: Channel.VideoQualityMode
+
+  - name: ForumChannel
+    defType: Class
+    extends: [GuildChannel]
+    fields:
+      2.0.x:
+        id:
+          type: ForumChannelId
+          override: true
+
+        last_message_id:
+          type: ThreadChannelId
+          withNull: true
+
+        guild_id:
+          type: GuildId
+          withUndefined: true
+
+        position: Int
+
+        permission_overwrites: Seq[Channel.PermissionOverwrite]
+
+        name: String
+
+        parent_id:
+          type: GuildChannelId
+          withNull: true
+
+        topic:
+          type: String
+          withNull: true
+
+        rate_limit_per_user:
+          type: Int
+          withNull: true
+
+        default_auto_archive_duration:
+          type: Int
+          withNull: true
+
+        flags:
+          type: Channel.ChannelFlags
+
+        available_tags:
+          type: Seq[Channel.ForumTag]
+
+        default_reaction_emoji:
+          type: Channel.DefaultReaction
+          withNull: true
+
+        default_thread_rate_limit_per_user: Int
+
+        default_sort_order: Channel.ForumSortOrder
+
+        default_forum_layout: Channel.ForumLayout
+
+
+  - name: DMChannel
+    defType: Class
+    extends: [TextChannel]
+    fields:
+      2.0.x:
+        id:
+          type: DMChannelId
+          override: true
+
+        last_message_id:
+          type: MessageId
+          withNull: true
+
+        recipients: Seq[User]
+
+  - name: GroupDMChannel
+    defType: Class
+    extends: [TextChannel]
+    fields:
+      2.0.x:
+        id:
+          type: GroupDMChannelId
+          override: true
+
+        last_message_id:
+          type: MessageId
+          withNull: true
+
+        recipients: Seq[User]
+
+        icon:
+          type: ImageHash
+          withNull: true
+
+        owner_id: UserId
+
+        application_id:
+          type: ApplicationId
+          withUndefined: true
+
+        managed:
+          type: Boolean
+          withUndefined: true
+
+  - name: Channel
+    defType: ObjectOnly
+    objectExtends: ['DiscordObjectCompanion[Channel]']
+
     innerTypes:
+      - defType: Freeform
+        content: |-
+          def makeRaw(json: Json, cache: Map[String, Any]): Channel = 
+            json.hcursor.get[ChannelType]("type").toOption.fold(RawChannel.makeRaw(json, cache): Channel) {
+              case ChannelType.GUILD_TEXT => TopLevelTextGuildChannel.makeRaw(json, cache)
+              case ChannelType.DM => DMChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_VOICE => NormalVoiceGuildChannel.makeRaw(json, cache)
+              case ChannelType.GROUP_DM => GroupDMChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_CATEGORY => GuildCategory.makeRaw(json, cache)
+              case ChannelType.GUILD_ANNOUNCEMENT => TopLevelTextGuildChannel.makeRaw(json, cache)
+              case ChannelType.ANNOUNCEMENT_THREAD => ThreadChannel.makeRaw(json, cache)
+              case ChannelType.PUBLIC_THREAD => ThreadChannel.makeRaw(json, cache)
+              case ChannelType.PRIVATE_THREAD => ThreadChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_STAGE_VOICE => StageChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_DIRECTORY => RawChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_FORUM => ForumChannel.makeRaw(json, cache)
+              case _ => RawChannel.makeRaw(json, cache)
+            }
+
       - name: ChannelType
         defType: Enum
         type: Int
@@ -245,7 +601,7 @@ innerTypes:
             value: "15"
             documentation: Channel that can only contain threads
 
-      - name: VideoQuality
+      - name: VideoQualityMode
         defType: Enum
         type: Int
         values:
@@ -303,7 +659,7 @@ innerTypes:
         fields:
           2.0.x:
             id:
-              type: RoleOrUserId
+              type: UserOrRoleId
               documentation: Role or user id
 
             tpe:
@@ -364,7 +720,7 @@ innerTypes:
         fields:
           2.0.x:
             id:
-              type: ThreadId
+              type: ThreadChannelId
               withUndefined: true
               documentation: ID of the thread
 
@@ -429,27 +785,6 @@ innerTypes:
               type: String
               withNull: true
               documentation: The unicode character of the emoji
-
-      - name: ChannelMention
-        defType: Class
-        fields:
-          2.0.x:
-            id:
-              type: GuildTextChannelId
-              documentation: Id of the channel
-
-            guild_id:
-              type: GuildId
-              documentation: Id of the guild containing the channel
-
-            tpe:
-              jsonName: type
-              type: Channel.ChannelType
-              documentation: The type of channel
-
-            name:
-              type: String
-              documentation: The name of the channel
 
   - name: Message
     defType: Class
@@ -525,7 +860,7 @@ innerTypes:
           documentation: Whether this message is pinned
 
         webhook_id:
-          type: WebhookId
+          type: Snowflake[Webhook]
           withUndefined: true
           documentation: If the message is generated by a webhook, this is the webhook's id
 
@@ -540,7 +875,7 @@ innerTypes:
           documentation: Sent with Rich Presence-related chat embeds
 
         application:
-          type: Message.MessageApplication
+          type: Message.MessageApplicationStub
           withUndefined: true
           documentation: Sent with Rich Presence-related chat embeds
 
@@ -550,7 +885,7 @@ innerTypes:
           documentation: If the message is an Interaction or application-owned webhook, this is the id of the application
 
         message_reference:
-          type: Message.MessageReference
+          type: MessageReference
           withUndefined: true
           documentation: Data showing the source of a crosspost, channel follow add, pin, or reply message
 
@@ -566,7 +901,7 @@ innerTypes:
           documentation: The message associated with the message_reference
 
         interaction:
-          type: Message.MessageInteraction
+          type: Message.MessageInteractionStub
           withUndefined: true
           documentation: Sent if the message is a response to an Interaction
 
@@ -576,12 +911,12 @@ innerTypes:
           documentation: The thread that was started from this message, includes thread member object
 
         components:
-          type: Seq[MessageComponent]
+          type: Seq[Component]
           withUndefined: true
           documentation: Sent if the message contains components like buttons, action rows, or other interactive components
 
         sticker_items:
-          type: Seq[Message.StickerItem]
+          type: Seq[Sticker.StickerItem]
           withUndefined: true
           documentation: Sent if the message contains stickers
 
@@ -591,7 +926,7 @@ innerTypes:
           documentation: A generally increasing integer (there may be gaps or duplicates) that represents the approximate position of the message in a thread, it can be used to estimate the relative position of the message in a thread in company with total_message_sent on parent thread
 
         role_subscription_data:
-          type: RoleSubscriptionData
+          type: Message.RoleSubscriptionData
           withUndefined: true
           documentation: Data of the role subscription purchase or renewal that prompted this ROLE_SUBSCRIPTION_PURCHASE message
 
@@ -632,6 +967,38 @@ innerTypes:
           STAGE_SPEAKER: "29"
           STAGE_TOPIC: "31"
           GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: "32"
+
+      - name: MessageInteractionStub
+        defType: Class
+        fields:
+          2.0.x: {}
+
+      # No idea what this contains, so we make it a stub for now
+      - name: MessageApplicationStub
+        defType: Class
+        fields:
+          2.0.x: { }
+
+      - name: ChannelMention
+        defType: Class
+        fields:
+          2.0.x:
+            id:
+              type: TextGuildChannelId
+              documentation: Id of the channel
+
+            guild_id:
+              type: GuildId
+              documentation: Id of the guild containing the channel
+
+            tpe:
+              jsonName: type
+              type: Channel.ChannelType
+              documentation: The type of channel
+
+            name:
+              type: String
+              documentation: The name of the channel
 
       - name: MessageActivity
         defType: Class
@@ -731,7 +1098,7 @@ innerTypes:
     fields:
       2.0.x:
         message_id:
-          type: MessageI
+          type: MessageId
           withUndefined: true
           documentation: Id of the originating message
 
@@ -741,7 +1108,7 @@ innerTypes:
           documentation: Id of the originating message's channel
 
         guild_id:
-          type: GuildID
+          type: GuildId
           withUndefined: true
           documentation: Id of the originating message's guild
 
@@ -759,7 +1126,7 @@ innerTypes:
           documentation: Source channel id
 
         webhook_id:
-          type: WebhookId
+          type: Snowflake[Webhook]
           documentation: Created target webhook id
 
   - name: Reaction
@@ -775,7 +1142,7 @@ innerTypes:
           documentation: Whether the current user reacted using this emoji
 
         emoji:
-          type: Reaction.ReactionEmoji
+          type: Emoji
           documentation: Emoji information
 
   - name: Embed
@@ -789,7 +1156,8 @@ innerTypes:
           verification:
             max_length: 256
 
-        type:
+        tpe:
+          jsonName: type
           type: Embed.EmbedType
           documentation: Type of embed (always "rich" for webhook embeds)
 

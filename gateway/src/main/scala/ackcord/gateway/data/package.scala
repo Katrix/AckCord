@@ -5,5 +5,5 @@ import io.circe.Json
 package object data {
 
   //Just to make stuff compile
-  type Activity  = Json
+  type Activity = Json
 }

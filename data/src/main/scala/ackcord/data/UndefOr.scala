@@ -28,7 +28,8 @@ trait UndefOr[+A] {
   def toList[A1 >: A]: List[A]
 }
 object UndefOr {
-  implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = (c: HCursor) => if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined)
+  implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = (c: HCursor) =>
+    if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined)
 }
 
 case class UndefOrSome[A](value: A) extends UndefOr[A] {

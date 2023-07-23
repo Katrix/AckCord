@@ -9,6 +9,7 @@ object CodeGenTypes {
       documentation: Option[String],
       innerTypes: Seq[TypeDef],
       allUndefined: Boolean,
+      customMakeRaw: Boolean,
       fields: ListMap[String, ListMap[String, FieldDef]],
       `extends`: Seq[String],
       objectExtends: Seq[String]
@@ -33,6 +34,7 @@ object CodeGenTypes {
         documentation <- c.get[Option[String]]("documentation")
         innerTypes    <- c.getOrElse[Seq[TypeDef]]("innerTypes")(Nil)
         allUndefined  <- c.getOrElse[Boolean]("allUndefined")(false)
+        customMakeRaw <- c.getOrElse[Boolean]("customMakeRaw")(false)
         fieldsMap     <- c.get[ListMap[String, ListMap[String, Either[String, FieldDef]]]]("fields")
         extend        <- c.getOrElse[Seq[String]]("extends")(Nil)
         objectExtends <- c.getOrElse[Seq[String]]("objectExtends")(Nil)
@@ -41,13 +43,22 @@ object CodeGenTypes {
         documentation,
         innerTypes,
         allUndefined,
+        customMakeRaw,
         fieldsMap.map { case (k1, v1) =>
           k1 -> v1.map { case (k2, v2) =>
-            k2 -> v2.swap
-              .map { tpe =>
-                FieldDef(tpe, None, None, None, withUndefined = false, withNull = false, isExtension = false, None)
-              }
-              .merge
+            k2 -> v2.swap.map { tpe =>
+              FieldDef(
+                tpe,
+                None,
+                None,
+                None,
+                withUndefined = false,
+                withNull = false,
+                isExtension = false,
+                overrides = false,
+                None
+              )
+            }.merge
           }
         },
         extend,
@@ -230,6 +241,7 @@ object CodeGenTypes {
       withUndefined: Boolean,
       withNull: Boolean,
       isExtension: Boolean,
+      overrides: Boolean,
       verification: Option[FieldVerification]
   )
 
@@ -241,11 +253,22 @@ object CodeGenTypes {
         jsonName      <- c.get[Option[String]]("jsonName")
         default       <- c.get[Option[String]]("default")
         documentation <- c.get[Option[String]]("documentation")
-        withUndefined <- c.getOrElse("withUndefined")(false)
-        withNull      <- c.getOrElse("withNull")(false)
-        isExtension   <- c.getOrElse("isExtension")(false)
+        withUndefined <- c.getOrElse[Boolean]("withUndefined")(false)
+        withNull      <- c.getOrElse[Boolean]("withNull")(false)
+        isExtension   <- c.getOrElse[Boolean]("isExtension")(false)
+        overrides     <- c.getOrElse[Boolean]("override")(false)
         verification  <- c.get[Option[FieldVerification]]("verification")
-      } yield FieldDef(tpe, jsonName, default, documentation, withUndefined, withNull, isExtension, verification)
+      } yield FieldDef(
+        tpe,
+        jsonName,
+        default,
+        documentation,
+        withUndefined,
+        withNull,
+        isExtension,
+        overrides,
+        verification
+      )
   }
 
   case class FieldVerification(

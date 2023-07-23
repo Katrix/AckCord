@@ -1,10 +1,11 @@
 package ackcord.gateway
 
-import cats.Functor
-
 import java.io.ByteArrayOutputStream
 import java.util.zip.Inflater
+
 import scala.util.Using
+
+import cats.Functor
 import cats.effect.kernel.Resource
 import sttp.monad.MonadError
 

@@ -1,13 +1,5 @@
 name: GatewayEvent
 defType: ObjectOnly
-imports:
-  - ackcord.data.DiscordObject
-  - ackcord.data.DiscordObjectCompanion
-  - ackcord.data.DiscordStringEnum
-  - ackcord.data.DiscordStringEnumCompanion
-  - ackcord.data.UndefOr
-  - ackcord.data.UndefOrSome
-  - io.circe.Json
 objectExtends: [ "GatewayEventBase.TopMixin" ]
 innerTypes:
   - name: Dispatch
@@ -114,20 +106,11 @@ innerTypes:
               type: Seq[Activity]
               documentation: Client's activities
             status:
-              type: GatewayEvent.UpdatePresence.Status
+              type: Status
               documentation: Client's status
             afk:
               type: Boolean
               documentation: If the Client is AFK
-      - name: Status
-        defType: Enum
-        type: String
-        values:
-          Online: online
-          DoNotDisturb: dnd
-          Idle: idle
-          Invisible: invisible
-          Offline: Offline
 
 
 

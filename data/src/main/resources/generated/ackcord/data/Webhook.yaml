@@ -7,7 +7,8 @@ fields:
       type: Snowflake[Webhook]
       documentation: The id of the webhook
 
-    type:
+    tpe:
+      jsonName: type
       type: Webhook.WebhookType
       documentation: The type of the webhook
 
@@ -71,7 +72,7 @@ innerTypes:
     defType: Class
     fields:
       2.0.x:
-        id: GuildID
+        id: GuildId
         name: String
         icon:
           type: ImageHash

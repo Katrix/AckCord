@@ -1,4 +1,8 @@
 defType: Multiple
+
+imports:
+  - java.time.OffsetDateTime
+
 innerTypes:
   - name: VoiceState
     defType: Class

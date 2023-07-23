@@ -1,9 +1,6 @@
 defType: Class
 name: Application
 
-imports:
-  - io.circe.Json
-
 documentation:
   A Discord application
 
@@ -149,7 +146,7 @@ innerTypes:
       2.0.x:
         scopes: Seq[String]
 
-        permissions: Permission
+        permissions: Permissions
 
   - defType: Class
     name: ApplicationOwner

@@ -162,7 +162,7 @@ innerTypes:
             fields:
               2.0.x:
                 id:
-                  type: RoleOrUserId
+                  type: UserOrRoleId
                   documentation: Role or user id
 
                 tpe:
@@ -253,12 +253,12 @@ innerTypes:
       Files must be attached using a multipart/form-data body as described in Uploading Files.
       **Limitations:**
 
-      * When operating on a guild channel, the current user must have the SEND_MESSAGES permission.
-      * When sending a message with tts (text-to-speech) set to true, the current user must have the SEND_TTS_MESSAGES permission.
-      * When creating a message as a reply to another message, the current user must have the READ_MESSAGE_HISTORY permission.
-      * * The referenced message must exist and cannot be a system message.
-      * The maximum request size when sending a message is 25 MiB
-      * For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
+      - When operating on a guild channel, the current user must have the SEND_MESSAGES permission.
+      - When sending a message with tts (text-to-speech) set to true, the current user must have the SEND_TTS_MESSAGES permission.
+      - When creating a message as a reply to another message, the current user must have the READ_MESSAGE_HISTORY permission.
+      - - The referenced message must exist and cannot be a system message.
+      - The maximum request size when sending a message is 25 MiB
+      - For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
     method: POST
     path: [channels, {argOf: ChannelId}, messages]
     additionalTypeParams: ["MPR"]
@@ -306,7 +306,7 @@ innerTypes:
             documentation: Include to make your message a reply
 
           components:
-            type: Seq[MessageComponent]
+            type: Seq[Component]
             documentation: Components to include with the message
 
           sticker_ids:
@@ -518,7 +518,7 @@ innerTypes:
             documentation: Allowed mentions for the message
 
           components:
-            type: Seq[MessageComponent]
+            type: Seq[Component]
             documentation: Components to include with the message
 
           attachments:
@@ -821,14 +821,14 @@ innerTypes:
       and a 400 BAD REQUEST on invalid parameters. Fires a Thread Create and
       Message Create Gateway event.
       
-      * The type of the created thread is PUBLIC_THREAD.
-      * See message formatting for more information on how to properly format messages.
-      * The current user must have the SEND_MESSAGES permission (CREATE_PUBLIC_THREADS is ignored).
-      * The maximum request size when sending a message is 25 MiB.
-      * For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
-      * Examples for file uploads are available in Uploading Files.
-      * Files must be attached using a multipart/form-data body as described in Uploading Files.
-      * Note that when sending a message, you must provide a value for at least one of content, embeds, sticker_ids, components, or files[n].
+      - The type of the created thread is PUBLIC_THREAD.
+      - See message formatting for more information on how to properly format messages.
+      - The current user must have the SEND_MESSAGES permission (CREATE_PUBLIC_THREADS is ignored).
+      - The maximum request size when sending a message is 25 MiB.
+      - For the embed object, you can set every field except type (it will be rich regardless of if you try to set it), provider, video, and any height, width, or proxy_url values for images.
+      - Examples for file uploads are available in Uploading Files.
+      - Files must be attached using a multipart/form-data body as described in Uploading Files.
+      - Note that when sending a message, you must provide a value for at least one of content, embeds, sticker_ids, components, or files[n].
     method: POST
     path: [ channels, { argOf: ChannelId }, threads ]
     allowsReason: true
@@ -896,7 +896,7 @@ innerTypes:
           documentation: Allowed mentions for the message
 
         components:
-          type: Seq[MessageComponent]
+          type: Seq[Component]
           documentation: Components to include with the message
 
         sticker_ids:

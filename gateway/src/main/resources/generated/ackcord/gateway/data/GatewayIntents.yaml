@@ -2,9 +2,6 @@ name: GatewayIntents
 defType: Enum
 type: Int
 isBitfield: true
-imports:
-  - ackcord.data.DiscordIntEnum
-  - ackcord.data.DiscordIntEnumCompanion
 values:
   Guilds: "1 << 0"
   GuildMembers: "1 << 1"

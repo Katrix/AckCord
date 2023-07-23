@@ -1,8 +1,8 @@
 package ackcord.gateway
 
-import ackcord.gateway.GatewayProcess.Context
-
 import scala.annotation.tailrec
+
+import ackcord.gateway.GatewayProcess.Context
 import ackcord.requests._
 import ackcord.requests.base.{EncodeBody, Requests}
 import io.circe.{Decoder, HCursor}

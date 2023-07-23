@@ -4,7 +4,7 @@ import java.io.InputStream
 import java.nio.file.Path
 import java.util.UUID
 
-import ackcord.data.{CacheSnapshot, GuildChannelId, GuildId, Permission}
+import ackcord.data.{CacheSnapshot, GuildChannelId, GuildId, Permissions}
 import ackcord.requests.Request
 import cats.data.Ior
 import io.circe.{Decoder, Encoder, Json}
@@ -30,7 +30,7 @@ case class ComplexRequest[Params, Response, -R1, -R2](
     requestBody: EncodeBody[Params, R1],
     parseResponse: ParseResponse[Response, R2],
     extraHeaders: Map[String, String] = Map.empty,
-    requiredPermissions: Permission = Permission.None,
+    requiredPermissions: Permissions = Permission.None,
     permissionContext: Option[Ior[GuildId, GuildChannelId]] = None
 ) extends AckCordRequest[Response, R1 with R2] {
 
@@ -55,7 +55,7 @@ object ComplexRequest {
       requestBody: EncodeBody[Params, R1] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permission = Permission.None
+      requiredPermissions: Permissions = Permission.None
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = ComplexRequest(
@@ -76,7 +76,7 @@ object ComplexRequest {
       requestBody: EncodeBody[Params, Any] = EncodeBody.NoBody,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permission = Permission.None
+      requiredPermissions: Permissions = Permission.None
   )(
       implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] =
@@ -89,7 +89,7 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, R1]] = None,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permission = Permission.None
+      requiredPermissions: Permissions = Permission.None
   ): ComplexRequest[Params, Response, R1, R2] = complexBaseRestRequest(
     route,
     requestBody.getOrElse(
@@ -106,7 +106,7 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, Any]] = None,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty,
-      requiredPermissions: Permission = Permission.None
+      requiredPermissions: Permissions = Permission.None
   ): Request[Params, Response] = complexRestRequest(
     route,
     params,

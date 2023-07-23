@@ -142,6 +142,10 @@
           "type": "boolean",
           "default": false
         },
+        "customMakeRaw": {
+          "type": "boolean",
+          "description": "Avoid generating the makeRaw function to allow for a custom implementation"
+        },
         "fields": {
           "description": "The fields of this class",
           "type": "object",
@@ -279,6 +283,10 @@
           "type": "boolean",
           "description": "This object extends another object with more fields",
           "default": false
+        },
+        "override": {
+          "type": "boolean",
+          "description": "If this field should be defined with override"
         },
         "verification": {
           "type": "object",

@@ -1,0 +1,350 @@
+defType: Multiple
+innerTypes:
+  - defType: Freeform
+    content: |-
+      sealed trait Component extends DiscordObject {
+        def tpe: Component.ComponentType
+      }
+
+  - name: Component
+    defType: ObjectOnly
+    objectExtends: ["DiscordObjectCompanion[Component]"]
+    innerTypes:
+      - defType: Freeform
+        content: |-
+          def makeRaw(json: Json, cache: Map[String, Any]): Component = 
+            json.hcursor.get[ComponentType]("type").toOption.fold(UnknownComponent.makeRaw(json, cache): Component) {
+              case ComponentType.ActionRow => ActionRow.makeRaw(json, cache)
+              case ComponentType.Button => Button.makeRaw(json, cache)
+              case ComponentType.StringSelect => SelectMenu.makeRaw(json, cache)
+              case ComponentType.TextInput => TextInput.makeRaw(json, cache)
+              case ComponentType.UserSelect => SelectMenu.makeRaw(json, cache)
+              case ComponentType.RoleSelect => SelectMenu.makeRaw(json, cache)
+              case ComponentType.MentionableSelect => SelectMenu.makeRaw(json, cache)
+              case ComponentType.ChannelSelect => SelectMenu.makeRaw(json, cache)
+              case _ => UnknownComponent.makeRaw(json, cache)
+            }
+
+      - name: ComponentType
+        defType: Enum
+        type: Int
+        values:
+          ActionRow:
+            value: "1"
+            documentation: Container for other components
+
+          Button:
+            value: "2"
+            documentation: Button object
+
+          StringSelect:
+            value: "3"
+            documentation: Select menu for picking from defined text options
+
+          TextInput:
+            value: "4"
+            documentation: Text input object
+
+          UserSelect:
+            value: "5"
+            documentation: Select menu for users
+
+          RoleSelect:
+            value: "6"
+            documentation: Select menu for roles
+
+          MentionableSelect:
+            value: "7"
+            documentation: Select menu for mentionables (users and roles)
+
+          ChannelSelect:
+            value: "8"
+            documentation: Select menu for channels
+
+      - name: ActionRow
+        defType: Class
+        extends: [Component]
+        documentation: |-
+          An Action Row is a non-interactive container component for other types of components. It has a type: 1 and a sub-array of components of other types.
+          - You can have up to 5 Action Rows per message
+          - An Action Row cannot contain another Action Row
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: ComponentType
+              default: ComponentType.ActionRow
+
+            components: Seq[Component]
+
+      - name: Button
+        defType: Class
+        extends: [Component]
+        documentation: |-
+          Buttons are interactive components that render in messages. They can be clicked by users, and send an interaction to your app when clicked.
+          - Buttons must be sent inside an Action Row
+          - An Action Row can contain up to 5 buttons
+          - An Action Row containing buttons cannot also contain any select menu components
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: ComponentType
+              default: ComponentType.Button
+
+            style:
+              type: Button.ButtonStyle
+              documentation: A button style
+
+            label:
+              type: String
+              withUndefined: true
+              documentation: Text that appears on the button; max 80 characters
+              verification:
+                max_length: 80
+
+            emoji:
+              type: ComponentEmoji
+              withUndefined: true
+              documentation: name, id, and animated
+
+            custom_id:
+              type: String
+              withUndefined: true
+              documentation: Developer-defined identifier for the button; max 100 characters
+              verification:
+                max_length: 100
+
+            url:
+              type: String
+              withUndefined: true
+              documentation: URL for link-style buttons
+
+            disabled:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether the button is disabled (defaults to false)
+
+        innerTypes:
+          - name: ButtonStyle
+            defType: Enum
+            type: Int
+            documentation: |-
+              Buttons come in a variety of styles to convey different types of actions. These styles also define what fields are valid for a button.
+              -Non-link buttons must have a custom_id, and cannot have a url
+              -Link buttons must have a url, and cannot have a custom_id
+              -Link buttons do not send an interaction to your app when clicked
+            values:
+              Primary:
+                value: "1"
+                documentation: Blurple
+
+              Secondary:
+                value: "2"
+                documentation: Grey
+
+              Success:
+                value: "3"
+                documentation: Green
+
+              Danger:
+                value: "4"
+                documentation: Red
+
+              Link:
+                value: "5"
+                documentation: Grey, navigates to a URL
+
+      - name: ComponentEmoji
+        defType: Class
+        fields:
+          2.0.x:
+            id:
+              type: EmojiId
+              withNull: true
+              documentation: The id of this emoji
+            name:
+              type: String
+              documentation: The name of this emoji
+
+            animated:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether this emoji is animated
+
+      - name: SelectMenu
+        defType: Class
+        extends: [Component]
+        documentation: |-
+          Select menus are interactive components that allow users to select one or more options from a dropdown list in messages. On desktop, clicking on a select menu opens a dropdown-style UI; on mobile, tapping a select menu opens up a half-sheet with the options.
+          
+          Select menus support single-select and multi-select behavior, meaning you can prompt a user to choose just one item from a list, or multiple. When a user finishes making their choice(s) by clicking out of the dropdown or closing the half-sheet, your app will receive an interaction.
+          - Select menus must be sent inside an Action Row
+          - An Action Row can contain only one select menu
+          - An Action Row containing a select menu cannot also contain buttons
+          
+          There are 5 different select menu components that can be included in Action Rows.
+          
+          The string select menu (type 3) is the only select type that allows (and requires) apps to define the options that appear in the dropdown list. The other 4 select menu components (users, roles, mentionables, and channels) are auto-populated with options corresponding to the resource type—similar to command option types.
+          
+          In addition to the values array in all select menu interaction payloads, auto-populated select menu components (users, roles, mentionables, and channels) also include an additional resolved object that provides additional details about the user's selected resource.
+          
+          The payloads for the select menu components are detailed in the select menu structure.
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: ComponentType
+
+            custom_id:
+              type: String
+              documentation: ID for the select menu; max 100 characters
+              verification:
+                max_length: 100
+
+            options:
+              type: Seq[SelectOption]
+              withUndefined: true
+              documentation: Specified choices in a select menu (only required and available for string selects (type 3); max 25
+              verification:
+                max_length: 25
+
+            channel_types:
+              type: Seq[Channel.ChannelType]
+              withUndefined: true
+              documentation: List of channel types to include in the channel select component (type 8)
+
+            placeholder:
+              type: String
+              withUndefined: true
+              documentation: Placeholder text if nothing is selected; max 150 characters
+              verification:
+                max_length: 150
+
+            min_values:
+              type: Int
+              withUndefined: true
+              documentation: Minimum number of items that must be chosen (defaults to 1); min 0, max 25
+
+            max_values:
+              type: Int
+              withUndefined: true
+              documentation: Maximum number of items that can be chosen (defaults to 1); max 25
+
+            disabled:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether select menu is disabled (defaults to false)
+
+      - name: SelectOption
+        defType: Class
+        fields:
+          2.0.x:
+            label:
+              type: String
+              documentation: User-facing name of the option; max 100 characters
+              verification:
+                max_length: 100
+
+            value:
+              type: String
+              documentation: Dev-defined value of the option; max 100 characters
+              verification:
+                max_length: 100
+
+            description:
+              type: String
+              withUndefined: true
+              documentation: Additional description of the option; max 100 characters
+              verification:
+                max_length: 100
+
+            emoji:
+              type: ComponentEmoji
+              withUndefined: true
+              documentation: id, name, and animated
+
+            default:
+              type: Boolean
+              withUndefined: true
+              documentation: Will show this option as selected by default
+
+      - name: TextInput
+        defType: Class
+        extends: [Component]
+        documentation: |-
+          Text inputs are an interactive component that render on modals. They can be used to collect short-form or long-form text.
+
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: ComponentType
+              default: ComponentType.TextInput
+
+            custom_id:
+              type: String
+              documentation: Developer-defined identifier for the input; max 100 characters
+              verification:
+                max_length: 100
+
+            style:
+              type: TextInput.TextInputStyle
+              documentation: The Text Input Style
+
+            label:
+              type: String
+              documentation: Label for this component; max 45 characters
+              verification:
+                max_length: 45
+
+            min_length:
+              type: Int
+              withUndefined: true
+              documentation: Minimum input length for a text input; min 0, max 4000
+
+            max_length:
+              type: Int
+              withUndefined: true
+              documentation: Maximum input length for a text input; min 1, max 4000
+
+            required:
+              type: Boolean
+              withUndefined: true
+              documentation: Whether this component is required to be filled (defaults to true)
+
+            value:
+              type: String
+              withUndefined: true
+              documentation: Pre-filled value for this component; max 4000 characters
+              verification:
+                max_length: 4000
+
+            placeholder:
+              type: String
+              withUndefined: true
+              documentation: Custom placeholder text if the input is empty; max 100 characters
+              verification:
+                max_length: 100
+
+        innerTypes:
+          - name: TextInputStyle
+            defType: Enum
+            type: Int
+            values:
+              Short:
+                value: "1"
+                documentation: Single-line input
+
+              Paragraph:
+                value: "2"
+                documentation: Multi-line input
+
+      - name: UnknownComponent
+        defType: Class
+        extends: [Component]
+        fields:
+          2.0.x:
+            tpe:
+              jsonName: type
+              type: ComponentType

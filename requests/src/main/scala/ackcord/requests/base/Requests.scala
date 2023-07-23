@@ -39,20 +39,28 @@ class Requests[F[_], +R](
   )(implicit @unused iKnowWhatImDoing: Requests.IWantToMakeRequestsWithoutRatelimits): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequestWithoutRatelimits(request, backend, settings))
 
-  /** Run a normal request, returning the [[RequestAnswer]]. If it fails, it will not be retried. */
+  /**
+    * Run a normal request, returning the [[RequestAnswer]]. If it fails, it
+    * will not be retried.
+    */
   def runRequestToAnswer[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1]
   ): F[RequestAnswer[Response]] =
     addExtraProcessing(request, RequestHandling.runRequest(request, backend, settings))
 
-  /** Run a normal request, returning the response type. If it fails, it will not be retried. */
+  /**
+    * Run a normal request, returning the response type. If it fails, it will
+    * not be retried.
+    */
   def runRequest[Response, R1 >: R with Effect[F]](request: AckCordRequest[Response, R1]): F[Response] =
     runRequestToAnswer(request).flatMap {
       case RequestResponse(data, _, _, _) => F.unit(data)
       case request: FailedRequest         => F.error(request.asException)
     }
 
-  /** Run a request, returning the [[RequestAnswer]] while retrying if it fails. */
+  /**
+    * Run a request, returning the [[RequestAnswer]] while retrying if it fails.
+    */
   def runRequestToAnswerWithRetry[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1]
   ): F[RequestAnswer[Response]] =
@@ -68,7 +76,7 @@ class Requests[F[_], +R](
       request: AckCordRequest[Response, R1]
   ): F[Response] = runRequestToAnswerWithRetry(request).flatMap {
     case RequestResponse(data, _, _, _) => F.unit(data)
-    case request: FailedRequest => F.error(request.asException)
+    case request: FailedRequest         => F.error(request.asException)
   }
 }
 object Requests {

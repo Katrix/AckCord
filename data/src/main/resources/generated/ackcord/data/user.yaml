@@ -1,7 +1,42 @@
 defType: Multiple
 innerTypes:
+  - defType: Freeform
+    content: sealed trait UserOrRole
+
+  - defType: Freeform
+    content: |-
+      sealed trait MessageAuthor extends DiscordObject
+      
+      object MessageAuthor extends DiscordObjectCompanion[MessageAuthor] {
+        def makeRaw(json: Json, cache: Map[String, Any]): MessageAuthor =
+          if (json.hcursor.get[String]("discriminator").isRight) User.makeRaw(json, cache)
+          else WebhookAuthor.makeRaw(json, cache)
+      }
+
+  - name: Status
+    defType: Enum
+    type: String
+    values:
+      Online: online
+      DoNotDisturb: dnd
+      Idle: idle
+      Invisible: invisible
+      Offline: Offline
+
+  - name: WebhookAuthor
+    defType: Class
+    extends: [ MessageAuthor ]
+    fields:
+      2.0.x:
+        id: Snowflake[Webhook]
+        username: String
+        avatar:
+          type: ImageHash
+          withNull: true
+
   - name: User
     defType: Class
+    extends: [ UserOrRole, MessageAuthor ]
     documentation: >-
       Users in Discord are generally considered the base entity. Users can spawn across the entire platform, be members of guilds, participate in text and voice chat, and much more. Users are separated by a distinction of "bot" vs "normal." Although they are similar, bot users are automated users that are "owned" by another user. Unlike normal users, bot users do not have a limitation on the number of Guilds they can be a part of.
     fields:
@@ -171,13 +206,13 @@ innerTypes:
           None:
             value: "0"
 
-          Nitro Classic:
+          NitroClassic:
             value: "1"
 
           Nitro:
             value: "2"
 
-          Nitro Basic:
+          NitroBasic:
             value: "3"
 
   - name: Connection
@@ -193,7 +228,8 @@ innerTypes:
           type: String
           documentation: The username of the connection account
 
-        type:
+        tpe:
+          jsonName: type
           type: Connection.ConnectionServiceType
           documentation: The service of this connection
 
@@ -232,7 +268,7 @@ innerTypes:
       - name: ConnectionIntegration
         defType: Class
         fields:
-          2.0.x: {}
+          2.0.x: { }
 
       - name: ConnectionServiceType
         defType: Enum
@@ -346,9 +382,116 @@ innerTypes:
             max_length: 100
 
         metadata:
-          type: Object
+          type: Map[String, String]
           documentation: Object mapping application role connection metadata keys to their
             string-ified value (max 100 characters) for the user on the platform a
             bot has connected
-          verification:
-            max_length: 100
+
+  # Role goes here so we can make UserOrRole sealed
+  - name: Role
+    defType: Class
+    extends: [ UserOrRole ]
+
+    documentation: >-
+      Roles represent a set of permissions attached to a group of users. Roles have 
+      names, colors, and can be "pinned" to the side bar, causing their members to 
+      be listed separately. Roles can have separate permission profiles for the 
+      global context (guild) and channel context. The @everyone role has the same 
+      ID as the guild it belongs to.
+
+    fields:
+      2.0.x:
+        id:
+          type: RoleId
+          documentation: Role id
+
+        name:
+          type: String
+          documentation: Role name
+
+        color:
+          type: Int
+          documentation: Integer representation of hexadecimal color code
+
+        hoist:
+          type: Boolean
+          documentation: If this role is pinned in the user listing
+
+        icon:
+          type: ImageHash
+          withUndefined: true
+          withNull: true
+          documentation: Role icon hash
+
+        unicode_emoji:
+          type: String
+          withUndefined: true
+          withNull: true
+          documentation: Role unicode emoji
+
+        position:
+          type: Int
+          documentation: Position of this role
+
+        permissions:
+          type: Permissions
+          documentation: Permission bit set
+
+        managed:
+          type: Boolean
+          documentation: Whether this role is managed by an integration
+
+        mentionable:
+          type: Boolean
+          documentation: Whether this role is mentionable
+
+        tags:
+          type: Role.RoleTag
+          documentation: The tags this role has
+
+        flags:
+          type: Role.RoleFlags
+          documentation: Role flags combined as a bitfield
+
+    innerTypes:
+      - name: RoleTag
+        defType: Class
+        documentation: Tags with type null represent booleans. They will be present and set to null if they are "true", and will be not present if they are "false".
+        allUndefined: true
+        fields:
+          2.0.x:
+            bot_id:
+              type: UserId
+              documentation: The id of the bot this role belongs to
+
+            integration_id:
+              type: Snowflake[Integration]
+              documentation: The id of the integration this role belongs to
+
+            premium_subscriber:
+              type: Unit
+              withNull: true
+              documentation: Whether this is the guild's Booster role
+
+            subscription_listing_id:
+              type: RawSnowflake
+              documentation: The id of this role's subscription sku and listing
+
+            available_for_purchase:
+              type: Unit
+              withNull: true
+              documentation: Whether this role is available for purchase
+
+            guild_connections:
+              type: Unit
+              withNull: true
+              documentation: Whether this role is a guild's linked role
+
+      - name: RoleFlags
+        defType: Enum
+        type: Int
+        isBitfield: true
+        values:
+          IN_PROMPT:
+            value: "1 << 0"
+            documentation: Role can be selected by members in an onboarding prompt

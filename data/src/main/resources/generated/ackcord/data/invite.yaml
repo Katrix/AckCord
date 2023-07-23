@@ -1,4 +1,6 @@
 defType: Multiple
+imports:
+  - java.time.OffsetDateTime
 innerTypes:
   - name: Invite
     defType: Class
@@ -106,7 +108,9 @@ innerTypes:
           2.0.x:
             id: GuildChannelId
             name: String
-            type: Channel.ChannelType
+            tpe:
+              jsonName: type
+              type: Channel.ChannelType
 
       - name: InviteApplication
         defType: Class

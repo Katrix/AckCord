@@ -1,9 +1,6 @@
 name: GatewayDispatchType
 defType: Enum
 type: String
-imports:
-  - ackcord.data.DiscordStringEnum
-  - ackcord.data.DiscordStringEnumCompanion
 values:
   Ready: "READY"
   Resumed: "RESUMED"

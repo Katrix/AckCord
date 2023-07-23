@@ -3,7 +3,6 @@ package ackcord.requests
 import ackcord.data.ChannelId
 import ackcord.data.base.{DiscordObject, DiscordObjectCompanion}
 import io.circe.Json
-
 import sttp.model.Method
 
 object CreateMessageContainer {

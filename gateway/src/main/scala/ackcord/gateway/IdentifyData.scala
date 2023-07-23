@@ -10,7 +10,7 @@ class IdentifyData private (
     val largeThreshold: UndefOr[Int],
     val shard: UndefOr[Seq[Int]],
     val presence: UndefOr[GatewayEvent.UpdatePresence.Data],
-    val intents: GatewayIntents,
+    val intents: GatewayIntents
 ) {
 
   private def copy(
@@ -20,7 +20,7 @@ class IdentifyData private (
       largeThreshold: UndefOr[Int] = largeThreshold,
       shard: UndefOr[Seq[Int]] = shard,
       presence: UndefOr[GatewayEvent.UpdatePresence.Data] = presence,
-      intents: GatewayIntents = intents,
+      intents: GatewayIntents = intents
   ): IdentifyData = new IdentifyData(token, properties, compress, largeThreshold, shard, presence, intents)
 
   def withProperties(properties: Map[String, String]): IdentifyData = copy(properties = properties)

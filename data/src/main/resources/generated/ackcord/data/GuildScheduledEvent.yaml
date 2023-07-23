@@ -4,10 +4,13 @@ name: GuildScheduledEvent
 documentation:
   A scheduled event for a guild
 
+imports:
+  - java.time.OffsetDateTime
+
 fields:
   2.0.x:
     id:
-      type: GuildScheduledEventId
+      type: Snowflake[GuildScheduledEvent]
       documentation: The id of the scheduled event
     guild_id:
       type: GuildId
@@ -43,20 +46,20 @@ fields:
       withNull: true
       documentation: The time the scheduled event will end, required if entity_type is EXTERNAL
     privacy_level:
-      type: GuildScheduledEventPrivacyLevel
+      type: GuildScheduledEvent.GuildScheduledEventPrivacyLevel
       documentation: The privacy level of the scheduled event
     status:
-      type: GuildScheduledEventStatus
+      type: GuildScheduledEvent.GuildScheduledEventStatus
       documentation: The status of the scheduled event
     entity_type:
-      type: GuildScheduledEventEntityType
+      type: GuildScheduledEvent.GuildScheduledEventEntityType
       documentation: The type of the scheduled event
     entity_id:
-      type: Snowflake # TODO: Entity???
+      type: RawSnowflake
       withNull: true
       documentation: The id of an entity associated with a guild scheduled event
     entity_metadata:
-      type: GuildScheduledEventEntityMetadata
+      type: GuildScheduledEvent.GuildScheduledEventEntityMetadata
       withNull: true
       documentation: Additional metadata for the guild scheduled event
     creator:

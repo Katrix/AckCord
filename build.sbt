@@ -111,7 +111,7 @@ lazy val gateway = crossProject(JSPlatform, JVMPlatform)
   )
 
 lazy val gatewayJVM = gateway.jvm
-lazy val gatewayJS = gateway.js
+lazy val gatewayJS  = gateway.js
 
 lazy val interactions = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -125,7 +125,7 @@ lazy val interactions = crossProject(JSPlatform, JVMPlatform)
   )
 
 lazy val interactionsJVM = interactions.jvm
-lazy val interactionsJS = interactions.js
+lazy val interactionsJS  = interactions.js
 
 lazy val ackcord = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -133,14 +133,14 @@ lazy val ackcord = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord",
-    moduleName := "ackcord",
-    version := ackCordVersion,
+    name        := "ackcord",
+    moduleName  := "ackcord",
+    version     := ackCordVersion,
     description := "The high level API of AckCord"
   )
 
 lazy val ackcordJVM = ackcord.jvm
-lazy val ackcordJS = ackcord.js
+lazy val ackcordJS  = ackcord.js
 
 lazy val example = project
   .settings(
@@ -175,7 +175,10 @@ lazy val docs = project
     Compile / scalacOptions ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      dataJVM, requestsJVM, gatewayJVM, interactionsJVM
+      dataJVM,
+      requestsJVM,
+      gatewayJVM,
+      interactionsJVM
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp"),
     docsMappingsAPIDir := "api",
@@ -195,7 +198,15 @@ lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(
     dataJVM,
-    dataJS
+    dataJS,
+    requestsJVM,
+    requestsJS,
+    gatewayJVM,
+    gatewayJS,
+    interactionsJVM,
+    interactionsJS,
+    ackcordJVM,
+    ackcordJS
   )
   .settings(
     commonSettings,

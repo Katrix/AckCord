@@ -1,9 +1,9 @@
 package ackcord.gateway.data
 
+import ackcord.data.ChannelId
+import ackcord.data.GuildId
 import ackcord.data.UndefOr
 import ackcord.data.UndefOrSome
-import ackcord.data.GuildId
-import ackcord.data.ChannelId
 import ackcord.data.UserId
 import ackcord.data.base.{DiscordObject, DiscordObjectCompanion, DiscordStringEnum, DiscordStringEnumCompanion}
 import io.circe.Json

@@ -2,7 +2,7 @@ package ackcord.gateway.cache
 
 import ackcord.data.CacheSnapshot
 import ackcord.gateway.data.{GatewayEventBase, GatewayEventOp}
-import ackcord.gateway.{DisconnectBehavior, GatewayProcess, Context, ContextKey}
+import ackcord.gateway.{Context, ContextKey, DisconnectBehavior, GatewayProcess}
 import cats.Applicative
 import cats.syntax.all._
 import org.typelevel.log4cats.Logger

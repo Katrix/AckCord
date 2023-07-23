@@ -1,0 +1,153 @@
+name: OAuth2Scope
+defType: Enum
+type: String
+values:
+  ActivitiesRead:
+    value: activities.read
+    documentation: >-
+      Allows your app to fetch data from a user's "Now Playing/Recently Played" 
+      list — not currently available for apps
+
+  ActivitiesWrite:
+    value: activities.write
+    documentation: >-
+      Allows your app to update a user's activity - requires Discord approval (NOT
+      REQUIRED FOR GAMESDK ACTIVITY MANAGER)
+
+  ApplicationsBuildsRead:
+    value: applications.builds.read
+    documentation: allows your app to read build data for a user's applications
+
+  ApplicationsBuildsUpload:
+    value: applications.builds.upload
+    documentation: >-
+      Allows your app to upload/update builds for a user's applications - requires
+      Discord approval
+
+  ApplicationsCommands:
+    value: applications.commands
+    documentation: Allows your app to use commands in a guild
+
+  ApplicationsCommandsUpdate:
+    value: applications.commands.update
+    documentation: >-
+      Allows your app to update its commands using a Bearer token - client
+      credentials grant only
+
+  ApplicationsCommandsPermissionsUpdate:
+    value: applications.commands.permissions.update
+    documentation: >-
+      Allows your app to update permissions for its commands in a guild a user has
+      permissions to
+
+  ApplicationsEntitlements:
+    value: applications.entitlements
+    documentation: Allows your app to read entitlements for a user's applications
+
+  ApplicationsStoreUpdate:
+    value: applications.store.update
+    documentation: >-
+      Allows your app to read and update store data (SKUs, store listings,
+      achievements, etc.) for a user's applications
+
+  Bot:
+    value: bot
+    documentation: For oauth2 bots, this puts the bot in the user's selected guild by default
+
+  Connections:
+    value: connections
+    documentation: Allows /users/@me/connections to return linked third-party accounts
+
+  DmChannelsRead:
+    value: dm_channels.read
+    documentation: >-
+      Allows your app to see information about the user's DMs and group DMs -
+      requires Discord approval
+
+  Email:
+    value: email
+    documentation: Enables /users/@me to return an email
+
+  GdmJoin:
+    value: gdm.join
+    documentation: Allows your app to join users to a group dm
+
+  Guilds:
+    value: guilds
+    documentation: >-
+      Allows /users/@me/guilds to return basic information about all of a user's
+      guilds
+
+  GuildsJoin:
+    value: guilds.join
+    documentation: >-
+      Allows /guilds/{guild.id}/members/{user.id} to be used for joining users to
+      a guild
+
+  GuildsMembersRead:
+    value: guilds.members.read
+    documentation: >-
+      Allows /users/@me/guilds/{guild.id}/member to return a user's member
+      information in a guild
+
+  Identify:
+    value: identify
+    documentation: Allows /users/@me without email
+
+  MessagesRead:
+    value: messages.read
+    documentation: >-
+      For local rpc server api access, this allows you to read messages from all
+      client channels (otherwise restricted to channels/guilds your app creates)
+
+  RelationshipsRead:
+    value: relationships.read
+    documentation: >-
+      Allows your app to know a user's friends and implicit relationships -
+      requires Discord approval
+
+  RoleConnectionsWrite:
+    value: role_connections.write
+    documentation: Allows your app to update a user's connection and metadata for the app
+
+  Rpc:
+    value: rpc
+    documentation: >-
+      For local rpc server access, this allows you to control a user's local
+      Discord client - requires Discord approval
+
+  RpcActivitiesWrite:
+    value: rpc.activities.write
+    documentation: >-
+      For local rpc server access, this allows you to update a user's activity -
+      requires Discord approval
+
+  RpcNotificationsRead:
+    value: rpc.notifications.read
+    documentation: >-
+      For local rpc server access, this allows you to receive notifications pushed
+      out to the user - requires Discord approval
+
+  RpcVoiceRead:
+    value: rpc.voice.read
+    documentation: >-
+      For local rpc server access, this allows you to read a user's voice settings
+      and listen for voice events - requires Discord approval
+
+  RpcVoiceWrite:
+    value: rpc.voice.write
+    documentation: >-
+      For local rpc server access, this allows you to update a user's voice
+      settings - requires Discord approval
+
+  Voice:
+    value: voice
+    documentation: >-
+      Allows your app to connect to voice on user's behalf and see all the voice
+      members - requires Discord approval
+
+  WebhookIncoming:
+    value: webhook.incoming
+    documentation: >-
+      This generates a webhook that is returned in the oauth token response for
+      authorization code grants

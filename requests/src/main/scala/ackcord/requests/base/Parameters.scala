@@ -41,7 +41,8 @@ object Parameters {
 
   def ofGuildId(guildId: GuildId): MajorParameter[GuildId] = new MajorParameter[GuildId]("guildId", guildId)
 
-  def ofChannelId(channelId: ChannelId): MinorParameter[ChannelId] = new MinorParameter[ChannelId]("channelId", channelId)
+  def ofChannelId(channelId: ChannelId): MinorParameter[ChannelId] =
+    new MinorParameter[ChannelId]("channelId", channelId)
 
   def query[A](name: String, value: Option[A]): QueryParameter[A] =
     QueryParameter(name, value)

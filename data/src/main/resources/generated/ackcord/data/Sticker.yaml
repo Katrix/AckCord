@@ -27,7 +27,8 @@ fields:
       verification:
         max_length: 200
 
-    type:
+    tpe:
+      jsonName: type
       type: Sticker.StickerType
       documentation: Type of sticker
 
