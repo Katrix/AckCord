@@ -22,6 +22,7 @@ innerTypes:
     defType: Request
     method: POST
     path: [ guilds, { argOf: GuildId }, emojis ]
+    allowsReason: true
     body:
       fields:
         2.0.x:
@@ -40,6 +41,7 @@ innerTypes:
     defType: Request
     method: PATCH
     path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
+    allowsReason: true
     body:
       fields:
         2.0.x:
@@ -56,3 +58,4 @@ innerTypes:
     defType: Request
     method: DELETE
     path: [ guilds, { argOf: GuildId }, emojis, { argOf: EmojiId } ]
+    allowsReason: true
