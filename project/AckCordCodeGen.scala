@@ -297,7 +297,8 @@ object AckCordCodeGen {
       "UserId",
       "Emoji",
       "RoleId",
-      "WebhookId"
+      "WebhookId",
+      "GuildScheduledEventId"
     )
 
     elem.argOf match {

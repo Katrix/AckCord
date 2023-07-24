@@ -81,39 +81,39 @@ innerTypes:
     defType: Enum
     type: Int
     values:
-        GUILD_ONLY:
-          value: "2"
-          documentation: The scheduled event is only accessible to guild members
+      GUILD_ONLY:
+        value: "2"
+        documentation: The scheduled event is only accessible to guild members
   - name: GuildScheduledEventEntityType
     defType: Enum
     type: Int
     values:
-        STAGE_INSTANCE:
-          value: "1"
-        VOICE:
-          value: "2"
-        EXTERNAL:
-          value: "3"
+      STAGE_INSTANCE:
+        value: "1"
+      VOICE:
+        value: "2"
+      EXTERNAL:
+        value: "3"
   - name: GuildScheduledEventStatus
     defType: Enum
     type: Int
     values:
-        SCHEDULED:
-          value: "1"
-        ACTIVE:
-          value: "2"
-        COMPLETED:
-          value: "3"
-        CANCELED:
-          value: "4"
+      SCHEDULED:
+        value: "1"
+      ACTIVE:
+        value: "2"
+      COMPLETED:
+        value: "3"
+      CANCELED:
+        value: "4"
   - name: GuildScheduledEventEntityMetadata
     defType: Class
     documentation: Additional metadata for the guild scheduled event
     fields:
       2.0.x:
         location:
-            type: String
-            documentation: The location of the scheduled event (1-100 characters)
-            verification:
-                max_length: 100
-                min_length: 1
+          type: String
+          documentation: The location of the scheduled event (1-100 characters)
+          verification:
+            max_length: 100
+            min_length: 1
