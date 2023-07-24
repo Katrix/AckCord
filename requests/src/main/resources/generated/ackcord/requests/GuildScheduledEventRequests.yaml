@@ -1,0 +1,140 @@
+name: GuildScheduledEventRequests
+defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - sttp.model.Method
+innerTypes:
+  - name: listGuildScheduledEvents
+    defType: Request
+    method: GET
+    path: [ guilds, { argOf: GuildId }, scheduled-events ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_user_count:
+            type: Boolean
+            documentation: Whether to include the number of users that will be notified by each event
+    return: Seq[GuildScheduledEvent]
+
+  - name: createGuildScheduledEvent
+    defType: Request
+    method: POST
+    path: [ guilds, { argOf: GuildId }, scheduled-events ]
+    body:
+      fields:
+        2.0.x:
+          channel_id:
+            type: GuildChannelId
+            documentation: The channel id of the scheduled event
+          entity_metadata:
+            type: GuildScheduledEvent.GuildScheduledEventEntityMetadata
+            documentation: The entity metadata of the scheduled event
+          name:
+            type: String
+            documentation: The name of the scheduled event
+          privacy_level:
+            type: GuildScheduledEvent.GuildScheduledEventPrivacyLevel
+            documentation: The privacy level of the scheduled event
+          scheduled_start_time:
+            type: OffsetDateTime
+            documentation: The time to schedule the scheduled event
+          scheduled_end_time:
+            type: OffsetDateTime
+            withUndefined: true
+            documentation: The time when the scheduled event is scheduled to end
+          description:
+            type: String
+            withUndefined: true
+            documentation: The description of the scheduled event
+          entity_type:
+            type: GuildScheduledEvent.GuildScheduledEventEntityType
+            documentation: The entity type of the scheduled event
+          image:
+            type: String
+            withUndefined: true
+            documentation: The cover image of the scheduled event
+    return: GuildScheduledEvent
+
+  - name: getGuildScheduledEvent
+    defType: Request
+    method: GET
+    path: [ guilds, { argOf: GuildId }, scheduled-events, { argOf: GuildScheduledEventId } ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          with_user_count:
+            type: Boolean
+            documentation: Whether to include the number of users that will be notified by each event
+    return: GuildScheduledEvent
+
+  - name: modifyGuildScheduledEvent
+    defType: Request
+    method: PATCH
+    path: [ guilds, { argOf: GuildId }, scheduled-events, { argOf: GuildScheduledEventId } ]
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          channel_id:
+            type: GuildChannelId
+            documentation: The channel id of the scheduled event
+          entity_metadata:
+            type: GuildScheduledEvent.GuildScheduledEventEntityMetadata
+            documentation: The entity metadata of the scheduled event
+          name:
+            type: String
+            documentation: The name of the scheduled event
+          privacy_level:
+            type: GuildScheduledEvent.GuildScheduledEventPrivacyLevel
+            documentation: The privacy level of the scheduled event
+          scheduled_start_time:
+            type: OffsetDateTime
+            documentation: The time to schedule the scheduled event
+          scheduled_end_time:
+            type: OffsetDateTime
+            withUndefined: true
+            documentation: The time when the scheduled event is scheduled to end
+          description:
+            type: String
+            withUndefined: true
+            documentation: The description of the scheduled event
+          entity_type:
+            type: GuildScheduledEvent.GuildScheduledEventEntityType
+            documentation: The entity type of the scheduled event
+          status:
+            type: GuildScheduledEvent.GuildScheduledEventStatus
+            documentation: The status of the scheduled event
+          image:
+            type: String
+            withUndefined: true
+            documentation: The cover image of the scheduled event
+    return: GuildScheduledEvent
+
+  - name: deleteGuildScheduledEvent
+    defType: Request
+    method: DELETE
+    path: [ guilds, { argOf: GuildId }, scheduled-events, { argOf: GuildScheduledEventId } ]
+
+  - name: getGuildScheduledEventUsers
+    defType: Request
+    method: GET
+    path: [ guilds, { argOf: GuildId }, scheduled-events, { argOf: GuildScheduledEventId }, users ]
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          limit:
+            type: Int
+            documentation: The maximum number of users to return
+          after:
+            type: UserId
+            documentation: The user id to offset the returned users by
+          before:
+            type: UserId
+            documentation: The user id to offset the returned users by
+          with_member:
+            type: Boolean
+            documentation: Whether to include the guild members of the returned users
+    return: Seq[GuildScheduledEventUser]

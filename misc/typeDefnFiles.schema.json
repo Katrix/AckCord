@@ -492,6 +492,7 @@
                       "UserId",
                       "Emoji",
                       "RoleId",
+                      "GuildScheduledEventId",
                       "WebhookId",
                       "webhookToken"
                     ]

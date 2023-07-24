@@ -16,7 +16,7 @@ fields:
       type: GuildId
       documentation: the guild id which the scheduled event belongs to
     channel_id:
-      type: ChannelId # TODO: What type of channel?
+      type: VoiceGuildChannelId
       withNull: true
       documentation: The channel id in which the scheduled event will be hosted, or null if scheduled entity type is EXTERNAL
     creator_id:
