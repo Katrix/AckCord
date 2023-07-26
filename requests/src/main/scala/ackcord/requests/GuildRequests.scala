@@ -20,33 +20,59 @@ object GuildRequests {
     /** Name of the guild (2-100 characters) */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): CreateGuildBody = objWith(CreateGuildBody, "name", newValue)
+
     /** Base64 128x128 image for the guild icon */
     @inline def icon: UndefOr[ImageData] = selectDynamic[UndefOr[ImageData]]("icon")
+
+    @inline def withIcon(newValue: UndefOr[ImageData]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "icon", newValue)
 
     /** Verification level */
     @inline def verificationLevel: UndefOr[Guild.VerificationLevel] =
       selectDynamic[UndefOr[Guild.VerificationLevel]]("verification_level")
 
+    @inline def withVerificationLevel(newValue: UndefOr[Guild.VerificationLevel]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "verification_level", newValue)
+
     /** Default message notification level */
     @inline def defaultMessageNotifications: UndefOr[Guild.MessageNotificationLevel] =
       selectDynamic[UndefOr[Guild.MessageNotificationLevel]]("default_message_notifications")
+
+    @inline def withDefaultMessageNotifications(newValue: UndefOr[Guild.MessageNotificationLevel]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "default_message_notifications", newValue)
 
     /** Explicit content filter level */
     @inline def explicitContentFilter: UndefOr[Guild.ExplicitContentFilterLevel] =
       selectDynamic[UndefOr[Guild.ExplicitContentFilterLevel]]("explicit_content_filter")
 
+    @inline def withExplicitContentFilter(newValue: UndefOr[Guild.ExplicitContentFilterLevel]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "explicit_content_filter", newValue)
+
     /** New guild roles */
     @inline def roles: UndefOr[Seq[Role]] = selectDynamic[UndefOr[Seq[Role]]]("roles")
+
+    @inline def withRoles(newValue: UndefOr[Seq[Role]]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "roles", newValue)
 
     /** New guild's channels */
     @inline def channels: UndefOr[Seq[CreateGuildPartialChannel]] =
       selectDynamic[UndefOr[Seq[CreateGuildPartialChannel]]]("channels")
 
+    @inline def withChannels(newValue: UndefOr[Seq[CreateGuildPartialChannel]]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "channels", newValue)
+
     /** Id for afk channel */
     @inline def afkChannelId: UndefOr[GuildChannelId] = selectDynamic[UndefOr[GuildChannelId]]("afk_channel_id")
 
+    @inline def withAfkChannelId(newValue: UndefOr[GuildChannelId]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "afk_channel_id", newValue)
+
     /** Afk timeout in seconds, can be set to: 60, 300, 900, 1800, 3600 */
     @inline def afkTimeout: UndefOr[Int] = selectDynamic[UndefOr[Int]]("afk_timeout")
+
+    @inline def withAfkTimeout(newValue: UndefOr[Int]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "afk_timeout", newValue)
 
     /**
       * The id of the channel where guild notices such as welcome messages and
@@ -55,9 +81,15 @@ object GuildRequests {
     @inline def systemChannelId: UndefOr[TextGuildChannelId] =
       selectDynamic[UndefOr[TextGuildChannelId]]("system_channel_id")
 
+    @inline def withSystemChannelId(newValue: UndefOr[TextGuildChannelId]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "system_channel_id", newValue)
+
     /** System channel flags */
     @inline def systemChannelFlags: UndefOr[Guild.SystemChannelFlags] =
       selectDynamic[UndefOr[Guild.SystemChannelFlags]]("system_channel_flags")
+
+    @inline def withSystemChannelFlags(newValue: UndefOr[Guild.SystemChannelFlags]): CreateGuildBody =
+      objWithUndef(CreateGuildBody, "system_channel_flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => name,
@@ -74,7 +106,8 @@ object GuildRequests {
     )
   }
   object CreateGuildBody extends DiscordObjectCompanion[CreateGuildBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildBody = new CreateGuildBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildBody =
+      new CreateGuildBody(json, cache)
 
     /**
       * @param name
@@ -126,29 +159,39 @@ object GuildRequests {
       "system_channel_id"             :=? systemChannelId,
       "system_channel_flags"          :=? systemChannelFlags
     )
-
   }
 
   /**
     * Create a new guild. Returns a guild object on success. Fires a Guild
     * Create Gateway event.
     */
-  def createGuild(
-      body: CreateGuildBody
-  ): Request[CreateGuildBody, Guild] =
+  def createGuild(body: CreateGuildBody): Request[CreateGuildBody, Guild] =
     Request.restRequest(
       route = (Route.Empty / "guilds").toRequest(Method.POST),
       params = body
     )
 
   class CreateGuildPartialChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): CreateGuildPartialChannel =
+      objWith(CreateGuildPartialChannel, "name", newValue)
 
     @inline def id: UndefOr[GuildChannelId] = selectDynamic[UndefOr[GuildChannelId]]("id")
 
+    @inline def withId(newValue: UndefOr[GuildChannelId]): CreateGuildPartialChannel =
+      objWithUndef(CreateGuildPartialChannel, "id", newValue)
+
     @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
 
+    @inline def withTpe(newValue: Channel.ChannelType): CreateGuildPartialChannel =
+      objWith(CreateGuildPartialChannel, "type", newValue)
+
     @inline def parentId: UndefOr[GuildChannelId] = selectDynamic[UndefOr[GuildChannelId]]("parent_id")
+
+    @inline def withParentId(newValue: UndefOr[GuildChannelId]): CreateGuildPartialChannel =
+      objWithUndef(CreateGuildPartialChannel, "parent_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => name, () => id, () => tpe, () => parentId)
   }
@@ -163,7 +206,6 @@ object GuildRequests {
         parentId: UndefOr[GuildChannelId] = UndefOrUndefined
     ): CreateGuildPartialChannel =
       makeRawFromFields("name" := name, "id" :=? id, "type" := tpe, "parent_id" :=? parentId)
-
   }
 
   class GetGuildQuery(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -173,6 +215,9 @@ object GuildRequests {
       * guild
       */
     @inline def withCounts: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_counts")
+
+    @inline def withWithCounts(newValue: UndefOr[Boolean]): GetGuildQuery =
+      objWithUndef(GetGuildQuery, "with_counts", newValue)
 
     override def values: Seq[() => Any] = Seq(() => withCounts)
   }
@@ -184,10 +229,8 @@ object GuildRequests {
       *   When true, will return approximate member and presence counts for the
       *   guild
       */
-    def make20(withCounts: UndefOr[Boolean] = UndefOrUndefined): GetGuildQuery = makeRawFromFields(
-      "with_counts" :=? withCounts
-    )
-
+    def make20(withCounts: UndefOr[Boolean] = UndefOrUndefined): GetGuildQuery =
+      makeRawFromFields("with_counts" :=? withCounts)
   }
 
   /**
@@ -208,9 +251,7 @@ object GuildRequests {
     * Returns the guild preview object for the given id. If the user is not in
     * the guild, then the guild must be discoverable.
     */
-  def getGuildPreview(
-      guildId: GuildId
-  ): Request[Unit, GuildPreview] =
+  def getGuildPreview(guildId: GuildId): Request[Unit, GuildPreview] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "preview")
         .toRequest(Method.GET)
@@ -221,24 +262,42 @@ object GuildRequests {
     /** Guild name */
     @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+    @inline def withName(newValue: UndefOr[String]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "name", newValue)
+
     /** Verification level */
     @inline def verificationLevel: JsonOption[Guild.VerificationLevel] =
       selectDynamic[JsonOption[Guild.VerificationLevel]]("verification_level")
+
+    @inline def withVerificationLevel(newValue: JsonOption[Guild.VerificationLevel]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "verification_level", newValue)
 
     /** Default message notification level */
     @inline def defaultMessageNotifications: JsonOption[Guild.MessageNotificationLevel] =
       selectDynamic[JsonOption[Guild.MessageNotificationLevel]]("default_message_notifications")
 
+    @inline def withDefaultMessageNotifications(newValue: JsonOption[Guild.MessageNotificationLevel]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "default_message_notifications", newValue)
+
     /** Explicit content filter level */
     @inline def explicitContentFilter: JsonOption[Guild.ExplicitContentFilterLevel] =
       selectDynamic[JsonOption[Guild.ExplicitContentFilterLevel]]("explicit_content_filter")
+
+    @inline def withExplicitContentFilter(newValue: JsonOption[Guild.ExplicitContentFilterLevel]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "explicit_content_filter", newValue)
 
     /** Id for afk channel */
     @inline def afkChannelId: JsonOption[VoiceGuildChannelId] =
       selectDynamic[JsonOption[VoiceGuildChannelId]]("afk_channel_id")
 
+    @inline def withAfkChannelId(newValue: JsonOption[VoiceGuildChannelId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "afk_channel_id", newValue)
+
     /** Afk timeout in seconds, can be set to: 60, 300, 900, 1800, 3600 */
     @inline def afkTimeout: UndefOr[Int] = selectDynamic[UndefOr[Int]]("afk_timeout")
+
+    @inline def withAfkTimeout(newValue: UndefOr[Int]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "afk_timeout", newValue)
 
     /**
       * Base64 1024x1024 png/jpeg/gif image for the guild icon (can be animated
@@ -246,8 +305,14 @@ object GuildRequests {
       */
     @inline def icon: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("icon")
 
+    @inline def withIcon(newValue: JsonOption[ImageData]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "icon", newValue)
+
     /** User id to transfer guild ownership to (must be owner) */
     @inline def ownerId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("owner_id")
+
+    @inline def withOwnerId(newValue: UndefOr[UserId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "owner_id", newValue)
 
     /**
       * Base64 16:9 png/jpeg image for the guild splash (when the server has the
@@ -255,11 +320,17 @@ object GuildRequests {
       */
     @inline def splash: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("splash")
 
+    @inline def withSplash(newValue: JsonOption[ImageData]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "splash", newValue)
+
     /**
       * Base64 16:9 png/jpeg image for the guild discovery splash (when the
       * server has the DISCOVERABLE feature)
       */
     @inline def discoverySplash: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("discovery_splash")
+
+    @inline def withDiscoverySplash(newValue: JsonOption[ImageData]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "discovery_splash", newValue)
 
     /**
       * Base64 16:9 png/jpeg image for the guild banner (when the server has the
@@ -268,6 +339,9 @@ object GuildRequests {
       */
     @inline def banner: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("banner")
 
+    @inline def withBanner(newValue: JsonOption[ImageData]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "banner", newValue)
+
     /**
       * The id of the channel where guild notices such as welcome messages and
       * boost events are posted
@@ -275,9 +349,15 @@ object GuildRequests {
     @inline def systemChannelId: JsonOption[TextGuildChannelId] =
       selectDynamic[JsonOption[TextGuildChannelId]]("system_channel_id")
 
+    @inline def withSystemChannelId(newValue: JsonOption[TextGuildChannelId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "system_channel_id", newValue)
+
     /** System channel flags */
     @inline def systemChannelFlags: UndefOr[Guild.SystemChannelFlags] =
       selectDynamic[UndefOr[Guild.SystemChannelFlags]]("system_channel_flags")
+
+    @inline def withSystemChannelFlags(newValue: UndefOr[Guild.SystemChannelFlags]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "system_channel_flags", newValue)
 
     /**
       * The id of the channel where Community guilds display rules and/or
@@ -286,6 +366,9 @@ object GuildRequests {
     @inline def rulesChannelId: JsonOption[TextGuildChannelId] =
       selectDynamic[JsonOption[TextGuildChannelId]]("rules_channel_id")
 
+    @inline def withRulesChannelId(newValue: JsonOption[TextGuildChannelId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "rules_channel_id", newValue)
+
     /**
       * The id of the channel where admins and moderators of Community guilds
       * receive notices from Discord
@@ -293,21 +376,36 @@ object GuildRequests {
     @inline def publicUpdatesChannelId: JsonOption[TextGuildChannelId] =
       selectDynamic[JsonOption[TextGuildChannelId]]("public_updates_channel_id")
 
+    @inline def withPublicUpdatesChannelId(newValue: JsonOption[TextGuildChannelId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "public_updates_channel_id", newValue)
+
     /**
       * The preferred locale of a Community guild used in server discovery and
       * notices from Discord; defaults to "en-US"
       */
     @inline def preferredLocale: JsonOption[String] = selectDynamic[JsonOption[String]]("preferred_locale")
 
+    @inline def withPreferredLocale(newValue: JsonOption[String]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "preferred_locale", newValue)
+
     /** Enabled guild features */
     @inline def features: UndefOr[Seq[Guild.GuildFeature]] = selectDynamic[UndefOr[Seq[Guild.GuildFeature]]]("features")
+
+    @inline def withFeatures(newValue: UndefOr[Seq[Guild.GuildFeature]]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "features", newValue)
 
     /** The description for the guild */
     @inline def description: JsonOption[String] = selectDynamic[JsonOption[String]]("description")
 
+    @inline def withDescription(newValue: JsonOption[String]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "description", newValue)
+
     /** Whether the guild's boost progress bar should be enabled */
     @inline def premiumProgressBarEnabled: UndefOr[Boolean] =
       selectDynamic[UndefOr[Boolean]]("premium_progress_bar_enabled")
+
+    @inline def withPremiumProgressBarEnabled(newValue: UndefOr[Boolean]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "premium_progress_bar_enabled", newValue)
 
     /**
       * The id of the channel where admins and moderators of Community guilds
@@ -315,6 +413,9 @@ object GuildRequests {
       */
     @inline def safetyAlertsChannelId: JsonOption[TextGuildChannelId] =
       selectDynamic[JsonOption[TextGuildChannelId]]("safety_alerts_channel_id")
+
+    @inline def withSafetyAlertsChannelId(newValue: JsonOption[TextGuildChannelId]): ModifyGuildBody =
+      objWithUndef(ModifyGuildBody, "safety_alerts_channel_id", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => name,
@@ -340,7 +441,8 @@ object GuildRequests {
     )
   }
   object ModifyGuildBody extends DiscordObjectCompanion[ModifyGuildBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildBody = new ModifyGuildBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildBody =
+      new ModifyGuildBody(json, cache)
 
     /**
       * @param name
@@ -437,7 +539,6 @@ object GuildRequests {
       "premium_progress_bar_enabled"  :=? premiumProgressBarEnabled,
       "safety_alerts_channel_id"      :=? safetyAlertsChannelId
     )
-
   }
 
   /**
@@ -459,17 +560,13 @@ object GuildRequests {
     * Delete a guild permanently. User must be owner. Returns 204 No Content on
     * success. Fires a Guild Delete Gateway event.
     */
-  def deleteGuild(
-      guildId: GuildId
-  ): Request[Unit, Unit] =
+  def deleteGuild(guildId: GuildId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true)).toRequest(Method.DELETE)
     )
 
   /** Returns a list of guild channel objects. Does not include threads. */
-  def getGuildChannels(
-      guildId: GuildId
-  ): Request[Unit, Seq[GuildChannel]] =
+  def getGuildChannels(guildId: GuildId): Request[Unit, Seq[GuildChannel]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "channels")
         .toRequest(Method.GET)
@@ -480,17 +577,31 @@ object GuildRequests {
     /** Channel name (1-100 characters) */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): CreateGuildChannelBody = objWith(CreateGuildChannelBody, "name", newValue)
+
     /** The type of channel */
     @inline def tpe: JsonOption[Channel.ChannelType] = selectDynamic[JsonOption[Channel.ChannelType]]("type")
+
+    @inline def withTpe(newValue: JsonOption[Channel.ChannelType]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "type", newValue)
 
     /** Channel topic (0-1024 characters) */
     @inline def topic: JsonOption[String] = selectDynamic[JsonOption[String]]("topic")
 
+    @inline def withTopic(newValue: JsonOption[String]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "topic", newValue)
+
     /** The bitrate (in bits) of the voice or stage channel; min 8000 */
     @inline def bitrate: JsonOption[Int] = selectDynamic[JsonOption[Int]]("bitrate")
 
+    @inline def withBitrate(newValue: JsonOption[Int]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "bitrate", newValue)
+
     /** The user limit of the voice channel */
     @inline def userLimit: JsonOption[Int] = selectDynamic[JsonOption[Int]]("user_limit")
+
+    @inline def withUserLimit(newValue: JsonOption[Int]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "user_limit", newValue)
 
     /**
       * Amount of seconds a user has to wait before sending another message
@@ -499,8 +610,14 @@ object GuildRequests {
       */
     @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
 
+    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "rate_limit_per_user", newValue)
+
     /** Sorting position of the channel */
     @inline def position: JsonOption[Int] = selectDynamic[JsonOption[Int]]("position")
+
+    @inline def withPosition(newValue: JsonOption[Int]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "position", newValue)
 
     /** The channel's permission overwrites */
     @inline def permissionOverwrites
@@ -509,11 +626,21 @@ object GuildRequests {
         Seq[ChannelRequests.ModifyChannelBody.ModifyGuildChannelBody.EditChannelPartialOverwrite]
       ]]("permission_overwrites")
 
+    @inline def withPermissionOverwrites(
+        newValue: JsonOption[Seq[ChannelRequests.ModifyChannelBody.ModifyGuildChannelBody.EditChannelPartialOverwrite]]
+    ): CreateGuildChannelBody = objWithUndef(CreateGuildChannelBody, "permission_overwrites", newValue)
+
     /** Id of the parent category for a channel */
     @inline def parentId: JsonOption[GuildChannelId] = selectDynamic[JsonOption[GuildChannelId]]("parent_id")
 
+    @inline def withParentId(newValue: JsonOption[GuildChannelId]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "parent_id", newValue)
+
     /** Whether the channel is nsfw */
     @inline def nsfw: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("nsfw")
+
+    @inline def withNsfw(newValue: JsonOption[Boolean]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "nsfw", newValue)
 
     /**
       * Channel voice region id of the voice or stage channel, automatic when
@@ -521,9 +648,15 @@ object GuildRequests {
       */
     @inline def rtcRegion: JsonOption[String] = selectDynamic[JsonOption[String]]("rtc_region")
 
+    @inline def withRtcRegion(newValue: JsonOption[String]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "rtc_region", newValue)
+
     /** The camera video quality mode of the voice channel */
     @inline def videoQualityMode: JsonOption[Channel.VideoQualityMode] =
       selectDynamic[JsonOption[Channel.VideoQualityMode]]("video_quality_mode")
+
+    @inline def withVideoQualityMode(newValue: JsonOption[Channel.VideoQualityMode]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "video_quality_mode", newValue)
 
     /**
       * The default duration that the clients use (not the API) for newly
@@ -533,6 +666,9 @@ object GuildRequests {
     @inline def defaultAutoArchiveDuration: JsonOption[Int] =
       selectDynamic[JsonOption[Int]]("default_auto_archive_duration")
 
+    @inline def withDefaultAutoArchiveDuration(newValue: JsonOption[Int]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "default_auto_archive_duration", newValue)
+
     /**
       * Emoji to show in the add reaction button on a thread in a GUILD_FORUM
       * channel
@@ -540,9 +676,15 @@ object GuildRequests {
     @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
       selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
 
+    @inline def withDefaultReactionEmoji(newValue: JsonOption[Channel.DefaultReaction]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "default_reaction_emoji", newValue)
+
     /** Set of tags that can be used in a GUILD_FORUM channel */
     @inline def availableTags: JsonOption[Seq[Channel.ForumTag]] =
       selectDynamic[JsonOption[Seq[Channel.ForumTag]]]("available_tags")
+
+    @inline def withAvailableTags(newValue: JsonOption[Seq[Channel.ForumTag]]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "available_tags", newValue)
 
     /**
       * The default sort order type used to order posts in GUILD_FORUM channels
@@ -550,11 +692,17 @@ object GuildRequests {
     @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
       selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
 
+    @inline def withDefaultSortOrder(newValue: JsonOption[Channel.ForumSortOrder]): CreateGuildChannelBody =
+      objWithUndef(CreateGuildChannelBody, "default_sort_order", newValue)
+
     /**
       * The default forum layout view used to display posts in GUILD_FORUM
       * channels
       */
     @inline def defaultForumLayout: Channel.ForumLayout = selectDynamic[Channel.ForumLayout]("default_forum_layout")
+
+    @inline def withDefaultForumLayout(newValue: Channel.ForumLayout): CreateGuildChannelBody =
+      objWith(CreateGuildChannelBody, "default_forum_layout", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => name,
@@ -577,7 +725,8 @@ object GuildRequests {
     )
   }
   object CreateGuildChannelBody extends DiscordObjectCompanion[CreateGuildChannelBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildChannelBody = new CreateGuildChannelBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildChannelBody =
+      new CreateGuildChannelBody(json, cache)
 
     /**
       * @param name
@@ -662,7 +811,6 @@ object GuildRequests {
       "default_sort_order"            :=? defaultSortOrder,
       "default_forum_layout"           := defaultForumLayout
     )
-
   }
 
   /**
@@ -690,8 +838,14 @@ object GuildRequests {
     /** Channel id */
     @inline def id: GuildChannelId = selectDynamic[GuildChannelId]("id")
 
+    @inline def withId(newValue: GuildChannelId): ModifyGuildChannelPositionsBody =
+      objWith(ModifyGuildChannelPositionsBody, "id", newValue)
+
     /** Sorting position of the channel */
     @inline def position: JsonOption[Int] = selectDynamic[JsonOption[Int]]("position")
+
+    @inline def withPosition(newValue: JsonOption[Int]): ModifyGuildChannelPositionsBody =
+      objWithUndef(ModifyGuildChannelPositionsBody, "position", newValue)
 
     /**
       * Syncs the permission overwrites with the new parent, if moving to a new
@@ -699,8 +853,14 @@ object GuildRequests {
       */
     @inline def lockPermissions: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("lock_permissions")
 
+    @inline def withLockPermissions(newValue: JsonOption[Boolean]): ModifyGuildChannelPositionsBody =
+      objWithUndef(ModifyGuildChannelPositionsBody, "lock_permissions", newValue)
+
     /** The new parent ID for the channel that is moved */
     @inline def parentId: JsonOption[GuildChannelId] = selectDynamic[JsonOption[GuildChannelId]]("parent_id")
+
+    @inline def withParentId(newValue: JsonOption[GuildChannelId]): ModifyGuildChannelPositionsBody =
+      objWithUndef(ModifyGuildChannelPositionsBody, "parent_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => position, () => lockPermissions, () => parentId)
   }
@@ -730,11 +890,10 @@ object GuildRequests {
       "lock_permissions" :=? lockPermissions,
       "parent_id"        :=? parentId
     )
-
   }
 
   /**
-    * * Modify the positions of a set of channel objects for the guild. Requires
+    * Modify the positions of a set of channel objects for the guild. Requires
     * MANAGE_CHANNELS permission. Returns a 204 empty response on success. Fires
     * multiple Channel Update Gateway events.
     *
@@ -756,11 +915,17 @@ object GuildRequests {
     /** The active threads */
     @inline def threads: Seq[Channel] = selectDynamic[Seq[Channel]]("threads")
 
+    @inline def withThreads(newValue: Seq[Channel]): ListActiveGuildThreadsResult =
+      objWith(ListActiveGuildThreadsResult, "threads", newValue)
+
     /**
       * A thread member object for each returned thread the current user has
       * joined
       */
     @inline def members: Seq[Channel.ThreadMember] = selectDynamic[Seq[Channel.ThreadMember]]("members")
+
+    @inline def withMembers(newValue: Seq[Channel.ThreadMember]): ListActiveGuildThreadsResult =
+      objWith(ListActiveGuildThreadsResult, "members", newValue)
 
     override def values: Seq[() => Any] = Seq(() => threads, () => members)
   }
@@ -777,26 +942,20 @@ object GuildRequests {
       */
     def make20(threads: Seq[Channel], members: Seq[Channel.ThreadMember]): ListActiveGuildThreadsResult =
       makeRawFromFields("threads" := threads, "members" := members)
-
   }
 
   /**
     * Returns all active threads in the guild, including public and private
     * threads. Threads are ordered by their id, in descending order.
     */
-  def listActiveGuildThreads(
-      guildId: GuildId
-  ): Request[Unit, ListActiveGuildThreadsResult] =
+  def listActiveGuildThreads(guildId: GuildId): Request[Unit, ListActiveGuildThreadsResult] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "threads" / "active")
         .toRequest(Method.GET)
     )
 
   /** Returns a guild member object for the specified user. */
-  def getGuildMember(
-      guildId: GuildId,
-      userId: UserId
-  ): Request[Unit, GuildMember] =
+  def getGuildMember(guildId: GuildId, userId: UserId): Request[Unit, GuildMember] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
         UserId
@@ -808,13 +967,20 @@ object GuildRequests {
     /** Max number of members to return (1-1000) */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
 
+    @inline def withLimit(newValue: UndefOr[Int]): ListGuildMembersQuery =
+      objWithUndef(ListGuildMembersQuery, "limit", newValue)
+
     /** The highest user id in the previous page */
     @inline def after: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("after")
+
+    @inline def withAfter(newValue: UndefOr[UserId]): ListGuildMembersQuery =
+      objWithUndef(ListGuildMembersQuery, "after", newValue)
 
     override def values: Seq[() => Any] = Seq(() => limit, () => after)
   }
   object ListGuildMembersQuery extends DiscordObjectCompanion[ListGuildMembersQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ListGuildMembersQuery = new ListGuildMembersQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ListGuildMembersQuery =
+      new ListGuildMembersQuery(json, cache)
 
     /**
       * @param limit
@@ -826,7 +992,6 @@ object GuildRequests {
         limit: UndefOr[Int] = UndefOrUndefined,
         after: UndefOr[UserId] = UndefOrUndefined
     ): ListGuildMembersQuery = makeRawFromFields("limit" :=? limit, "after" :=? after)
-
   }
 
   /** Returns a list of guild member objects that are members of the guild. */
@@ -844,13 +1009,20 @@ object GuildRequests {
     /** Query string to match username(s) and nickname(s) against. */
     @inline def query: String = selectDynamic[String]("query")
 
+    @inline def withQuery(newValue: String): SearchGuildMembersQuery =
+      objWith(SearchGuildMembersQuery, "query", newValue)
+
     /** Max number of members to return (1-1000) */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): SearchGuildMembersQuery =
+      objWithUndef(SearchGuildMembersQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => query, () => limit)
   }
   object SearchGuildMembersQuery extends DiscordObjectCompanion[SearchGuildMembersQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): SearchGuildMembersQuery = new SearchGuildMembersQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): SearchGuildMembersQuery =
+      new SearchGuildMembersQuery(json, cache)
 
     /**
       * @param query
@@ -860,17 +1032,13 @@ object GuildRequests {
       */
     def make20(query: String, limit: UndefOr[Int] = UndefOrUndefined): SearchGuildMembersQuery =
       makeRawFromFields("query" := query, "limit" :=? limit)
-
   }
 
   /**
     * Returns a list of guild member objects whose username or nickname starts
     * with a provided string.
     */
-  def searchGuildMembers(
-      guildId: GuildId,
-      query: SearchGuildMembersQuery
-  ): Request[Unit, Seq[GuildMember]] =
+  def searchGuildMembers(guildId: GuildId, query: SearchGuildMembersQuery): Request[Unit, Seq[GuildMember]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId](
         "guildId",
@@ -888,22 +1056,38 @@ object GuildRequests {
       */
     @inline def accessToken: String = selectDynamic[String]("access_token")
 
+    @inline def withAccessToken(newValue: String): AddGuildMemberBody =
+      objWith(AddGuildMemberBody, "access_token", newValue)
+
     /** Value to set user's nickname to */
     @inline def nick: UndefOr[String] = selectDynamic[UndefOr[String]]("nick")
+
+    @inline def withNick(newValue: UndefOr[String]): AddGuildMemberBody =
+      objWithUndef(AddGuildMemberBody, "nick", newValue)
 
     /** Array of role ids the member is assigned */
     @inline def roles: UndefOr[Seq[RoleId]] = selectDynamic[UndefOr[Seq[RoleId]]]("roles")
 
+    @inline def withRoles(newValue: UndefOr[Seq[RoleId]]): AddGuildMemberBody =
+      objWithUndef(AddGuildMemberBody, "roles", newValue)
+
     /** Whether the user is muted in voice channels */
     @inline def mute: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mute")
+
+    @inline def withMute(newValue: UndefOr[Boolean]): AddGuildMemberBody =
+      objWithUndef(AddGuildMemberBody, "mute", newValue)
 
     /** Whether the user is deafened in voice channels */
     @inline def deaf: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("deaf")
 
+    @inline def withDeaf(newValue: UndefOr[Boolean]): AddGuildMemberBody =
+      objWithUndef(AddGuildMemberBody, "deaf", newValue)
+
     override def values: Seq[() => Any] = Seq(() => accessToken, () => nick, () => roles, () => mute, () => deaf)
   }
   object AddGuildMemberBody extends DiscordObjectCompanion[AddGuildMemberBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): AddGuildMemberBody = new AddGuildMemberBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): AddGuildMemberBody =
+      new AddGuildMemberBody(json, cache)
 
     /**
       * @param accessToken
@@ -931,11 +1115,10 @@ object GuildRequests {
       "mute"        :=? mute,
       "deaf"        :=? deaf
     )
-
   }
 
   /**
-    * * Adds a user to the guild, provided you have a valid oauth2 access token
+    * Adds a user to the guild, provided you have a valid oauth2 access token
     * for the user with the guilds.join scope. Returns a 201 Created with the
     * guild member as the body, or 204 No Content if the user is already a
     * member of the guild. Fires a Guild Member Add Gateway event.
@@ -983,8 +1166,14 @@ object GuildRequests {
     /** Value to set user's nickname to */
     @inline def nick: JsonOption[String] = selectDynamic[JsonOption[String]]("nick")
 
+    @inline def withNick(newValue: JsonOption[String]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "nick", newValue)
+
     /** Array of role ids the member is assigned */
     @inline def roles: JsonOption[Seq[RoleId]] = selectDynamic[JsonOption[Seq[RoleId]]]("roles")
+
+    @inline def withRoles(newValue: JsonOption[Seq[RoleId]]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "roles", newValue)
 
     /**
       * Whether the user is muted in voice channels. Will throw a 400 error if
@@ -992,15 +1181,24 @@ object GuildRequests {
       */
     @inline def mute: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("mute")
 
+    @inline def withMute(newValue: JsonOption[Boolean]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "mute", newValue)
+
     /**
       * Whether the user is deafened in voice channels. Will throw a 400 error
       * if the user is not in a voice channel
       */
     @inline def deaf: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("deaf")
 
+    @inline def withDeaf(newValue: JsonOption[Boolean]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "deaf", newValue)
+
     /** Id of channel to move user to (if they are connected to voice) */
     @inline def channelId: JsonOption[VoiceGuildChannelId] =
       selectDynamic[JsonOption[VoiceGuildChannelId]]("channel_id")
+
+    @inline def withChannelId(newValue: JsonOption[VoiceGuildChannelId]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "channel_id", newValue)
 
     /**
       * When the user's timeout will expire and the user will be able to
@@ -1011,9 +1209,15 @@ object GuildRequests {
     @inline def communicationDisabledUntil: JsonOption[OffsetDateTime] =
       selectDynamic[JsonOption[OffsetDateTime]]("communication_disabled_until")
 
+    @inline def withCommunicationDisabledUntil(newValue: JsonOption[OffsetDateTime]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "communication_disabled_until", newValue)
+
     /** Guild member flags */
     @inline def flags: JsonOption[GuildMember.GuildMemberFlags] =
       selectDynamic[JsonOption[GuildMember.GuildMemberFlags]]("flags")
+
+    @inline def withFlags(newValue: JsonOption[GuildMember.GuildMemberFlags]): ModifyGuildMemberBody =
+      objWithUndef(ModifyGuildMemberBody, "flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => nick,
@@ -1026,7 +1230,8 @@ object GuildRequests {
     )
   }
   object ModifyGuildMemberBody extends DiscordObjectCompanion[ModifyGuildMemberBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildMemberBody = new ModifyGuildMemberBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildMemberBody =
+      new ModifyGuildMemberBody(json, cache)
 
     /**
       * @param nick
@@ -1066,7 +1271,6 @@ object GuildRequests {
       "communication_disabled_until" :=? communicationDisabledUntil,
       "flags"                        :=? flags
     )
-
   }
 
   /**
@@ -1094,14 +1298,21 @@ object GuildRequests {
     /** Value to set user's nickname to */
     @inline def nick: JsonOption[String] = selectDynamic[JsonOption[String]]("nick")
 
+    @inline def withNick(newValue: JsonOption[String]): ModifyCurrentMemberBody =
+      objWithUndef(ModifyCurrentMemberBody, "nick", newValue)
+
     override def values: Seq[() => Any] = Seq(() => nick)
   }
   object ModifyCurrentMemberBody extends DiscordObjectCompanion[ModifyCurrentMemberBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyCurrentMemberBody = new ModifyCurrentMemberBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyCurrentMemberBody =
+      new ModifyCurrentMemberBody(json, cache)
 
-    /** @param nick Value to set user's nickname to */
-    def make20(nick: JsonOption[String] = JsonUndefined): ModifyCurrentMemberBody = makeRawFromFields("nick" :=? nick)
-
+    /**
+      * @param nick
+      *   Value to set user's nickname to
+      */
+    def make20(nick: JsonOption[String] = JsonUndefined): ModifyCurrentMemberBody =
+      makeRawFromFields("nick" :=? nick)
   }
 
   /**
@@ -1160,11 +1371,7 @@ object GuildRequests {
     * Remove a member from a guild. Requires KICK_MEMBERS permission. Returns a
     * 204 empty response on success. Fires a Guild Member Remove Gateway event.
     */
-  def removeGuildMember(
-      guildId: GuildId,
-      userId: UserId,
-      reason: Option[String]
-  ): Request[Unit, Unit] =
+  def removeGuildMember(guildId: GuildId, userId: UserId, reason: Option[String]): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "members" / Parameters[
         UserId
@@ -1177,16 +1384,26 @@ object GuildRequests {
     /** Number of users to return (up to maximum 1000) */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
 
+    @inline def withLimit(newValue: UndefOr[Int]): GetGuildBansQuery =
+      objWithUndef(GetGuildBansQuery, "limit", newValue)
+
     /** Consider only users before given user id */
     @inline def before: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("before")
+
+    @inline def withBefore(newValue: UndefOr[UserId]): GetGuildBansQuery =
+      objWithUndef(GetGuildBansQuery, "before", newValue)
 
     /** Consider only users after given user id */
     @inline def after: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("after")
 
+    @inline def withAfter(newValue: UndefOr[UserId]): GetGuildBansQuery =
+      objWithUndef(GetGuildBansQuery, "after", newValue)
+
     override def values: Seq[() => Any] = Seq(() => limit, () => before, () => after)
   }
   object GetGuildBansQuery extends DiscordObjectCompanion[GetGuildBansQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildBansQuery = new GetGuildBansQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildBansQuery =
+      new GetGuildBansQuery(json, cache)
 
     /**
       * @param limit
@@ -1201,7 +1418,6 @@ object GuildRequests {
         before: UndefOr[UserId] = UndefOrUndefined,
         after: UndefOr[UserId] = UndefOrUndefined
     ): GetGuildBansQuery = makeRawFromFields("limit" :=? limit, "before" :=? before, "after" :=? after)
-
   }
 
   /**
@@ -1224,10 +1440,7 @@ object GuildRequests {
     * Returns a ban object for the given user or a 404 not found if the ban
     * cannot be found. Requires the BAN_MEMBERS permission.
     */
-  def getGuildBan(
-      guildId: GuildId,
-      userId: UserId
-  ): Request[Unit, Ban] =
+  def getGuildBan(guildId: GuildId, userId: UserId): Request[Unit, Ban] =
     Request.restRequest(
       route =
         (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" / Parameters[UserId](
@@ -1243,20 +1456,22 @@ object GuildRequests {
       */
     @inline def deleteMessageSeconds: UndefOr[Int] = selectDynamic[UndefOr[Int]]("delete_message_seconds")
 
+    @inline def withDeleteMessageSeconds(newValue: UndefOr[Int]): CreateGuildBanBody =
+      objWithUndef(CreateGuildBanBody, "delete_message_seconds", newValue)
+
     override def values: Seq[() => Any] = Seq(() => deleteMessageSeconds)
   }
   object CreateGuildBanBody extends DiscordObjectCompanion[CreateGuildBanBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildBanBody = new CreateGuildBanBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildBanBody =
+      new CreateGuildBanBody(json, cache)
 
     /**
       * @param deleteMessageSeconds
       *   Number of seconds to delete messages for, between 0 and 604800 (7
       *   days)
       */
-    def make20(deleteMessageSeconds: UndefOr[Int] = UndefOrUndefined): CreateGuildBanBody = makeRawFromFields(
-      "delete_message_seconds" :=? deleteMessageSeconds
-    )
-
+    def make20(deleteMessageSeconds: UndefOr[Int] = UndefOrUndefined): CreateGuildBanBody =
+      makeRawFromFields("delete_message_seconds" :=? deleteMessageSeconds)
   }
 
   /**
@@ -1284,11 +1499,7 @@ object GuildRequests {
     * Remove the ban for a user. Requires the BAN_MEMBERS permissions. Returns a
     * 204 empty response on success. Fires a Guild Ban Remove Gateway event.
     */
-  def removeGuildBan(
-      guildId: GuildId,
-      userId: UserId,
-      reason: Option[String]
-  ): Request[Unit, Unit] =
+  def removeGuildBan(guildId: GuildId, userId: UserId, reason: Option[String]): Request[Unit, Unit] =
     Request.restRequest(
       route =
         (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "bans" / Parameters[UserId](
@@ -1299,9 +1510,7 @@ object GuildRequests {
     )
 
   /** Returns a list of role objects for the guild. */
-  def getGuildRoles(
-      guildId: GuildId
-  ): Request[Unit, Seq[Role]] =
+  def getGuildRoles(guildId: GuildId): Request[Unit, Seq[Role]] =
     Request.restRequest(
       route =
         (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles").toRequest(Method.GET)
@@ -1312,17 +1521,32 @@ object GuildRequests {
     /** Name of the role, max 100 characters */
     @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+    @inline def withName(newValue: UndefOr[String]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "name", newValue)
+
     /** Bitwise value of the enabled/disabled permissions */
     @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
+
+    @inline def withPermissions(newValue: UndefOr[Permissions]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "permissions", newValue)
 
     /** RGB color value */
     @inline def color: UndefOr[Int] = selectDynamic[UndefOr[Int]]("color")
 
+    @inline def withColor(newValue: UndefOr[Int]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "color", newValue)
+
     /** Whether the role should be displayed separately in the sidebar */
     @inline def hoist: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("hoist")
 
+    @inline def withHoist(newValue: UndefOr[Boolean]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "hoist", newValue)
+
     /** The role's icon image (if the guild has the ROLE_ICONS feature) */
     @inline def icon: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("icon")
+
+    @inline def withIcon(newValue: JsonOption[ImageData]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "icon", newValue)
 
     /**
       * The role's unicode emoji as a standard emoji (if the guild has the
@@ -1330,14 +1554,21 @@ object GuildRequests {
       */
     @inline def unicodeEmoji: JsonOption[String] = selectDynamic[JsonOption[String]]("unicode_emoji")
 
+    @inline def withUnicodeEmoji(newValue: JsonOption[String]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "unicode_emoji", newValue)
+
     /** Whether the role should be mentionable */
     @inline def mentionable: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mentionable")
+
+    @inline def withMentionable(newValue: UndefOr[Boolean]): CreateGuildRoleBody =
+      objWithUndef(CreateGuildRoleBody, "mentionable", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => name, () => permissions, () => color, () => hoist, () => icon, () => unicodeEmoji, () => mentionable)
   }
   object CreateGuildRoleBody extends DiscordObjectCompanion[CreateGuildRoleBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildRoleBody = new CreateGuildRoleBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildRoleBody =
+      new CreateGuildRoleBody(json, cache)
 
     /**
       * @param name
@@ -1373,7 +1604,6 @@ object GuildRequests {
       "unicode_emoji" :=? unicodeEmoji,
       "mentionable"   :=? mentionable
     )
-
   }
 
   /**
@@ -1399,8 +1629,14 @@ object GuildRequests {
     /** Role */
     @inline def id: RoleId = selectDynamic[RoleId]("id")
 
+    @inline def withId(newValue: RoleId): ModifyGuildRolePositionsBody =
+      objWith(ModifyGuildRolePositionsBody, "id", newValue)
+
     /** Sorting position of the role */
     @inline def position: Option[Int] = selectDynamic[Option[Int]]("position")
+
+    @inline def withPosition(newValue: Option[Int]): ModifyGuildRolePositionsBody =
+      objWith(ModifyGuildRolePositionsBody, "position", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => position)
   }
@@ -1416,7 +1652,6 @@ object GuildRequests {
       */
     def make20(id: RoleId, position: Option[Int]): ModifyGuildRolePositionsBody =
       makeRawFromFields("id" := id, "position" := position)
-
   }
 
   /**
@@ -1441,17 +1676,32 @@ object GuildRequests {
     /** Name of the role, max 100 characters */
     @inline def name: JsonOption[String] = selectDynamic[JsonOption[String]]("name")
 
+    @inline def withName(newValue: JsonOption[String]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "name", newValue)
+
     /** Bitwise value of the enabled/disabled permissions */
     @inline def permissions: JsonOption[Permissions] = selectDynamic[JsonOption[Permissions]]("permissions")
+
+    @inline def withPermissions(newValue: JsonOption[Permissions]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "permissions", newValue)
 
     /** RGB color value */
     @inline def color: JsonOption[Int] = selectDynamic[JsonOption[Int]]("color")
 
+    @inline def withColor(newValue: JsonOption[Int]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "color", newValue)
+
     /** Whether the role should be displayed separately in the sidebar */
     @inline def hoist: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("hoist")
 
+    @inline def withHoist(newValue: JsonOption[Boolean]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "hoist", newValue)
+
     /** The role's icon image (if the guild has the ROLE_ICONS feature) */
     @inline def icon: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("icon")
+
+    @inline def withIcon(newValue: JsonOption[ImageData]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "icon", newValue)
 
     /**
       * The role's unicode emoji as a standard emoji (if the guild has the
@@ -1459,14 +1709,21 @@ object GuildRequests {
       */
     @inline def unicodeEmoji: JsonOption[String] = selectDynamic[JsonOption[String]]("unicode_emoji")
 
+    @inline def withUnicodeEmoji(newValue: JsonOption[String]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "unicode_emoji", newValue)
+
     /** Whether the role should be mentionable */
     @inline def mentionable: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("mentionable")
+
+    @inline def withMentionable(newValue: JsonOption[Boolean]): ModifyGuildRoleBody =
+      objWithUndef(ModifyGuildRoleBody, "mentionable", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => name, () => permissions, () => color, () => hoist, () => icon, () => unicodeEmoji, () => mentionable)
   }
   object ModifyGuildRoleBody extends DiscordObjectCompanion[ModifyGuildRoleBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildRoleBody = new ModifyGuildRoleBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildRoleBody =
+      new ModifyGuildRoleBody(json, cache)
 
     /**
       * @param name
@@ -1502,7 +1759,6 @@ object GuildRequests {
       "unicode_emoji" :=? unicodeEmoji,
       "mentionable"   :=? mentionable
     )
-
   }
 
   /**
@@ -1530,14 +1786,20 @@ object GuildRequests {
     /** MFA level */
     @inline def level: Guild.MFALevel = selectDynamic[Guild.MFALevel]("level")
 
+    @inline def withLevel(newValue: Guild.MFALevel): ModifyGuildMFALevelBody =
+      objWith(ModifyGuildMFALevelBody, "level", newValue)
+
     override def values: Seq[() => Any] = Seq(() => level)
   }
   object ModifyGuildMFALevelBody extends DiscordObjectCompanion[ModifyGuildMFALevelBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildMFALevelBody = new ModifyGuildMFALevelBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildMFALevelBody =
+      new ModifyGuildMFALevelBody(json, cache)
 
-    /** @param level MFA level */
+    /**
+      * @param level
+      *   MFA level
+      */
     def make20(level: Guild.MFALevel): ModifyGuildMFALevelBody = makeRawFromFields("level" := level)
-
   }
 
   /**
@@ -1560,11 +1822,7 @@ object GuildRequests {
     * Delete a guild role. Requires the MANAGE_ROLES permission. Returns a 204
     * empty response on success. Fires a Guild Role Delete Gateway event.
     */
-  def deleteGuildRole(
-      guildId: GuildId,
-      roleId: RoleId,
-      reason: Option[String]
-  ): Request[Unit, Unit] =
+  def deleteGuildRole(guildId: GuildId, roleId: RoleId, reason: Option[String]): Request[Unit, Unit] =
     Request.restRequest(
       route =
         (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "roles" / Parameters[RoleId](
@@ -1579,13 +1837,20 @@ object GuildRequests {
     /** Number of days to count prune for (1-30) */
     @inline def days: UndefOr[Int] = selectDynamic[UndefOr[Int]]("days")
 
+    @inline def withDays(newValue: UndefOr[Int]): GetGuildPruneCountQuery =
+      objWithUndef(GetGuildPruneCountQuery, "days", newValue)
+
     /** Role(s) to include. Comma-delimited array of snowflakes */
     @inline def includeRoles: UndefOr[String] = selectDynamic[UndefOr[String]]("include_roles")
+
+    @inline def withIncludeRoles(newValue: UndefOr[String]): GetGuildPruneCountQuery =
+      objWithUndef(GetGuildPruneCountQuery, "include_roles", newValue)
 
     override def values: Seq[() => Any] = Seq(() => days, () => includeRoles)
   }
   object GetGuildPruneCountQuery extends DiscordObjectCompanion[GetGuildPruneCountQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildPruneCountQuery = new GetGuildPruneCountQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildPruneCountQuery =
+      new GetGuildPruneCountQuery(json, cache)
 
     /**
       * @param days
@@ -1597,11 +1862,14 @@ object GuildRequests {
         days: UndefOr[Int] = UndefOrUndefined,
         includeRoles: UndefOr[String] = UndefOrUndefined
     ): GetGuildPruneCountQuery = makeRawFromFields("days" :=? days, "include_roles" :=? includeRoles)
-
   }
 
   class GetGuildPruneCountResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def pruned: Int = selectDynamic[Int]("pruned")
+
+    @inline def withPruned(newValue: Int): GetGuildPruneCountResult =
+      objWith(GetGuildPruneCountResult, "pruned", newValue)
 
     override def values: Seq[() => Any] = Seq(() => pruned)
   }
@@ -1610,11 +1878,10 @@ object GuildRequests {
       new GetGuildPruneCountResult(json, cache)
 
     def make20(pruned: Int): GetGuildPruneCountResult = makeRawFromFields("pruned" := pruned)
-
   }
 
   /**
-    * * Returns an object with one pruned key indicating the number of members
+    * Returns an object with one pruned key indicating the number of members
     * that would be removed in a prune operation. Requires the KICK_MEMBERS
     * permission.
     *
@@ -1637,16 +1904,25 @@ object GuildRequests {
     /** Number of days to prune (1-30) */
     @inline def days: Int = selectDynamic[Int]("days")
 
+    @inline def withDays(newValue: Int): BeginGuildPruneBody = objWith(BeginGuildPruneBody, "days", newValue)
+
     /** Whether pruned is returned, discouraged for large guilds */
     @inline def computePruneCount: Boolean = selectDynamic[Boolean]("compute_prune_count")
+
+    @inline def withComputePruneCount(newValue: Boolean): BeginGuildPruneBody =
+      objWith(BeginGuildPruneBody, "compute_prune_count", newValue)
 
     /** Role(s) to include */
     @inline def includeRoles: Seq[RoleId] = selectDynamic[Seq[RoleId]]("include_roles")
 
+    @inline def withIncludeRoles(newValue: Seq[RoleId]): BeginGuildPruneBody =
+      objWith(BeginGuildPruneBody, "include_roles", newValue)
+
     override def values: Seq[() => Any] = Seq(() => days, () => computePruneCount, () => includeRoles)
   }
   object BeginGuildPruneBody extends DiscordObjectCompanion[BeginGuildPruneBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): BeginGuildPruneBody = new BeginGuildPruneBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): BeginGuildPruneBody =
+      new BeginGuildPruneBody(json, cache)
 
     /**
       * @param days
@@ -1656,26 +1932,33 @@ object GuildRequests {
       * @param includeRoles
       *   Role(s) to include
       */
-    def make20(days: Int, computePruneCount: Boolean, includeRoles: Seq[RoleId]): BeginGuildPruneBody =
+    def make20(
+        days: Int,
+        computePruneCount: Boolean,
+        includeRoles: Seq[RoleId]
+    ): BeginGuildPruneBody =
       makeRawFromFields("days" := days, "compute_prune_count" := computePruneCount, "include_roles" := includeRoles)
-
   }
 
   class BeginGuildPruneResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def pruned: Option[Int] = selectDynamic[Option[Int]]("pruned")
+
+    @inline def withPruned(newValue: Option[Int]): BeginGuildPruneResult =
+      objWith(BeginGuildPruneResult, "pruned", newValue)
 
     override def values: Seq[() => Any] = Seq(() => pruned)
   }
   object BeginGuildPruneResult extends DiscordObjectCompanion[BeginGuildPruneResult] {
-    def makeRaw(json: Json, cache: Map[String, Any]): BeginGuildPruneResult = new BeginGuildPruneResult(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): BeginGuildPruneResult =
+      new BeginGuildPruneResult(json, cache)
 
     def make20(pruned: Option[Int]): BeginGuildPruneResult = makeRawFromFields("pruned" := pruned)
-
   }
 
   /**
-    * * Begin a prune operation. Requires the KICK_MEMBERS permission. Returns
-    * an object with one pruned key indicating the number of members that were
+    * Begin a prune operation. Requires the KICK_MEMBERS permission. Returns an
+    * object with one pruned key indicating the number of members that were
     * removed in the prune operation. For large guilds it's recommended to set
     * the compute_prune_count option to false, forcing pruned to null. Fires
     * multiple Guild Member Remove Gateway events.
@@ -1701,9 +1984,7 @@ object GuildRequests {
     * Returns a list of voice region objects for the guild. Unlike the similar
     * /voice route, this returns VIP servers when the guild is VIP-enabled.
     */
-  def getGuildVoiceRegions(
-      guildId: GuildId
-  ): Request[Unit, Seq[VoiceRegion]] =
+  def getGuildVoiceRegions(guildId: GuildId): Request[Unit, Seq[VoiceRegion]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "regions")
         .toRequest(Method.GET)
@@ -1713,9 +1994,7 @@ object GuildRequests {
     * Returns a list of invite objects (with invite metadata) for the guild.
     * Requires the MANAGE_GUILD permission.
     */
-  def getGuildInvites(
-      guildId: GuildId
-  ): Request[Unit, Seq[InviteMetadata]] =
+  def getGuildInvites(guildId: GuildId): Request[Unit, Seq[InviteMetadata]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "invites")
         .toRequest(Method.GET)
@@ -1725,9 +2004,7 @@ object GuildRequests {
     * Returns a list of integration objects for the guild. Requires the
     * MANAGE_GUILD permission.
     */
-  def getGuildIntegrations(
-      guildId: GuildId
-  ): Request[Unit, Seq[Integration]] =
+  def getGuildIntegrations(guildId: GuildId): Request[Unit, Seq[Integration]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "integrations")
         .toRequest(Method.GET)
@@ -1757,9 +2034,7 @@ object GuildRequests {
     * Returns a guild widget settings object. Requires the MANAGE_GUILD
     * permission.
     */
-  def getGuildWidgetSettings(
-      guildId: GuildId
-  ): Request[Unit, GuildWidgetSettings] =
+  def getGuildWidgetSettings(guildId: GuildId): Request[Unit, GuildWidgetSettings] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget")
         .toRequest(Method.GET)
@@ -1783,27 +2058,31 @@ object GuildRequests {
     )
 
   /** Returns the widget for the guild. */
-  def getGuildWidget(
-      guildId: GuildId
-  ): Request[Unit, GuildWidget] =
+  def getGuildWidget(guildId: GuildId): Request[Unit, GuildWidget] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget.json")
         .toRequest(Method.GET)
     )
 
   class GetGuildVanityURLResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def code: Option[String] = selectDynamic[Option[String]]("code")
 
+    @inline def withCode(newValue: Option[String]): GetGuildVanityURLResult =
+      objWith(GetGuildVanityURLResult, "code", newValue)
+
     @inline def uses: Int = selectDynamic[Int]("uses")
+
+    @inline def withUses(newValue: Int): GetGuildVanityURLResult = objWith(GetGuildVanityURLResult, "uses", newValue)
 
     override def values: Seq[() => Any] = Seq(() => code, () => uses)
   }
   object GetGuildVanityURLResult extends DiscordObjectCompanion[GetGuildVanityURLResult] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildVanityURLResult = new GetGuildVanityURLResult(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildVanityURLResult =
+      new GetGuildVanityURLResult(json, cache)
 
     def make20(code: Option[String], uses: Int): GetGuildVanityURLResult =
       makeRawFromFields("code" := code, "uses" := uses)
-
   }
 
   /**
@@ -1811,9 +2090,7 @@ object GuildRequests {
     * Requires the MANAGE_GUILD permission. code will be null if a vanity url
     * for the guild is not set.
     */
-  def getGuildVanityURL(
-      guildId: GuildId
-  ): Request[Unit, GetGuildVanityURLResult] =
+  def getGuildVanityURL(guildId: GuildId): Request[Unit, GetGuildVanityURLResult] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "vanity-url")
         .toRequest(Method.GET)
@@ -1824,17 +2101,21 @@ object GuildRequests {
     /** Style of the widget image returned (see below) */
     @inline def style: UndefOr[GuildWidgetImageStyle] = selectDynamic[UndefOr[GuildWidgetImageStyle]]("style")
 
+    @inline def withStyle(newValue: UndefOr[GuildWidgetImageStyle]): GetGuildWidgetImageQuery =
+      objWithUndef(GetGuildWidgetImageQuery, "style", newValue)
+
     override def values: Seq[() => Any] = Seq(() => style)
   }
   object GetGuildWidgetImageQuery extends DiscordObjectCompanion[GetGuildWidgetImageQuery] {
     def makeRaw(json: Json, cache: Map[String, Any]): GetGuildWidgetImageQuery =
       new GetGuildWidgetImageQuery(json, cache)
 
-    /** @param style Style of the widget image returned (see below) */
-    def make20(style: UndefOr[GuildWidgetImageStyle] = UndefOrUndefined): GetGuildWidgetImageQuery = makeRawFromFields(
-      "style" :=? style
-    )
-
+    /**
+      * @param style
+      *   Style of the widget image returned (see below)
+      */
+    def make20(style: UndefOr[GuildWidgetImageStyle] = UndefOrUndefined): GetGuildWidgetImageQuery =
+      makeRawFromFields("style" :=? style)
   }
 
   /**
@@ -1891,17 +2172,14 @@ object GuildRequests {
 
     def unknown(value: String): GuildWidgetImageStyle = new GuildWidgetImageStyle(value)
 
-    def values: Seq[GuildWidgetImageStyle] = Seq(Shield, Banner1, Banner2, Banner3, Banner4)
-
+    val values: Seq[GuildWidgetImageStyle] = Seq(Shield, Banner1, Banner2, Banner3, Banner4)
   }
 
   /**
     * Returns the Welcome Screen object for the guild. If the welcome screen is
     * not enabled, the MANAGE_GUILD permission is required.
     */
-  def getGuildWelcomeScreen(
-      guildId: GuildId
-  ): Request[Unit, WelcomeScreen] =
+  def getGuildWelcomeScreen(guildId: GuildId): Request[Unit, WelcomeScreen] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "welcome-screen")
         .toRequest(Method.GET)
@@ -1913,12 +2191,22 @@ object GuildRequests {
     /** Whether the welcome screen is enabled */
     @inline def enabled: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("enabled")
 
+    @inline def withEnabled(newValue: JsonOption[Boolean]): ModifyGuildWelcomeScreenBody =
+      objWithUndef(ModifyGuildWelcomeScreenBody, "enabled", newValue)
+
     /** Channels linked in the welcome screen and their display options */
     @inline def welcomeChannels: JsonOption[Seq[WelcomeScreen.WelcomeScreenChannel]] =
       selectDynamic[JsonOption[Seq[WelcomeScreen.WelcomeScreenChannel]]]("welcome_channels")
 
+    @inline def withWelcomeChannels(
+        newValue: JsonOption[Seq[WelcomeScreen.WelcomeScreenChannel]]
+    ): ModifyGuildWelcomeScreenBody = objWithUndef(ModifyGuildWelcomeScreenBody, "welcome_channels", newValue)
+
     /** The server description to show in the welcome screen */
     @inline def description: JsonOption[String] = selectDynamic[JsonOption[String]]("description")
+
+    @inline def withDescription(newValue: JsonOption[String]): ModifyGuildWelcomeScreenBody =
+      objWithUndef(ModifyGuildWelcomeScreenBody, "description", newValue)
 
     override def values: Seq[() => Any] = Seq(() => enabled, () => welcomeChannels, () => description)
   }
@@ -1940,7 +2228,6 @@ object GuildRequests {
         description: JsonOption[String] = JsonUndefined
     ): ModifyGuildWelcomeScreenBody =
       makeRawFromFields("enabled" :=? enabled, "welcome_channels" :=? welcomeChannels, "description" :=? description)
-
   }
 
   /**
@@ -1961,9 +2248,7 @@ object GuildRequests {
     )
 
   /** Returns the Onboarding object for the guild. */
-  def getGuildOnboarding(
-      guildId: GuildId
-  ): Request[Unit, GuildOnboarding] =
+  def getGuildOnboarding(guildId: GuildId): Request[Unit, GuildOnboarding] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "onboarding")
         .toRequest(Method.GET)
@@ -1975,14 +2260,26 @@ object GuildRequests {
     @inline def prompts: Seq[GuildOnboarding.OnboardingPrompt] =
       selectDynamic[Seq[GuildOnboarding.OnboardingPrompt]]("prompts")
 
+    @inline def withPrompts(newValue: Seq[GuildOnboarding.OnboardingPrompt]): ModifyGuildOnboardingBody =
+      objWith(ModifyGuildOnboardingBody, "prompts", newValue)
+
     /** Channel IDs that members get opted into automatically */
     @inline def defaultChannelIds: Seq[GuildChannelId] = selectDynamic[Seq[GuildChannelId]]("default_channel_ids")
+
+    @inline def withDefaultChannelIds(newValue: Seq[GuildChannelId]): ModifyGuildOnboardingBody =
+      objWith(ModifyGuildOnboardingBody, "default_channel_ids", newValue)
 
     /** Whether onboarding is enabled in the guild */
     @inline def enabled: Boolean = selectDynamic[Boolean]("enabled")
 
+    @inline def withEnabled(newValue: Boolean): ModifyGuildOnboardingBody =
+      objWith(ModifyGuildOnboardingBody, "enabled", newValue)
+
     /** Current mode of onboarding */
     @inline def mode: GuildOnboarding.OnboardingMode = selectDynamic[GuildOnboarding.OnboardingMode]("mode")
+
+    @inline def withMode(newValue: GuildOnboarding.OnboardingMode): ModifyGuildOnboardingBody =
+      objWith(ModifyGuildOnboardingBody, "mode", newValue)
 
     override def values: Seq[() => Any] = Seq(() => prompts, () => defaultChannelIds, () => enabled, () => mode)
   }
@@ -2011,7 +2308,6 @@ object GuildRequests {
       "enabled"             := enabled,
       "mode"                := mode
     )
-
   }
 
   /**
@@ -2037,12 +2333,21 @@ object GuildRequests {
     /** The id of the channel the user is currently in */
     @inline def channelId: UndefOr[StageChannelId] = selectDynamic[UndefOr[StageChannelId]]("channel_id")
 
+    @inline def withChannelId(newValue: UndefOr[StageChannelId]): ModifyCurrentUserVoiceStateBody =
+      objWithUndef(ModifyCurrentUserVoiceStateBody, "channel_id", newValue)
+
     /** Toggles the user's suppress state */
     @inline def suppress: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("suppress")
+
+    @inline def withSuppress(newValue: UndefOr[Boolean]): ModifyCurrentUserVoiceStateBody =
+      objWithUndef(ModifyCurrentUserVoiceStateBody, "suppress", newValue)
 
     /** Sets the user's request to speak */
     @inline def requestToSpeakTimestamp: JsonOption[OffsetDateTime] =
       selectDynamic[JsonOption[OffsetDateTime]]("request_to_speak_timestamp")
+
+    @inline def withRequestToSpeakTimestamp(newValue: JsonOption[OffsetDateTime]): ModifyCurrentUserVoiceStateBody =
+      objWithUndef(ModifyCurrentUserVoiceStateBody, "request_to_speak_timestamp", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => suppress, () => requestToSpeakTimestamp)
   }
@@ -2067,7 +2372,6 @@ object GuildRequests {
       "suppress"                   :=? suppress,
       "request_to_speak_timestamp" :=? requestToSpeakTimestamp
     )
-
   }
 
   /**
@@ -2089,8 +2393,14 @@ object GuildRequests {
     /** The id of the channel the user is currently in */
     @inline def channelId: UndefOr[StageChannelId] = selectDynamic[UndefOr[StageChannelId]]("channel_id")
 
+    @inline def withChannelId(newValue: UndefOr[StageChannelId]): ModifyUserVoiceStateBody =
+      objWithUndef(ModifyUserVoiceStateBody, "channel_id", newValue)
+
     /** Toggles the user's suppress state */
     @inline def suppress: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("suppress")
+
+    @inline def withSuppress(newValue: UndefOr[Boolean]): ModifyUserVoiceStateBody =
+      objWithUndef(ModifyUserVoiceStateBody, "suppress", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => suppress)
   }
@@ -2108,7 +2418,6 @@ object GuildRequests {
         channelId: UndefOr[StageChannelId] = UndefOrUndefined,
         suppress: UndefOr[Boolean] = UndefOrUndefined
     ): ModifyUserVoiceStateBody = makeRawFromFields("channel_id" :=? channelId, "suppress" :=? suppress)
-
   }
 
   /**
@@ -2128,5 +2437,4 @@ object GuildRequests {
       ) / "voice-states" / Parameters[UserId]("userId", userId)).toRequest(Method.PATCH),
       params = body
     )
-
 }

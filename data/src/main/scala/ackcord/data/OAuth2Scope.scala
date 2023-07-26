@@ -157,7 +157,7 @@ object OAuth2Scope                                    extends DiscordEnumCompani
 
   def unknown(value: String): OAuth2Scope = new OAuth2Scope(value)
 
-  def values: Seq[OAuth2Scope] = Seq(
+  val values: Seq[OAuth2Scope] = Seq(
     ActivitiesRead,
     ActivitiesWrite,
     ApplicationsBuildsRead,
@@ -187,5 +187,4 @@ object OAuth2Scope                                    extends DiscordEnumCompani
     Voice,
     WebhookIncoming
   )
-
 }

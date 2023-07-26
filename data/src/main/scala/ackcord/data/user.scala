@@ -21,27 +21,37 @@ object MessageAuthor extends DiscordObjectCompanion[MessageAuthor] {
 
 sealed case class Status private (value: String) extends DiscordEnum[String]
 object Status extends DiscordEnumCompanion[String, Status] {
+  val Online: Status = Status("online")
 
-  val Online: Status       = Status("online")
   val DoNotDisturb: Status = Status("dnd")
-  val Idle: Status         = Status("idle")
-  val Invisible: Status    = Status("invisible")
-  val Offline: Status      = Status("Offline")
+
+  val Idle: Status = Status("idle")
+
+  val Invisible: Status = Status("invisible")
+
+  val Offline: Status = Status("Offline")
 
   def unknown(value: String): Status = new Status(value)
 
-  def values: Seq[Status] = Seq(Online, DoNotDisturb, Idle, Invisible, Offline)
-
+  val values: Seq[Status] = Seq(Online, DoNotDisturb, Idle, Invisible, Offline)
 }
 
 class WebhookAuthor(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with MessageAuthor {
+
   @inline def id: WebhookId = selectDynamic[WebhookId]("id")
+
+  @inline def withId(newValue: WebhookId): WebhookAuthor = objWith(WebhookAuthor, "id", newValue)
 
   @inline def username: String = selectDynamic[String]("username")
 
+  @inline def withUsername(newValue: String): WebhookAuthor = objWith(WebhookAuthor, "username", newValue)
+
   @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
+
+  @inline def withAvatar(newValue: Option[ImageHash]): WebhookAuthor =
+    objWith(WebhookAuthor, "avatar", newValue)
 
   override def values: Seq[() => Any] = Seq(() => id, () => username, () => avatar)
 }
@@ -50,7 +60,6 @@ object WebhookAuthor extends DiscordObjectCompanion[WebhookAuthor] {
 
   def make20(id: WebhookId, username: String, avatar: Option[ImageHash]): WebhookAuthor =
     makeRawFromFields("id" := id, "username" := username, "avatar" := avatar)
-
 }
 
 /**
@@ -69,11 +78,17 @@ class User(json: Json, cache: Map[String, Any] = Map.empty)
   /** The user's id */
   @inline def id: UserId = selectDynamic[UserId]("id")
 
+  @inline def withId(newValue: UserId): User = objWith(User, "id", newValue)
+
   /** The user's username, not unique across the platform */
   @inline def username: String = selectDynamic[String]("username")
 
+  @inline def withUsername(newValue: String): User = objWith(User, "username", newValue)
+
   /** The user's Discord-tag */
   @inline def discriminator: String = selectDynamic[String]("discriminator")
+
+  @inline def withDiscriminator(newValue: String): User = objWith(User, "discriminator", newValue)
 
   /**
     * The user's display name, if it is set. For bots, this is the application
@@ -81,11 +96,17 @@ class User(json: Json, cache: Map[String, Any] = Map.empty)
     */
   @inline def globalName: Option[String] = selectDynamic[Option[String]]("global_name")
 
+  @inline def withGlobalName(newValue: Option[String]): User = objWith(User, "global_name", newValue)
+
   /** The user's avatar hash */
   @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
 
+  @inline def withAvatar(newValue: Option[ImageHash]): User = objWith(User, "avatar", newValue)
+
   /** Whether the user belongs to an OAuth2 application */
   @inline def bot: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("bot")
+
+  @inline def withBot(newValue: UndefOr[Boolean]): User = objWithUndef(User, "bot", newValue)
 
   /**
     * Whether the user is an Official Discord System user (part of the urgent
@@ -93,11 +114,17 @@ class User(json: Json, cache: Map[String, Any] = Map.empty)
     */
   @inline def system: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("system")
 
+  @inline def withSystem(newValue: UndefOr[Boolean]): User = objWithUndef(User, "system", newValue)
+
   /** Whether the user has two factor enabled on their account */
   @inline def mfaEnabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mfa_enabled")
 
+  @inline def withMfaEnabled(newValue: UndefOr[Boolean]): User = objWithUndef(User, "mfa_enabled", newValue)
+
   /** The user's banner hash */
   @inline def banner: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("banner")
+
+  @inline def withBanner(newValue: JsonOption[ImageHash]): User = objWithUndef(User, "banner", newValue)
 
   /**
     * The user's banner color encoded as an integer representation of
@@ -105,26 +132,45 @@ class User(json: Json, cache: Map[String, Any] = Map.empty)
     */
   @inline def accentColor: JsonOption[Int] = selectDynamic[JsonOption[Int]]("accent_color")
 
+  @inline def withAccentColor(newValue: JsonOption[Int]): User = objWithUndef(User, "accent_color", newValue)
+
   /** The user's chosen language option */
   @inline def locale: UndefOr[String] = selectDynamic[UndefOr[String]]("locale")
+
+  @inline def withLocale(newValue: UndefOr[String]): User = objWithUndef(User, "locale", newValue)
 
   /** Whether the email on this account has been verified */
   @inline def verified: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("verified")
 
+  @inline def withVerified(newValue: UndefOr[Boolean]): User = objWithUndef(User, "verified", newValue)
+
   /** The user's email */
   @inline def email: JsonOption[String] = selectDynamic[JsonOption[String]]("email")
+
+  @inline def withEmail(newValue: JsonOption[String]): User = objWithUndef(User, "email", newValue)
 
   /** The flags on a user's account */
   @inline def flags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("flags")
 
+  @inline def withFlags(newValue: UndefOr[User.UserFlags]): User = objWithUndef(User, "flags", newValue)
+
   /** The type of Nitro subscription on a user's account */
   @inline def premiumType: UndefOr[User.PremiumType] = selectDynamic[UndefOr[User.PremiumType]]("premium_type")
+
+  @inline def withPremiumType(newValue: UndefOr[User.PremiumType]): User =
+    objWithUndef(User, "premium_type", newValue)
 
   /** The public flags on a user's account */
   @inline def publicFlags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("public_flags")
 
+  @inline def withPublicFlags(newValue: UndefOr[User.UserFlags]): User =
+    objWithUndef(User, "public_flags", newValue)
+
   /** The user's avatar decoration hash */
   @inline def avatarDecoration: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar_decoration")
+
+  @inline def withAvatarDecoration(newValue: JsonOption[ImageHash]): User =
+    objWithUndef(User, "avatar_decoration", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -242,11 +288,18 @@ object User extends DiscordObjectCompanion[User] {
     /** The user's id */
     @inline def id: UserId = selectDynamic[UserId]("id")
 
+    @inline def withId(newValue: UserId): Partial = objWith(Partial, "id", newValue)
+
     /** The user's username, not unique across the platform */
     @inline def username: UndefOr[String] = selectDynamic[UndefOr[String]]("username")
 
+    @inline def withUsername(newValue: UndefOr[String]): Partial = objWithUndef(Partial, "username", newValue)
+
     /** The user's Discord-tag */
     @inline def discriminator: UndefOr[String] = selectDynamic[UndefOr[String]]("discriminator")
+
+    @inline def withDiscriminator(newValue: UndefOr[String]): Partial =
+      objWithUndef(Partial, "discriminator", newValue)
 
     /**
       * The user's display name, if it is set. For bots, this is the application
@@ -254,11 +307,19 @@ object User extends DiscordObjectCompanion[User] {
       */
     @inline def globalName: JsonOption[String] = selectDynamic[JsonOption[String]]("global_name")
 
+    @inline def withGlobalName(newValue: JsonOption[String]): Partial =
+      objWithUndef(Partial, "global_name", newValue)
+
     /** The user's avatar hash */
     @inline def avatar: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar")
 
+    @inline def withAvatar(newValue: JsonOption[ImageHash]): Partial =
+      objWithUndef(Partial, "avatar", newValue)
+
     /** Whether the user belongs to an OAuth2 application */
     @inline def bot: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("bot")
+
+    @inline def withBot(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "bot", newValue)
 
     /**
       * Whether the user is an Official Discord System user (part of the urgent
@@ -266,11 +327,18 @@ object User extends DiscordObjectCompanion[User] {
       */
     @inline def system: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("system")
 
+    @inline def withSystem(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "system", newValue)
+
     /** Whether the user has two factor enabled on their account */
     @inline def mfaEnabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mfa_enabled")
 
+    @inline def withMfaEnabled(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "mfa_enabled", newValue)
+
     /** The user's banner hash */
     @inline def banner: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("banner")
+
+    @inline def withBanner(newValue: JsonOption[ImageHash]): Partial =
+      objWithUndef(Partial, "banner", newValue)
 
     /**
       * The user's banner color encoded as an integer representation of
@@ -278,26 +346,46 @@ object User extends DiscordObjectCompanion[User] {
       */
     @inline def accentColor: JsonOption[Int] = selectDynamic[JsonOption[Int]]("accent_color")
 
+    @inline def withAccentColor(newValue: JsonOption[Int]): Partial = objWithUndef(Partial, "accent_color", newValue)
+
     /** The user's chosen language option */
     @inline def locale: UndefOr[String] = selectDynamic[UndefOr[String]]("locale")
+
+    @inline def withLocale(newValue: UndefOr[String]): Partial = objWithUndef(Partial, "locale", newValue)
 
     /** Whether the email on this account has been verified */
     @inline def verified: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("verified")
 
+    @inline def withVerified(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "verified", newValue)
+
     /** The user's email */
     @inline def email: JsonOption[String] = selectDynamic[JsonOption[String]]("email")
+
+    @inline def withEmail(newValue: JsonOption[String]): Partial = objWithUndef(Partial, "email", newValue)
 
     /** The flags on a user's account */
     @inline def flags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("flags")
 
+    @inline def withFlags(newValue: UndefOr[User.UserFlags]): Partial =
+      objWithUndef(Partial, "flags", newValue)
+
     /** The type of Nitro subscription on a user's account */
     @inline def premiumType: UndefOr[User.PremiumType] = selectDynamic[UndefOr[User.PremiumType]]("premium_type")
+
+    @inline def withPremiumType(newValue: UndefOr[User.PremiumType]): Partial =
+      objWithUndef(Partial, "premium_type", newValue)
 
     /** The public flags on a user's account */
     @inline def publicFlags: UndefOr[User.UserFlags] = selectDynamic[UndefOr[User.UserFlags]]("public_flags")
 
+    @inline def withPublicFlags(newValue: UndefOr[User.UserFlags]): Partial =
+      objWithUndef(Partial, "public_flags", newValue)
+
     /** The user's avatar decoration hash */
     @inline def avatarDecoration: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar_decoration")
+
+    @inline def withAvatarDecoration(newValue: JsonOption[ImageHash]): Partial =
+      objWithUndef(Partial, "avatar_decoration", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -451,7 +539,7 @@ object User extends DiscordObjectCompanion[User] {
 
       def unknown(value: Int): UserFlags = new UserFlags(value)
 
-      def values: Seq[UserFlags] = Seq(
+      val values: Seq[UserFlags] = Seq(
         STAFF,
         PARTNER,
         HYPESQUAD,
@@ -470,6 +558,7 @@ object User extends DiscordObjectCompanion[User] {
       )
 
       implicit class UserFlagsBitFieldOps(private val here: UserFlags) extends AnyVal {
+
         def toInt: Int = here.value
 
         def ++(there: UserFlags): UserFlags = UserFlags(here.value | there.value)
@@ -486,16 +575,17 @@ object User extends DiscordObjectCompanion[User] {
       */
     sealed case class PremiumType private (value: Int) extends DiscordEnum[Int]
     object PremiumType extends DiscordEnumCompanion[Int, PremiumType] {
+      val None: PremiumType = PremiumType(0)
 
-      val None: PremiumType         = PremiumType(0)
       val NitroClassic: PremiumType = PremiumType(1)
-      val Nitro: PremiumType        = PremiumType(2)
-      val NitroBasic: PremiumType   = PremiumType(3)
+
+      val Nitro: PremiumType = PremiumType(2)
+
+      val NitroBasic: PremiumType = PremiumType(3)
 
       def unknown(value: Int): PremiumType = new PremiumType(value)
 
-      def values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
-
+      val values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
     }
   }
 
@@ -551,7 +641,7 @@ object User extends DiscordObjectCompanion[User] {
 
     def unknown(value: Int): UserFlags = new UserFlags(value)
 
-    def values: Seq[UserFlags] = Seq(
+    val values: Seq[UserFlags] = Seq(
       STAFF,
       PARTNER,
       HYPESQUAD,
@@ -570,6 +660,7 @@ object User extends DiscordObjectCompanion[User] {
     )
 
     implicit class UserFlagsBitFieldOps(private val here: UserFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: UserFlags): UserFlags = UserFlags(here.value | there.value)
@@ -586,16 +677,17 @@ object User extends DiscordObjectCompanion[User] {
     */
   sealed case class PremiumType private (value: Int) extends DiscordEnum[Int]
   object PremiumType extends DiscordEnumCompanion[Int, PremiumType] {
+    val None: PremiumType = PremiumType(0)
 
-    val None: PremiumType         = PremiumType(0)
     val NitroClassic: PremiumType = PremiumType(1)
-    val Nitro: PremiumType        = PremiumType(2)
-    val NitroBasic: PremiumType   = PremiumType(3)
+
+    val Nitro: PremiumType = PremiumType(2)
+
+    val NitroBasic: PremiumType = PremiumType(3)
 
     def unknown(value: Int): PremiumType = new PremiumType(value)
 
-    def values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
-
+    val values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
   }
 }
 
@@ -605,24 +697,40 @@ class Connection(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   /** Id of the connection account */
   @inline def id: String = selectDynamic[String]("id")
 
+  @inline def withId(newValue: String): Connection = objWith(Connection, "id", newValue)
+
   /** The username of the connection account */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): Connection = objWith(Connection, "name", newValue)
 
   /** The service of this connection */
   @inline def tpe: Connection.ConnectionServiceType = selectDynamic[Connection.ConnectionServiceType]("type")
 
+  @inline def withTpe(newValue: Connection.ConnectionServiceType): Connection =
+    objWith(Connection, "type", newValue)
+
   /** Whether the connection is revoked */
   @inline def revoked: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("revoked")
+
+  @inline def withRevoked(newValue: UndefOr[Boolean]): Connection = objWithUndef(Connection, "revoked", newValue)
 
   /** An array of partial server integrations */
   @inline def integrations: UndefOr[Seq[Connection.ConnectionIntegration]] =
     selectDynamic[UndefOr[Seq[Connection.ConnectionIntegration]]]("integrations")
 
+  @inline def withIntegrations(newValue: UndefOr[Seq[Connection.ConnectionIntegration]]): Connection =
+    objWithUndef(Connection, "integrations", newValue)
+
   /** Whether the connection is verified */
   @inline def verified: Boolean = selectDynamic[Boolean]("verified")
 
+  @inline def withVerified(newValue: Boolean): Connection = objWith(Connection, "verified", newValue)
+
   /** Whether friend sync is enabled for this connection */
   @inline def friendSync: Boolean = selectDynamic[Boolean]("friend_sync")
+
+  @inline def withFriendSync(newValue: Boolean): Connection = objWith(Connection, "friend_sync", newValue)
 
   /**
     * Whether activities related to this connection will be shown in presence
@@ -630,11 +738,18 @@ class Connection(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def showActivity: Boolean = selectDynamic[Boolean]("show_activity")
 
+  @inline def withShowActivity(newValue: Boolean): Connection = objWith(Connection, "show_activity", newValue)
+
   /** Whether this connection has a corresponding third party OAuth2 token */
   @inline def twoWayLink: Boolean = selectDynamic[Boolean]("two_way_link")
 
+  @inline def withTwoWayLink(newValue: Boolean): Connection = objWith(Connection, "two_way_link", newValue)
+
   /** Visibility of this connection */
   @inline def visibility: Connection.ConnectionVisibility = selectDynamic[Connection.ConnectionVisibility]("visibility")
+
+  @inline def withVisibility(newValue: Connection.ConnectionVisibility): Connection =
+    objWith(Connection, "visibility", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -704,10 +819,10 @@ object Connection extends DiscordObjectCompanion[Connection] {
     override def values: Seq[() => Any] = Seq()
   }
   object ConnectionIntegration extends DiscordObjectCompanion[ConnectionIntegration] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ConnectionIntegration = new ConnectionIntegration(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ConnectionIntegration =
+      new ConnectionIntegration(json, cache)
 
     def make20(): ConnectionIntegration = makeRawFromFields()
-
   }
 
   sealed case class ConnectionServiceType private (value: String) extends DiscordEnum[String]
@@ -772,7 +887,7 @@ object Connection extends DiscordObjectCompanion[Connection] {
 
     def unknown(value: String): ConnectionServiceType = new ConnectionServiceType(value)
 
-    def values: Seq[ConnectionServiceType] = Seq(
+    val values: Seq[ConnectionServiceType] = Seq(
       Battlenet,
       Ebay,
       Epicgames,
@@ -793,7 +908,6 @@ object Connection extends DiscordObjectCompanion[Connection] {
       Xbox,
       Youtube
     )
-
   }
 
   sealed case class ConnectionVisibility private (value: Int) extends DiscordEnum[Int]
@@ -807,8 +921,7 @@ object Connection extends DiscordObjectCompanion[Connection] {
 
     def unknown(value: Int): ConnectionVisibility = new ConnectionVisibility(value)
 
-    def values: Seq[ConnectionVisibility] = Seq(None, Everyone)
-
+    val values: Seq[ConnectionVisibility] = Seq(None, Everyone)
   }
 }
 
@@ -818,8 +931,14 @@ class ApplicationRoleConnection(json: Json, cache: Map[String, Any] = Map.empty)
   /** The vanity name of the platform a bot has connected (max 50 characters) */
   @inline def platformName: Option[String] = selectDynamic[Option[String]]("platform_name")
 
+  @inline def withPlatformName(newValue: Option[String]): ApplicationRoleConnection =
+    objWith(ApplicationRoleConnection, "platform_name", newValue)
+
   /** The username on the platform a bot has connected (max 100 characters) */
   @inline def platformUsername: Option[String] = selectDynamic[Option[String]]("platform_username")
+
+  @inline def withPlatformUsername(newValue: Option[String]): ApplicationRoleConnection =
+    objWith(ApplicationRoleConnection, "platform_username", newValue)
 
   /**
     * Object mapping application role connection metadata keys to their
@@ -827,6 +946,9 @@ class ApplicationRoleConnection(json: Json, cache: Map[String, Any] = Map.empty)
     * has connected
     */
   @inline def metadata: Map[String, String] = selectDynamic[Map[String, String]]("metadata")
+
+  @inline def withMetadata(newValue: Map[String, String]): ApplicationRoleConnection =
+    objWith(ApplicationRoleConnection, "metadata", newValue)
 
   override def values: Seq[() => Any] = Seq(() => platformName, () => platformUsername, () => metadata)
 }
@@ -850,7 +972,6 @@ object ApplicationRoleConnection extends DiscordObjectCompanion[ApplicationRoleC
       metadata: Map[String, String]
   ): ApplicationRoleConnection =
     makeRawFromFields("platform_name" := platformName, "platform_username" := platformUsername, "metadata" := metadata)
-
 }
 
 /**
@@ -865,38 +986,62 @@ class Role(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObjec
   /** Role id */
   @inline def id: RoleId = selectDynamic[RoleId]("id")
 
+  @inline def withId(newValue: RoleId): Role = objWith(Role, "id", newValue)
+
   /** Role name */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): Role = objWith(Role, "name", newValue)
 
   /** Integer representation of hexadecimal color code */
   @inline def color: Int = selectDynamic[Int]("color")
 
+  @inline def withColor(newValue: Int): Role = objWith(Role, "color", newValue)
+
   /** If this role is pinned in the user listing */
   @inline def hoist: Boolean = selectDynamic[Boolean]("hoist")
+
+  @inline def withHoist(newValue: Boolean): Role = objWith(Role, "hoist", newValue)
 
   /** Role icon hash */
   @inline def icon: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("icon")
 
+  @inline def withIcon(newValue: JsonOption[ImageHash]): Role = objWithUndef(Role, "icon", newValue)
+
   /** Role unicode emoji */
   @inline def unicodeEmoji: JsonOption[String] = selectDynamic[JsonOption[String]]("unicode_emoji")
+
+  @inline def withUnicodeEmoji(newValue: JsonOption[String]): Role = objWithUndef(Role, "unicode_emoji", newValue)
 
   /** Position of this role */
   @inline def position: Int = selectDynamic[Int]("position")
 
+  @inline def withPosition(newValue: Int): Role = objWith(Role, "position", newValue)
+
   /** Permission bit set */
   @inline def permissions: Permissions = selectDynamic[Permissions]("permissions")
+
+  @inline def withPermissions(newValue: Permissions): Role = objWith(Role, "permissions", newValue)
 
   /** Whether this role is managed by an integration */
   @inline def managed: Boolean = selectDynamic[Boolean]("managed")
 
+  @inline def withManaged(newValue: Boolean): Role = objWith(Role, "managed", newValue)
+
   /** Whether this role is mentionable */
   @inline def mentionable: Boolean = selectDynamic[Boolean]("mentionable")
+
+  @inline def withMentionable(newValue: Boolean): Role = objWith(Role, "mentionable", newValue)
 
   /** The tags this role has */
   @inline def tags: Role.RoleTag = selectDynamic[Role.RoleTag]("tags")
 
+  @inline def withTags(newValue: Role.RoleTag): Role = objWith(Role, "tags", newValue)
+
   /** Role flags combined as a bitfield */
   @inline def flags: Role.RoleFlags = selectDynamic[Role.RoleFlags]("flags")
+
+  @inline def withFlags(newValue: Role.RoleFlags): Role = objWith(Role, "flags", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -979,22 +1124,39 @@ object Role extends DiscordObjectCompanion[Role] {
     /** The id of the bot this role belongs to */
     @inline def botId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("bot_id")
 
+    @inline def withBotId(newValue: UndefOr[UserId]): RoleTag = objWithUndef(RoleTag, "bot_id", newValue)
+
     /** The id of the integration this role belongs to */
     @inline def integrationId: UndefOr[Snowflake[Integration]] =
       selectDynamic[UndefOr[Snowflake[Integration]]]("integration_id")
 
+    @inline def withIntegrationId(newValue: UndefOr[Snowflake[Integration]]): RoleTag =
+      objWithUndef(RoleTag, "integration_id", newValue)
+
     /** Whether this is the guild's Booster role */
     @inline def premiumSubscriber: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("premium_subscriber")
+
+    @inline def withPremiumSubscriber(newValue: JsonOption[Unit]): RoleTag =
+      objWithUndef(RoleTag, "premium_subscriber", newValue)
 
     /** The id of this role's subscription sku and listing */
     @inline def subscriptionListingId: UndefOr[RawSnowflake] =
       selectDynamic[UndefOr[RawSnowflake]]("subscription_listing_id")
 
+    @inline def withSubscriptionListingId(newValue: UndefOr[RawSnowflake]): RoleTag =
+      objWithUndef(RoleTag, "subscription_listing_id", newValue)
+
     /** Whether this role is available for purchase */
     @inline def availableForPurchase: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("available_for_purchase")
 
+    @inline def withAvailableForPurchase(newValue: JsonOption[Unit]): RoleTag =
+      objWithUndef(RoleTag, "available_for_purchase", newValue)
+
     /** Whether this role is a guild's linked role */
     @inline def guildConnections: JsonOption[Unit] = selectDynamic[JsonOption[Unit]]("guild_connections")
+
+    @inline def withGuildConnections(newValue: JsonOption[Unit]): RoleTag =
+      objWithUndef(RoleTag, "guild_connections", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => botId,
@@ -1037,7 +1199,6 @@ object Role extends DiscordObjectCompanion[Role] {
       "available_for_purchase"  :=? availableForPurchase,
       "guild_connections"       :=? guildConnections
     )
-
   }
 
   sealed case class RoleFlags private (value: Int) extends DiscordEnum[Int]
@@ -1048,9 +1209,10 @@ object Role extends DiscordObjectCompanion[Role] {
 
     def unknown(value: Int): RoleFlags = new RoleFlags(value)
 
-    def values: Seq[RoleFlags] = Seq(IN_PROMPT)
+    val values: Seq[RoleFlags] = Seq(IN_PROMPT)
 
     implicit class RoleFlagsBitFieldOps(private val here: RoleFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: RoleFlags): RoleFlags = RoleFlags(here.value | there.value)

@@ -21,5 +21,4 @@ object VoiceRegionRequests {
     Request.restRequest(
       route = (Route.Empty / "voice" / "regions").toRequest(Method.GET)
     )
-
 }

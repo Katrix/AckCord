@@ -18,14 +18,23 @@ class Webhook(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
   /** The id of the webhook */
   @inline def id: WebhookId = selectDynamic[WebhookId]("id")
 
+  @inline def withId(newValue: WebhookId): Webhook = objWith(Webhook, "id", newValue)
+
   /** The type of the webhook */
   @inline def tpe: Webhook.WebhookType = selectDynamic[Webhook.WebhookType]("type")
+
+  @inline def withTpe(newValue: Webhook.WebhookType): Webhook = objWith(Webhook, "type", newValue)
 
   /** The guild id this webhook is for, if any */
   @inline def guildId: JsonOption[GuildId] = selectDynamic[JsonOption[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: JsonOption[GuildId]): Webhook = objWithUndef(Webhook, "guild_id", newValue)
+
   /** The channel id this webhook is for, if any */
   @inline def channelId: Option[TextGuildChannelId] = selectDynamic[Option[TextGuildChannelId]]("channel_id")
+
+  @inline def withChannelId(newValue: Option[TextGuildChannelId]): Webhook =
+    objWith(Webhook, "channel_id", newValue)
 
   /**
     * The user this webhook was created by (not returned when getting a webhook
@@ -33,23 +42,37 @@ class Webhook(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
     */
   @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
 
+  @inline def withUser(newValue: UndefOr[User]): Webhook = objWithUndef(Webhook, "user", newValue)
+
   /** The default name of the webhook */
   @inline def name: Option[String] = selectDynamic[Option[String]]("name")
+
+  @inline def withName(newValue: Option[String]): Webhook = objWith(Webhook, "name", newValue)
 
   /** The default user avatar hash of the webhook */
   @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
 
+  @inline def withAvatar(newValue: Option[ImageHash]): Webhook = objWith(Webhook, "avatar", newValue)
+
   /** The secure token of the webhook (returned for Incoming Webhooks) */
   @inline def token: UndefOr[String] = selectDynamic[UndefOr[String]]("token")
 
+  @inline def withToken(newValue: UndefOr[String]): Webhook = objWithUndef(Webhook, "token", newValue)
+
   /** The bot/OAuth2 application that created this webhook */
   @inline def applicationId: Option[ApplicationId] = selectDynamic[Option[ApplicationId]]("application_id")
+
+  @inline def withApplicationId(newValue: Option[ApplicationId]): Webhook =
+    objWith(Webhook, "application_id", newValue)
 
   /**
     * The guild of the channel that this webhook is following (returned for
     * Channel Follower Webhooks)
     */
   @inline def sourceGuild: UndefOr[Webhook.WebhookGuild] = selectDynamic[UndefOr[Webhook.WebhookGuild]]("source_guild")
+
+  @inline def withSourceGuild(newValue: UndefOr[Webhook.WebhookGuild]): Webhook =
+    objWithUndef(Webhook, "source_guild", newValue)
 
   /**
     * The channel that this webhook is following (returned for Channel Follower
@@ -58,11 +81,16 @@ class Webhook(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
   @inline def sourceChannel: UndefOr[Webhook.WebhookChannel] =
     selectDynamic[UndefOr[Webhook.WebhookChannel]]("source_channel")
 
+  @inline def withSourceChannel(newValue: UndefOr[Webhook.WebhookChannel]): Webhook =
+    objWithUndef(Webhook, "source_channel", newValue)
+
   /**
     * The url used for executing the webhook (returned by the webhooks OAuth2
     * flow)
     */
   @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
+
+  @inline def withUrl(newValue: UndefOr[String]): Webhook = objWithUndef(Webhook, "url", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -141,11 +169,18 @@ object Webhook extends DiscordObjectCompanion[Webhook] {
   )
 
   class WebhookGuild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: GuildId = selectDynamic[GuildId]("id")
+
+    @inline def withId(newValue: GuildId): WebhookGuild = objWith(WebhookGuild, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): WebhookGuild = objWith(WebhookGuild, "name", newValue)
+
     @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
+
+    @inline def withIcon(newValue: Option[ImageHash]): WebhookGuild = objWith(WebhookGuild, "icon", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => icon)
   }
@@ -154,21 +189,27 @@ object Webhook extends DiscordObjectCompanion[Webhook] {
 
     def make20(id: GuildId, name: String, icon: Option[ImageHash]): WebhookGuild =
       makeRawFromFields("id" := id, "name" := name, "icon" := icon)
-
   }
 
   class WebhookChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: TextGuildChannelId = selectDynamic[TextGuildChannelId]("id")
 
+    @inline def withId(newValue: TextGuildChannelId): WebhookChannel =
+      objWith(WebhookChannel, "id", newValue)
+
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): WebhookChannel = objWith(WebhookChannel, "name", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name)
   }
   object WebhookChannel extends DiscordObjectCompanion[WebhookChannel] {
-    def makeRaw(json: Json, cache: Map[String, Any]): WebhookChannel = new WebhookChannel(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): WebhookChannel =
+      new WebhookChannel(json, cache)
 
-    def make20(id: TextGuildChannelId, name: String): WebhookChannel = makeRawFromFields("id" := id, "name" := name)
-
+    def make20(id: TextGuildChannelId, name: String): WebhookChannel =
+      makeRawFromFields("id" := id, "name" := name)
   }
 
   sealed case class WebhookType private (value: Int) extends DiscordEnum[Int]
@@ -190,7 +231,6 @@ object Webhook extends DiscordObjectCompanion[Webhook] {
 
     def unknown(value: Int): WebhookType = new WebhookType(value)
 
-    def values: Seq[WebhookType] = Seq(Incoming, ChannelFollower, Application)
-
+    val values: Seq[WebhookType] = Seq(Incoming, ChannelFollower, Application)
   }
 }

@@ -2,16 +2,38 @@ package ackcord.data.base
 
 import scala.language.implicitConversions
 
-import ackcord.data.{JsonOption, UndefOr}
+import ackcord.data.{JsonOption, UndefOr, UndefOrSome, UndefOrUndefined}
 import io.circe._
 import io.circe.syntax._
 
 class DiscordObject(val json: Json, startCache: Map[String, Any]) {
   private[base] val cache = startCache.to(collection.mutable.Map)
 
+  def cacheCopy: Map[String, Any] = cache.toMap
+
   def extensionCache(s: String): Map[String, Any] = startCache.collect {
     case (k, v) if k.startsWith(s"$s.") => k.substring(s.length + 1) -> v
   }
+
+  def objWith[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: V)(
+      implicit encoder: Encoder[V]
+  ): A = objWithJson(companion, Json.obj(name -> encoder(obj)), Map(name -> obj))
+
+  def objWithUndef[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: UndefOr[V])(
+      implicit encoder: Encoder[V]
+  ): A = obj match {
+    case UndefOrSome(value) => objWith(companion, name, value)
+    case UndefOrUndefined   => objWithout(companion, name)
+  }
+
+  def objWithJson[A <: DiscordObject](
+      companion: DiscordObjectCompanion[A],
+      json: Json,
+      cacheUpdates: Map[String, Any]
+  ): A = companion.makeRaw(json.deepMerge(json), cacheCopy ++ cacheUpdates)
+
+  def objWithout[A <: DiscordObject](companion: DiscordObjectCompanion[A], name: String): A =
+    companion.makeRaw(json.mapObject(_.remove(name)), cacheCopy.removed(name))
 
   def retype[A <: DiscordObject](companion: DiscordObjectCompanion[A]): A =
     companion.makeRaw(json, Map.empty)

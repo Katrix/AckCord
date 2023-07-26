@@ -25,9 +25,7 @@ object UserRequests {
     )
 
   /** Returns a user object for a given user ID. */
-  def getUser(
-      userId: UserId
-  ): Request[Unit, User] =
+  def getUser(userId: UserId): Request[Unit, User] =
     Request.restRequest(
       route = (Route.Empty / "users" / Parameters[UserId]("userId", userId)).toRequest(Method.GET)
     )
@@ -40,13 +38,20 @@ object UserRequests {
       */
     @inline def username: UndefOr[String] = selectDynamic[UndefOr[String]]("username")
 
+    @inline def withUsername(newValue: UndefOr[String]): ModifyCurrentUserBody =
+      objWithUndef(ModifyCurrentUserBody, "username", newValue)
+
     /** If passed, modifies the user's avatar */
     @inline def avatar: JsonOption[ImageData] = selectDynamic[JsonOption[ImageData]]("avatar")
+
+    @inline def withAvatar(newValue: JsonOption[ImageData]): ModifyCurrentUserBody =
+      objWithUndef(ModifyCurrentUserBody, "avatar", newValue)
 
     override def values: Seq[() => Any] = Seq(() => username, () => avatar)
   }
   object ModifyCurrentUserBody extends DiscordObjectCompanion[ModifyCurrentUserBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyCurrentUserBody = new ModifyCurrentUserBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyCurrentUserBody =
+      new ModifyCurrentUserBody(json, cache)
 
     /**
       * @param username
@@ -59,16 +64,13 @@ object UserRequests {
         username: UndefOr[String] = UndefOrUndefined,
         avatar: JsonOption[ImageData] = JsonUndefined
     ): ModifyCurrentUserBody = makeRawFromFields("username" :=? username, "avatar" :=? avatar)
-
   }
 
   /**
     * Modify the requester's user account settings. Returns a user object on
     * success. Fires a User Update Gateway event.
     */
-  def modifyCurrentUser(
-      body: ModifyCurrentUserBody
-  ): Request[ModifyCurrentUserBody, User] =
+  def modifyCurrentUser(body: ModifyCurrentUserBody): Request[ModifyCurrentUserBody, User] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me").toRequest(Method.PATCH),
       params = body
@@ -79,14 +81,26 @@ object UserRequests {
     /** Get guilds before this guild ID */
     @inline def before: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("before")
 
+    @inline def withBefore(newValue: UndefOr[GuildId]): GetCurrentUserGuildsQuery =
+      objWithUndef(GetCurrentUserGuildsQuery, "before", newValue)
+
     /** Get guilds after this guild ID */
     @inline def after: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("after")
+
+    @inline def withAfter(newValue: UndefOr[GuildId]): GetCurrentUserGuildsQuery =
+      objWithUndef(GetCurrentUserGuildsQuery, "after", newValue)
 
     /** Max number of guilds to return (1-200) */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
 
+    @inline def withLimit(newValue: UndefOr[Int]): GetCurrentUserGuildsQuery =
+      objWithUndef(GetCurrentUserGuildsQuery, "limit", newValue)
+
     /** Include approximate member and presence counts in response */
     @inline def withCounts: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_counts")
+
+    @inline def withWithCounts(newValue: UndefOr[Boolean]): GetCurrentUserGuildsQuery =
+      objWithUndef(GetCurrentUserGuildsQuery, "with_counts", newValue)
 
     override def values: Seq[() => Any] = Seq(() => before, () => after, () => limit, () => withCounts)
   }
@@ -111,25 +125,49 @@ object UserRequests {
         withCounts: UndefOr[Boolean] = UndefOrUndefined
     ): GetCurrentUserGuildsQuery =
       makeRawFromFields("before" :=? before, "after" :=? after, "limit" :=? limit, "with_counts" :=? withCounts)
-
   }
 
   class GetCurrentUserGuildsResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: GuildId = selectDynamic[GuildId]("id")
+
+    @inline def withId(newValue: GuildId): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "name", newValue)
+
     @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
+
+    @inline def withIcon(newValue: Option[ImageHash]): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "icon", newValue)
 
     @inline def owner: Boolean = selectDynamic[Boolean]("owner")
 
+    @inline def withOwner(newValue: Boolean): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "owner", newValue)
+
     @inline def permissions: Permissions = selectDynamic[Permissions]("permissions")
+
+    @inline def withPermissions(newValue: Permissions): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "permissions", newValue)
 
     @inline def features: Seq[Guild.GuildFeature] = selectDynamic[Seq[Guild.GuildFeature]]("features")
 
+    @inline def withFeatures(newValue: Seq[Guild.GuildFeature]): GetCurrentUserGuildsResult =
+      objWith(GetCurrentUserGuildsResult, "features", newValue)
+
     @inline def approximateMemberCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_member_count")
 
+    @inline def withApproximateMemberCount(newValue: UndefOr[Int]): GetCurrentUserGuildsResult =
+      objWithUndef(GetCurrentUserGuildsResult, "approximate_member_count", newValue)
+
     @inline def approximatePresenceCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_presence_count")
+
+    @inline def withApproximatePresenceCount(newValue: UndefOr[Int]): GetCurrentUserGuildsResult =
+      objWithUndef(GetCurrentUserGuildsResult, "approximate_presence_count", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -165,7 +203,6 @@ object UserRequests {
       "approximate_member_count"   :=? approximateMemberCount,
       "approximate_presence_count" :=? approximatePresenceCount
     )
-
   }
 
   /**
@@ -187,9 +224,7 @@ object UserRequests {
     * Returns a guild member object for the current user. Requires the
     * guilds.members.read OAuth2 scope.
     */
-  def getCurrentUserGuildMember(
-      guildId: GuildId
-  ): Request[Unit, GuildMember] =
+  def getCurrentUserGuildMember(guildId: GuildId): Request[Unit, GuildMember] =
     Request.restRequest(
       route =
         (Route.Empty / "users" / "@me" / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "member")
@@ -200,9 +235,7 @@ object UserRequests {
     * Leave a guild. Returns a 204 empty response on success. Fires a Guild
     * Delete Gateway event and a Guild Member Remove Gateway event.
     */
-  def leaveGuild(
-      guildId: GuildId
-  ): Request[Unit, Unit] =
+  def leaveGuild(guildId: GuildId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "guilds" / Parameters[GuildId]("guildId", guildId, major = true))
         .toRequest(Method.DELETE)
@@ -213,23 +246,25 @@ object UserRequests {
     /** The recipient to open a DM channel with */
     @inline def recipientId: UserId = selectDynamic[UserId]("recipient_id")
 
+    @inline def withRecipientId(newValue: UserId): CreateDMBody = objWith(CreateDMBody, "recipient_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => recipientId)
   }
   object CreateDMBody extends DiscordObjectCompanion[CreateDMBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): CreateDMBody = new CreateDMBody(json, cache)
 
-    /** @param recipientId The recipient to open a DM channel with */
+    /**
+      * @param recipientId
+      *   The recipient to open a DM channel with
+      */
     def make20(recipientId: UserId): CreateDMBody = makeRawFromFields("recipient_id" := recipientId)
-
   }
 
   /**
     * Create a new DM channel with a user. Returns a DM channel object (if one
     * already exists, it will be returned instead).
     */
-  def createDM(
-      body: CreateDMBody
-  ): Request[CreateDMBody, DMChannel] =
+  def createDM(body: CreateDMBody): Request[CreateDMBody, DMChannel] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "channels").toRequest(Method.POST),
       params = body
@@ -240,13 +275,20 @@ object UserRequests {
     /** Access tokens of users that have granted your app the gdm.join scope */
     @inline def accessTokens: Seq[String] = selectDynamic[Seq[String]]("access_tokens")
 
+    @inline def withAccessTokens(newValue: Seq[String]): CreateGroupDMBody =
+      objWith(CreateGroupDMBody, "access_tokens", newValue)
+
     /** A dictionary of user ids to their respective nicknames */
     @inline def nicks: Map[UserId, String] = selectDynamic[Map[UserId, String]]("nicks")
+
+    @inline def withNicks(newValue: Map[UserId, String]): CreateGroupDMBody =
+      objWith(CreateGroupDMBody, "nicks", newValue)
 
     override def values: Seq[() => Any] = Seq(() => accessTokens, () => nicks)
   }
   object CreateGroupDMBody extends DiscordObjectCompanion[CreateGroupDMBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGroupDMBody = new CreateGroupDMBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGroupDMBody =
+      new CreateGroupDMBody(json, cache)
 
     /**
       * @param accessTokens
@@ -256,7 +298,6 @@ object UserRequests {
       */
     def make20(accessTokens: Seq[String], nicks: Map[UserId, String]): CreateGroupDMBody =
       makeRawFromFields("access_tokens" := accessTokens, "nicks" := nicks)
-
   }
 
   /**
@@ -264,9 +305,7 @@ object UserRequests {
     * object. This endpoint was intended to be used with the now-deprecated
     * GameBridge SDK. Fires a Channel Create Gateway event.
     */
-  def createGroupDM(
-      body: CreateGroupDMBody
-  ): Request[CreateGroupDMBody, GroupDMChannel] =
+  def createGroupDM(body: CreateGroupDMBody): Request[CreateGroupDMBody, GroupDMChannel] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "channels").toRequest(Method.POST),
       params = body
@@ -286,9 +325,7 @@ object UserRequests {
     * access token with role_connections.write scope for the application
     * specified in the path.
     */
-  def getUserApplicationRoleConnection(
-      applicationId: ApplicationId
-  ): Request[Unit, ApplicationRoleConnection] =
+  def getUserApplicationRoleConnection(applicationId: ApplicationId): Request[Unit, ApplicationRoleConnection] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "applications" / Parameters[ApplicationId](
         "applicationId",
@@ -304,8 +341,14 @@ object UserRequests {
       */
     @inline def platformName: UndefOr[String] = selectDynamic[UndefOr[String]]("platform_name")
 
+    @inline def withPlatformName(newValue: UndefOr[String]): UpdateUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateUserApplicationRoleConnectionBody, "platform_name", newValue)
+
     /** The username on the platform a bot has connected (max 100 characters) */
     @inline def platformUsername: UndefOr[String] = selectDynamic[UndefOr[String]]("platform_username")
+
+    @inline def withPlatformUsername(newValue: UndefOr[String]): UpdateUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateUserApplicationRoleConnectionBody, "platform_username", newValue)
 
     /**
       * Object mapping application role connection metadata keys to their
@@ -313,6 +356,9 @@ object UserRequests {
       * bot has connected
       */
     @inline def metadata: UndefOr[Map[String, String]] = selectDynamic[UndefOr[Map[String, String]]]("metadata")
+
+    @inline def withMetadata(newValue: UndefOr[Map[String, String]]): UpdateUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateUserApplicationRoleConnectionBody, "metadata", newValue)
 
     override def values: Seq[() => Any] = Seq(() => platformName, () => platformUsername, () => metadata)
   }
@@ -341,7 +387,6 @@ object UserRequests {
       "platform_username" :=? platformUsername,
       "metadata"          :=? metadata
     )
-
   }
 
   /**
@@ -360,5 +405,4 @@ object UserRequests {
       ) / "role-connection").toRequest(Method.PUT),
       params = body
     )
-
 }

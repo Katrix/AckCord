@@ -34,5 +34,4 @@ object ApplicationRoleConnectionMetadataRequests {
       ) / "role-connections" / "metadata").toRequest(Method.PUT),
       params = body
     )
-
 }

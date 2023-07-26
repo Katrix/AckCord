@@ -15,28 +15,44 @@ class Emoji(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   /** The id of this emoji. */
   @inline def id: Option[EmojiId] = selectDynamic[Option[EmojiId]]("id")
 
+  @inline def withId(newValue: Option[EmojiId]): Emoji = objWith(Emoji, "id", newValue)
+
   /** The name of this emoji. Can be None for reaction emojis */
   @inline def name: Option[String] = selectDynamic[Option[String]]("name")
+
+  @inline def withName(newValue: Option[String]): Emoji = objWith(Emoji, "name", newValue)
 
   /** The roles this emoji is whitelisted to */
   @inline def roles: UndefOr[Seq[RoleId]] = selectDynamic[UndefOr[Seq[RoleId]]]("roles")
 
+  @inline def withRoles(newValue: UndefOr[Seq[RoleId]]): Emoji = objWithUndef(Emoji, "roles", newValue)
+
   /** The user that created this emoji */
   @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
+
+  @inline def withUser(newValue: UndefOr[User]): Emoji = objWithUndef(Emoji, "user", newValue)
 
   /** Whether this emoji must be wrapped in colons */
   @inline def requireColons: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("require_colons")
 
+  @inline def withRequireColons(newValue: UndefOr[Boolean]): Emoji = objWithUndef(Emoji, "require_colons", newValue)
+
   /** Whether this emoji is managed */
   @inline def managed: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("managed")
 
+  @inline def withManaged(newValue: UndefOr[Boolean]): Emoji = objWithUndef(Emoji, "managed", newValue)
+
   /** Whether this emoji is animated */
   @inline def animated: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("animated")
+
+  @inline def withAnimated(newValue: UndefOr[Boolean]): Emoji = objWithUndef(Emoji, "animated", newValue)
 
   /**
     * Whether this emoji can be used, may be false due to loss of Server Boosts
     */
   @inline def available: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("available")
+
+  @inline def withAvailable(newValue: UndefOr[Boolean]): Emoji = objWithUndef(Emoji, "available", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -90,5 +106,4 @@ object Emoji extends DiscordObjectCompanion[Emoji] {
     "animated"       :=? animated,
     "available"      :=? available
   )
-
 }

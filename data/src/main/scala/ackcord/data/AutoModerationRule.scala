@@ -14,39 +14,69 @@ class AutoModerationRule(json: Json, cache: Map[String, Any] = Map.empty) extend
   /** The id of this rule */
   @inline def id: Snowflake[AutoModerationRule] = selectDynamic[Snowflake[AutoModerationRule]]("id")
 
+  @inline def withId(newValue: Snowflake[AutoModerationRule]): AutoModerationRule =
+    objWith(AutoModerationRule, "id", newValue)
+
   /** The id of the guild which this rule belongs to */
   @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+  @inline def withGuildId(newValue: GuildId): AutoModerationRule = objWith(AutoModerationRule, "guild_id", newValue)
 
   /** The rule name */
   @inline def name: String = selectDynamic[String]("name")
 
+  @inline def withName(newValue: String): AutoModerationRule = objWith(AutoModerationRule, "name", newValue)
+
   /** The user which first created this rule */
   @inline def creatorId: UserId = selectDynamic[UserId]("creator_id")
+
+  @inline def withCreatorId(newValue: UserId): AutoModerationRule = objWith(AutoModerationRule, "creator_id", newValue)
 
   /** The rule event type */
   @inline def eventType: AutoModerationRule.AutoModerationRuleEventType =
     selectDynamic[AutoModerationRule.AutoModerationRuleEventType]("event_type")
 
+  @inline def withEventType(newValue: AutoModerationRule.AutoModerationRuleEventType): AutoModerationRule =
+    objWith(AutoModerationRule, "event_type", newValue)
+
   /** The rule trigger type */
   @inline def triggerType: AutoModerationRule.AutoModerationRuleTriggerType =
     selectDynamic[AutoModerationRule.AutoModerationRuleTriggerType]("trigger_type")
+
+  @inline def withTriggerType(newValue: AutoModerationRule.AutoModerationRuleTriggerType): AutoModerationRule =
+    objWith(AutoModerationRule, "trigger_type", newValue)
 
   /** The rule trigger metadata */
   @inline def triggerMetadata: AutoModerationRule.AutoModerationRuleTriggerMetadata =
     selectDynamic[AutoModerationRule.AutoModerationRuleTriggerMetadata]("trigger_metadata")
 
+  @inline def withTriggerMetadata(
+      newValue: AutoModerationRule.AutoModerationRuleTriggerMetadata
+  ): AutoModerationRule = objWith(AutoModerationRule, "trigger_metadata", newValue)
+
   /** The actions which will execute when the rule is triggered */
   @inline def actions: Seq[AutoModerationRule.AutoModerationRuleAction] =
     selectDynamic[Seq[AutoModerationRule.AutoModerationRuleAction]]("actions")
 
+  @inline def withActions(newValue: Seq[AutoModerationRule.AutoModerationRuleAction]): AutoModerationRule =
+    objWith(AutoModerationRule, "actions", newValue)
+
   /** Whether the rule is enabled */
   @inline def enabled: Boolean = selectDynamic[Boolean]("enabled")
+
+  @inline def withEnabled(newValue: Boolean): AutoModerationRule = objWith(AutoModerationRule, "enabled", newValue)
 
   /** The role ids that should not be affected by the rule (Maximum of 20) */
   @inline def exemptRoles: Seq[RoleId] = selectDynamic[Seq[RoleId]]("exempt_roles")
 
+  @inline def withExemptRoles(newValue: Seq[RoleId]): AutoModerationRule =
+    objWith(AutoModerationRule, "exempt_roles", newValue)
+
   /** The channel ids that should not be affected by the rule (Maximum of 50) */
   @inline def exemptChannels: Seq[GuildChannelId] = selectDynamic[Seq[GuildChannelId]]("exempt_channels")
+
+  @inline def withExemptChannels(newValue: Seq[GuildChannelId]): AutoModerationRule =
+    objWith(AutoModerationRule, "exempt_channels", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -63,7 +93,8 @@ class AutoModerationRule(json: Json, cache: Map[String, Any] = Map.empty) extend
   )
 }
 object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
-  def makeRaw(json: Json, cache: Map[String, Any]): AutoModerationRule = new AutoModerationRule(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): AutoModerationRule =
+    new AutoModerationRule(json, cache)
 
   /**
     * @param id
@@ -132,8 +163,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
 
     def unknown(value: Int): AutoModerationRuleTriggerType = new AutoModerationRuleTriggerType(value)
 
-    def values: Seq[AutoModerationRuleTriggerType] = Seq(KEYWORD, SPAM, KEYWORD_PRESET, MENTION_SPAM)
-
+    val values: Seq[AutoModerationRuleTriggerType] = Seq(KEYWORD, SPAM, KEYWORD_PRESET, MENTION_SPAM)
   }
 
   class AutoModerationRuleTriggerMetadata(json: Json, cache: Map[String, Any] = Map.empty)
@@ -142,11 +172,17 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
     /** Substrings which will be searched for in content (Maximum of 1000) */
     @inline def keywordFilter: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("keyword_filter")
 
+    @inline def withKeywordFilter(newValue: UndefOr[Seq[String]]): AutoModerationRuleTriggerMetadata =
+      objWithUndef(AutoModerationRuleTriggerMetadata, "keyword_filter", newValue)
+
     /**
       * Regular expression patterns which will be matched against content
       * (Maximum of 10)
       */
     @inline def regexPatterns: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("regex_patterns")
+
+    @inline def withRegexPatterns(newValue: UndefOr[Seq[String]]): AutoModerationRuleTriggerMetadata =
+      objWithUndef(AutoModerationRuleTriggerMetadata, "regex_patterns", newValue)
 
     /**
       * The internally pre-defined wordsets which will be searched for in
@@ -155,8 +191,15 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
     @inline def presets: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]] =
       selectDynamic[UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]]]("presets")
 
+    @inline def withPresets(
+        newValue: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]]
+    ): AutoModerationRuleTriggerMetadata = objWithUndef(AutoModerationRuleTriggerMetadata, "presets", newValue)
+
     /** Substrings which should not trigger the rule (Maximum of 100 or 1000) */
     @inline def allowList: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("allow_list")
+
+    @inline def withAllowList(newValue: UndefOr[Seq[String]]): AutoModerationRuleTriggerMetadata =
+      objWithUndef(AutoModerationRuleTriggerMetadata, "allow_list", newValue)
 
     /**
       * Total number of unique role and user mentions allowed per message
@@ -164,9 +207,15 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       */
     @inline def mentionTotalLimit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("mention_total_limit")
 
+    @inline def withMentionTotalLimit(newValue: UndefOr[Int]): AutoModerationRuleTriggerMetadata =
+      objWithUndef(AutoModerationRuleTriggerMetadata, "mention_total_limit", newValue)
+
     /** Whether to automatically detect mention raids */
     @inline def mentionRaidProtectionEnabled: UndefOr[Boolean] =
       selectDynamic[UndefOr[Boolean]]("mention_raid_protection_enabled")
+
+    @inline def withMentionRaidProtectionEnabled(newValue: UndefOr[Boolean]): AutoModerationRuleTriggerMetadata =
+      objWithUndef(AutoModerationRuleTriggerMetadata, "mention_raid_protection_enabled", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => keywordFilter,
@@ -213,7 +262,6 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       "mention_total_limit"             :=? mentionTotalLimit,
       "mention_raid_protection_enabled" :=? mentionRaidProtectionEnabled
     )
-
   }
 
   sealed case class AutoModerationRuleKeywordPresetType private (value: Int) extends DiscordEnum[Int]
@@ -230,8 +278,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
 
     def unknown(value: Int): AutoModerationRuleKeywordPresetType = new AutoModerationRuleKeywordPresetType(value)
 
-    def values: Seq[AutoModerationRuleKeywordPresetType] = Seq(PROFANITY, SEXUAL_CONTENT, SLURS)
-
+    val values: Seq[AutoModerationRuleKeywordPresetType] = Seq(PROFANITY, SEXUAL_CONTENT, SLURS)
   }
 
   sealed case class AutoModerationRuleEventType private (value: Int) extends DiscordEnum[Int]
@@ -242,8 +289,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
 
     def unknown(value: Int): AutoModerationRuleEventType = new AutoModerationRuleEventType(value)
 
-    def values: Seq[AutoModerationRuleEventType] = Seq(MESSAGE_SEND)
-
+    val values: Seq[AutoModerationRuleEventType] = Seq(MESSAGE_SEND)
   }
 
   class AutoModerationRuleAction(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -252,12 +298,20 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
     @inline def tpe: AutoModerationRule.AutoModerationRuleActionType =
       selectDynamic[AutoModerationRule.AutoModerationRuleActionType]("type")
 
+    @inline def withTpe(
+        newValue: AutoModerationRule.AutoModerationRuleActionType
+    ): AutoModerationRuleAction = objWith(AutoModerationRuleAction, "type", newValue)
+
     /**
       * Additional metadata needed during execution for this specific action
       * type
       */
     @inline def metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata] =
       selectDynamic[UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata]]("metadata")
+
+    @inline def withMetadata(
+        newValue: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata]
+    ): AutoModerationRuleAction = objWithUndef(AutoModerationRuleAction, "metadata", newValue)
 
     override def values: Seq[() => Any] = Seq(() => tpe, () => metadata)
   }
@@ -276,7 +330,6 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
         tpe: AutoModerationRule.AutoModerationRuleActionType,
         metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata] = UndefOrUndefined
     ): AutoModerationRuleAction = makeRawFromFields("type" := tpe, "metadata" :=? metadata)
-
   }
 
   sealed case class AutoModerationRuleActionType private (value: Int) extends DiscordEnum[Int]
@@ -297,8 +350,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
 
     def unknown(value: Int): AutoModerationRuleActionType = new AutoModerationRuleActionType(value)
 
-    def values: Seq[AutoModerationRuleActionType] = Seq(BLOCK_MESSAGE, SEND_ALERT_MESSAGE, TIMEOUT)
-
+    val values: Seq[AutoModerationRuleActionType] = Seq(BLOCK_MESSAGE, SEND_ALERT_MESSAGE, TIMEOUT)
   }
 
   class AutoModerationRuleActionMetadata(json: Json, cache: Map[String, Any] = Map.empty)
@@ -307,14 +359,23 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
     /** Channel to which user content should be logged */
     @inline def channelId: UndefOr[ChannelId] = selectDynamic[UndefOr[ChannelId]]("channel_id")
 
+    @inline def withChannelId(newValue: UndefOr[ChannelId]): AutoModerationRuleActionMetadata =
+      objWithUndef(AutoModerationRuleActionMetadata, "channel_id", newValue)
+
     /** Timeout duration in seconds */
     @inline def durationSeconds: UndefOr[Int] = selectDynamic[UndefOr[Int]]("duration_seconds")
+
+    @inline def withDurationSeconds(newValue: UndefOr[Int]): AutoModerationRuleActionMetadata =
+      objWithUndef(AutoModerationRuleActionMetadata, "duration_seconds", newValue)
 
     /**
       * Additional explanation that will be shown to members whenever their
       * message is blocked
       */
     @inline def customMessage: UndefOr[String] = selectDynamic[UndefOr[String]]("custom_message")
+
+    @inline def withCustomMessage(newValue: UndefOr[String]): AutoModerationRuleActionMetadata =
+      objWithUndef(AutoModerationRuleActionMetadata, "custom_message", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => durationSeconds, () => customMessage)
   }
@@ -340,6 +401,5 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       "duration_seconds" :=? durationSeconds,
       "custom_message"   :=? customMessage
     )
-
   }
 }

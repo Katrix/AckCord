@@ -19,9 +19,7 @@ object ChannelRequests {
     * Get a channel by ID. Returns a channel object. If the channel is a thread,
     * a thread member object is included in the returned result.
     */
-  def getChannel(
-      channelId: ChannelId
-  ): Request[Unit, Channel] =
+  def getChannel(channelId: ChannelId): Request[Unit, Channel] =
     Request.restRequest(
       route =
         (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true)).toRequest(Method.GET)
@@ -67,13 +65,20 @@ object ChannelRequests {
       /** 1-100 character channel name */
       @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+      @inline def withName(newValue: UndefOr[String]): ModifyGroupDMBody =
+        objWithUndef(ModifyGroupDMBody, "name", newValue)
+
       /** Base64 encoded icon */
       @inline def icon: UndefOr[ImageData] = selectDynamic[UndefOr[ImageData]]("icon")
+
+      @inline def withIcon(newValue: UndefOr[ImageData]): ModifyGroupDMBody =
+        objWithUndef(ModifyGroupDMBody, "icon", newValue)
 
       override def values: Seq[() => Any] = Seq(() => name, () => icon)
     }
     object ModifyGroupDMBody extends DiscordObjectCompanion[ModifyGroupDMBody] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ModifyGroupDMBody = new ModifyGroupDMBody(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ModifyGroupDMBody =
+        new ModifyGroupDMBody(json, cache)
 
       /**
         * @param name
@@ -85,7 +90,6 @@ object ChannelRequests {
           name: UndefOr[String] = UndefOrUndefined,
           icon: UndefOr[ImageData] = UndefOrUndefined
       ): ModifyGroupDMBody = makeRawFromFields("name" :=? name, "icon" :=? icon)
-
     }
 
     /**
@@ -104,14 +108,23 @@ object ChannelRequests {
       /** 1-100 character channel name */
       @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+      @inline def withName(newValue: UndefOr[String]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "name", newValue)
+
       /**
         * The type of channel; only conversion between text and announcement is
         * supported and only in guilds with the "NEWS" feature
         */
       @inline def tpe: UndefOr[Channel.ChannelType] = selectDynamic[UndefOr[Channel.ChannelType]]("type")
 
+      @inline def withTpe(newValue: UndefOr[Channel.ChannelType]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "type", newValue)
+
       /** The position of the channel in the left-hand listing */
       @inline def position: JsonOption[Int] = selectDynamic[JsonOption[Int]]("position")
+
+      @inline def withPosition(newValue: JsonOption[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "position", newValue)
 
       /**
         * 0-1024 character channel topic (0-4096 characters for GUILD_FORUM
@@ -119,8 +132,14 @@ object ChannelRequests {
         */
       @inline def topic: JsonOption[String] = selectDynamic[JsonOption[String]]("topic")
 
+      @inline def withTopic(newValue: JsonOption[String]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "topic", newValue)
+
       /** Whether the channel is nsfw */
       @inline def nsfw: JsonOption[Boolean] = selectDynamic[JsonOption[Boolean]]("nsfw")
+
+      @inline def withNsfw(newValue: JsonOption[Boolean]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "nsfw", newValue)
 
       /**
         * Amount of seconds a user has to wait before sending another message
@@ -129,8 +148,14 @@ object ChannelRequests {
         */
       @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
 
+      @inline def withRateLimitPerUser(newValue: JsonOption[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "rate_limit_per_user", newValue)
+
       /** The bitrate (in bits) of the voice or stage channel; min 8000 */
       @inline def bitrate: JsonOption[Int] = selectDynamic[JsonOption[Int]]("bitrate")
+
+      @inline def withBitrate(newValue: JsonOption[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "bitrate", newValue)
 
       /**
         * The user limit of the voice or stage channel, max 99 for voice
@@ -138,19 +163,35 @@ object ChannelRequests {
         */
       @inline def userLimit: JsonOption[Int] = selectDynamic[JsonOption[Int]]("user_limit")
 
+      @inline def withUserLimit(newValue: JsonOption[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "user_limit", newValue)
+
       /** Channel or category-specific permissions */
       @inline def permissionOverwrites: JsonOption[ModifyGuildChannelBody.EditChannelPartialOverwrite] =
         selectDynamic[JsonOption[ModifyGuildChannelBody.EditChannelPartialOverwrite]]("permission_overwrites")
 
+      @inline def withPermissionOverwrites(
+          newValue: JsonOption[ModifyGuildChannelBody.EditChannelPartialOverwrite]
+      ): ModifyGuildChannelBody = objWithUndef(ModifyGuildChannelBody, "permission_overwrites", newValue)
+
       /** Id of the new parent category for a channel */
       @inline def parentId: JsonOption[GuildCategoryId] = selectDynamic[JsonOption[GuildCategoryId]]("parent_id")
+
+      @inline def withParentId(newValue: JsonOption[GuildCategoryId]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "parent_id", newValue)
 
       /** Channel voice region id, automatic when set to null */
       @inline def rtcRegion: JsonOption[VoiceRegion] = selectDynamic[JsonOption[VoiceRegion]]("rtc_region")
 
+      @inline def withRtcRegion(newValue: JsonOption[VoiceRegion]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "rtc_region", newValue)
+
       /** The camera video quality mode of the voice channel */
       @inline def videoQualityMode: JsonOption[Channel.VideoQualityMode] =
         selectDynamic[JsonOption[Channel.VideoQualityMode]]("video_quality_mode")
+
+      @inline def withVideoQualityMode(newValue: JsonOption[Channel.VideoQualityMode]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "video_quality_mode", newValue)
 
       /**
         * The default duration that the clients use (not the API) for newly
@@ -160,11 +201,17 @@ object ChannelRequests {
       @inline def defaultAutoArchiveDuration: JsonOption[Int] =
         selectDynamic[JsonOption[Int]]("default_auto_archive_duration")
 
+      @inline def withDefaultAutoArchiveDuration(newValue: JsonOption[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "default_auto_archive_duration", newValue)
+
       /**
         * Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1 <<
         * 4) is supported.
         */
       @inline def flags: UndefOr[Channel.ChannelFlags] = selectDynamic[UndefOr[Channel.ChannelFlags]]("flags")
+
+      @inline def withFlags(newValue: UndefOr[Channel.ChannelFlags]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "flags", newValue)
 
       /**
         * The set of tags that can be used in a GUILD_FORUM channel; limited to
@@ -173,12 +220,18 @@ object ChannelRequests {
       @inline def availableTags: UndefOr[Seq[Channel.ForumTag]] =
         selectDynamic[UndefOr[Seq[Channel.ForumTag]]]("available_tags")
 
+      @inline def withAvailableTags(newValue: UndefOr[Seq[Channel.ForumTag]]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "available_tags", newValue)
+
       /**
         * The emoji to show in the add reaction button on a thread in a
         * GUILD_FORUM channel
         */
       @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
         selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
+
+      @inline def withDefaultReactionEmoji(newValue: JsonOption[Channel.DefaultReaction]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "default_reaction_emoji", newValue)
 
       /**
         * The initial rate_limit_per_user to set on newly created threads in a
@@ -188,6 +241,9 @@ object ChannelRequests {
       @inline def defaultThreadRateLimitPerUser: UndefOr[Int] =
         selectDynamic[UndefOr[Int]]("default_thread_rate_limit_per_user")
 
+      @inline def withDefaultThreadRateLimitPerUser(newValue: UndefOr[Int]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "default_thread_rate_limit_per_user", newValue)
+
       /**
         * The default sort order type used to order posts in GUILD_FORUM
         * channels
@@ -195,12 +251,18 @@ object ChannelRequests {
       @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
         selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
 
+      @inline def withDefaultSortOrder(newValue: JsonOption[Channel.ForumSortOrder]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "default_sort_order", newValue)
+
       /**
         * The default forum layout type used to display posts in GUILD_FORUM
         * channels
         */
       @inline def defaultForumLayout: UndefOr[Channel.ForumLayout] =
         selectDynamic[UndefOr[Channel.ForumLayout]]("default_forum_layout")
+
+      @inline def withDefaultForumLayout(newValue: UndefOr[Channel.ForumLayout]): ModifyGuildChannelBody =
+        objWithUndef(ModifyGuildChannelBody, "default_forum_layout", newValue)
 
       override def values: Seq[() => Any] = Seq(
         () => name,
@@ -225,7 +287,8 @@ object ChannelRequests {
       )
     }
     object ModifyGuildChannelBody extends DiscordObjectCompanion[ModifyGuildChannelBody] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildChannelBody = new ModifyGuildChannelBody(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildChannelBody =
+        new ModifyGuildChannelBody(json, cache)
 
       /**
         * @param name
@@ -329,15 +392,28 @@ object ChannelRequests {
         /** Role or user id */
         @inline def id: UserOrRoleId = selectDynamic[UserOrRoleId]("id")
 
+        @inline def withId(newValue: UserOrRoleId): EditChannelPartialOverwrite =
+          objWith(EditChannelPartialOverwrite, "id", newValue)
+
         /** Either 0 (role) or 1 (member) */
         @inline def tpe: Channel.PermissionOverwrite.PermissionOverwriteType =
           selectDynamic[Channel.PermissionOverwrite.PermissionOverwriteType]("type")
 
+        @inline def withTpe(
+            newValue: Channel.PermissionOverwrite.PermissionOverwriteType
+        ): EditChannelPartialOverwrite = objWith(EditChannelPartialOverwrite, "type", newValue)
+
         /** Permission bit set */
         @inline def allow: JsonOption[Permissions] = selectDynamic[JsonOption[Permissions]]("allow")
 
+        @inline def withAllow(newValue: JsonOption[Permissions]): EditChannelPartialOverwrite =
+          objWithUndef(EditChannelPartialOverwrite, "allow", newValue)
+
         /** Permission bit set */
         @inline def deny: JsonOption[Permissions] = selectDynamic[JsonOption[Permissions]]("deny")
+
+        @inline def withDeny(newValue: JsonOption[Permissions]): EditChannelPartialOverwrite =
+          objWithUndef(EditChannelPartialOverwrite, "deny", newValue)
 
         override def values: Seq[() => Any] = Seq(() => id, () => tpe, () => allow, () => deny)
       }
@@ -362,7 +438,6 @@ object ChannelRequests {
             deny: JsonOption[Permissions] = JsonUndefined
         ): EditChannelPartialOverwrite =
           makeRawFromFields("id" := id, "type" := tpe, "allow" :=? allow, "deny" :=? deny)
-
       }
     }
 
@@ -373,8 +448,14 @@ object ChannelRequests {
       /** 1-100 character channel name */
       @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+      @inline def withName(newValue: UndefOr[String]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "name", newValue)
+
       /** Whether the thread is archived */
       @inline def archived: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("archived")
+
+      @inline def withArchived(newValue: UndefOr[Boolean]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "archived", newValue)
 
       /**
         * The thread will stop showing in the channel list after
@@ -383,17 +464,26 @@ object ChannelRequests {
         */
       @inline def autoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("auto_archive_duration")
 
+      @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "auto_archive_duration", newValue)
+
       /**
         * Whether the thread is locked; when a thread is locked, only users with
         * MANAGE_THREADS can unarchive it
         */
       @inline def locked: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("locked")
 
+      @inline def withLocked(newValue: UndefOr[Boolean]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "locked", newValue)
+
       /**
         * Whether non-moderators can add other non-moderators to a thread; only
         * available on private threads
         */
       @inline def invitable: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("invitable")
+
+      @inline def withInvitable(newValue: UndefOr[Boolean]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "invitable", newValue)
 
       /**
         * Amount of seconds a user has to wait before sending another message
@@ -402,11 +492,17 @@ object ChannelRequests {
         */
       @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
 
+      @inline def withRateLimitPerUser(newValue: JsonOption[Int]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "rate_limit_per_user", newValue)
+
       /**
         * Channel flags combined as a bitfield; PINNED can only be set for
         * threads in forum channels
         */
       @inline def flags: UndefOr[Channel.ChannelFlags] = selectDynamic[UndefOr[Channel.ChannelFlags]]("flags")
+
+      @inline def withFlags(newValue: UndefOr[Channel.ChannelFlags]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "flags", newValue)
 
       /**
         * The IDs of the set of tags that have been applied to a thread in a
@@ -414,6 +510,9 @@ object ChannelRequests {
         */
       @inline def appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] =
         selectDynamic[UndefOr[Seq[Snowflake[Channel.ForumTag]]]]("applied_tags")
+
+      @inline def withAppliedTags(newValue: UndefOr[Seq[Snowflake[Channel.ForumTag]]]): ModifyThreadChannelBody =
+        objWithUndef(ModifyThreadChannelBody, "applied_tags", newValue)
 
       override def values: Seq[() => Any] = Seq(
         () => name,
@@ -475,7 +574,6 @@ object ChannelRequests {
         "flags"                 :=? flags,
         "applied_tags"          :=? appliedTags
       )
-
     }
   }
 
@@ -487,10 +585,7 @@ object ChannelRequests {
     * each of them. Returns a channel object on success. Fires a Channel Delete
     * Gateway event (or Thread Delete if the channel was a thread).
     */
-  def deleteCloseChannel(
-      channelId: ChannelId,
-      reason: Option[String]
-  ): Request[Unit, Unit] =
+  def deleteCloseChannel(channelId: ChannelId, reason: Option[String]): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true))
         .toRequest(Method.DELETE),
@@ -498,17 +593,14 @@ object ChannelRequests {
     )
 
   /**
-    * * Retrieves a specific message in the channel. Returns a message object on
+    * Retrieves a specific message in the channel. Returns a message object on
     * success.
     *
     * If operating on a guild channel, this endpoint requires the current user
     * to have the VIEW_CHANNEL and READ_MESSAGE_HISTORY permissions. If the
     * channel is a voice channel, they must also have the CONNECT permission.
     */
-  def getChannelMessage(
-      channelId: ChannelId,
-      messageId: MessageId
-  ): Request[Unit, Message] =
+  def getChannelMessage(channelId: ChannelId, messageId: MessageId): Request[Unit, Message] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -522,40 +614,70 @@ object ChannelRequests {
     /** Message contents (up to 2000 characters) */
     @inline def content: UndefOr[String] = selectDynamic[UndefOr[String]]("content")
 
+    @inline def withContent(newValue: UndefOr[String]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "content", newValue)
+
     /**
       * Can be used to verify a message was sent (up to 25 characters). Value
       * will appear in the Message Create event.
       */
     @inline def nonce: UndefOr[IntOrString] = selectDynamic[UndefOr[IntOrString]]("nonce")
 
+    @inline def withNonce(newValue: UndefOr[IntOrString]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "nonce", newValue)
+
     /** true if this is a TTS message */
     @inline def tts: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("tts")
+
+    @inline def withTts(newValue: UndefOr[Boolean]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "tts", newValue)
 
     /** Up to 10 rich embeds (up to 6000 characters) */
     @inline def embeds: UndefOr[Seq[OutgoingEmbed]] = selectDynamic[UndefOr[Seq[OutgoingEmbed]]]("embeds")
 
+    @inline def withEmbeds(newValue: UndefOr[Seq[OutgoingEmbed]]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "embeds", newValue)
+
     /** Allowed mentions for the message */
     @inline def allowedMentions: UndefOr[AllowedMentions] = selectDynamic[UndefOr[AllowedMentions]]("allowed_mentions")
+
+    @inline def withAllowedMentions(newValue: UndefOr[AllowedMentions]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "allowed_mentions", newValue)
 
     /** Include to make your message a reply */
     @inline def messageReference: UndefOr[MessageReference] =
       selectDynamic[UndefOr[MessageReference]]("message_reference")
 
+    @inline def withMessageReference(newValue: UndefOr[MessageReference]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "message_reference", newValue)
+
     /** Components to include with the message */
     @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
+
+    @inline def withComponents(newValue: UndefOr[Seq[Component]]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "components", newValue)
 
     /** IDs of up to 3 stickers in the server to send in the message */
     @inline def stickerIds: UndefOr[Seq[RawSnowflake]] = selectDynamic[UndefOr[Seq[RawSnowflake]]]("sticker_ids")
 
+    @inline def withStickerIds(newValue: UndefOr[Seq[RawSnowflake]]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "sticker_ids", newValue)
+
     /** Attachment objects with filename and description */
     @inline def attachments: UndefOr[Seq[MessageCreateEditAttachment]] =
       selectDynamic[UndefOr[Seq[MessageCreateEditAttachment]]]("attachments")
+
+    @inline def withAttachments(newValue: UndefOr[Seq[MessageCreateEditAttachment]]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "attachments", newValue)
 
     /**
       * Message flags combined as a bitfield (only SUPPRESS_EMBEDS and
       * SUPPRESS_NOTIFICATIONS can be set)
       */
     @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): CreateMessageBody =
+      objWithUndef(CreateMessageBody, "flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => content,
@@ -571,7 +693,8 @@ object ChannelRequests {
     )
   }
   object CreateMessageBody extends DiscordObjectCompanion[CreateMessageBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateMessageBody = new CreateMessageBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateMessageBody =
+      new CreateMessageBody(json, cache)
 
     /**
       * @param content
@@ -620,11 +743,10 @@ object ChannelRequests {
       "attachments"       :=? attachments,
       "flags"             :=? flags
     )
-
   }
 
   /**
-    * * Post a message to a guild text or DM channel. Returns a message object.
+    * Post a message to a guild text or DM channel. Returns a message object.
     * Fires a Message Create Gateway event. See message formatting for more
     * information on how to properly format messages.
     *
@@ -670,35 +792,68 @@ object ChannelRequests {
     /** Attachment id */
     @inline def id: Snowflake[Attachment] = selectDynamic[Snowflake[Attachment]]("id")
 
+    @inline def withId(newValue: Snowflake[Attachment]): MessageCreateEditAttachment =
+      objWith(MessageCreateEditAttachment, "id", newValue)
+
     /** Name of file attached */
     @inline def filename: UndefOr[String] = selectDynamic[UndefOr[String]]("filename")
+
+    @inline def withFilename(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "filename", newValue)
 
     /** Description for the file (max 1024 characters) */
     @inline def description: UndefOr[String] = selectDynamic[UndefOr[String]]("description")
 
+    @inline def withDescription(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "description", newValue)
+
     /** The attachment's media type */
     @inline def contentType: UndefOr[String] = selectDynamic[UndefOr[String]]("content_type")
+
+    @inline def withContentType(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "content_type", newValue)
 
     /** Size of file in bytes */
     @inline def size: UndefOr[Int] = selectDynamic[UndefOr[Int]]("size")
 
+    @inline def withSize(newValue: UndefOr[Int]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "size", newValue)
+
     /** Source url of file */
     @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
+
+    @inline def withUrl(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "url", newValue)
 
     /** A proxied url of file */
     @inline def proxyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_url")
 
+    @inline def withProxyUrl(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "proxy_url", newValue)
+
     /** Height of file (if image) */
     @inline def height: JsonOption[Int] = selectDynamic[JsonOption[Int]]("height")
+
+    @inline def withHeight(newValue: JsonOption[Int]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "height", newValue)
 
     /** Width of file (if image) */
     @inline def width: JsonOption[Int] = selectDynamic[JsonOption[Int]]("width")
 
+    @inline def withWidth(newValue: JsonOption[Int]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "width", newValue)
+
     /** Whether this attachment is ephemeral */
     @inline def ephemeral: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("ephemeral")
 
+    @inline def withEphemeral(newValue: UndefOr[Boolean]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "ephemeral", newValue)
+
     /** The duration of the audio file (currently for voice messages) */
     @inline def durationSecs: UndefOr[Float] = selectDynamic[UndefOr[Float]]("duration_secs")
+
+    @inline def withDurationSecs(newValue: UndefOr[Float]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "duration_secs", newValue)
 
     /**
       * Base64 encoded bytearray representing a sampled waveform (currently for
@@ -706,8 +861,14 @@ object ChannelRequests {
       */
     @inline def waveform: UndefOr[String] = selectDynamic[UndefOr[String]]("waveform")
 
+    @inline def withWaveform(newValue: UndefOr[String]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "waveform", newValue)
+
     /** Attachment flags combined as a bitfield */
     @inline def flags: UndefOr[Attachment.AttachmentFlags] = selectDynamic[UndefOr[Attachment.AttachmentFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[Attachment.AttachmentFlags]): MessageCreateEditAttachment =
+      objWithUndef(MessageCreateEditAttachment, "flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -787,21 +948,17 @@ object ChannelRequests {
       "waveform"      :=? waveform,
       "flags"         :=? flags
     )
-
   }
 
   /**
-    * * Crosspost a message in an Announcement Channel to following channels.
-    * This endpoint requires the SEND_MESSAGES permission, if the current user
-    * sent the message, or additionally the MANAGE_MESSAGES permission, for all
-    * other messages, to be present for the current user.
+    * Crosspost a message in an Announcement Channel to following channels. This
+    * endpoint requires the SEND_MESSAGES permission, if the current user sent
+    * the message, or additionally the MANAGE_MESSAGES permission, for all other
+    * messages, to be present for the current user.
     *
     * Returns a message object. Fires a Message Update Gateway event.
     */
-  def crosspostMessage(
-      channelId: ChannelId,
-      messageId: MessageId
-  ): Request[Unit, Message] =
+  def crosspostMessage(channelId: ChannelId, messageId: MessageId): Request[Unit, Message] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -820,11 +977,7 @@ object ChannelRequests {
     * will fail with 10014: Unknown Emoji. To use custom emoji, you must encode
     * it in the format name:id with the emoji name and emoji id.
     */
-  def createReaction(
-      channelId: ChannelId,
-      messageId: MessageId,
-      emoji: Emoji
-  ): Request[Unit, Unit] =
+  def createReaction(channelId: ChannelId, messageId: MessageId, emoji: Emoji): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -843,11 +996,7 @@ object ChannelRequests {
     * Emoji. To use custom emoji, you must encode it in the format name:id with
     * the emoji name and emoji id.
     */
-  def deleteOwnReaction(
-      channelId: ChannelId,
-      messageId: MessageId,
-      emoji: Emoji
-  ): Request[Unit, Unit] =
+  def deleteOwnReaction(channelId: ChannelId, messageId: MessageId, emoji: Emoji): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -889,13 +1038,20 @@ object ChannelRequests {
     /** Get users after this user ID */
     @inline def after: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("after")
 
+    @inline def withAfter(newValue: UndefOr[RawSnowflake]): GetReactionsQuery =
+      objWithUndef(GetReactionsQuery, "after", newValue)
+
     /** Max number of users to return (1-100) */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): GetReactionsQuery =
+      objWithUndef(GetReactionsQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => after, () => limit)
   }
   object GetReactionsQuery extends DiscordObjectCompanion[GetReactionsQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetReactionsQuery = new GetReactionsQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetReactionsQuery =
+      new GetReactionsQuery(json, cache)
 
     /**
       * @param after
@@ -907,7 +1063,6 @@ object ChannelRequests {
         after: UndefOr[RawSnowflake] = UndefOrUndefined,
         limit: UndefOr[Int] = UndefOrUndefined
     ): GetReactionsQuery = makeRawFromFields("after" :=? after, "limit" :=? limit)
-
   }
 
   /**
@@ -938,10 +1093,7 @@ object ChannelRequests {
     * MANAGE_MESSAGES permission to be present on the current user. Fires a
     * Message Reaction Remove All Gateway event.
     */
-  def deleteAllReactions(
-      channelId: ChannelId,
-      messageId: MessageId
-  ): Request[Unit, Unit] =
+  def deleteAllReactions(channelId: ChannelId, messageId: MessageId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -958,11 +1110,7 @@ object ChannelRequests {
     * emoji, you must encode it in the format name:id with the emoji name and
     * emoji id.
     */
-  def deleteAllReactionsForEmoji(
-      channelId: ChannelId,
-      messageId: MessageId,
-      emoji: Emoji
-  ): Request[Unit, Unit] =
+  def deleteAllReactionsForEmoji(channelId: ChannelId, messageId: MessageId, emoji: Emoji): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -977,8 +1125,14 @@ object ChannelRequests {
     /** Message contents (up to 2000 characters) */
     @inline def content: UndefOr[String] = selectDynamic[UndefOr[String]]("content")
 
+    @inline def withContent(newValue: UndefOr[String]): EditMessageBody =
+      objWithUndef(EditMessageBody, "content", newValue)
+
     /** Up to 10 rich embeds (up to 6000 characters) */
     @inline def embeds: UndefOr[Seq[OutgoingEmbed]] = selectDynamic[UndefOr[Seq[OutgoingEmbed]]]("embeds")
+
+    @inline def withEmbeds(newValue: UndefOr[Seq[OutgoingEmbed]]): EditMessageBody =
+      objWithUndef(EditMessageBody, "embeds", newValue)
 
     /**
       * Edit the flags of a message (only SUPPRESS_EMBEDS can currently be
@@ -986,11 +1140,20 @@ object ChannelRequests {
       */
     @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
 
+    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): EditMessageBody =
+      objWithUndef(EditMessageBody, "flags", newValue)
+
     /** Allowed mentions for the message */
     @inline def allowedMentions: UndefOr[AllowedMentions] = selectDynamic[UndefOr[AllowedMentions]]("allowed_mentions")
 
+    @inline def withAllowedMentions(newValue: UndefOr[AllowedMentions]): EditMessageBody =
+      objWithUndef(EditMessageBody, "allowed_mentions", newValue)
+
     /** Components to include with the message */
     @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
+
+    @inline def withComponents(newValue: UndefOr[Seq[Component]]): EditMessageBody =
+      objWithUndef(EditMessageBody, "components", newValue)
 
     /**
       * Attached files to keep and possible descriptions for new files. See
@@ -999,11 +1162,15 @@ object ChannelRequests {
     @inline def attachments: UndefOr[Seq[MessageCreateEditAttachment]] =
       selectDynamic[UndefOr[Seq[MessageCreateEditAttachment]]]("attachments")
 
+    @inline def withAttachments(newValue: UndefOr[Seq[MessageCreateEditAttachment]]): EditMessageBody =
+      objWithUndef(EditMessageBody, "attachments", newValue)
+
     override def values: Seq[() => Any] =
       Seq(() => content, () => embeds, () => flags, () => allowedMentions, () => components, () => attachments)
   }
   object EditMessageBody extends DiscordObjectCompanion[EditMessageBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): EditMessageBody = new EditMessageBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): EditMessageBody =
+      new EditMessageBody(json, cache)
 
     /**
       * @param content
@@ -1036,17 +1203,16 @@ object ChannelRequests {
       "components"       :=? components,
       "attachments"      :=? attachments
     )
-
   }
 
   /**
-    * * Edit a previously sent message. The fields content, embeds, and flags
-    * can be edited by the original message author. Other users can only edit
-    * flags and only if they have the MANAGE_MESSAGES permission in the
-    * corresponding channel. When specifying flags, ensure to include all
-    * previously set flags/bits in addition to ones that you are modifying. Only
-    * flags documented in the table below may be modified by users (unsupported
-    * flag changes are currently ignored without error).
+    * Edit a previously sent message. The fields content, embeds, and flags can
+    * be edited by the original message author. Other users can only edit flags
+    * and only if they have the MANAGE_MESSAGES permission in the corresponding
+    * channel. When specifying flags, ensure to include all previously set
+    * flags/bits in addition to ones that you are modifying. Only flags
+    * documented in the table below may be modified by users (unsupported flag
+    * changes are currently ignored without error).
     *
     * When the content field is edited, the mentions array in the message object
     * will be reconstructed from scratch based on the new content. The
@@ -1110,18 +1276,24 @@ object ChannelRequests {
     /** An array of message ids to delete (2-100) */
     @inline def messages: Seq[MessageId] = selectDynamic[Seq[MessageId]]("messages")
 
+    @inline def withMessages(newValue: Seq[MessageId]): BulkDeleteMessagesBody =
+      objWith(BulkDeleteMessagesBody, "messages", newValue)
+
     override def values: Seq[() => Any] = Seq(() => messages)
   }
   object BulkDeleteMessagesBody extends DiscordObjectCompanion[BulkDeleteMessagesBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): BulkDeleteMessagesBody = new BulkDeleteMessagesBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): BulkDeleteMessagesBody =
+      new BulkDeleteMessagesBody(json, cache)
 
-    /** @param messages An array of message ids to delete (2-100) */
+    /**
+      * @param messages
+      *   An array of message ids to delete (2-100)
+      */
     def make20(messages: Seq[MessageId]): BulkDeleteMessagesBody = makeRawFromFields("messages" := messages)
-
   }
 
   /**
-    * * Delete multiple messages in a single request. This endpoint can only be
+    * Delete multiple messages in a single request. This endpoint can only be
     * used on guild channels and requires the MANAGE_MESSAGES permission.
     * Returns a 204 empty response on success. Fires a Message Delete Bulk
     * Gateway event.
@@ -1149,12 +1321,22 @@ object ChannelRequests {
     /** The bitwise value of all allowed permissions (default "0") */
     @inline def allow: JsonOption[String] = selectDynamic[JsonOption[String]]("allow")
 
+    @inline def withAllow(newValue: JsonOption[String]): EditChannelPermissionsBody =
+      objWithUndef(EditChannelPermissionsBody, "allow", newValue)
+
     /** The bitwise value of all disallowed permissions (default "0") */
     @inline def deny: JsonOption[String] = selectDynamic[JsonOption[String]]("deny")
+
+    @inline def withDeny(newValue: JsonOption[String]): EditChannelPermissionsBody =
+      objWithUndef(EditChannelPermissionsBody, "deny", newValue)
 
     /** 0 for a role or 1 for a member */
     @inline def tpe: Channel.PermissionOverwrite.PermissionOverwriteType =
       selectDynamic[Channel.PermissionOverwrite.PermissionOverwriteType]("type")
+
+    @inline def withTpe(
+        newValue: Channel.PermissionOverwrite.PermissionOverwriteType
+    ): EditChannelPermissionsBody = objWith(EditChannelPermissionsBody, "type", newValue)
 
     override def values: Seq[() => Any] = Seq(() => allow, () => deny, () => tpe)
   }
@@ -1175,7 +1357,6 @@ object ChannelRequests {
         deny: JsonOption[String] = JsonUndefined,
         tpe: Channel.PermissionOverwrite.PermissionOverwriteType
     ): EditChannelPermissionsBody = makeRawFromFields("allow" :=? allow, "deny" :=? deny, "type" := tpe)
-
   }
 
   /**
@@ -1206,9 +1387,7 @@ object ChannelRequests {
     * Returns a list of invite objects (with invite metadata) for the channel.
     * Only usable for guild channels. Requires the MANAGE_CHANNELS permission.
     */
-  def getChannelInvites(
-      channelId: ChannelId
-  ): Request[Unit, Seq[Invite]] =
+  def getChannelInvites(channelId: ChannelId): Request[Unit, Seq[Invite]] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "invites")
         .toRequest(Method.GET)
@@ -1222,11 +1401,20 @@ object ChannelRequests {
       */
     @inline def maxAge: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_age")
 
+    @inline def withMaxAge(newValue: UndefOr[Int]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "max_age", newValue)
+
     /** Max number of uses or 0 for unlimited. between 0 and 100 */
     @inline def maxUses: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_uses")
 
+    @inline def withMaxUses(newValue: UndefOr[Int]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "max_uses", newValue)
+
     /** Whether this invite only grants temporary membership */
     @inline def temporary: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("temporary")
+
+    @inline def withTemporary(newValue: UndefOr[Boolean]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "temporary", newValue)
 
     /**
       * If true, don't try to reuse a similar invite (useful for creating many
@@ -1234,9 +1422,15 @@ object ChannelRequests {
       */
     @inline def unique: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("unique")
 
+    @inline def withUnique(newValue: UndefOr[Boolean]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "unique", newValue)
+
     /** The type of target for this voice channel invite */
     @inline def targetType: UndefOr[Invite.InviteTargetType] =
       selectDynamic[UndefOr[Invite.InviteTargetType]]("target_type")
+
+    @inline def withTargetType(newValue: UndefOr[Invite.InviteTargetType]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "target_type", newValue)
 
     /**
       * The id of the user whose stream to display for this invite, required if
@@ -1244,12 +1438,18 @@ object ChannelRequests {
       */
     @inline def targetUserId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("target_user_id")
 
+    @inline def withTargetUserId(newValue: UndefOr[UserId]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "target_user_id", newValue)
+
     /**
       * The id of the embedded application to open for this invite, required if
       * target_type is 2, the application must have the EMBEDDED flag
       */
     @inline def targetApplicationId: UndefOr[ApplicationId] =
       selectDynamic[UndefOr[ApplicationId]]("target_application_id")
+
+    @inline def withTargetApplicationId(newValue: UndefOr[ApplicationId]): CreateChannelInviteBody =
+      objWithUndef(CreateChannelInviteBody, "target_application_id", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => maxAge,
@@ -1262,7 +1462,8 @@ object ChannelRequests {
     )
   }
   object CreateChannelInviteBody extends DiscordObjectCompanion[CreateChannelInviteBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateChannelInviteBody = new CreateChannelInviteBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateChannelInviteBody =
+      new CreateChannelInviteBody(json, cache)
 
     /**
       * @param maxAge
@@ -1301,7 +1502,6 @@ object ChannelRequests {
       "target_user_id"        :=? targetUserId,
       "target_application_id" :=? targetApplicationId
     )
-
   }
 
   /**
@@ -1350,17 +1550,21 @@ object ChannelRequests {
     /** Id of target channel */
     @inline def webhookChannelId: ChannelId = selectDynamic[ChannelId]("webhook_channel_id")
 
+    @inline def withWebhookChannelId(newValue: ChannelId): FollowAnnouncementChannelBody =
+      objWith(FollowAnnouncementChannelBody, "webhook_channel_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => webhookChannelId)
   }
   object FollowAnnouncementChannelBody extends DiscordObjectCompanion[FollowAnnouncementChannelBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): FollowAnnouncementChannelBody =
       new FollowAnnouncementChannelBody(json, cache)
 
-    /** @param webhookChannelId Id of target channel */
-    def make20(webhookChannelId: ChannelId): FollowAnnouncementChannelBody = makeRawFromFields(
-      "webhook_channel_id" := webhookChannelId
-    )
-
+    /**
+      * @param webhookChannelId
+      *   Id of target channel
+      */
+    def make20(webhookChannelId: ChannelId): FollowAnnouncementChannelBody =
+      makeRawFromFields("webhook_channel_id" := webhookChannelId)
   }
 
   /**
@@ -1386,9 +1590,7 @@ object ChannelRequests {
     * to let the user know that the bot is processing their message. Returns a
     * 204 empty response on success. Fires a Typing Start Gateway event.
     */
-  def triggerTypingIndicator(
-      channelId: ChannelId
-  ): Request[Unit, Unit] =
+  def triggerTypingIndicator(channelId: ChannelId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "typing")
         .toRequest(Method.POST)
@@ -1397,9 +1599,7 @@ object ChannelRequests {
   /**
     * Returns all pinned messages in the channel as an array of message objects.
     */
-  def getPinnedMessages(
-      channelId: ChannelId
-  ): Request[Unit, Seq[Message]] =
+  def getPinnedMessages(channelId: ChannelId): Request[Unit, Seq[Message]] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "pins")
         .toRequest(Method.GET)
@@ -1448,13 +1648,19 @@ object ChannelRequests {
     /** Access token of a user that has granted your app the gdm.join scope */
     @inline def accessToken: String = selectDynamic[String]("access_token")
 
+    @inline def withAccessToken(newValue: String): GroupDMAddRecipientBody =
+      objWith(GroupDMAddRecipientBody, "access_token", newValue)
+
     /** Nickname of the user being added */
     @inline def nick: String = selectDynamic[String]("nick")
+
+    @inline def withNick(newValue: String): GroupDMAddRecipientBody = objWith(GroupDMAddRecipientBody, "nick", newValue)
 
     override def values: Seq[() => Any] = Seq(() => accessToken, () => nick)
   }
   object GroupDMAddRecipientBody extends DiscordObjectCompanion[GroupDMAddRecipientBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GroupDMAddRecipientBody = new GroupDMAddRecipientBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GroupDMAddRecipientBody =
+      new GroupDMAddRecipientBody(json, cache)
 
     /**
       * @param accessToken
@@ -1464,7 +1670,6 @@ object ChannelRequests {
       */
     def make20(accessToken: String, nick: String): GroupDMAddRecipientBody =
       makeRawFromFields("access_token" := accessToken, "nick" := nick)
-
   }
 
   /** Adds a recipient to a Group DM using their access token. */
@@ -1483,10 +1688,7 @@ object ChannelRequests {
     )
 
   /** Removes a recipient from a Group DM. */
-  def groupDMRemoveRecipient(
-      channelId: ChannelId,
-      userId: UserId
-  ): Request[Unit, Unit] =
+  def groupDMRemoveRecipient(channelId: ChannelId, userId: UserId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -1500,6 +1702,9 @@ object ChannelRequests {
     /** 1-100 character channel name */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): StartThreadfromMessageBody =
+      objWith(StartThreadfromMessageBody, "name", newValue)
+
     /**
       * The thread will stop showing in the channel list after
       * auto_archive_duration minutes of inactivity, can be set to: 60, 1440,
@@ -1507,11 +1712,17 @@ object ChannelRequests {
       */
     @inline def autoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("auto_archive_duration")
 
+    @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): StartThreadfromMessageBody =
+      objWithUndef(StartThreadfromMessageBody, "auto_archive_duration", newValue)
+
     /**
       * Amount of seconds a user has to wait before sending another message
       * (0-21600)
       */
     @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
+
+    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): StartThreadfromMessageBody =
+      objWithUndef(StartThreadfromMessageBody, "rate_limit_per_user", newValue)
 
     override def values: Seq[() => Any] = Seq(() => name, () => autoArchiveDuration, () => rateLimitPerUser)
   }
@@ -1539,11 +1750,10 @@ object ChannelRequests {
       "auto_archive_duration" :=? autoArchiveDuration,
       "rate_limit_per_user"   :=? rateLimitPerUser
     )
-
   }
 
   /**
-    * * Creates a new thread from an existing message. Returns a channel on
+    * Creates a new thread from an existing message. Returns a channel on
     * success, and a 400 BAD REQUEST on invalid parameters. Fires a Thread
     * Create and a Message Update Gateway event.
     *
@@ -1575,6 +1785,9 @@ object ChannelRequests {
     /** 1-100 character channel name */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): StartThreadwithoutMessageBody =
+      objWith(StartThreadwithoutMessageBody, "name", newValue)
+
     /**
       * The thread will stop showing in the channel list after
       * auto_archive_duration minutes of inactivity, can be set to: 60, 1440,
@@ -1582,8 +1795,14 @@ object ChannelRequests {
       */
     @inline def autoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("auto_archive_duration")
 
+    @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): StartThreadwithoutMessageBody =
+      objWithUndef(StartThreadwithoutMessageBody, "auto_archive_duration", newValue)
+
     /** The type of thread to create */
     @inline def tpe: UndefOr[Channel.ChannelType] = selectDynamic[UndefOr[Channel.ChannelType]]("type")
+
+    @inline def withTpe(newValue: UndefOr[Channel.ChannelType]): StartThreadwithoutMessageBody =
+      objWithUndef(StartThreadwithoutMessageBody, "type", newValue)
 
     /**
       * Whether non-moderators can add other non-moderators to a thread; only
@@ -1591,11 +1810,17 @@ object ChannelRequests {
       */
     @inline def invitable: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("invitable")
 
+    @inline def withInvitable(newValue: UndefOr[Boolean]): StartThreadwithoutMessageBody =
+      objWithUndef(StartThreadwithoutMessageBody, "invitable", newValue)
+
     /**
       * Amount of seconds a user has to wait before sending another message
       * (0-21600)
       */
     @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
+
+    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): StartThreadwithoutMessageBody =
+      objWithUndef(StartThreadwithoutMessageBody, "rate_limit_per_user", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => name, () => autoArchiveDuration, () => tpe, () => invitable, () => rateLimitPerUser)
@@ -1633,7 +1858,6 @@ object ChannelRequests {
       "invitable"             :=? invitable,
       "rate_limit_per_user"   :=? rateLimitPerUser
     )
-
   }
 
   /**
@@ -1659,11 +1883,17 @@ object ChannelRequests {
     /** 1-100 character channel name */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): StartThreadInForumChannelBody =
+      objWith(StartThreadInForumChannelBody, "name", newValue)
+
     /**
       * Duration in minutes to automatically archive the thread after recent
       * activity, can be set to: 60, 1440, 4320, 10080
       */
     @inline def autoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("auto_archive_duration")
+
+    @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): StartThreadInForumChannelBody =
+      objWithUndef(StartThreadInForumChannelBody, "auto_archive_duration", newValue)
 
     /**
       * Amount of seconds a user has to wait before sending another message
@@ -1671,8 +1901,14 @@ object ChannelRequests {
       */
     @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
 
+    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): StartThreadInForumChannelBody =
+      objWithUndef(StartThreadInForumChannelBody, "rate_limit_per_user", newValue)
+
     /** Contents of the first message in the forum thread */
     @inline def message: ForumThreadMessageParams = selectDynamic[ForumThreadMessageParams]("message")
+
+    @inline def withMessage(newValue: ForumThreadMessageParams): StartThreadInForumChannelBody =
+      objWith(StartThreadInForumChannelBody, "message", newValue)
 
     /**
       * The IDs of the set of tags that have been applied to a thread in a
@@ -1680,6 +1916,9 @@ object ChannelRequests {
       */
     @inline def appliedTags: Seq[Snowflake[Channel.ForumTag]] =
       selectDynamic[Seq[Snowflake[Channel.ForumTag]]]("applied_tags")
+
+    @inline def withAppliedTags(newValue: Seq[Snowflake[Channel.ForumTag]]): StartThreadInForumChannelBody =
+      objWith(StartThreadInForumChannelBody, "applied_tags", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => name, () => autoArchiveDuration, () => rateLimitPerUser, () => message, () => appliedTags)
@@ -1716,11 +1955,10 @@ object ChannelRequests {
       "message"                := message,
       "applied_tags"           := appliedTags
     )
-
   }
 
   /**
-    * * Creates a new thread in a forum channel, and sends a message within the
+    * Creates a new thread in a forum channel, and sends a message within the
     * created thread. Returns a channel, with a nested message object, on
     * success, and a 400 BAD REQUEST on invalid parameters. Fires a Thread
     * Create and Message Create Gateway event.
@@ -1764,28 +2002,49 @@ object ChannelRequests {
     /** Message contents (up to 2000 characters) */
     @inline def content: UndefOr[String] = selectDynamic[UndefOr[String]]("content")
 
+    @inline def withContent(newValue: UndefOr[String]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "content", newValue)
+
     /** Up to 10 rich embeds (up to 6000 characters) */
     @inline def embeds: UndefOr[Seq[OutgoingEmbed]] = selectDynamic[UndefOr[Seq[OutgoingEmbed]]]("embeds")
+
+    @inline def withEmbeds(newValue: UndefOr[Seq[OutgoingEmbed]]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "embeds", newValue)
 
     /** Allowed mentions for the message */
     @inline def allowedMentions: UndefOr[AllowedMentions] = selectDynamic[UndefOr[AllowedMentions]]("allowed_mentions")
 
+    @inline def withAllowedMentions(newValue: UndefOr[AllowedMentions]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "allowed_mentions", newValue)
+
     /** Components to include with the message */
     @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
+
+    @inline def withComponents(newValue: UndefOr[Seq[Component]]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "components", newValue)
 
     /** IDs of up to 3 stickers in the server to send in the message */
     @inline def stickerIds: UndefOr[Seq[Snowflake[Sticker]]] =
       selectDynamic[UndefOr[Seq[Snowflake[Sticker]]]]("sticker_ids")
 
+    @inline def withStickerIds(newValue: UndefOr[Seq[Snowflake[Sticker]]]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "sticker_ids", newValue)
+
     /** Attachment objects with filename and description. See Uploading Files */
     @inline def attachments: UndefOr[Seq[MessageCreateEditAttachment]] =
       selectDynamic[UndefOr[Seq[MessageCreateEditAttachment]]]("attachments")
+
+    @inline def withAttachments(newValue: UndefOr[Seq[MessageCreateEditAttachment]]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "attachments", newValue)
 
     /**
       * Message flags combined as a bitfield (only SUPPRESS_EMBEDS and
       * SUPPRESS_NOTIFICATIONS can be set)
       */
     @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): ForumThreadMessageParams =
+      objWithUndef(ForumThreadMessageParams, "flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => content,
@@ -1835,7 +2094,6 @@ object ChannelRequests {
       "attachments"      :=? attachments,
       "flags"            :=? flags
     )
-
   }
 
   /**
@@ -1843,9 +2101,7 @@ object ChannelRequests {
     * archived. Returns a 204 empty response on success. Fires a Thread Members
     * Update and a Thread Create Gateway event.
     */
-  def joinThread(
-      channelId: ChannelId
-  ): Request[Unit, Unit] =
+  def joinThread(channelId: ChannelId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -1860,10 +2116,7 @@ object ChannelRequests {
     * response if the member is successfully added or was already a member of
     * the thread. Fires a Thread Members Update Gateway event.
     */
-  def addThreadMember(
-      channelId: ChannelId,
-      userId: UserId
-  ): Request[Unit, Unit] =
+  def addThreadMember(channelId: ChannelId, userId: UserId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -1877,9 +2130,7 @@ object ChannelRequests {
     * archived. Returns a 204 empty response on success. Fires a Thread Members
     * Update Gateway event.
     */
-  def leaveThread(
-      channelId: ChannelId
-  ): Request[Unit, Unit] =
+  def leaveThread(channelId: ChannelId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -1894,10 +2145,7 @@ object ChannelRequests {
     * requires the thread is not archived. Returns a 204 empty response on
     * success. Fires a Thread Members Update Gateway event.
     */
-  def removeThreadMember(
-      channelId: ChannelId,
-      userId: UserId
-  ): Request[Unit, Unit] =
+  def removeThreadMember(channelId: ChannelId, userId: UserId): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId](
         "channelId",
@@ -1911,24 +2159,26 @@ object ChannelRequests {
     /** Whether to include a guild member object for the thread member */
     @inline def withMember: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_member")
 
+    @inline def withWithMember(newValue: UndefOr[Boolean]): GetThreadMemberQuery =
+      objWithUndef(GetThreadMemberQuery, "with_member", newValue)
+
     override def values: Seq[() => Any] = Seq(() => withMember)
   }
   object GetThreadMemberQuery extends DiscordObjectCompanion[GetThreadMemberQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetThreadMemberQuery = new GetThreadMemberQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetThreadMemberQuery =
+      new GetThreadMemberQuery(json, cache)
 
     /**
       * @param withMember
       *   Whether to include a guild member object for the thread member
       */
-    def make20(withMember: UndefOr[Boolean] = UndefOrUndefined): GetThreadMemberQuery = makeRawFromFields(
-      "with_member" :=? withMember
-    )
-
+    def make20(withMember: UndefOr[Boolean] = UndefOrUndefined): GetThreadMemberQuery =
+      makeRawFromFields("with_member" :=? withMember)
   }
 
   /**
-    * * Returns a thread member object for the specified user if they are a
-    * member of the thread, returns a 404 response otherwise.
+    * Returns a thread member object for the specified user if they are a member
+    * of the thread, returns a 404 response otherwise.
     *
     * When with_member is set to true, the thread member object will include a
     * member field containing a guild member object.
@@ -1952,16 +2202,26 @@ object ChannelRequests {
     /** Whether to include a guild member object for each thread member */
     @inline def withMember: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_member")
 
+    @inline def withWithMember(newValue: UndefOr[Boolean]): ListThreadMembersQuery =
+      objWithUndef(ListThreadMembersQuery, "with_member", newValue)
+
     /** Get thread members after this user ID */
     @inline def after: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("after")
+
+    @inline def withAfter(newValue: UndefOr[UserId]): ListThreadMembersQuery =
+      objWithUndef(ListThreadMembersQuery, "after", newValue)
 
     /** Max number of thread members to return (1-100). Defaults to 100. */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
 
+    @inline def withLimit(newValue: UndefOr[Int]): ListThreadMembersQuery =
+      objWithUndef(ListThreadMembersQuery, "limit", newValue)
+
     override def values: Seq[() => Any] = Seq(() => withMember, () => after, () => limit)
   }
   object ListThreadMembersQuery extends DiscordObjectCompanion[ListThreadMembersQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ListThreadMembersQuery = new ListThreadMembersQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ListThreadMembersQuery =
+      new ListThreadMembersQuery(json, cache)
 
     /**
       * @param withMember
@@ -1976,7 +2236,6 @@ object ChannelRequests {
         after: UndefOr[UserId] = UndefOrUndefined,
         limit: UndefOr[Int] = UndefOrUndefined
     ): ListThreadMembersQuery = makeRawFromFields("with_member" :=? withMember, "after" :=? after, "limit" :=? limit)
-
   }
 
   /**
@@ -2003,8 +2262,14 @@ object ChannelRequests {
     /** Returns threads archived before this timestamp */
     @inline def before: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("before")
 
+    @inline def withBefore(newValue: UndefOr[OffsetDateTime]): ListPublicArchivedThreadsQuery =
+      objWithUndef(ListPublicArchivedThreadsQuery, "before", newValue)
+
     /** Optional maximum number of threads to return */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): ListPublicArchivedThreadsQuery =
+      objWithUndef(ListPublicArchivedThreadsQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => before, () => limit)
   }
@@ -2022,7 +2287,6 @@ object ChannelRequests {
         before: UndefOr[OffsetDateTime] = UndefOrUndefined,
         limit: UndefOr[Int] = UndefOrUndefined
     ): ListPublicArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
-
   }
 
   class ListPublicArchivedThreadsResult(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2031,17 +2295,26 @@ object ChannelRequests {
     /** The public, archived threads */
     @inline def threads: Seq[Channel] = selectDynamic[Seq[Channel]]("threads")
 
+    @inline def withThreads(newValue: Seq[Channel]): ListPublicArchivedThreadsResult =
+      objWith(ListPublicArchivedThreadsResult, "threads", newValue)
+
     /**
       * A thread member object for each returned thread the current user has
       * joined
       */
     @inline def members: Seq[Channel.ThreadMember] = selectDynamic[Seq[Channel.ThreadMember]]("members")
 
+    @inline def withMembers(newValue: Seq[Channel.ThreadMember]): ListPublicArchivedThreadsResult =
+      objWith(ListPublicArchivedThreadsResult, "members", newValue)
+
     /**
       * Whether there are potentially additional threads that could be returned
       * on a subsequent call
       */
     @inline def hasMore: Boolean = selectDynamic[Boolean]("has_more")
+
+    @inline def withHasMore(newValue: Boolean): ListPublicArchivedThreadsResult =
+      objWith(ListPublicArchivedThreadsResult, "has_more", newValue)
 
     override def values: Seq[() => Any] = Seq(() => threads, () => members, () => hasMore)
   }
@@ -2065,7 +2338,6 @@ object ChannelRequests {
         hasMore: Boolean
     ): ListPublicArchivedThreadsResult =
       makeRawFromFields("threads" := threads, "members" := members, "has_more" := hasMore)
-
   }
 
   /**
@@ -2094,8 +2366,14 @@ object ChannelRequests {
     /** Returns threads archived before this timestamp */
     @inline def before: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("before")
 
+    @inline def withBefore(newValue: UndefOr[OffsetDateTime]): ListPrivateArchivedThreadsQuery =
+      objWithUndef(ListPrivateArchivedThreadsQuery, "before", newValue)
+
     /** Optional maximum number of threads to return */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): ListPrivateArchivedThreadsQuery =
+      objWithUndef(ListPrivateArchivedThreadsQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => before, () => limit)
   }
@@ -2113,7 +2391,6 @@ object ChannelRequests {
         before: UndefOr[OffsetDateTime] = UndefOrUndefined,
         limit: UndefOr[Int] = UndefOrUndefined
     ): ListPrivateArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
-
   }
 
   class ListPrivateArchivedThreadsResult(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2122,17 +2399,26 @@ object ChannelRequests {
     /** The private, archived threads */
     @inline def threads: Seq[Channel] = selectDynamic[Seq[Channel]]("threads")
 
+    @inline def withThreads(newValue: Seq[Channel]): ListPrivateArchivedThreadsResult =
+      objWith(ListPrivateArchivedThreadsResult, "threads", newValue)
+
     /**
       * A thread member object for each returned thread the current user has
       * joined
       */
     @inline def members: Seq[Channel.ThreadMember] = selectDynamic[Seq[Channel.ThreadMember]]("members")
 
+    @inline def withMembers(newValue: Seq[Channel.ThreadMember]): ListPrivateArchivedThreadsResult =
+      objWith(ListPrivateArchivedThreadsResult, "members", newValue)
+
     /**
       * Whether there are potentially additional threads that could be returned
       * on a subsequent call
       */
     @inline def hasMore: Boolean = selectDynamic[Boolean]("has_more")
+
+    @inline def withHasMore(newValue: Boolean): ListPrivateArchivedThreadsResult =
+      objWith(ListPrivateArchivedThreadsResult, "has_more", newValue)
 
     override def values: Seq[() => Any] = Seq(() => threads, () => members, () => hasMore)
   }
@@ -2156,7 +2442,6 @@ object ChannelRequests {
         hasMore: Boolean
     ): ListPrivateArchivedThreadsResult =
       makeRawFromFields("threads" := threads, "members" := members, "has_more" := hasMore)
-
   }
 
   /**
@@ -2183,8 +2468,14 @@ object ChannelRequests {
     /** Returns threads before this id */
     @inline def before: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("before")
 
+    @inline def withBefore(newValue: UndefOr[RawSnowflake]): ListJoinedPrivateArchivedThreadsQuery =
+      objWithUndef(ListJoinedPrivateArchivedThreadsQuery, "before", newValue)
+
     /** Optional maximum number of threads to return */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): ListJoinedPrivateArchivedThreadsQuery =
+      objWithUndef(ListJoinedPrivateArchivedThreadsQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => before, () => limit)
   }
@@ -2202,7 +2493,6 @@ object ChannelRequests {
         before: UndefOr[RawSnowflake] = UndefOrUndefined,
         limit: UndefOr[Int] = UndefOrUndefined
     ): ListJoinedPrivateArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
-
   }
 
   class ListJoinedPrivateArchivedThreadsResult(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2211,17 +2501,26 @@ object ChannelRequests {
     /** The private, archived threads the current user has joined */
     @inline def threads: Seq[Channel] = selectDynamic[Seq[Channel]]("threads")
 
+    @inline def withThreads(newValue: Seq[Channel]): ListJoinedPrivateArchivedThreadsResult =
+      objWith(ListJoinedPrivateArchivedThreadsResult, "threads", newValue)
+
     /**
       * A thread member object for each returned thread the current user has
       * joined
       */
     @inline def members: Seq[Channel.ThreadMember] = selectDynamic[Seq[Channel.ThreadMember]]("members")
 
+    @inline def withMembers(newValue: Seq[Channel.ThreadMember]): ListJoinedPrivateArchivedThreadsResult =
+      objWith(ListJoinedPrivateArchivedThreadsResult, "members", newValue)
+
     /**
       * Whether there are potentially additional threads that could be returned
       * on a subsequent call
       */
     @inline def hasMore: Boolean = selectDynamic[Boolean]("has_more")
+
+    @inline def withHasMore(newValue: Boolean): ListJoinedPrivateArchivedThreadsResult =
+      objWith(ListJoinedPrivateArchivedThreadsResult, "has_more", newValue)
 
     override def values: Seq[() => Any] = Seq(() => threads, () => members, () => hasMore)
   }
@@ -2245,7 +2544,6 @@ object ChannelRequests {
         hasMore: Boolean
     ): ListJoinedPrivateArchivedThreadsResult =
       makeRawFromFields("threads" := threads, "members" := members, "has_more" := hasMore)
-
   }
 
   /**
@@ -2265,5 +2563,4 @@ object ChannelRequests {
       ) / "users" / "@me" / "threads" / "archived" / "private" +? Parameters.query("before", query.before) +? Parameters
         .query("limit", query.limit)).toRequest(Method.GET)
     )
-
 }

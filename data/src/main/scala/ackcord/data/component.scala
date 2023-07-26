@@ -57,35 +57,39 @@ object Component extends DiscordObjectCompanion[Component] {
 
     def unknown(value: Int): ComponentType = new ComponentType(value)
 
-    def values: Seq[ComponentType] =
+    val values: Seq[ComponentType] =
       Seq(ActionRow, Button, StringSelect, TextInput, UserSelect, RoleSelect, MentionableSelect, ChannelSelect)
-
   }
 
   /**
-    * * An Action Row is a non-interactive container component for other types
-    * of components. It has a type: 1 and a sub-array of components of other
-    * types.
+    * An Action Row is a non-interactive container component for other types of
+    * components. It has a type: 1 and a sub-array of components of other types.
     *   - You can have up to 5 Action Rows per message
     *   - An Action Row cannot contain another Action Row
     */
   class ActionRow(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with Component {
+
     @inline def tpe: ComponentType = selectDynamic[ComponentType]("type")
 
+    @inline def withTpe(newValue: ComponentType): ActionRow = objWith(ActionRow, "type", newValue)
+
     @inline def components: Seq[Component] = selectDynamic[Seq[Component]]("components")
+
+    @inline def withComponents(newValue: Seq[Component]): ActionRow = objWith(ActionRow, "components", newValue)
 
     override def values: Seq[() => Any] = Seq(() => tpe, () => components)
   }
   object ActionRow extends DiscordObjectCompanion[ActionRow] {
     def makeRaw(json: Json, cache: Map[String, Any]): ActionRow = new ActionRow(json, cache)
 
-    def make20(tpe: ComponentType = ComponentType.ActionRow, components: Seq[Component]): ActionRow =
-      makeRawFromFields("type" := tpe, "components" := components)
-
+    def make20(
+        tpe: ComponentType = ComponentType.ActionRow,
+        components: Seq[Component]
+    ): ActionRow = makeRawFromFields("type" := tpe, "components" := components)
   }
 
   /**
-    * * Buttons are interactive components that render in messages. They can be
+    * Buttons are interactive components that render in messages. They can be
     * clicked by users, and send an interaction to your app when clicked.
     *   - Buttons must be sent inside an Action Row
     *   - An Action Row can contain up to 5 buttons
@@ -93,25 +97,41 @@ object Component extends DiscordObjectCompanion[Component] {
     *     components
     */
   class Button(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with Component {
+
     @inline def tpe: ComponentType = selectDynamic[ComponentType]("type")
+
+    @inline def withTpe(newValue: ComponentType): Button = objWith(Button, "type", newValue)
 
     /** A button style */
     @inline def style: Button.ButtonStyle = selectDynamic[Button.ButtonStyle]("style")
 
+    @inline def withStyle(newValue: Button.ButtonStyle): Button = objWith(Button, "style", newValue)
+
     /** Text that appears on the button; max 80 characters */
     @inline def label: UndefOr[String] = selectDynamic[UndefOr[String]]("label")
+
+    @inline def withLabel(newValue: UndefOr[String]): Button = objWithUndef(Button, "label", newValue)
 
     /** name, id, and animated */
     @inline def emoji: UndefOr[ComponentEmoji] = selectDynamic[UndefOr[ComponentEmoji]]("emoji")
 
+    @inline def withEmoji(newValue: UndefOr[ComponentEmoji]): Button =
+      objWithUndef(Button, "emoji", newValue)
+
     /** Developer-defined identifier for the button; max 100 characters */
     @inline def customId: UndefOr[String] = selectDynamic[UndefOr[String]]("custom_id")
+
+    @inline def withCustomId(newValue: UndefOr[String]): Button = objWithUndef(Button, "custom_id", newValue)
 
     /** URL for link-style buttons */
     @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
 
+    @inline def withUrl(newValue: UndefOr[String]): Button = objWithUndef(Button, "url", newValue)
+
     /** Whether the button is disabled (defaults to false) */
     @inline def disabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("disabled")
+
+    @inline def withDisabled(newValue: UndefOr[Boolean]): Button = objWithUndef(Button, "disabled", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => tpe, () => style, () => label, () => emoji, () => customId, () => url, () => disabled)
@@ -152,7 +172,7 @@ object Component extends DiscordObjectCompanion[Component] {
     )
 
     /**
-      * * Buttons come in a variety of styles to convey different types of
+      * Buttons come in a variety of styles to convey different types of
       * actions. These styles also define what fields are valid for a button.
       * -Non-link buttons must have a custom_id, and cannot have a url
       * -Link buttons must have a url, and cannot have a custom_id
@@ -178,8 +198,7 @@ object Component extends DiscordObjectCompanion[Component] {
 
       def unknown(value: Int): ButtonStyle = new ButtonStyle(value)
 
-      def values: Seq[ButtonStyle] = Seq(Primary, Secondary, Success, Danger, Link)
-
+      val values: Seq[ButtonStyle] = Seq(Primary, Secondary, Success, Danger, Link)
     }
   }
 
@@ -188,16 +207,24 @@ object Component extends DiscordObjectCompanion[Component] {
     /** The id of this emoji */
     @inline def id: Option[EmojiId] = selectDynamic[Option[EmojiId]]("id")
 
+    @inline def withId(newValue: Option[EmojiId]): ComponentEmoji = objWith(ComponentEmoji, "id", newValue)
+
     /** The name of this emoji */
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): ComponentEmoji = objWith(ComponentEmoji, "name", newValue)
 
     /** Whether this emoji is animated */
     @inline def animated: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("animated")
 
+    @inline def withAnimated(newValue: UndefOr[Boolean]): ComponentEmoji =
+      objWithUndef(ComponentEmoji, "animated", newValue)
+
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => animated)
   }
   object ComponentEmoji extends DiscordObjectCompanion[ComponentEmoji] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ComponentEmoji = new ComponentEmoji(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ComponentEmoji =
+      new ComponentEmoji(json, cache)
 
     /**
       * @param id
@@ -207,15 +234,17 @@ object Component extends DiscordObjectCompanion[Component] {
       * @param animated
       *   Whether this emoji is animated
       */
-    def make20(id: Option[EmojiId], name: String, animated: UndefOr[Boolean] = UndefOrUndefined): ComponentEmoji =
-      makeRawFromFields("id" := id, "name" := name, "animated" :=? animated)
-
+    def make20(
+        id: Option[EmojiId],
+        name: String,
+        animated: UndefOr[Boolean] = UndefOrUndefined
+    ): ComponentEmoji = makeRawFromFields("id" := id, "name" := name, "animated" :=? animated)
   }
 
   /**
-    * * Select menus are interactive components that allow users to select one
-    * or more options from a dropdown list in messages. On desktop, clicking on
-    * a select menu opens a dropdown-style UI; on mobile, tapping a select menu
+    * Select menus are interactive components that allow users to select one or
+    * more options from a dropdown list in messages. On desktop, clicking on a
+    * select menu opens a dropdown-style UI; on mobile, tapping a select menu
     * opens up a half-sheet with the options.
     *
     * Select menus support single-select and multi-select behavior, meaning you
@@ -244,16 +273,24 @@ object Component extends DiscordObjectCompanion[Component] {
     * menu structure.
     */
   class SelectMenu(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with Component {
+
     @inline def tpe: ComponentType = selectDynamic[ComponentType]("type")
+
+    @inline def withTpe(newValue: ComponentType): SelectMenu = objWith(SelectMenu, "type", newValue)
 
     /** ID for the select menu; max 100 characters */
     @inline def customId: String = selectDynamic[String]("custom_id")
+
+    @inline def withCustomId(newValue: String): SelectMenu = objWith(SelectMenu, "custom_id", newValue)
 
     /**
       * Specified choices in a select menu (only required and available for
       * string selects (type 3); max 25
       */
     @inline def options: UndefOr[Seq[SelectOption]] = selectDynamic[UndefOr[Seq[SelectOption]]]("options")
+
+    @inline def withOptions(newValue: UndefOr[Seq[SelectOption]]): SelectMenu =
+      objWithUndef(SelectMenu, "options", newValue)
 
     /**
       * List of channel types to include in the channel select component (type
@@ -262,8 +299,14 @@ object Component extends DiscordObjectCompanion[Component] {
     @inline def channelTypes: UndefOr[Seq[Channel.ChannelType]] =
       selectDynamic[UndefOr[Seq[Channel.ChannelType]]]("channel_types")
 
+    @inline def withChannelTypes(newValue: UndefOr[Seq[Channel.ChannelType]]): SelectMenu =
+      objWithUndef(SelectMenu, "channel_types", newValue)
+
     /** Placeholder text if nothing is selected; max 150 characters */
     @inline def placeholder: UndefOr[String] = selectDynamic[UndefOr[String]]("placeholder")
+
+    @inline def withPlaceholder(newValue: UndefOr[String]): SelectMenu =
+      objWithUndef(SelectMenu, "placeholder", newValue)
 
     /**
       * Minimum number of items that must be chosen (defaults to 1); min 0, max
@@ -271,11 +314,18 @@ object Component extends DiscordObjectCompanion[Component] {
       */
     @inline def minValues: UndefOr[Int] = selectDynamic[UndefOr[Int]]("min_values")
 
+    @inline def withMinValues(newValue: UndefOr[Int]): SelectMenu = objWithUndef(SelectMenu, "min_values", newValue)
+
     /** Maximum number of items that can be chosen (defaults to 1); max 25 */
     @inline def maxValues: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_values")
 
+    @inline def withMaxValues(newValue: UndefOr[Int]): SelectMenu = objWithUndef(SelectMenu, "max_values", newValue)
+
     /** Whether select menu is disabled (defaults to false) */
     @inline def disabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("disabled")
+
+    @inline def withDisabled(newValue: UndefOr[Boolean]): SelectMenu =
+      objWithUndef(SelectMenu, "disabled", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => tpe,
@@ -329,7 +379,6 @@ object Component extends DiscordObjectCompanion[Component] {
       "max_values"    :=? maxValues,
       "disabled"      :=? disabled
     )
-
   }
 
   class SelectOption(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -337,17 +386,30 @@ object Component extends DiscordObjectCompanion[Component] {
     /** User-facing name of the option; max 100 characters */
     @inline def label: String = selectDynamic[String]("label")
 
+    @inline def withLabel(newValue: String): SelectOption = objWith(SelectOption, "label", newValue)
+
     /** Dev-defined value of the option; max 100 characters */
     @inline def value: String = selectDynamic[String]("value")
+
+    @inline def withValue(newValue: String): SelectOption = objWith(SelectOption, "value", newValue)
 
     /** Additional description of the option; max 100 characters */
     @inline def description: UndefOr[String] = selectDynamic[UndefOr[String]]("description")
 
+    @inline def withDescription(newValue: UndefOr[String]): SelectOption =
+      objWithUndef(SelectOption, "description", newValue)
+
     /** id, name, and animated */
     @inline def emoji: UndefOr[ComponentEmoji] = selectDynamic[UndefOr[ComponentEmoji]]("emoji")
 
+    @inline def withEmoji(newValue: UndefOr[ComponentEmoji]): SelectOption =
+      objWithUndef(SelectOption, "emoji", newValue)
+
     /** Will show this option as selected by default */
     @inline def default: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("default")
+
+    @inline def withDefault(newValue: UndefOr[Boolean]): SelectOption =
+      objWithUndef(SelectOption, "default", newValue)
 
     override def values: Seq[() => Any] = Seq(() => label, () => value, () => description, () => emoji, () => default)
   }
@@ -379,7 +441,6 @@ object Component extends DiscordObjectCompanion[Component] {
       "emoji"       :=? emoji,
       "default"     :=? default
     )
-
   }
 
   /**
@@ -387,31 +448,52 @@ object Component extends DiscordObjectCompanion[Component] {
     * be used to collect short-form or long-form text.
     */
   class TextInput(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with Component {
+
     @inline def tpe: ComponentType = selectDynamic[ComponentType]("type")
+
+    @inline def withTpe(newValue: ComponentType): TextInput = objWith(TextInput, "type", newValue)
 
     /** Developer-defined identifier for the input; max 100 characters */
     @inline def customId: String = selectDynamic[String]("custom_id")
 
+    @inline def withCustomId(newValue: String): TextInput = objWith(TextInput, "custom_id", newValue)
+
     /** The Text Input Style */
     @inline def style: TextInput.TextInputStyle = selectDynamic[TextInput.TextInputStyle]("style")
+
+    @inline def withStyle(newValue: TextInput.TextInputStyle): TextInput =
+      objWith(TextInput, "style", newValue)
 
     /** Label for this component; max 45 characters */
     @inline def label: String = selectDynamic[String]("label")
 
+    @inline def withLabel(newValue: String): TextInput = objWith(TextInput, "label", newValue)
+
     /** Minimum input length for a text input; min 0, max 4000 */
     @inline def minLength: UndefOr[Int] = selectDynamic[UndefOr[Int]]("min_length")
+
+    @inline def withMinLength(newValue: UndefOr[Int]): TextInput = objWithUndef(TextInput, "min_length", newValue)
 
     /** Maximum input length for a text input; min 1, max 4000 */
     @inline def maxLength: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_length")
 
+    @inline def withMaxLength(newValue: UndefOr[Int]): TextInput = objWithUndef(TextInput, "max_length", newValue)
+
     /** Whether this component is required to be filled (defaults to true) */
     @inline def required: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("required")
+
+    @inline def withRequired(newValue: UndefOr[Boolean]): TextInput = objWithUndef(TextInput, "required", newValue)
 
     /** Pre-filled value for this component; max 4000 characters */
     @inline def value: UndefOr[String] = selectDynamic[UndefOr[String]]("value")
 
+    @inline def withValue(newValue: UndefOr[String]): TextInput = objWithUndef(TextInput, "value", newValue)
+
     /** Custom placeholder text if the input is empty; max 100 characters */
     @inline def placeholder: UndefOr[String] = selectDynamic[UndefOr[String]]("placeholder")
+
+    @inline def withPlaceholder(newValue: UndefOr[String]): TextInput =
+      objWithUndef(TextInput, "placeholder", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => tpe,
@@ -479,22 +561,24 @@ object Component extends DiscordObjectCompanion[Component] {
 
       def unknown(value: Int): TextInputStyle = new TextInputStyle(value)
 
-      def values: Seq[TextInputStyle] = Seq(Short, Paragraph)
-
+      val values: Seq[TextInputStyle] = Seq(Short, Paragraph)
     }
   }
 
   class UnknownComponent(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with Component {
+
     @inline def tpe: ComponentType = selectDynamic[ComponentType]("type")
+
+    @inline def withTpe(newValue: ComponentType): UnknownComponent = objWith(UnknownComponent, "type", newValue)
 
     override def values: Seq[() => Any] = Seq(() => tpe)
   }
   object UnknownComponent extends DiscordObjectCompanion[UnknownComponent] {
-    def makeRaw(json: Json, cache: Map[String, Any]): UnknownComponent = new UnknownComponent(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): UnknownComponent =
+      new UnknownComponent(json, cache)
 
     def make20(tpe: ComponentType): UnknownComponent = makeRawFromFields("type" := tpe)
-
   }
 }

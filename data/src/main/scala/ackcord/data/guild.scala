@@ -20,19 +20,29 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   /** Guild id */
   @inline def id: GuildId = selectDynamic[GuildId]("id")
 
+  @inline def withId(newValue: GuildId): Guild = objWith(Guild, "id", newValue)
+
   /**
     * Guild name (2-100 characters, excluding trailing and leading whitespace)
     */
   @inline def name: String = selectDynamic[String]("name")
 
+  @inline def withName(newValue: String): Guild = objWith(Guild, "name", newValue)
+
   /** Icon hash */
   @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
+
+  @inline def withIcon(newValue: Option[ImageHash]): Guild = objWith(Guild, "icon", newValue)
 
   /** Icon hash, returned when in the template object */
   @inline def iconHash: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("icon_hash")
 
+  @inline def withIconHash(newValue: JsonOption[ImageHash]): Guild = objWithUndef(Guild, "icon_hash", newValue)
+
   /** Splash hash */
   @inline def splash: Option[ImageHash] = selectDynamic[Option[ImageHash]]("splash")
+
+  @inline def withSplash(newValue: Option[ImageHash]): Guild = objWith(Guild, "splash", newValue)
 
   /**
     * Discovery splash hash; only present for guilds with the "DISCOVERABLE"
@@ -40,23 +50,40 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
     */
   @inline def discoverySplash: Option[ImageHash] = selectDynamic[Option[ImageHash]]("discovery_splash")
 
+  @inline def withDiscoverySplash(newValue: Option[ImageHash]): Guild =
+    objWith(Guild, "discovery_splash", newValue)
+
   /** True if the user is the owner of the guild */
   @inline def owner: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("owner")
+
+  @inline def withOwner(newValue: UndefOr[Boolean]): Guild = objWithUndef(Guild, "owner", newValue)
 
   /** Id of owner */
   @inline def ownerId: UserId = selectDynamic[UserId]("owner_id")
 
+  @inline def withOwnerId(newValue: UserId): Guild = objWith(Guild, "owner_id", newValue)
+
   /** Total permissions for the user in the guild (excludes overwrites) */
   @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
+
+  @inline def withPermissions(newValue: UndefOr[Permissions]): Guild =
+    objWithUndef(Guild, "permissions", newValue)
 
   /** Id of afk channel */
   @inline def afkChannelId: Option[VoiceGuildChannelId] = selectDynamic[Option[VoiceGuildChannelId]]("afk_channel_id")
 
+  @inline def withAfkChannelId(newValue: Option[VoiceGuildChannelId]): Guild =
+    objWith(Guild, "afk_channel_id", newValue)
+
   /** Afk timeout in seconds */
   @inline def afkTimeout: Int = selectDynamic[Int]("afk_timeout")
 
+  @inline def withAfkTimeout(newValue: Int): Guild = objWith(Guild, "afk_timeout", newValue)
+
   /** True if the server widget is enabled */
   @inline def widgetEnabled: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("widget_enabled")
+
+  @inline def withWidgetEnabled(newValue: UndefOr[Boolean]): Guild = objWithUndef(Guild, "widget_enabled", newValue)
 
   /**
     * The channel id that the widget will generate an invite to, or null if set
@@ -65,31 +92,55 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   @inline def widgetChannelId: JsonOption[GuildChannelId] =
     selectDynamic[JsonOption[GuildChannelId]]("widget_channel_id")
 
+  @inline def withWidgetChannelId(newValue: JsonOption[GuildChannelId]): Guild =
+    objWithUndef(Guild, "widget_channel_id", newValue)
+
   /** Verification level required for the guild */
   @inline def verificationLevel: Guild.VerificationLevel = selectDynamic[Guild.VerificationLevel]("verification_level")
+
+  @inline def withVerificationLevel(newValue: Guild.VerificationLevel): Guild =
+    objWith(Guild, "verification_level", newValue)
 
   /** Default message notifications level */
   @inline def defaultMessageNotifications: Guild.MessageNotificationLevel =
     selectDynamic[Guild.MessageNotificationLevel]("default_message_notifications")
 
+  @inline def withDefaultMessageNotifications(newValue: Guild.MessageNotificationLevel): Guild =
+    objWith(Guild, "default_message_notifications", newValue)
+
   /** Explicit content filter level */
   @inline def explicitContentFilter: Guild.ExplicitContentFilterLevel =
     selectDynamic[Guild.ExplicitContentFilterLevel]("explicit_content_filter")
 
+  @inline def withExplicitContentFilter(newValue: Guild.ExplicitContentFilterLevel): Guild =
+    objWith(Guild, "explicit_content_filter", newValue)
+
   /** Roles in the guild */
   @inline def roles: Seq[Role] = selectDynamic[Seq[Role]]("roles")
+
+  @inline def withRoles(newValue: Seq[Role]): Guild = objWith(Guild, "roles", newValue)
 
   /** Custom guild emojis */
   @inline def emojis: Seq[Emoji] = selectDynamic[Seq[Emoji]]("emojis")
 
+  @inline def withEmojis(newValue: Seq[Emoji]): Guild = objWith(Guild, "emojis", newValue)
+
   /** Enabled guild features */
   @inline def features: Seq[Guild.GuildFeature] = selectDynamic[Seq[Guild.GuildFeature]]("features")
+
+  @inline def withFeatures(newValue: Seq[Guild.GuildFeature]): Guild =
+    objWith(Guild, "features", newValue)
 
   /** Required MFA level for the guild */
   @inline def mfaLevel: Guild.MFALevel = selectDynamic[Guild.MFALevel]("mfa_level")
 
+  @inline def withMfaLevel(newValue: Guild.MFALevel): Guild = objWith(Guild, "mfa_level", newValue)
+
   /** Application id of the guild creator if it is bot-created */
   @inline def applicationId: Option[ApplicationId] = selectDynamic[Option[ApplicationId]]("application_id")
+
+  @inline def withApplicationId(newValue: Option[ApplicationId]): Guild =
+    objWith(Guild, "application_id", newValue)
 
   /**
     * The id of the channel where guild notices such as welcome messages and
@@ -98,9 +149,15 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   @inline def systemChannelId: Option[TextGuildChannelId] =
     selectDynamic[Option[TextGuildChannelId]]("system_channel_id")
 
+  @inline def withSystemChannelId(newValue: Option[TextGuildChannelId]): Guild =
+    objWith(Guild, "system_channel_id", newValue)
+
   /** System channel flags */
   @inline def systemChannelFlags: Guild.SystemChannelFlags =
     selectDynamic[Guild.SystemChannelFlags]("system_channel_flags")
+
+  @inline def withSystemChannelFlags(newValue: Guild.SystemChannelFlags): Guild =
+    objWith(Guild, "system_channel_flags", newValue)
 
   /**
     * The id of the channel where Community guilds can display rules and/or
@@ -108,35 +165,55 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
     */
   @inline def rulesChannelId: Option[TextGuildChannelId] = selectDynamic[Option[TextGuildChannelId]]("rules_channel_id")
 
+  @inline def withRulesChannelId(newValue: Option[TextGuildChannelId]): Guild =
+    objWith(Guild, "rules_channel_id", newValue)
+
   /**
     * The maximum number of presences for the guild (null is always returned,
     * apart from the largest of guilds)
     */
   @inline def maxPresences: JsonOption[Int] = selectDynamic[JsonOption[Int]]("max_presences")
 
+  @inline def withMaxPresences(newValue: JsonOption[Int]): Guild = objWithUndef(Guild, "max_presences", newValue)
+
   /** The maximum number of members for the guild */
   @inline def maxMembers: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_members")
+
+  @inline def withMaxMembers(newValue: UndefOr[Int]): Guild = objWithUndef(Guild, "max_members", newValue)
 
   /** The vanity url code for the guild */
   @inline def vanityUrlCode: Option[String] = selectDynamic[Option[String]]("vanity_url_code")
 
+  @inline def withVanityUrlCode(newValue: Option[String]): Guild = objWith(Guild, "vanity_url_code", newValue)
+
   /** The description of a guild */
   @inline def description: Option[String] = selectDynamic[Option[String]]("description")
+
+  @inline def withDescription(newValue: Option[String]): Guild = objWith(Guild, "description", newValue)
 
   /** Banner hash */
   @inline def banner: Option[ImageHash] = selectDynamic[Option[ImageHash]]("banner")
 
+  @inline def withBanner(newValue: Option[ImageHash]): Guild = objWith(Guild, "banner", newValue)
+
   /** Premium tier (Server Boost level) */
   @inline def premiumTier: Guild.PremiumTier = selectDynamic[Guild.PremiumTier]("premium_tier")
 
+  @inline def withPremiumTier(newValue: Guild.PremiumTier): Guild = objWith(Guild, "premium_tier", newValue)
+
   /** The number of boosts this guild currently has */
   @inline def premiumSubscriptionCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("premium_subscription_count")
+
+  @inline def withPremiumSubscriptionCount(newValue: UndefOr[Int]): Guild =
+    objWithUndef(Guild, "premium_subscription_count", newValue)
 
   /**
     * The preferred locale of a Community guild; used in server discovery and
     * notices from Discord, and sent in interactions; defaults to "en-US"
     */
   @inline def preferredLocale: String = selectDynamic[String]("preferred_locale")
+
+  @inline def withPreferredLocale(newValue: String): Guild = objWith(Guild, "preferred_locale", newValue)
 
   /**
     * The id of the channel where admins and moderators of Community guilds
@@ -145,11 +222,20 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   @inline def publicUpdatesChannelId: Option[TextGuildChannelId] =
     selectDynamic[Option[TextGuildChannelId]]("public_updates_channel_id")
 
+  @inline def withPublicUpdatesChannelId(newValue: Option[TextGuildChannelId]): Guild =
+    objWith(Guild, "public_updates_channel_id", newValue)
+
   /** The maximum amount of users in a video channel */
   @inline def maxVideoChannelUsers: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_video_channel_users")
 
+  @inline def withMaxVideoChannelUsers(newValue: UndefOr[Int]): Guild =
+    objWithUndef(Guild, "max_video_channel_users", newValue)
+
   /** The maximum amount of users in a stage video channel */
   @inline def maxStageVideoChannelUsers: UndefOr[Int] = selectDynamic[UndefOr[Int]]("max_stage_video_channel_users")
+
+  @inline def withMaxStageVideoChannelUsers(newValue: UndefOr[Int]): Guild =
+    objWithUndef(Guild, "max_stage_video_channel_users", newValue)
 
   /**
     * Approximate number of members in this guild, returned from the GET
@@ -157,11 +243,17 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
     */
   @inline def approximateMemberCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_member_count")
 
+  @inline def withApproximateMemberCount(newValue: UndefOr[Int]): Guild =
+    objWithUndef(Guild, "approximate_member_count", newValue)
+
   /**
     * Approximate number of non-offline members in this guild, returned from the
     * GET /guilds/<id> and /users/@me/guilds endpoints when with_counts is true
     */
   @inline def approximatePresenceCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_presence_count")
+
+  @inline def withApproximatePresenceCount(newValue: UndefOr[Int]): Guild =
+    objWithUndef(Guild, "approximate_presence_count", newValue)
 
   /**
     * The welcome screen of a Community guild, shown to new members, returned in
@@ -169,14 +261,24 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
     */
   @inline def welcomeScreen: UndefOr[WelcomeScreen] = selectDynamic[UndefOr[WelcomeScreen]]("welcome_screen")
 
+  @inline def withWelcomeScreen(newValue: UndefOr[WelcomeScreen]): Guild =
+    objWithUndef(Guild, "welcome_screen", newValue)
+
   /** Guild NSFW level */
   @inline def nsfwLevel: Guild.GuildNSFWLevel = selectDynamic[Guild.GuildNSFWLevel]("nsfw_level")
+
+  @inline def withNsfwLevel(newValue: Guild.GuildNSFWLevel): Guild = objWith(Guild, "nsfw_level", newValue)
 
   /** Custom guild stickers */
   @inline def stickers: UndefOr[Seq[Sticker]] = selectDynamic[UndefOr[Seq[Sticker]]]("stickers")
 
+  @inline def withStickers(newValue: UndefOr[Seq[Sticker]]): Guild = objWithUndef(Guild, "stickers", newValue)
+
   /** Whether the guild has the boost progress bar enabled */
   @inline def premiumProgressBarEnabled: Boolean = selectDynamic[Boolean]("premium_progress_bar_enabled")
+
+  @inline def withPremiumProgressBarEnabled(newValue: Boolean): Guild =
+    objWith(Guild, "premium_progress_bar_enabled", newValue)
 
   /**
     * The id of the channel where admins and moderators of Community guilds
@@ -184,6 +286,9 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
     */
   @inline def safetyAlertsChannelId: Option[TextGuildChannelId] =
     selectDynamic[Option[TextGuildChannelId]]("safety_alerts_channel_id")
+
+  @inline def withSafetyAlertsChannelId(newValue: Option[TextGuildChannelId]): Guild =
+    objWith(Guild, "safety_alerts_channel_id", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -433,8 +538,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: Int): MessageNotificationLevel = new MessageNotificationLevel(value)
 
-    def values: Seq[MessageNotificationLevel] = Seq(ALL_MESSAGES, ONLY_MENTIONS)
-
+    val values: Seq[MessageNotificationLevel] = Seq(ALL_MESSAGES, ONLY_MENTIONS)
   }
 
   sealed case class ExplicitContentFilterLevel private (value: Int) extends DiscordEnum[Int]
@@ -451,8 +555,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: Int): ExplicitContentFilterLevel = new ExplicitContentFilterLevel(value)
 
-    def values: Seq[ExplicitContentFilterLevel] = Seq(DISABLED, MEMBERS_WITHOUT_ROLES, ALL_MEMBERS)
-
+    val values: Seq[ExplicitContentFilterLevel] = Seq(DISABLED, MEMBERS_WITHOUT_ROLES, ALL_MEMBERS)
   }
 
   sealed case class MFALevel private (value: Int) extends DiscordEnum[Int]
@@ -466,8 +569,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: Int): MFALevel = new MFALevel(value)
 
-    def values: Seq[MFALevel] = Seq(NONE, ELEVATED)
-
+    val values: Seq[MFALevel] = Seq(NONE, ELEVATED)
   }
 
   sealed case class VerificationLevel private (value: Int) extends DiscordEnum[Int]
@@ -490,22 +592,22 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: Int): VerificationLevel = new VerificationLevel(value)
 
-    def values: Seq[VerificationLevel] = Seq(NONE, LOW, MEDIUM, HIGH, VERY_HIGH)
-
+    val values: Seq[VerificationLevel] = Seq(NONE, LOW, MEDIUM, HIGH, VERY_HIGH)
   }
 
   sealed case class GuildNSFWLevel private (value: Int) extends DiscordEnum[Int]
   object GuildNSFWLevel extends DiscordEnumCompanion[Int, GuildNSFWLevel] {
+    val DEFAULT: GuildNSFWLevel = GuildNSFWLevel(0)
 
-    val DEFAULT: GuildNSFWLevel        = GuildNSFWLevel(0)
-    val EXPLICIT: GuildNSFWLevel       = GuildNSFWLevel(1)
-    val SAFE: GuildNSFWLevel           = GuildNSFWLevel(2)
+    val EXPLICIT: GuildNSFWLevel = GuildNSFWLevel(1)
+
+    val SAFE: GuildNSFWLevel = GuildNSFWLevel(2)
+
     val AGE_RESTRICTED: GuildNSFWLevel = GuildNSFWLevel(3)
 
     def unknown(value: Int): GuildNSFWLevel = new GuildNSFWLevel(value)
 
-    def values: Seq[GuildNSFWLevel] = Seq(DEFAULT, EXPLICIT, SAFE, AGE_RESTRICTED)
-
+    val values: Seq[GuildNSFWLevel] = Seq(DEFAULT, EXPLICIT, SAFE, AGE_RESTRICTED)
   }
 
   sealed case class PremiumTier private (value: Int) extends DiscordEnum[Int]
@@ -525,8 +627,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: Int): PremiumTier = new PremiumTier(value)
 
-    def values: Seq[PremiumTier] = Seq(NONE, TIER_1, TIER_2, TIER_3)
-
+    val values: Seq[PremiumTier] = Seq(NONE, TIER_1, TIER_2, TIER_3)
   }
 
   sealed case class SystemChannelFlags private (value: Int) extends DiscordEnum[Int]
@@ -545,14 +646,16 @@ object Guild extends DiscordObjectCompanion[Guild] {
     val SUPPRESS_JOIN_NOTIFICATION_REPLIES: SystemChannelFlags = SystemChannelFlags(1 << 3)
 
     /** Suppress role subscription purchase and renewal notifications */
-    val SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATIONS: SystemChannelFlags = SystemChannelFlags(1 << 4)
+    val SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATIONS: SystemChannelFlags =
+      SystemChannelFlags(1 << 4)
 
     /** Hide role subscription sticker reply buttons */
-    val SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES: SystemChannelFlags = SystemChannelFlags(1 << 5)
+    val SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES: SystemChannelFlags =
+      SystemChannelFlags(1 << 5)
 
     def unknown(value: Int): SystemChannelFlags = new SystemChannelFlags(value)
 
-    def values: Seq[SystemChannelFlags] = Seq(
+    val values: Seq[SystemChannelFlags] = Seq(
       SUPPRESS_JOIN_NOTIFICATIONS,
       SUPPRESS_PREMIUM_SUBSCRIPTIONS,
       SUPPRESS_GUILD_REMINDER_NOTIFICATIONS,
@@ -562,6 +665,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
     )
 
     implicit class SystemChannelFlagsBitFieldOps(private val here: SystemChannelFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(here.value | there.value)
@@ -672,7 +776,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: String): GuildFeature = new GuildFeature(value)
 
-    def values: Seq[GuildFeature] = Seq(
+    val values: Seq[GuildFeature] = Seq(
       ANIMATED_BANNER,
       ANIMATED_ICON,
       APPLICATION_COMMAND_PERMISSIONS_V2,
@@ -701,7 +805,6 @@ object Guild extends DiscordObjectCompanion[Guild] {
       VIP_REGIONS,
       WELCOME_SCREEN_ENABLED
     )
-
   }
 
   sealed case class MutableGuildFeature private (value: String) extends DiscordEnum[String]
@@ -721,8 +824,7 @@ object Guild extends DiscordObjectCompanion[Guild] {
 
     def unknown(value: String): MutableGuildFeature = new MutableGuildFeature(value)
 
-    def values: Seq[MutableGuildFeature] = Seq(COMMUNITY, DISCOVERABLE, INVITES_DISABLED, RAID_ALERTS_DISABLED)
-
+    val values: Seq[MutableGuildFeature] = Seq(COMMUNITY, DISCOVERABLE, INVITES_DISABLED, RAID_ALERTS_DISABLED)
   }
 }
 
@@ -736,17 +838,24 @@ class UnavailableGuild(json: Json, cache: Map[String, Any] = Map.empty) extends 
   /** Guild id */
   @inline def id: GuildId = selectDynamic[GuildId]("id")
 
+  @inline def withId(newValue: GuildId): UnavailableGuild = objWith(UnavailableGuild, "id", newValue)
+
   @inline def unavailable: Boolean = selectDynamic[Boolean]("unavailable")
+
+  @inline def withUnavailable(newValue: Boolean): UnavailableGuild = objWith(UnavailableGuild, "unavailable", newValue)
 
   override def values: Seq[() => Any] = Seq(() => id, () => unavailable)
 }
 object UnavailableGuild extends DiscordObjectCompanion[UnavailableGuild] {
-  def makeRaw(json: Json, cache: Map[String, Any]): UnavailableGuild = new UnavailableGuild(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): UnavailableGuild =
+    new UnavailableGuild(json, cache)
 
-  /** @param id Guild id */
+  /**
+    * @param id
+    *   Guild id
+    */
   def make20(id: GuildId, unavailable: Boolean): UnavailableGuild =
     makeRawFromFields("id" := id, "unavailable" := unavailable)
-
 }
 
 class GuildPreview(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -754,35 +863,62 @@ class GuildPreview(json: Json, cache: Map[String, Any] = Map.empty) extends Disc
   /** Guild id */
   @inline def id: RawSnowflake = selectDynamic[RawSnowflake]("id")
 
+  @inline def withId(newValue: RawSnowflake): GuildPreview = objWith(GuildPreview, "id", newValue)
+
   /** Guild name (2-100 characters) */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): GuildPreview = objWith(GuildPreview, "name", newValue)
 
   /** Icon hash */
   @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
+  @inline def withIcon(newValue: Option[ImageHash]): GuildPreview = objWith(GuildPreview, "icon", newValue)
+
   /** Splash hash */
   @inline def splash: Option[ImageHash] = selectDynamic[Option[ImageHash]]("splash")
+
+  @inline def withSplash(newValue: Option[ImageHash]): GuildPreview = objWith(GuildPreview, "splash", newValue)
 
   /** Discovery splash hash */
   @inline def discoverySplash: Option[ImageHash] = selectDynamic[Option[ImageHash]]("discovery_splash")
 
+  @inline def withDiscoverySplash(newValue: Option[ImageHash]): GuildPreview =
+    objWith(GuildPreview, "discovery_splash", newValue)
+
   /** Custom guild emojis */
   @inline def emojis: Seq[Emoji] = selectDynamic[Seq[Emoji]]("emojis")
+
+  @inline def withEmojis(newValue: Seq[Emoji]): GuildPreview = objWith(GuildPreview, "emojis", newValue)
 
   /** Enabled guild features */
   @inline def features: Seq[Guild.GuildFeature] = selectDynamic[Seq[Guild.GuildFeature]]("features")
 
+  @inline def withFeatures(newValue: Seq[Guild.GuildFeature]): GuildPreview =
+    objWith(GuildPreview, "features", newValue)
+
   /** Approximate number of members in this guild */
   @inline def approximateMemberCount: Int = selectDynamic[Int]("approximate_member_count")
+
+  @inline def withApproximateMemberCount(newValue: Int): GuildPreview =
+    objWith(GuildPreview, "approximate_member_count", newValue)
 
   /** Approximate number of online members in this guild */
   @inline def approximatePresenceCount: Int = selectDynamic[Int]("approximate_presence_count")
 
+  @inline def withApproximatePresenceCount(newValue: Int): GuildPreview =
+    objWith(GuildPreview, "approximate_presence_count", newValue)
+
   /** The description for the guild */
   @inline def description: Option[String] = selectDynamic[Option[String]]("description")
 
+  @inline def withDescription(newValue: Option[String]): GuildPreview =
+    objWith(GuildPreview, "description", newValue)
+
   /** Custom guild stickers */
   @inline def stickers: Seq[Sticker] = selectDynamic[Seq[Sticker]]("stickers")
+
+  @inline def withStickers(newValue: Seq[Sticker]): GuildPreview = objWith(GuildPreview, "stickers", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -850,7 +986,6 @@ object GuildPreview extends DiscordObjectCompanion[GuildPreview] {
     "description"                := description,
     "stickers"                   := stickers
   )
-
 }
 
 class GuildWidgetSettings(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -858,13 +993,19 @@ class GuildWidgetSettings(json: Json, cache: Map[String, Any] = Map.empty) exten
   /** Whether the widget is enabled */
   @inline def enabled: Boolean = selectDynamic[Boolean]("enabled")
 
+  @inline def withEnabled(newValue: Boolean): GuildWidgetSettings = objWith(GuildWidgetSettings, "enabled", newValue)
+
   /** The widget channel id */
   @inline def channelId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("channel_id")
+
+  @inline def withChannelId(newValue: Option[GuildChannelId]): GuildWidgetSettings =
+    objWith(GuildWidgetSettings, "channel_id", newValue)
 
   override def values: Seq[() => Any] = Seq(() => enabled, () => channelId)
 }
 object GuildWidgetSettings extends DiscordObjectCompanion[GuildWidgetSettings] {
-  def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetSettings = new GuildWidgetSettings(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetSettings =
+    new GuildWidgetSettings(json, cache)
 
   /**
     * @param enabled
@@ -874,7 +1015,6 @@ object GuildWidgetSettings extends DiscordObjectCompanion[GuildWidgetSettings] {
     */
   def make20(enabled: Boolean, channelId: Option[GuildChannelId]): GuildWidgetSettings =
     makeRawFromFields("enabled" := enabled, "channel_id" := channelId)
-
 }
 
 class GuildWidget(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -882,21 +1022,36 @@ class GuildWidget(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   /** Guild id */
   @inline def id: GuildId = selectDynamic[GuildId]("id")
 
+  @inline def withId(newValue: GuildId): GuildWidget = objWith(GuildWidget, "id", newValue)
+
   /** Guild name (2-100 characters) */
   @inline def name: String = selectDynamic[String]("name")
 
+  @inline def withName(newValue: String): GuildWidget = objWith(GuildWidget, "name", newValue)
+
   /** Instant invite for the guilds specified widget invite channel */
   @inline def instantInvite: Option[String] = selectDynamic[Option[String]]("instant_invite")
+
+  @inline def withInstantInvite(newValue: Option[String]): GuildWidget =
+    objWith(GuildWidget, "instant_invite", newValue)
 
   /** Voice and stage channels which are accessible by @everyone */
   @inline def channels: Seq[GuildWidget.GuildWidgetChannel] =
     selectDynamic[Seq[GuildWidget.GuildWidgetChannel]]("channels")
 
+  @inline def withChannels(newValue: Seq[GuildWidget.GuildWidgetChannel]): GuildWidget =
+    objWith(GuildWidget, "channels", newValue)
+
   /** Special widget user objects that includes users presence (Limit 100) */
   @inline def members: Seq[GuildWidget.GuildWidgetUser] = selectDynamic[Seq[GuildWidget.GuildWidgetUser]]("members")
 
+  @inline def withMembers(newValue: Seq[GuildWidget.GuildWidgetUser]): GuildWidget =
+    objWith(GuildWidget, "members", newValue)
+
   /** Number of online members in this guild */
   @inline def presenceCount: Int = selectDynamic[Int]("presence_count")
+
+  @inline def withPresenceCount(newValue: Int): GuildWidget = objWith(GuildWidget, "presence_count", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => id, () => name, () => instantInvite, () => channels, () => members, () => presenceCount)
@@ -935,40 +1090,64 @@ object GuildWidget extends DiscordObjectCompanion[GuildWidget] {
   )
 
   class GuildWidgetChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: GuildChannelId = selectDynamic[GuildChannelId]("id")
+
+    @inline def withId(newValue: GuildChannelId): GuildWidgetChannel =
+      objWith(GuildWidgetChannel, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): GuildWidgetChannel = objWith(GuildWidgetChannel, "name", newValue)
+
     @inline def position: Int = selectDynamic[Int]("position")
+
+    @inline def withPosition(newValue: Int): GuildWidgetChannel = objWith(GuildWidgetChannel, "position", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => position)
   }
   object GuildWidgetChannel extends DiscordObjectCompanion[GuildWidgetChannel] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetChannel = new GuildWidgetChannel(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetChannel =
+      new GuildWidgetChannel(json, cache)
 
     def make20(id: GuildChannelId, name: String, position: Int): GuildWidgetChannel =
       makeRawFromFields("id" := id, "name" := name, "position" := position)
-
   }
 
   class GuildWidgetUser(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: UserId = selectDynamic[UserId]("id")
+
+    @inline def withId(newValue: UserId): GuildWidgetUser = objWith(GuildWidgetUser, "id", newValue)
 
     @inline def username: String = selectDynamic[String]("username")
 
+    @inline def withUsername(newValue: String): GuildWidgetUser = objWith(GuildWidgetUser, "username", newValue)
+
     @inline def discriminator: String = selectDynamic[String]("discriminator")
+
+    @inline def withDiscriminator(newValue: String): GuildWidgetUser =
+      objWith(GuildWidgetUser, "discriminator", newValue)
 
     @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
 
+    @inline def withAvatar(newValue: Option[ImageHash]): GuildWidgetUser =
+      objWith(GuildWidgetUser, "avatar", newValue)
+
     @inline def status: Status = selectDynamic[Status]("status")
 
+    @inline def withStatus(newValue: Status): GuildWidgetUser = objWith(GuildWidgetUser, "status", newValue)
+
     @inline def avatarUrl: String = selectDynamic[String]("avatar_url")
+
+    @inline def withAvatarUrl(newValue: String): GuildWidgetUser = objWith(GuildWidgetUser, "avatar_url", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => id, () => username, () => discriminator, () => avatar, () => status, () => avatarUrl)
   }
   object GuildWidgetUser extends DiscordObjectCompanion[GuildWidgetUser] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetUser = new GuildWidgetUser(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildWidgetUser =
+      new GuildWidgetUser(json, cache)
 
     def make20(
         id: UserId,
@@ -985,7 +1164,6 @@ object GuildWidget extends DiscordObjectCompanion[GuildWidget] {
       "status"        := status,
       "avatar_url"    := avatarUrl
     )
-
   }
 }
 
@@ -994,29 +1172,50 @@ class GuildMember(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   /** The user this guild member represents */
   @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
 
+  @inline def withUser(newValue: UndefOr[User]): GuildMember = objWithUndef(GuildMember, "user", newValue)
+
   /** This user's guild nickname */
   @inline def nick: JsonOption[String] = selectDynamic[JsonOption[String]]("nick")
+
+  @inline def withNick(newValue: JsonOption[String]): GuildMember = objWithUndef(GuildMember, "nick", newValue)
 
   /** The member's guild avatar hash */
   @inline def avatar: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar")
 
+  @inline def withAvatar(newValue: JsonOption[ImageHash]): GuildMember =
+    objWithUndef(GuildMember, "avatar", newValue)
+
   /** Array of role object ids */
   @inline def roles: Seq[RoleId] = selectDynamic[Seq[RoleId]]("roles")
+
+  @inline def withRoles(newValue: Seq[RoleId]): GuildMember = objWith(GuildMember, "roles", newValue)
 
   /** When the user joined the guild */
   @inline def joinedAt: OffsetDateTime = selectDynamic[OffsetDateTime]("joined_at")
 
+  @inline def withJoinedAt(newValue: OffsetDateTime): GuildMember = objWith(GuildMember, "joined_at", newValue)
+
   /** When the user started boosting the guild */
   @inline def premiumSince: JsonOption[OffsetDateTime] = selectDynamic[JsonOption[OffsetDateTime]]("premium_since")
+
+  @inline def withPremiumSince(newValue: JsonOption[OffsetDateTime]): GuildMember =
+    objWithUndef(GuildMember, "premium_since", newValue)
 
   /** Whether the user is deafened in voice channels */
   @inline def deaf: Boolean = selectDynamic[Boolean]("deaf")
 
+  @inline def withDeaf(newValue: Boolean): GuildMember = objWith(GuildMember, "deaf", newValue)
+
   /** Whether the user is muted in voice channels */
   @inline def mute: Boolean = selectDynamic[Boolean]("mute")
 
+  @inline def withMute(newValue: Boolean): GuildMember = objWith(GuildMember, "mute", newValue)
+
   /** Guild member flags represented as a bit set, defaults to 0 */
   @inline def flags: GuildMember.GuildMemberFlags = selectDynamic[GuildMember.GuildMemberFlags]("flags")
+
+  @inline def withFlags(newValue: GuildMember.GuildMemberFlags): GuildMember =
+    objWith(GuildMember, "flags", newValue)
 
   /**
     * Whether the user has not yet passed the guild's Membership Screening
@@ -1024,11 +1223,16 @@ class GuildMember(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def pending: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("pending")
 
+  @inline def withPending(newValue: UndefOr[Boolean]): GuildMember = objWithUndef(GuildMember, "pending", newValue)
+
   /**
     * Total permissions of the member in the channel, including overwrites,
     * returned when in the interaction object
     */
   @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
+
+  @inline def withPermissions(newValue: UndefOr[Permissions]): GuildMember =
+    objWithUndef(GuildMember, "permissions", newValue)
 
   /**
     * When the user's timeout will expire and the user will be able to
@@ -1037,6 +1241,9 @@ class GuildMember(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def communicationDisabledUntil: JsonOption[OffsetDateTime] =
     selectDynamic[JsonOption[OffsetDateTime]]("communication_disabled_until")
+
+  @inline def withCommunicationDisabledUntil(newValue: JsonOption[OffsetDateTime]): GuildMember =
+    objWithUndef(GuildMember, "communication_disabled_until", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => user,
@@ -1131,9 +1338,10 @@ object GuildMember extends DiscordObjectCompanion[GuildMember] {
 
     def unknown(value: Int): GuildMemberFlags = new GuildMemberFlags(value)
 
-    def values: Seq[GuildMemberFlags] = Seq(DID_REJOIN, COMPLETED_ONBOARDING, BYPASSES_VERIFICATION, STARTED_ONBOARDING)
+    val values: Seq[GuildMemberFlags] = Seq(DID_REJOIN, COMPLETED_ONBOARDING, BYPASSES_VERIFICATION, STARTED_ONBOARDING)
 
     implicit class GuildMemberFlagsBitFieldOps(private val here: GuildMemberFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: GuildMemberFlags): GuildMemberFlags = GuildMemberFlags(here.value | there.value)
@@ -1150,20 +1358,32 @@ class Integration(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   /** Integration id */
   @inline def id: Snowflake[Integration] = selectDynamic[Snowflake[Integration]]("id")
 
+  @inline def withId(newValue: Snowflake[Integration]): Integration = objWith(Integration, "id", newValue)
+
   /** Integration name */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): Integration = objWith(Integration, "name", newValue)
 
   /** Integration type (twitch, youtube, discord, or guild_subscription) */
   @inline def tpe: String = selectDynamic[String]("type")
 
+  @inline def withTpe(newValue: String): Integration = objWith(Integration, "type", newValue)
+
   /** Is this integration enabled */
   @inline def enabled: Boolean = selectDynamic[Boolean]("enabled")
+
+  @inline def withEnabled(newValue: Boolean): Integration = objWith(Integration, "enabled", newValue)
 
   /** Is this integration syncing */
   @inline def syncing: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("syncing")
 
+  @inline def withSyncing(newValue: UndefOr[Boolean]): Integration = objWithUndef(Integration, "syncing", newValue)
+
   /** Id that this integration uses for "subscribers" */
   @inline def roleId: UndefOr[RoleId] = selectDynamic[UndefOr[RoleId]]("role_id")
+
+  @inline def withRoleId(newValue: UndefOr[RoleId]): Integration = objWithUndef(Integration, "role_id", newValue)
 
   /**
     * Whether emoticons should be synced for this integration (twitch only
@@ -1171,33 +1391,61 @@ class Integration(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def enableEmoticons: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("enable_emoticons")
 
+  @inline def withEnableEmoticons(newValue: UndefOr[Boolean]): Integration =
+    objWithUndef(Integration, "enable_emoticons", newValue)
+
   /** The behavior of expiring subscribers */
   @inline def expireBehavior: UndefOr[Integration.IntegrationExpireBehavior] =
     selectDynamic[UndefOr[Integration.IntegrationExpireBehavior]]("expire_behavior")
 
+  @inline def withExpireBehavior(newValue: UndefOr[Integration.IntegrationExpireBehavior]): Integration =
+    objWithUndef(Integration, "expire_behavior", newValue)
+
   /** The grace period (in days) before expiring subscribers */
   @inline def expireGracePeriod: UndefOr[Int] = selectDynamic[UndefOr[Int]]("expire_grace_period")
+
+  @inline def withExpireGracePeriod(newValue: UndefOr[Int]): Integration =
+    objWithUndef(Integration, "expire_grace_period", newValue)
 
   /** User for this integration */
   @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
 
+  @inline def withUser(newValue: UndefOr[User]): Integration = objWithUndef(Integration, "user", newValue)
+
   /** Integration account information */
   @inline def account: Integration.IntegrationAccount = selectDynamic[Integration.IntegrationAccount]("account")
+
+  @inline def withAccount(newValue: Integration.IntegrationAccount): Integration =
+    objWith(Integration, "account", newValue)
 
   /** When this integration was last synced */
   @inline def syncedAt: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("synced_at")
 
+  @inline def withSyncedAt(newValue: UndefOr[OffsetDateTime]): Integration =
+    objWithUndef(Integration, "synced_at", newValue)
+
   /** How many subscribers this integration has */
   @inline def subscriberCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("subscriber_count")
+
+  @inline def withSubscriberCount(newValue: UndefOr[Int]): Integration =
+    objWithUndef(Integration, "subscriber_count", newValue)
 
   /** Has this integration been revoked */
   @inline def revoked: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("revoked")
 
+  @inline def withRevoked(newValue: UndefOr[Boolean]): Integration = objWithUndef(Integration, "revoked", newValue)
+
   /** The bot/OAuth2 application for discord integrations */
   @inline def application: UndefOr[Application] = selectDynamic[UndefOr[Application]]("application")
 
+  @inline def withApplication(newValue: UndefOr[Application]): Integration =
+    objWithUndef(Integration, "application", newValue)
+
   /** The scopes the application has been authorized for */
   @inline def scopes: UndefOr[Seq[OAuth2Scope]] = selectDynamic[UndefOr[Seq[OAuth2Scope]]]("scopes")
+
+  @inline def withScopes(newValue: UndefOr[Seq[OAuth2Scope]]): Integration =
+    objWithUndef(Integration, "scopes", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -1303,8 +1551,7 @@ object Integration extends DiscordObjectCompanion[Integration] {
 
     def unknown(value: Int): IntegrationExpireBehavior = new IntegrationExpireBehavior(value)
 
-    def values: Seq[IntegrationExpireBehavior] = Seq(RemoveRole, Kick)
-
+    val values: Seq[IntegrationExpireBehavior] = Seq(RemoveRole, Kick)
   }
 
   class IntegrationAccount(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1312,13 +1559,18 @@ object Integration extends DiscordObjectCompanion[Integration] {
     /** Id of the account */
     @inline def id: String = selectDynamic[String]("id")
 
+    @inline def withId(newValue: String): IntegrationAccount = objWith(IntegrationAccount, "id", newValue)
+
     /** Name of the account */
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): IntegrationAccount = objWith(IntegrationAccount, "name", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name)
   }
   object IntegrationAccount extends DiscordObjectCompanion[IntegrationAccount] {
-    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationAccount = new IntegrationAccount(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationAccount =
+      new IntegrationAccount(json, cache)
 
     /**
       * @param id
@@ -1327,7 +1579,6 @@ object Integration extends DiscordObjectCompanion[Integration] {
       *   Name of the account
       */
     def make20(id: String, name: String): IntegrationAccount = makeRawFromFields("id" := id, "name" := name)
-
   }
 
   class IntegrationApplication(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1335,22 +1586,37 @@ object Integration extends DiscordObjectCompanion[Integration] {
     /** The id of the app */
     @inline def id: ApplicationId = selectDynamic[ApplicationId]("id")
 
+    @inline def withId(newValue: ApplicationId): IntegrationApplication =
+      objWith(IntegrationApplication, "id", newValue)
+
     /** The name of the app */
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): IntegrationApplication = objWith(IntegrationApplication, "name", newValue)
 
     /** The icon hash of the app */
     @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
+    @inline def withIcon(newValue: Option[ImageHash]): IntegrationApplication =
+      objWith(IntegrationApplication, "icon", newValue)
+
     /** The description of the app */
     @inline def description: String = selectDynamic[String]("description")
+
+    @inline def withDescription(newValue: String): IntegrationApplication =
+      objWith(IntegrationApplication, "description", newValue)
 
     /** The bot associated with this application */
     @inline def bot: UndefOr[User] = selectDynamic[UndefOr[User]]("bot")
 
+    @inline def withBot(newValue: UndefOr[User]): IntegrationApplication =
+      objWithUndef(IntegrationApplication, "bot", newValue)
+
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => icon, () => description, () => bot)
   }
   object IntegrationApplication extends DiscordObjectCompanion[IntegrationApplication] {
-    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationApplication = new IntegrationApplication(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationApplication =
+      new IntegrationApplication(json, cache)
 
     /**
       * @param id
@@ -1372,7 +1638,6 @@ object Integration extends DiscordObjectCompanion[Integration] {
         bot: UndefOr[User] = UndefOrUndefined
     ): IntegrationApplication =
       makeRawFromFields("id" := id, "name" := name, "icon" := icon, "description" := description, "bot" :=? bot)
-
   }
 }
 
@@ -1381,8 +1646,12 @@ class Ban(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject
   /** The reason for the ban */
   @inline def reason: Option[String] = selectDynamic[Option[String]]("reason")
 
+  @inline def withReason(newValue: Option[String]): Ban = objWith(Ban, "reason", newValue)
+
   /** The banned user */
   @inline def user: User = selectDynamic[User]("user")
+
+  @inline def withUser(newValue: User): Ban = objWith(Ban, "user", newValue)
 
   override def values: Seq[() => Any] = Seq(() => reason, () => user)
 }
@@ -1396,7 +1665,6 @@ object Ban extends DiscordObjectCompanion[Ban] {
     *   The banned user
     */
   def make20(reason: Option[String], user: User): Ban = makeRawFromFields("reason" := reason, "user" := user)
-
 }
 
 class WelcomeScreen(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1404,9 +1672,15 @@ class WelcomeScreen(json: Json, cache: Map[String, Any] = Map.empty) extends Dis
   /** The server description shown in the welcome screen */
   @inline def description: Option[String] = selectDynamic[Option[String]]("description")
 
+  @inline def withDescription(newValue: Option[String]): WelcomeScreen =
+    objWith(WelcomeScreen, "description", newValue)
+
   /** The channels shown in the welcome screen, up to 5 */
   @inline def welcomeChannels: Seq[WelcomeScreen.WelcomeScreenChannel] =
     selectDynamic[Seq[WelcomeScreen.WelcomeScreenChannel]]("welcome_channels")
+
+  @inline def withWelcomeChannels(newValue: Seq[WelcomeScreen.WelcomeScreenChannel]): WelcomeScreen =
+    objWith(WelcomeScreen, "welcome_channels", newValue)
 
   override def values: Seq[() => Any] = Seq(() => description, () => welcomeChannels)
 }
@@ -1419,19 +1693,30 @@ object WelcomeScreen extends DiscordObjectCompanion[WelcomeScreen] {
     * @param welcomeChannels
     *   The channels shown in the welcome screen, up to 5
     */
-  def make20(description: Option[String], welcomeChannels: Seq[WelcomeScreen.WelcomeScreenChannel]): WelcomeScreen =
-    makeRawFromFields("description" := description, "welcome_channels" := welcomeChannels)
+  def make20(
+      description: Option[String],
+      welcomeChannels: Seq[WelcomeScreen.WelcomeScreenChannel]
+  ): WelcomeScreen = makeRawFromFields("description" := description, "welcome_channels" := welcomeChannels)
 
   class WelcomeScreenChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
     /** The channel's id */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: GuildChannelId): WelcomeScreenChannel =
+      objWith(WelcomeScreenChannel, "channel_id", newValue)
+
     /** The description shown for the channel */
     @inline def description: String = selectDynamic[String]("description")
 
+    @inline def withDescription(newValue: String): WelcomeScreenChannel =
+      objWith(WelcomeScreenChannel, "description", newValue)
+
     /** The emoji id, if the emoji is custom */
     @inline def emojiId: Option[Snowflake[Emoji]] = selectDynamic[Option[Snowflake[Emoji]]]("emoji_id")
+
+    @inline def withEmojiId(newValue: Option[Snowflake[Emoji]]): WelcomeScreenChannel =
+      objWith(WelcomeScreenChannel, "emoji_id", newValue)
 
     /**
       * The emoji name if custom, the unicode character if standard, or null if
@@ -1439,10 +1724,14 @@ object WelcomeScreen extends DiscordObjectCompanion[WelcomeScreen] {
       */
     @inline def emojiName: Option[String] = selectDynamic[Option[String]]("emoji_name")
 
+    @inline def withEmojiName(newValue: Option[String]): WelcomeScreenChannel =
+      objWith(WelcomeScreenChannel, "emoji_name", newValue)
+
     override def values: Seq[() => Any] = Seq(() => channelId, () => description, () => emojiId, () => emojiName)
   }
   object WelcomeScreenChannel extends DiscordObjectCompanion[WelcomeScreenChannel] {
-    def makeRaw(json: Json, cache: Map[String, Any]): WelcomeScreenChannel = new WelcomeScreenChannel(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): WelcomeScreenChannel =
+      new WelcomeScreenChannel(json, cache)
 
     /**
       * @param channelId
@@ -1466,7 +1755,6 @@ object WelcomeScreen extends DiscordObjectCompanion[WelcomeScreen] {
       "emoji_id"    := emojiId,
       "emoji_name"  := emojiName
     )
-
   }
 }
 
@@ -1475,18 +1763,31 @@ class GuildOnboarding(json: Json, cache: Map[String, Any] = Map.empty) extends D
   /** ID of the guild this onboarding is part of */
   @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+  @inline def withGuildId(newValue: GuildId): GuildOnboarding = objWith(GuildOnboarding, "guild_id", newValue)
+
   /** Prompts shown during onboarding and in customize community */
   @inline def prompts: Seq[GuildOnboarding.OnboardingPrompt] =
     selectDynamic[Seq[GuildOnboarding.OnboardingPrompt]]("prompts")
 
+  @inline def withPrompts(newValue: Seq[GuildOnboarding.OnboardingPrompt]): GuildOnboarding =
+    objWith(GuildOnboarding, "prompts", newValue)
+
   /** Channel IDs that members get opted into automatically */
   @inline def defaultChannelIds: Seq[GuildChannelId] = selectDynamic[Seq[GuildChannelId]]("default_channel_ids")
+
+  @inline def withDefaultChannelIds(newValue: Seq[GuildChannelId]): GuildOnboarding =
+    objWith(GuildOnboarding, "default_channel_ids", newValue)
 
   /** Whether onboarding is enabled in the guild */
   @inline def enabled: Boolean = selectDynamic[Boolean]("enabled")
 
+  @inline def withEnabled(newValue: Boolean): GuildOnboarding = objWith(GuildOnboarding, "enabled", newValue)
+
   /** Current mode of onboarding */
   @inline def mode: GuildOnboarding.OnboardingMode = selectDynamic[GuildOnboarding.OnboardingMode]("mode")
+
+  @inline def withMode(newValue: GuildOnboarding.OnboardingMode): GuildOnboarding =
+    objWith(GuildOnboarding, "mode", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => guildId, () => prompts, () => defaultChannelIds, () => enabled, () => mode)
@@ -1525,14 +1826,25 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
     /** ID of the prompt */
     @inline def id: Snowflake[OnboardingPrompt] = selectDynamic[Snowflake[OnboardingPrompt]]("id")
 
+    @inline def withId(newValue: Snowflake[OnboardingPrompt]): OnboardingPrompt =
+      objWith(OnboardingPrompt, "id", newValue)
+
     /** Type of prompt */
     @inline def tpe: GuildOnboarding.PromptType = selectDynamic[GuildOnboarding.PromptType]("type")
+
+    @inline def withTpe(newValue: GuildOnboarding.PromptType): OnboardingPrompt =
+      objWith(OnboardingPrompt, "type", newValue)
 
     /** Options available within the prompt */
     @inline def options: Seq[GuildOnboarding.PromptOption] = selectDynamic[Seq[GuildOnboarding.PromptOption]]("options")
 
+    @inline def withOptions(newValue: Seq[GuildOnboarding.PromptOption]): OnboardingPrompt =
+      objWith(OnboardingPrompt, "options", newValue)
+
     /** Title of the prompt */
     @inline def title: String = selectDynamic[String]("title")
+
+    @inline def withTitle(newValue: String): OnboardingPrompt = objWith(OnboardingPrompt, "title", newValue)
 
     /**
       * Indicates whether users are limited to selecting one option for the
@@ -1540,11 +1852,16 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
       */
     @inline def singleSelect: Boolean = selectDynamic[Boolean]("single_select")
 
+    @inline def withSingleSelect(newValue: Boolean): OnboardingPrompt =
+      objWith(OnboardingPrompt, "single_select", newValue)
+
     /**
       * Indicates whether the prompt is required before a user completes the
       * onboarding flow
       */
     @inline def required: Boolean = selectDynamic[Boolean]("required")
+
+    @inline def withRequired(newValue: Boolean): OnboardingPrompt = objWith(OnboardingPrompt, "required", newValue)
 
     /**
       * Indicates whether the prompt is present in the onboarding flow. If
@@ -1552,11 +1869,15 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
       */
     @inline def inOnboarding: Boolean = selectDynamic[Boolean]("in_onboarding")
 
+    @inline def withInOnboarding(newValue: Boolean): OnboardingPrompt =
+      objWith(OnboardingPrompt, "in_onboarding", newValue)
+
     override def values: Seq[() => Any] =
       Seq(() => id, () => tpe, () => options, () => title, () => singleSelect, () => required, () => inOnboarding)
   }
   object OnboardingPrompt extends DiscordObjectCompanion[OnboardingPrompt] {
-    def makeRaw(json: Json, cache: Map[String, Any]): OnboardingPrompt = new OnboardingPrompt(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): OnboardingPrompt =
+      new OnboardingPrompt(json, cache)
 
     /**
       * @param id
@@ -1594,7 +1915,6 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
       "required"      := required,
       "in_onboarding" := inOnboarding
     )
-
   }
 
   class PromptOption(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1602,20 +1922,35 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
     /** ID of the prompt option */
     @inline def id: Snowflake[PromptOption] = selectDynamic[Snowflake[PromptOption]]("id")
 
+    @inline def withId(newValue: Snowflake[PromptOption]): PromptOption =
+      objWith(PromptOption, "id", newValue)
+
     /** IDs for channels a member is added to when the option is selected */
     @inline def channelIds: Seq[GuildChannelId] = selectDynamic[Seq[GuildChannelId]]("channel_ids")
+
+    @inline def withChannelIds(newValue: Seq[GuildChannelId]): PromptOption =
+      objWith(PromptOption, "channel_ids", newValue)
 
     /** IDs for roles assigned to a member when the option is selected */
     @inline def roleIds: Seq[RoleId] = selectDynamic[Seq[RoleId]]("role_ids")
 
+    @inline def withRoleIds(newValue: Seq[RoleId]): PromptOption = objWith(PromptOption, "role_ids", newValue)
+
     /** Emoji of the option */
     @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
+
+    @inline def withEmoji(newValue: Emoji): PromptOption = objWith(PromptOption, "emoji", newValue)
 
     /** Title of the option */
     @inline def title: String = selectDynamic[String]("title")
 
+    @inline def withTitle(newValue: String): PromptOption = objWith(PromptOption, "title", newValue)
+
     /** Description of the option */
     @inline def description: Option[String] = selectDynamic[Option[String]]("description")
+
+    @inline def withDescription(newValue: Option[String]): PromptOption =
+      objWith(PromptOption, "description", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => id, () => channelIds, () => roleIds, () => emoji, () => title, () => description)
@@ -1652,7 +1987,6 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
       "title"       := title,
       "description" := description
     )
-
   }
 
   /**
@@ -1670,19 +2004,17 @@ object GuildOnboarding extends DiscordObjectCompanion[GuildOnboarding] {
 
     def unknown(value: Int): OnboardingMode = new OnboardingMode(value)
 
-    def values: Seq[OnboardingMode] = Seq(ONBOARDING_DEFAULT, ONBOARDING_ADVANCED)
-
+    val values: Seq[OnboardingMode] = Seq(ONBOARDING_DEFAULT, ONBOARDING_ADVANCED)
   }
 
   sealed case class PromptType private (value: Int) extends DiscordEnum[Int]
   object PromptType extends DiscordEnumCompanion[Int, PromptType] {
-
     val MULTIPLE_CHOICE: PromptType = PromptType(0)
-    val DROPDOWN: PromptType        = PromptType(1)
+
+    val DROPDOWN: PromptType = PromptType(1)
 
     def unknown(value: Int): PromptType = new PromptType(value)
 
-    def values: Seq[PromptType] = Seq(MULTIPLE_CHOICE, DROPDOWN)
-
+    val values: Seq[PromptType] = Seq(MULTIPLE_CHOICE, DROPDOWN)
   }
 }

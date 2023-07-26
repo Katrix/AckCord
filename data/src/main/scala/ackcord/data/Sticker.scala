@@ -15,24 +15,40 @@ class Sticker(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
   /** Id of the sticker */
   @inline def id: Snowflake[Sticker] = selectDynamic[Snowflake[Sticker]]("id")
 
+  @inline def withId(newValue: Snowflake[Sticker]): Sticker = objWith(Sticker, "id", newValue)
+
   /** For standard stickers, id of the pack the sticker is from */
   @inline def packId: UndefOr[Snowflake[Sticker.StickerPack]] =
     selectDynamic[UndefOr[Snowflake[Sticker.StickerPack]]]("pack_id")
 
+  @inline def withPackId(newValue: UndefOr[Snowflake[Sticker.StickerPack]]): Sticker =
+    objWithUndef(Sticker, "pack_id", newValue)
+
   /** Name of the sticker */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): Sticker = objWith(Sticker, "name", newValue)
 
   /** Description of the sticker */
   @inline def description: Option[String] = selectDynamic[Option[String]]("description")
 
+  @inline def withDescription(newValue: Option[String]): Sticker = objWith(Sticker, "description", newValue)
+
   /** Autocomplete/suggestion tags for the sticker (max 200 characters) */
   @inline def tags: String = selectDynamic[String]("tags")
+
+  @inline def withTags(newValue: String): Sticker = objWith(Sticker, "tags", newValue)
 
   /** Type of sticker */
   @inline def tpe: Sticker.StickerType = selectDynamic[Sticker.StickerType]("type")
 
+  @inline def withTpe(newValue: Sticker.StickerType): Sticker = objWith(Sticker, "type", newValue)
+
   /** Type of sticker format */
   @inline def formatType: Sticker.StickerFormatType = selectDynamic[Sticker.StickerFormatType]("format_type")
+
+  @inline def withFormatType(newValue: Sticker.StickerFormatType): Sticker =
+    objWith(Sticker, "format_type", newValue)
 
   /**
     * Whether this guild sticker can be used, may be false due to loss of Server
@@ -40,14 +56,22 @@ class Sticker(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
     */
   @inline def available: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("available")
 
+  @inline def withAvailable(newValue: UndefOr[Boolean]): Sticker = objWithUndef(Sticker, "available", newValue)
+
   /** Id of the guild that owns this sticker */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+  @inline def withGuildId(newValue: UndefOr[GuildId]): Sticker = objWithUndef(Sticker, "guild_id", newValue)
 
   /** The user that uploaded the guild sticker */
   @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
 
+  @inline def withUser(newValue: UndefOr[User]): Sticker = objWithUndef(Sticker, "user", newValue)
+
   /** The standard sticker's sort order within its pack */
   @inline def sortValue: UndefOr[Int] = selectDynamic[UndefOr[Int]]("sort_value")
+
+  @inline def withSortValue(newValue: UndefOr[Int]): Sticker = objWithUndef(Sticker, "sort_value", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -131,22 +155,22 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
 
     def unknown(value: Int): StickerType = new StickerType(value)
 
-    def values: Seq[StickerType] = Seq(STANDARD, GUILD)
-
+    val values: Seq[StickerType] = Seq(STANDARD, GUILD)
   }
 
   sealed case class StickerFormatType private (value: Int) extends DiscordEnum[Int]
   object StickerFormatType extends DiscordEnumCompanion[Int, StickerFormatType] {
+    val PNG: StickerFormatType = StickerFormatType(1)
 
-    val PNG: StickerFormatType    = StickerFormatType(1)
-    val APNG: StickerFormatType   = StickerFormatType(2)
+    val APNG: StickerFormatType = StickerFormatType(2)
+
     val LOTTIE: StickerFormatType = StickerFormatType(3)
-    val GIF: StickerFormatType    = StickerFormatType(4)
+
+    val GIF: StickerFormatType = StickerFormatType(4)
 
     def unknown(value: Int): StickerFormatType = new StickerFormatType(value)
 
-    def values: Seq[StickerFormatType] = Seq(PNG, APNG, LOTTIE, GIF)
-
+    val values: Seq[StickerFormatType] = Seq(PNG, APNG, LOTTIE, GIF)
   }
 
   /**
@@ -158,11 +182,18 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
     /** Id of the sticker */
     @inline def id: RawSnowflake = selectDynamic[RawSnowflake]("id")
 
+    @inline def withId(newValue: RawSnowflake): StickerItem = objWith(StickerItem, "id", newValue)
+
     /** Name of the sticker */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): StickerItem = objWith(StickerItem, "name", newValue)
+
     /** Type of sticker format */
     @inline def formatType: Sticker.StickerFormatType = selectDynamic[Sticker.StickerFormatType]("format_type")
+
+    @inline def withFormatType(newValue: Sticker.StickerFormatType): StickerItem =
+      objWith(StickerItem, "format_type", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => formatType)
   }
@@ -177,9 +208,11 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
       * @param formatType
       *   Type of sticker format
       */
-    def make20(id: RawSnowflake, name: String, formatType: Sticker.StickerFormatType): StickerItem =
-      makeRawFromFields("id" := id, "name" := name, "format_type" := formatType)
-
+    def make20(
+        id: RawSnowflake,
+        name: String,
+        formatType: Sticker.StickerFormatType
+    ): StickerItem = makeRawFromFields("id" := id, "name" := name, "format_type" := formatType)
   }
 
   /** Represents a pack of standard stickers. */
@@ -188,24 +221,40 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
     /** Id of the sticker pack */
     @inline def id: RawSnowflake = selectDynamic[RawSnowflake]("id")
 
+    @inline def withId(newValue: RawSnowflake): StickerPack = objWith(StickerPack, "id", newValue)
+
     /** The stickers in the pack */
     @inline def stickers: Seq[Sticker] = selectDynamic[Seq[Sticker]]("stickers")
+
+    @inline def withStickers(newValue: Seq[Sticker]): StickerPack = objWith(StickerPack, "stickers", newValue)
 
     /** Name of the sticker pack */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): StickerPack = objWith(StickerPack, "name", newValue)
+
     /** Id of the pack's SKU */
     @inline def skuId: RawSnowflake = selectDynamic[RawSnowflake]("sku_id")
+
+    @inline def withSkuId(newValue: RawSnowflake): StickerPack = objWith(StickerPack, "sku_id", newValue)
 
     /** Id of a sticker in the pack which is shown as the pack's icon */
     @inline def coverStickerId: UndefOr[Snowflake[Sticker]] =
       selectDynamic[UndefOr[Snowflake[Sticker]]]("cover_sticker_id")
 
+    @inline def withCoverStickerId(newValue: UndefOr[Snowflake[Sticker]]): StickerPack =
+      objWithUndef(StickerPack, "cover_sticker_id", newValue)
+
     /** Description of the sticker pack */
     @inline def description: String = selectDynamic[String]("description")
 
+    @inline def withDescription(newValue: String): StickerPack = objWith(StickerPack, "description", newValue)
+
     /** Id of the sticker pack's banner image */
     @inline def bannerAssetId: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("banner_asset_id")
+
+    @inline def withBannerAssetId(newValue: UndefOr[RawSnowflake]): StickerPack =
+      objWithUndef(StickerPack, "banner_asset_id", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -253,6 +302,5 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
       "description"       := description,
       "banner_asset_id"  :=? bannerAssetId
     )
-
   }
 }

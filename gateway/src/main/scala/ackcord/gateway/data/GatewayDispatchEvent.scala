@@ -85,7 +85,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   }
 
   /**
-    * * The ready event is dispatched when a client has completed the initial
+    * The ready event is dispatched when a client has completed the initial
     * handshake with the gateway (for new sessions). The ready event can be the
     * largest and most complex event the gateway will send, as it contains all
     * the state required for a client to begin interacting with the rest of the
@@ -102,25 +102,40 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** API version */
     @inline def v: Int = selectDynamic[Int]("v")
 
+    @inline def withV(newValue: Int): Ready = objWith(Ready, "v", newValue)
+
     /** Information about the user including email */
     @inline def user: User = selectDynamic[User]("user")
+
+    @inline def withUser(newValue: User): Ready = objWith(Ready, "user", newValue)
 
     /** Guilds the user is in */
     @inline def guilds: Seq[UnavailableGuild] = selectDynamic[Seq[UnavailableGuild]]("guilds")
 
+    @inline def withGuilds(newValue: Seq[UnavailableGuild]): Ready = objWith(Ready, "guilds", newValue)
+
     /** Used for resuming connections */
     @inline def sessionId: String = selectDynamic[String]("session_id")
 
+    @inline def withSessionId(newValue: String): Ready = objWith(Ready, "session_id", newValue)
+
     /** Gateway URL for resuming connections */
     @inline def resumeGatewayUrl: String = selectDynamic[String]("resume_gateway_url")
+
+    @inline def withResumeGatewayUrl(newValue: String): Ready = objWith(Ready, "resume_gateway_url", newValue)
 
     /**
       * Shard information associated with this session, if sent when identifying
       */
     @inline def shard: UndefOr[Seq[Int]] = selectDynamic[UndefOr[Seq[Int]]]("shard")
 
+    @inline def withShard(newValue: UndefOr[Seq[Int]]): Ready = objWithUndef(Ready, "shard", newValue)
+
     /** Contains id and flags */
     @inline def application: Ready.ReadyApplication = selectDynamic[Ready.ReadyApplication]("application")
+
+    @inline def withApplication(newValue: Ready.ReadyApplication): Ready =
+      objWith(Ready, "application", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => v, () => user, () => guilds, () => sessionId, () => resumeGatewayUrl, () => shard, () => application)
@@ -164,18 +179,24 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     )
 
     class ReadyApplication(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
       @inline def id: ApplicationId = selectDynamic[ApplicationId]("id")
 
+      @inline def withId(newValue: ApplicationId): ReadyApplication = objWith(ReadyApplication, "id", newValue)
+
       @inline def flags: Application.Flags = selectDynamic[Application.Flags]("flags")
+
+      @inline def withFlags(newValue: Application.Flags): ReadyApplication =
+        objWith(ReadyApplication, "flags", newValue)
 
       override def values: Seq[() => Any] = Seq(() => id, () => flags)
     }
     object ReadyApplication extends DiscordObjectCompanion[ReadyApplication] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ReadyApplication = new ReadyApplication(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ReadyApplication =
+        new ReadyApplication(json, cache)
 
       def make20(id: ApplicationId, flags: Application.Flags): ReadyApplication =
         makeRawFromFields("id" := id, "flags" := flags)
-
     }
   }
 
@@ -193,7 +214,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): Resumed = new Resumed(json, cache)
 
     def make20(): Resumed = makeRawFromFields()
-
   }
 
   /**
@@ -204,8 +224,14 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ApplicationCommandPermissionsUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub =
       ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(
+        newValue: ApplicationCommandPermissionsUpdate.ApplicationCommandPermissionsStub
+    ): ApplicationCommandPermissionsUpdate =
+      objWithJson(ApplicationCommandPermissionsUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -227,7 +253,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         new ApplicationCommandPermissionsStub(json, cache)
 
       def make20(): ApplicationCommandPermissionsStub = makeRawFromFields()
-
     }
   }
 
@@ -238,7 +263,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class AutoModerationRuleCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: AutoModerationRule): AutoModerationRuleCreate =
+      objWithJson(AutoModerationRuleCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -249,7 +278,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(data: AutoModerationRule): AutoModerationRuleCreate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("data", data)
     )
-
   }
 
   /**
@@ -259,7 +287,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class AutoModerationRuleUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: AutoModerationRule): AutoModerationRuleUpdate =
+      objWithJson(AutoModerationRuleUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -270,7 +302,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(data: AutoModerationRule): AutoModerationRuleUpdate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("data", data)
     )
-
   }
 
   /**
@@ -280,7 +311,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class AutoModerationRuleDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: AutoModerationRule = AutoModerationRule.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: AutoModerationRule): AutoModerationRuleDelete =
+      objWithJson(AutoModerationRuleDelete, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -291,7 +326,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(data: AutoModerationRule): AutoModerationRuleDelete = makeRawFromFields(
       DiscordObjectFrom.FromExtension("data", data)
     )
-
   }
 
   /**
@@ -305,25 +339,47 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild in which action was executed */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "guild_id", newValue)
+
     /** Action which was executed */
     @inline def action: AutoModerationRule.AutoModerationRuleAction =
       selectDynamic[AutoModerationRule.AutoModerationRuleAction]("action")
 
+    @inline def withAction(newValue: AutoModerationRule.AutoModerationRuleAction): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "action", newValue)
+
     /** ID of the rule which action belongs to */
     @inline def ruleId: Snowflake[AutoModerationRule] = selectDynamic[Snowflake[AutoModerationRule]]("rule_id")
+
+    @inline def withRuleId(newValue: Snowflake[AutoModerationRule]): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "rule_id", newValue)
 
     /** Trigger type of rule which was triggered */
     @inline def ruleTriggerType: AutoModerationRule.AutoModerationRuleTriggerType =
       selectDynamic[AutoModerationRule.AutoModerationRuleTriggerType]("rule_trigger_type")
 
+    @inline def withRuleTriggerType(
+        newValue: AutoModerationRule.AutoModerationRuleTriggerType
+    ): AutoModerationActionExecution = objWith(AutoModerationActionExecution, "rule_trigger_type", newValue)
+
     /** ID of the user which generated the content which triggered the rule */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
+
+    @inline def withUserId(newValue: UserId): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "user_id", newValue)
 
     /** ID of the channel in which user content was posted */
     @inline def channelId: UndefOr[TextGuildChannelId] = selectDynamic[UndefOr[TextGuildChannelId]]("channel_id")
 
+    @inline def withChannelId(newValue: UndefOr[TextGuildChannelId]): AutoModerationActionExecution =
+      objWithUndef(AutoModerationActionExecution, "channel_id", newValue)
+
     /** ID of any user message which content belongs to */
     @inline def messageId: UndefOr[MessageId] = selectDynamic[UndefOr[MessageId]]("message_id")
+
+    @inline def withMessageId(newValue: UndefOr[MessageId]): AutoModerationActionExecution =
+      objWithUndef(AutoModerationActionExecution, "message_id", newValue)
 
     /**
       * ID of any system auto moderation messages posted as a result of this
@@ -331,14 +387,26 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def alertSystemMessageId: UndefOr[MessageId] = selectDynamic[UndefOr[MessageId]]("alert_system_message_id")
 
+    @inline def withAlertSystemMessageId(newValue: UndefOr[MessageId]): AutoModerationActionExecution =
+      objWithUndef(AutoModerationActionExecution, "alert_system_message_id", newValue)
+
     /** User-generated text content */
     @inline def content: String = selectDynamic[String]("content")
+
+    @inline def withContent(newValue: String): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "content", newValue)
 
     /** Word or phrase configured in the rule that triggered the rule */
     @inline def matchedKeyword: Option[String] = selectDynamic[Option[String]]("matched_keyword")
 
+    @inline def withMatchedKeyword(newValue: Option[String]): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "matched_keyword", newValue)
+
     /** Substring in content that triggered the rule */
     @inline def matchedContent: Option[String] = selectDynamic[Option[String]]("matched_content")
+
+    @inline def withMatchedContent(newValue: Option[String]): AutoModerationActionExecution =
+      objWith(AutoModerationActionExecution, "matched_content", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => guildId,
@@ -408,7 +476,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "matched_keyword"          := matchedKeyword,
       "matched_content"          := matchedContent
     )
-
   }
 
   /**
@@ -418,7 +485,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ChannelCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: GuildChannel): ChannelCreate =
+      objWithJson(ChannelCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -426,11 +497,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): ChannelCreate = new ChannelCreate(json, cache)
 
     def make20(data: GuildChannel): ChannelCreate = makeRawFromFields(DiscordObjectFrom.FromExtension("data", data))
-
   }
 
   /**
-    * * Sent when a channel is updated. The inner payload is a channel object.
+    * Sent when a channel is updated. The inner payload is a channel object.
     * This is not sent when the field last_message_id is altered. To keep track
     * of the last_message_id changes, you must listen for Message Create events
     * (or Thread Create events for GUILD_FORUM channels).
@@ -441,7 +511,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ChannelUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: GuildChannel): ChannelUpdate =
+      objWithJson(ChannelUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -449,7 +523,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): ChannelUpdate = new ChannelUpdate(json, cache)
 
     def make20(data: GuildChannel): ChannelUpdate = makeRawFromFields(DiscordObjectFrom.FromExtension("data", data))
-
   }
 
   /**
@@ -459,7 +532,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ChannelDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: GuildChannel = GuildChannel.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: GuildChannel): ChannelDelete =
+      objWithJson(ChannelDelete, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -467,11 +544,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): ChannelDelete = new ChannelDelete(json, cache)
 
     def make20(data: GuildChannel): ChannelDelete = makeRawFromFields(DiscordObjectFrom.FromExtension("data", data))
-
   }
 
   /**
-    * * Sent when a thread is created, relevant to the current user, or when the
+    * Sent when a thread is created, relevant to the current user, or when the
     * current user is added to a thread. The inner payload is a channel object.
     *   - When a thread is created, includes an additional newly_created boolean
     *     field.
@@ -481,7 +557,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ThreadCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: ThreadChannel = ThreadChannel.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: ThreadChannel): ThreadCreate =
+      objWithJson(ThreadCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -489,7 +569,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): ThreadCreate = new ThreadCreate(json, cache)
 
     def make20(data: ThreadChannel): ThreadCreate = makeRawFromFields(DiscordObjectFrom.FromExtension("data", data))
-
   }
 
   /**
@@ -500,7 +579,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ThreadUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def data: ThreadChannel = ThreadChannel.makeRaw(json, extensionCache("data"))
+
+    @inline def withData(newValue: ThreadChannel): ThreadUpdate =
+      objWithJson(ThreadUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => data)
   }
@@ -508,7 +591,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): ThreadUpdate = new ThreadUpdate(json, cache)
 
     def make20(data: ThreadChannel): ThreadUpdate = makeRawFromFields(DiscordObjectFrom.FromExtension("data", data))
-
   }
 
   /**
@@ -519,13 +601,24 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class ThreadDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def id: ThreadChannelId = selectDynamic[ThreadChannelId]("id")
+
+    @inline def withId(newValue: ThreadChannelId): ThreadDelete = objWith(ThreadDelete, "id", newValue)
 
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): ThreadDelete = objWith(ThreadDelete, "guild_id", newValue)
+
     @inline def parentId: GuildChannelId = selectDynamic[GuildChannelId]("parent_id")
 
+    @inline def withParentId(newValue: GuildChannelId): ThreadDelete =
+      objWith(ThreadDelete, "parent_id", newValue)
+
     @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
+
+    @inline def withTpe(newValue: Channel.ChannelType): ThreadDelete =
+      objWith(ThreadDelete, "type", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => guildId, () => parentId, () => tpe)
   }
@@ -538,7 +631,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         parentId: GuildChannelId,
         tpe: Channel.ChannelType
     ): ThreadDelete = makeRawFromFields("id" := id, "guild_id" := guildId, "parent_id" := parentId, "type" := tpe)
-
   }
 
   /** Sent when the current user gains access to a channel. */
@@ -549,6 +641,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): ThreadListSync = objWith(ThreadListSync, "guild_id", newValue)
+
     /**
       * Parent channel IDs whose threads are being synced. If omitted, then
       * threads were synced for the entire guild. This array may contain
@@ -557,11 +651,17 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def channelIds: Seq[GuildChannelId] = selectDynamic[Seq[GuildChannelId]]("channel_ids")
 
+    @inline def withChannelIds(newValue: Seq[GuildChannelId]): ThreadListSync =
+      objWith(ThreadListSync, "channel_ids", newValue)
+
     /**
       * All active threads in the given channels that the current user can
       * access
       */
     @inline def threads: Seq[ThreadChannel] = selectDynamic[Seq[ThreadChannel]]("threads")
+
+    @inline def withThreads(newValue: Seq[ThreadChannel]): ThreadListSync =
+      objWith(ThreadListSync, "threads", newValue)
 
     /**
       * All thread member objects from the synced threads for the current user,
@@ -569,10 +669,14 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def members: Seq[Channel.ThreadMember] = selectDynamic[Seq[Channel.ThreadMember]]("members")
 
+    @inline def withMembers(newValue: Seq[Channel.ThreadMember]): ThreadListSync =
+      objWith(ThreadListSync, "members", newValue)
+
     override def values: Seq[() => Any] = Seq(() => guildId, () => channelIds, () => threads, () => members)
   }
   object ThreadListSync extends DiscordObjectCompanion[ThreadListSync] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ThreadListSync = new ThreadListSync(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ThreadListSync =
+      new ThreadListSync(json, cache)
 
     /**
       * @param guildId
@@ -596,7 +700,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         members: Seq[Channel.ThreadMember]
     ): ThreadListSync =
       makeRawFromFields("guild_id" := guildId, "channel_ids" := channelIds, "threads" := threads, "members" := members)
-
   }
 
   /**
@@ -613,13 +716,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): ThreadMemberUpdate = objWith(ThreadMemberUpdate, "guild_id", newValue)
+
     /** Rest of the thread member object */
     @inline def threadMember: Channel.ThreadMember = Channel.ThreadMember.makeRaw(json, extensionCache("thread_member"))
+
+    @inline def withThreadMember(newValue: Channel.ThreadMember): ThreadMemberUpdate =
+      objWithJson(ThreadMemberUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => threadMember)
   }
   object ThreadMemberUpdate extends DiscordObjectCompanion[ThreadMemberUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMemberUpdate = new ThreadMemberUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMemberUpdate =
+      new ThreadMemberUpdate(json, cache)
 
     /**
       * @param guildId
@@ -629,7 +738,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, threadMember: Channel.ThreadMember): ThreadMemberUpdate =
       makeRawFromFields("guild_id" := guildId, DiscordObjectFrom.FromExtension("thread_member", threadMember))
-
   }
 
   /**
@@ -644,24 +752,39 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the thread */
     @inline def id: ThreadChannelId = selectDynamic[ThreadChannelId]("id")
 
+    @inline def withId(newValue: ThreadChannelId): ThreadMembersUpdate =
+      objWith(ThreadMembersUpdate, "id", newValue)
+
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): ThreadMembersUpdate = objWith(ThreadMembersUpdate, "guild_id", newValue)
+
     /** Approximate number of members in the thread, capped at 50 */
     @inline def memberCount: Int = selectDynamic[Int]("member_count")
+
+    @inline def withMemberCount(newValue: Int): ThreadMembersUpdate =
+      objWith(ThreadMembersUpdate, "member_count", newValue)
 
     /** Users who were added to the thread */
     @inline def addedMembers: UndefOr[Seq[Channel.ThreadMember]] =
       selectDynamic[UndefOr[Seq[Channel.ThreadMember]]]("added_members")
 
+    @inline def withAddedMembers(newValue: UndefOr[Seq[Channel.ThreadMember]]): ThreadMembersUpdate =
+      objWithUndef(ThreadMembersUpdate, "added_members", newValue)
+
     /** ID of the users who were removed from the thread */
     @inline def removedMemberIds: UndefOr[Seq[UserId]] = selectDynamic[UndefOr[Seq[UserId]]]("removed_member_ids")
+
+    @inline def withRemovedMemberIds(newValue: UndefOr[Seq[UserId]]): ThreadMembersUpdate =
+      objWithUndef(ThreadMembersUpdate, "removed_member_ids", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => id, () => guildId, () => memberCount, () => addedMembers, () => removedMemberIds)
   }
   object ThreadMembersUpdate extends DiscordObjectCompanion[ThreadMembersUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMembersUpdate = new ThreadMembersUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMembersUpdate =
+      new ThreadMembersUpdate(json, cache)
 
     /**
       * @param id
@@ -688,7 +811,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "added_members"      :=? addedMembers,
       "removed_member_ids" :=? removedMemberIds
     )
-
   }
 
   /**
@@ -702,17 +824,27 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+    @inline def withGuildId(newValue: UndefOr[GuildId]): ChannelPinsUpdate =
+      objWithUndef(ChannelPinsUpdate, "guild_id", newValue)
+
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): ChannelPinsUpdate =
+      objWith(ChannelPinsUpdate, "channel_id", newValue)
 
     /** Time at which the most recent pinned message was pinned */
     @inline def lastPinTimestamp: JsonOption[OffsetDateTime] =
       selectDynamic[JsonOption[OffsetDateTime]]("last_pin_timestamp")
 
+    @inline def withLastPinTimestamp(newValue: JsonOption[OffsetDateTime]): ChannelPinsUpdate =
+      objWithUndef(ChannelPinsUpdate, "last_pin_timestamp", newValue)
+
     override def values: Seq[() => Any] = Seq(() => guildId, () => channelId, () => lastPinTimestamp)
   }
   object ChannelPinsUpdate extends DiscordObjectCompanion[ChannelPinsUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ChannelPinsUpdate = new ChannelPinsUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ChannelPinsUpdate =
+      new ChannelPinsUpdate(json, cache)
 
     /**
       * @param guildId
@@ -728,11 +860,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined
     ): ChannelPinsUpdate =
       makeRawFromFields("guild_id" :=? guildId, "channel_id" := channelId, "last_pin_timestamp" :=? lastPinTimestamp)
-
   }
 
   /**
-    * * This event can be sent in three different scenarios:
+    * This event can be sent in three different scenarios:
     *   1. When a user is initially connecting, to lazily load and backfill
     *      information for all unavailable guilds sent in the Ready event.
     *      Guilds that are unavailable due to an outage will send a Guild Delete
@@ -749,8 +880,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def guild: GuildCreate.GuildCreateGuild =
       GuildCreate.GuildCreateGuild.makeRaw(json, extensionCache("guild"))
+
+    @inline def withGuild(newValue: GuildCreate.GuildCreateGuild): GuildCreate =
+      objWithJson(GuildCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => guild)
   }
@@ -776,33 +911,56 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     class AvailableGuild(json: Json, cache: Map[String, Any] = Map.empty)
         extends DiscordObject(json, cache)
         with GuildCreateGuild {
+
       @inline def guild: Guild = Guild.makeRaw(json, extensionCache("guild"))
+
+      @inline def withGuild(newValue: Guild): AvailableGuild =
+        objWithJson(AvailableGuild, newValue.json, newValue.cacheCopy)
 
       /** When this guild was joined at */
       @inline def joinedAt: OffsetDateTime = selectDynamic[OffsetDateTime]("joined_at")
 
+      @inline def withJoinedAt(newValue: OffsetDateTime): AvailableGuild =
+        objWith(AvailableGuild, "joined_at", newValue)
+
       /** True if this is considered a large guild */
       @inline def large: Boolean = selectDynamic[Boolean]("large")
 
+      @inline def withLarge(newValue: Boolean): AvailableGuild = objWith(AvailableGuild, "large", newValue)
+
       /** Total number of members in this guild */
       @inline def memberCount: Int = selectDynamic[Int]("member_count")
+
+      @inline def withMemberCount(newValue: Int): AvailableGuild = objWith(AvailableGuild, "member_count", newValue)
 
       /**
         * States of members currently in voice channels; lacks the guild_id key
         */
       @inline def voiceStates: Seq[VoiceState] = selectDynamic[Seq[VoiceState]]("voice_states")
 
+      @inline def withVoiceStates(newValue: Seq[VoiceState]): AvailableGuild =
+        objWith(AvailableGuild, "voice_states", newValue)
+
       /** Users in the guild */
       @inline def members: Seq[GuildMember] = selectDynamic[Seq[GuildMember]]("members")
 
+      @inline def withMembers(newValue: Seq[GuildMember]): AvailableGuild =
+        objWith(AvailableGuild, "members", newValue)
+
       /** Channels in the guild */
       @inline def channels: Seq[GuildChannel] = selectDynamic[Seq[GuildChannel]]("channels")
+
+      @inline def withChannels(newValue: Seq[GuildChannel]): AvailableGuild =
+        objWith(AvailableGuild, "channels", newValue)
 
       /**
         * All active threads in the guild that current user has permission to
         * view
         */
       @inline def threads: Seq[ThreadChannel] = selectDynamic[Seq[ThreadChannel]]("threads")
+
+      @inline def withThreads(newValue: Seq[ThreadChannel]): AvailableGuild =
+        objWith(AvailableGuild, "threads", newValue)
 
       /**
         * Presences of the members in the guild, will only include non-offline
@@ -811,12 +969,22 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       @inline def presences: Seq[AvailableGuild.AvailableGuildPresenceUpdate] =
         selectDynamic[Seq[AvailableGuild.AvailableGuildPresenceUpdate]]("presences")
 
+      @inline def withPresences(
+          newValue: Seq[AvailableGuild.AvailableGuildPresenceUpdate]
+      ): AvailableGuild = objWith(AvailableGuild, "presences", newValue)
+
       /** Stage instances in the guild */
       @inline def stageInstances: Seq[StageInstance] = selectDynamic[Seq[StageInstance]]("stage_instances")
+
+      @inline def withStageInstances(newValue: Seq[StageInstance]): AvailableGuild =
+        objWith(AvailableGuild, "stage_instances", newValue)
 
       /** Scheduled events in the guild */
       @inline def guildScheduledEvents: Seq[GuildScheduledEvent] =
         selectDynamic[Seq[GuildScheduledEvent]]("guild_scheduled_events")
+
+      @inline def withGuildScheduledEvents(newValue: Seq[GuildScheduledEvent]): AvailableGuild =
+        objWith(AvailableGuild, "guild_scheduled_events", newValue)
 
       override def values: Seq[() => Any] = Seq(
         () => guild,
@@ -833,7 +1001,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       )
     }
     object AvailableGuild extends DiscordObjectCompanion[AvailableGuild] {
-      def makeRaw(json: Json, cache: Map[String, Any]): AvailableGuild = new AvailableGuild(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): AvailableGuild =
+        new AvailableGuild(json, cache)
 
       /**
         * @param joinedAt
@@ -888,7 +1057,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
 
       class AvailableGuildPresenceUpdate(json: Json, cache: Map[String, Any] = Map.empty)
           extends DiscordObject(json, cache) {
+
         @inline def presenceUpdate: PresenceUpdate = PresenceUpdate.makeRaw(json, extensionCache("presenceUpdate"))
+
+        @inline def withPresenceUpdate(newValue: PresenceUpdate): AvailableGuildPresenceUpdate =
+          objWithJson(AvailableGuildPresenceUpdate, newValue.json, newValue.cacheCopy)
 
         override def values: Seq[() => Any] = Seq(() => presenceUpdate)
       }
@@ -896,17 +1069,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         def makeRaw(json: Json, cache: Map[String, Any]): AvailableGuildPresenceUpdate =
           new AvailableGuildPresenceUpdate(json, cache)
 
-        def make20(presenceUpdate: PresenceUpdate): AvailableGuildPresenceUpdate = makeRawFromFields(
-          DiscordObjectFrom.FromExtension("presenceUpdate", presenceUpdate)
-        )
-
+        def make20(presenceUpdate: PresenceUpdate): AvailableGuildPresenceUpdate =
+          makeRawFromFields(DiscordObjectFrom.FromExtension("presenceUpdate", presenceUpdate))
       }
     }
 
     class GuildCreateUnavailableGuild(json: Json, cache: Map[String, Any] = Map.empty)
         extends DiscordObject(json, cache)
         with GuildCreateGuild {
+
       @inline def guild: UnavailableGuild = UnavailableGuild.makeRaw(json, extensionCache("guild"))
+
+      @inline def withGuild(newValue: UnavailableGuild): GuildCreateUnavailableGuild =
+        objWithJson(GuildCreateUnavailableGuild, newValue.json, newValue.cacheCopy)
 
       override def values: Seq[() => Any] = Seq(() => guild)
     }
@@ -914,10 +1089,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       def makeRaw(json: Json, cache: Map[String, Any]): GuildCreateUnavailableGuild =
         new GuildCreateUnavailableGuild(json, cache)
 
-      def make20(guild: UnavailableGuild): GuildCreateUnavailableGuild = makeRawFromFields(
-        DiscordObjectFrom.FromExtension("guild", guild)
-      )
-
+      def make20(guild: UnavailableGuild): GuildCreateUnavailableGuild =
+        makeRawFromFields(DiscordObjectFrom.FromExtension("guild", guild))
     }
   }
 
@@ -925,7 +1098,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def guild: Guild = Guild.makeRaw(json, extensionCache("guild"))
+
+    @inline def withGuild(newValue: Guild): GuildUpdate = objWithJson(GuildUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => guild)
   }
@@ -933,7 +1109,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): GuildUpdate = new GuildUpdate(json, cache)
 
     def make20(guild: Guild): GuildUpdate = makeRawFromFields(DiscordObjectFrom.FromExtension("guild", guild))
-
   }
 
   /**
@@ -945,7 +1120,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def unavailableGuild: UnavailableGuild = UnavailableGuild.makeRaw(json, extensionCache("unavailable_guild"))
+
+    @inline def withUnavailableGuild(newValue: UnavailableGuild): GuildDelete =
+      objWithJson(GuildDelete, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => unavailableGuild)
   }
@@ -955,7 +1134,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(unavailableGuild: UnavailableGuild): GuildDelete = makeRawFromFields(
       DiscordObjectFrom.FromExtension("unavailable_guild", unavailableGuild)
     )
-
   }
 
   /**
@@ -966,8 +1144,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildAuditLogEntryCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def auditLogEntry: AuditLog.AuditLogEntry =
       AuditLog.AuditLogEntry.makeRaw(json, extensionCache("audit_log_entry"))
+
+    @inline def withAuditLogEntry(newValue: AuditLog.AuditLogEntry): GuildAuditLogEntryCreate =
+      objWithJson(GuildAuditLogEntryCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => auditLogEntry)
   }
@@ -975,10 +1157,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): GuildAuditLogEntryCreate =
       new GuildAuditLogEntryCreate(json, cache)
 
-    def make20(auditLogEntry: AuditLog.AuditLogEntry): GuildAuditLogEntryCreate = makeRawFromFields(
-      DiscordObjectFrom.FromExtension("audit_log_entry", auditLogEntry)
-    )
-
+    def make20(auditLogEntry: AuditLog.AuditLogEntry): GuildAuditLogEntryCreate =
+      makeRawFromFields(DiscordObjectFrom.FromExtension("audit_log_entry", auditLogEntry))
   }
 
   /** Sent when a user is banned from a guild. */
@@ -989,8 +1169,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildBanAdd = objWith(GuildBanAdd, "guild_id", newValue)
+
     /** User who was banned */
     @inline def user: User = selectDynamic[User]("user")
+
+    @inline def withUser(newValue: User): GuildBanAdd = objWith(GuildBanAdd, "user", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => user)
   }
@@ -1004,7 +1188,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       *   User who was banned
       */
     def make20(guildId: GuildId, user: User): GuildBanAdd = makeRawFromFields("guild_id" := guildId, "user" := user)
-
   }
 
   /** Sent when a user is unbanned from a guild. */
@@ -1015,13 +1198,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildBanRemove = objWith(GuildBanRemove, "guild_id", newValue)
+
     /** User who was unbanned */
     @inline def user: User = selectDynamic[User]("user")
+
+    @inline def withUser(newValue: User): GuildBanRemove = objWith(GuildBanRemove, "user", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => user)
   }
   object GuildBanRemove extends DiscordObjectCompanion[GuildBanRemove] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildBanRemove = new GuildBanRemove(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildBanRemove =
+      new GuildBanRemove(json, cache)
 
     /**
       * @param guildId
@@ -1030,7 +1218,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       *   User who was unbanned
       */
     def make20(guildId: GuildId, user: User): GuildBanRemove = makeRawFromFields("guild_id" := guildId, "user" := user)
-
   }
 
   /** Sent when a guild's emojis have been updated. */
@@ -1041,13 +1228,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildEmojisUpdate = objWith(GuildEmojisUpdate, "guild_id", newValue)
+
     /** Array of emojis */
     @inline def emojis: Seq[Emoji] = selectDynamic[Seq[Emoji]]("emojis")
+
+    @inline def withEmojis(newValue: Seq[Emoji]): GuildEmojisUpdate = objWith(GuildEmojisUpdate, "emojis", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => emojis)
   }
   object GuildEmojisUpdate extends DiscordObjectCompanion[GuildEmojisUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildEmojisUpdate = new GuildEmojisUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildEmojisUpdate =
+      new GuildEmojisUpdate(json, cache)
 
     /**
       * @param guildId
@@ -1057,7 +1249,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, emojis: Seq[Emoji]): GuildEmojisUpdate =
       makeRawFromFields("guild_id" := guildId, "emojis" := emojis)
-
   }
 
   /** Sent when a guild's stickers have been updated. */
@@ -1068,13 +1259,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildStickersUpdate = objWith(GuildStickersUpdate, "guild_id", newValue)
+
     /** Array of stickers */
     @inline def stickers: Seq[Sticker] = selectDynamic[Seq[Sticker]]("stickers")
+
+    @inline def withStickers(newValue: Seq[Sticker]): GuildStickersUpdate =
+      objWith(GuildStickersUpdate, "stickers", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => stickers)
   }
   object GuildStickersUpdate extends DiscordObjectCompanion[GuildStickersUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildStickersUpdate = new GuildStickersUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildStickersUpdate =
+      new GuildStickersUpdate(json, cache)
 
     /**
       * @param guildId
@@ -1084,7 +1281,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, stickers: Seq[Sticker]): GuildStickersUpdate =
       makeRawFromFields("guild_id" := guildId, "stickers" := stickers)
-
   }
 
   /** Sent when a guild integration is updated. */
@@ -1095,14 +1291,20 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild whose integrations were updated */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildIntegrationsUpdate =
+      objWith(GuildIntegrationsUpdate, "guild_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => guildId)
   }
   object GuildIntegrationsUpdate extends DiscordObjectCompanion[GuildIntegrationsUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildIntegrationsUpdate = new GuildIntegrationsUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildIntegrationsUpdate =
+      new GuildIntegrationsUpdate(json, cache)
 
-    /** @param guildId ID of the guild whose integrations were updated */
+    /**
+      * @param guildId
+      *   ID of the guild whose integrations were updated
+      */
     def make20(guildId: GuildId): GuildIntegrationsUpdate = makeRawFromFields("guild_id" := guildId)
-
   }
 
   /**
@@ -1116,17 +1318,25 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildMemberAdd = objWith(GuildMemberAdd, "guild_id", newValue)
+
     @inline def guildMember: GuildMember = GuildMember.makeRaw(json, extensionCache("guild_member"))
+
+    @inline def withGuildMember(newValue: GuildMember): GuildMemberAdd =
+      objWithJson(GuildMemberAdd, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => guildMember)
   }
   object GuildMemberAdd extends DiscordObjectCompanion[GuildMemberAdd] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberAdd = new GuildMemberAdd(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberAdd =
+      new GuildMemberAdd(json, cache)
 
-    /** @param guildId ID of the guild */
+    /**
+      * @param guildId
+      *   ID of the guild
+      */
     def make20(guildId: GuildId, guildMember: GuildMember): GuildMemberAdd =
       makeRawFromFields("guild_id" := guildId, DiscordObjectFrom.FromExtension("guild_member", guildMember))
-
   }
 
   /** Sent when a user is removed from a guild (leave/kick/ban). */
@@ -1137,13 +1347,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildMemberRemove = objWith(GuildMemberRemove, "guild_id", newValue)
+
     /** User who was removed */
     @inline def user: User = selectDynamic[User]("user")
+
+    @inline def withUser(newValue: User): GuildMemberRemove = objWith(GuildMemberRemove, "user", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => user)
   }
   object GuildMemberRemove extends DiscordObjectCompanion[GuildMemberRemove] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberRemove = new GuildMemberRemove(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberRemove =
+      new GuildMemberRemove(json, cache)
 
     /**
       * @param guildId
@@ -1153,7 +1368,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, user: User): GuildMemberRemove =
       makeRawFromFields("guild_id" := guildId, "user" := user)
-
   }
 
   /**
@@ -1167,35 +1381,62 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildMemberUpdate = objWith(GuildMemberUpdate, "guild_id", newValue)
+
     /** User role ids */
     @inline def roles: Seq[RoleId] = selectDynamic[Seq[RoleId]]("roles")
+
+    @inline def withRoles(newValue: Seq[RoleId]): GuildMemberUpdate = objWith(GuildMemberUpdate, "roles", newValue)
 
     /** User */
     @inline def user: User = selectDynamic[User]("user")
 
+    @inline def withUser(newValue: User): GuildMemberUpdate = objWith(GuildMemberUpdate, "user", newValue)
+
     /** Nickname of the user in the guild */
     @inline def nick: JsonOption[String] = selectDynamic[JsonOption[String]]("nick")
+
+    @inline def withNick(newValue: JsonOption[String]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "nick", newValue)
 
     /** Member's guild avatar hash */
     @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
 
+    @inline def withAvatar(newValue: Option[ImageHash]): GuildMemberUpdate =
+      objWith(GuildMemberUpdate, "avatar", newValue)
+
     /** When the user joined the guild */
     @inline def joinedAt: Option[OffsetDateTime] = selectDynamic[Option[OffsetDateTime]]("joined_at")
+
+    @inline def withJoinedAt(newValue: Option[OffsetDateTime]): GuildMemberUpdate =
+      objWith(GuildMemberUpdate, "joined_at", newValue)
 
     /** When the user starting boosting the guild */
     @inline def premiumSince: JsonOption[OffsetDateTime] = selectDynamic[JsonOption[OffsetDateTime]]("premium_since")
 
+    @inline def withPremiumSince(newValue: JsonOption[OffsetDateTime]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "premium_since", newValue)
+
     /** Whether the user is deafened in voice channels */
     @inline def deaf: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("deaf")
 
+    @inline def withDeaf(newValue: UndefOr[Boolean]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "deaf", newValue)
+
     /** Whether the user is muted in voice channels */
     @inline def mute: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mute")
+
+    @inline def withMute(newValue: UndefOr[Boolean]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "mute", newValue)
 
     /**
       * Whether the user has not yet passed the guild's Membership Screening
       * requirements
       */
     @inline def pending: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("pending")
+
+    @inline def withPending(newValue: UndefOr[Boolean]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "pending", newValue)
 
     /**
       * When the user's timeout will expire and the user will be able to
@@ -1204,6 +1445,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def communicationDisabledUntil: JsonOption[OffsetDateTime] =
       selectDynamic[JsonOption[OffsetDateTime]]("communication_disabled_until")
+
+    @inline def withCommunicationDisabledUntil(newValue: JsonOption[OffsetDateTime]): GuildMemberUpdate =
+      objWithUndef(GuildMemberUpdate, "communication_disabled_until", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => guildId,
@@ -1220,7 +1464,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     )
   }
   object GuildMemberUpdate extends DiscordObjectCompanion[GuildMemberUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberUpdate = new GuildMemberUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildMemberUpdate =
+      new GuildMemberUpdate(json, cache)
 
     /**
       * @param guildId
@@ -1274,7 +1519,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "pending"                      :=? pending,
       "communication_disabled_until" :=? communicationDisabledUntil
     )
-
   }
 
   /**
@@ -1288,8 +1532,13 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildMembersChunk = objWith(GuildMembersChunk, "guild_id", newValue)
+
     /** Set of guild members */
     @inline def members: Seq[GuildMember] = selectDynamic[Seq[GuildMember]]("members")
+
+    @inline def withMembers(newValue: Seq[GuildMember]): GuildMembersChunk =
+      objWith(GuildMembersChunk, "members", newValue)
 
     /**
       * Chunk index in the expected chunks for this response (0 <= chunk_index <
@@ -1297,8 +1546,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def chunkIndex: Int = selectDynamic[Int]("chunk_index")
 
+    @inline def withChunkIndex(newValue: Int): GuildMembersChunk = objWith(GuildMembersChunk, "chunk_index", newValue)
+
     /** Total number of expected chunks for this response */
     @inline def chunkCount: Int = selectDynamic[Int]("chunk_count")
+
+    @inline def withChunkCount(newValue: Int): GuildMembersChunk = objWith(GuildMembersChunk, "chunk_count", newValue)
 
     /**
       * When passing an invalid ID to REQUEST_GUILD_MEMBERS, it will be returned
@@ -1306,14 +1559,23 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def notFound: UndefOr[Seq[UserId]] = selectDynamic[UndefOr[Seq[UserId]]]("not_found")
 
+    @inline def withNotFound(newValue: UndefOr[Seq[UserId]]): GuildMembersChunk =
+      objWithUndef(GuildMembersChunk, "not_found", newValue)
+
     /**
       * When passing true to REQUEST_GUILD_MEMBERS, presences of the returned
       * members will be here
       */
     @inline def presences: UndefOr[Seq[PresenceUpdate]] = selectDynamic[UndefOr[Seq[PresenceUpdate]]]("presences")
 
+    @inline def withPresences(newValue: UndefOr[Seq[PresenceUpdate]]): GuildMembersChunk =
+      objWithUndef(GuildMembersChunk, "presences", newValue)
+
     /** Nonce used in the Guild Members Request */
     @inline def nonce: UndefOr[String] = selectDynamic[UndefOr[String]]("nonce")
+
+    @inline def withNonce(newValue: UndefOr[String]): GuildMembersChunk =
+      objWithUndef(GuildMembersChunk, "nonce", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => guildId,
@@ -1326,7 +1588,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     )
   }
   object GuildMembersChunk extends DiscordObjectCompanion[GuildMembersChunk] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildMembersChunk = new GuildMembersChunk(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildMembersChunk =
+      new GuildMembersChunk(json, cache)
 
     /**
       * @param guildId
@@ -1364,7 +1627,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "presences"  :=? presences,
       "nonce"      :=? nonce
     )
-
   }
 
   /** Sent when a guild role is created. */
@@ -1375,13 +1637,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildRoleCreate = objWith(GuildRoleCreate, "guild_id", newValue)
+
     /** Role that was created */
     @inline def role: Role = selectDynamic[Role]("role")
+
+    @inline def withRole(newValue: Role): GuildRoleCreate = objWith(GuildRoleCreate, "role", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => role)
   }
   object GuildRoleCreate extends DiscordObjectCompanion[GuildRoleCreate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleCreate = new GuildRoleCreate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleCreate =
+      new GuildRoleCreate(json, cache)
 
     /**
       * @param guildId
@@ -1390,7 +1657,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       *   Role that was created
       */
     def make20(guildId: GuildId, role: Role): GuildRoleCreate = makeRawFromFields("guild_id" := guildId, "role" := role)
-
   }
 
   /** Sent when a guild role is updated. */
@@ -1401,13 +1667,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildRoleUpdate = objWith(GuildRoleUpdate, "guild_id", newValue)
+
     /** Role that was updated */
     @inline def role: Role = selectDynamic[Role]("role")
+
+    @inline def withRole(newValue: Role): GuildRoleUpdate = objWith(GuildRoleUpdate, "role", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => role)
   }
   object GuildRoleUpdate extends DiscordObjectCompanion[GuildRoleUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleUpdate = new GuildRoleUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleUpdate =
+      new GuildRoleUpdate(json, cache)
 
     /**
       * @param guildId
@@ -1416,7 +1687,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       *   Role that was updated
       */
     def make20(guildId: GuildId, role: Role): GuildRoleUpdate = makeRawFromFields("guild_id" := guildId, "role" := role)
-
   }
 
   /** Sent when a guild role is deleted. */
@@ -1427,13 +1697,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): GuildRoleDelete = objWith(GuildRoleDelete, "guild_id", newValue)
+
     /** ID of the role */
     @inline def roleId: RoleId = selectDynamic[RoleId]("role_id")
+
+    @inline def withRoleId(newValue: RoleId): GuildRoleDelete = objWith(GuildRoleDelete, "role_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => roleId)
   }
   object GuildRoleDelete extends DiscordObjectCompanion[GuildRoleDelete] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleDelete = new GuildRoleDelete(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildRoleDelete =
+      new GuildRoleDelete(json, cache)
 
     /**
       * @param guildId
@@ -1443,7 +1718,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, roleId: RoleId): GuildRoleDelete =
       makeRawFromFields("guild_id" := guildId, "role_id" := roleId)
-
   }
 
   /**
@@ -1453,8 +1727,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildScheduledEventCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
+
+    @inline def withScheduledEvent(newValue: GuildScheduledEvent): GuildScheduledEventCreate =
+      objWithJson(GuildScheduledEventCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => scheduledEvent)
   }
@@ -1462,10 +1740,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): GuildScheduledEventCreate =
       new GuildScheduledEventCreate(json, cache)
 
-    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventCreate = makeRawFromFields(
-      DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent)
-    )
-
+    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventCreate =
+      makeRawFromFields(DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent))
   }
 
   /**
@@ -1475,8 +1751,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildScheduledEventUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
+
+    @inline def withScheduledEvent(newValue: GuildScheduledEvent): GuildScheduledEventUpdate =
+      objWithJson(GuildScheduledEventUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => scheduledEvent)
   }
@@ -1484,10 +1764,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): GuildScheduledEventUpdate =
       new GuildScheduledEventUpdate(json, cache)
 
-    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventUpdate = makeRawFromFields(
-      DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent)
-    )
-
+    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventUpdate =
+      makeRawFromFields(DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent))
   }
 
   /**
@@ -1497,8 +1775,12 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class GuildScheduledEventDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def scheduledEvent: GuildScheduledEvent =
       GuildScheduledEvent.makeRaw(json, extensionCache("scheduled_event"))
+
+    @inline def withScheduledEvent(newValue: GuildScheduledEvent): GuildScheduledEventDelete =
+      objWithJson(GuildScheduledEventDelete, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => scheduledEvent)
   }
@@ -1506,24 +1788,32 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): GuildScheduledEventDelete =
       new GuildScheduledEventDelete(json, cache)
 
-    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventDelete = makeRawFromFields(
-      DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent)
-    )
-
+    def make20(scheduledEvent: GuildScheduledEvent): GuildScheduledEventDelete =
+      makeRawFromFields(DiscordObjectFrom.FromExtension("scheduled_event", scheduledEvent))
   }
 
   /** Sent when a user has subscribed to a guild scheduled event. */
   class GuildScheduledEventUserAdd(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def guildScheduledEventId: Snowflake[GuildScheduledEvent] =
       selectDynamic[Snowflake[GuildScheduledEvent]]("guild_scheduled_event_id")
+
+    @inline def withGuildScheduledEventId(newValue: Snowflake[GuildScheduledEvent]): GuildScheduledEventUserAdd =
+      objWith(GuildScheduledEventUserAdd, "guild_scheduled_event_id", newValue)
 
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+    @inline def withUserId(newValue: UserId): GuildScheduledEventUserAdd =
+      objWith(GuildScheduledEventUserAdd, "user_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): GuildScheduledEventUserAdd =
+      objWith(GuildScheduledEventUserAdd, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildScheduledEventId, () => userId, () => guildId)
   }
@@ -1543,21 +1833,30 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guildId: GuildId
     ): GuildScheduledEventUserAdd =
       makeRawFromFields("guild_scheduled_event_id" := guildScheduledEventId, "user_id" := userId, "guild_id" := guildId)
-
   }
 
   /** Sent when a user has unsubscribed  to a guild scheduled event. */
   class GuildScheduledEventUserRemove(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def guildScheduledEventId: Snowflake[GuildScheduledEvent] =
       selectDynamic[Snowflake[GuildScheduledEvent]]("guild_scheduled_event_id")
+
+    @inline def withGuildScheduledEventId(newValue: Snowflake[GuildScheduledEvent]): GuildScheduledEventUserRemove =
+      objWith(GuildScheduledEventUserRemove, "guild_scheduled_event_id", newValue)
 
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+    @inline def withUserId(newValue: UserId): GuildScheduledEventUserRemove =
+      objWith(GuildScheduledEventUserRemove, "user_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): GuildScheduledEventUserRemove =
+      objWith(GuildScheduledEventUserRemove, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildScheduledEventId, () => userId, () => guildId)
   }
@@ -1577,7 +1876,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guildId: GuildId
     ): GuildScheduledEventUserRemove =
       makeRawFromFields("guild_scheduled_event_id" := guildScheduledEventId, "user_id" := userId, "guild_id" := guildId)
-
   }
 
   /**
@@ -1587,18 +1885,24 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class IntegrationCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def integration: Integration = Integration.makeRaw(json, extensionCache("integration"))
 
+    @inline def withIntegration(newValue: Integration): IntegrationCreate =
+      objWithJson(IntegrationCreate, newValue.json, newValue.cacheCopy)
+
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): IntegrationCreate = objWith(IntegrationCreate, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => integration, () => guildId)
   }
   object IntegrationCreate extends DiscordObjectCompanion[IntegrationCreate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationCreate = new IntegrationCreate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationCreate =
+      new IntegrationCreate(json, cache)
 
     def make20(integration: Integration, guildId: GuildId): IntegrationCreate =
       makeRawFromFields(DiscordObjectFrom.FromExtension("integration", integration), "guild_id" := guildId)
-
   }
 
   /**
@@ -1608,18 +1912,24 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class IntegrationUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def integration: Integration = Integration.makeRaw(json, extensionCache("integration"))
 
+    @inline def withIntegration(newValue: Integration): IntegrationUpdate =
+      objWithJson(IntegrationUpdate, newValue.json, newValue.cacheCopy)
+
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): IntegrationUpdate = objWith(IntegrationUpdate, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => integration, () => guildId)
   }
   object IntegrationUpdate extends DiscordObjectCompanion[IntegrationUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationUpdate = new IntegrationUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationUpdate =
+      new IntegrationUpdate(json, cache)
 
     def make20(integration: Integration, guildId: GuildId): IntegrationUpdate =
       makeRawFromFields(DiscordObjectFrom.FromExtension("integration", integration), "guild_id" := guildId)
-
   }
 
   /** Sent when an integration is deleted. */
@@ -1630,16 +1940,25 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** Integration ID */
     @inline def id: Snowflake[Integration] = selectDynamic[Snowflake[Integration]]("id")
 
+    @inline def withId(newValue: Snowflake[Integration]): IntegrationDelete =
+      objWith(IntegrationDelete, "id", newValue)
+
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): IntegrationDelete = objWith(IntegrationDelete, "guild_id", newValue)
 
     /** ID of the bot/OAuth2 application for this discord integration */
     @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
 
+    @inline def withApplicationId(newValue: UndefOr[ApplicationId]): IntegrationDelete =
+      objWithUndef(IntegrationDelete, "application_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => id, () => guildId, () => applicationId)
   }
   object IntegrationDelete extends DiscordObjectCompanion[IntegrationDelete] {
-    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationDelete = new IntegrationDelete(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): IntegrationDelete =
+      new IntegrationDelete(json, cache)
 
     /**
       * @param id
@@ -1654,7 +1973,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guildId: GuildId,
         applicationId: UndefOr[ApplicationId] = UndefOrUndefined
     ): IntegrationDelete = makeRawFromFields("id" := id, "guild_id" := guildId, "application_id" :=? applicationId)
-
   }
 
   /** Sent when a new invite to a channel is created. */
@@ -1665,30 +1983,53 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** Channel the invite is for */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: GuildChannelId): InviteCreate =
+      objWith(InviteCreate, "channel_id", newValue)
+
     /** Unique invite code */
     @inline def code: String = selectDynamic[String]("code")
+
+    @inline def withCode(newValue: String): InviteCreate = objWith(InviteCreate, "code", newValue)
 
     /** Time at which the invite was created */
     @inline def createdAt: OffsetDateTime = selectDynamic[OffsetDateTime]("created_at")
 
+    @inline def withCreatedAt(newValue: OffsetDateTime): InviteCreate =
+      objWith(InviteCreate, "created_at", newValue)
+
     /** Guild of the invite */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): InviteCreate =
+      objWithUndef(InviteCreate, "guild_id", newValue)
 
     /** User that created the invite */
     @inline def inviter: UndefOr[User] = selectDynamic[UndefOr[User]]("inviter")
 
+    @inline def withInviter(newValue: UndefOr[User]): InviteCreate = objWithUndef(InviteCreate, "inviter", newValue)
+
     /** How long the invite is valid for (in seconds) */
     @inline def maxAge: Int = selectDynamic[Int]("max_age")
 
+    @inline def withMaxAge(newValue: Int): InviteCreate = objWith(InviteCreate, "max_age", newValue)
+
     /** Maximum number of times the invite can be used */
     @inline def maxUses: Int = selectDynamic[Int]("max_uses")
+
+    @inline def withMaxUses(newValue: Int): InviteCreate = objWith(InviteCreate, "max_uses", newValue)
 
     /** Type of target for this voice channel invite */
     @inline def targetType: UndefOr[Invite.InviteTargetType] =
       selectDynamic[UndefOr[Invite.InviteTargetType]]("target_type")
 
+    @inline def withTargetType(newValue: UndefOr[Invite.InviteTargetType]): InviteCreate =
+      objWithUndef(InviteCreate, "target_type", newValue)
+
     /** User whose stream to display for this voice channel stream invite */
     @inline def targetUser: UndefOr[User] = selectDynamic[UndefOr[User]]("target_user")
+
+    @inline def withTargetUser(newValue: UndefOr[User]): InviteCreate =
+      objWithUndef(InviteCreate, "target_user", newValue)
 
     /**
       * Embedded application to open for this voice channel embedded application
@@ -1697,14 +2038,21 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     @inline def targetApplication: UndefOr[Invite.InviteApplication] =
       selectDynamic[UndefOr[Invite.InviteApplication]]("target_application")
 
+    @inline def withTargetApplication(newValue: UndefOr[Invite.InviteApplication]): InviteCreate =
+      objWithUndef(InviteCreate, "target_application", newValue)
+
     /**
       * Whether or not the invite is temporary (invited users will be kicked on
       * disconnect unless they're assigned a role)
       */
     @inline def temporary: Boolean = selectDynamic[Boolean]("temporary")
 
+    @inline def withTemporary(newValue: Boolean): InviteCreate = objWith(InviteCreate, "temporary", newValue)
+
     /** How many times the invite has been used (always will be 0) */
     @inline def uses: Int = selectDynamic[Int]("uses")
+
+    @inline def withUses(newValue: Int): InviteCreate = objWith(InviteCreate, "uses", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => channelId,
@@ -1779,7 +2127,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "temporary"           := temporary,
       "uses"                := uses
     )
-
   }
 
   /** Sent when an invite is deleted. */
@@ -1790,11 +2137,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** Channel of the invite */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: GuildChannelId): InviteDelete =
+      objWith(InviteDelete, "channel_id", newValue)
+
     /** Guild of the invite */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+    @inline def withGuildId(newValue: UndefOr[GuildId]): InviteDelete =
+      objWithUndef(InviteDelete, "guild_id", newValue)
+
     /** Unique invite code */
     @inline def code: String = selectDynamic[String]("code")
+
+    @inline def withCode(newValue: String): InviteDelete = objWith(InviteDelete, "code", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => guildId, () => code)
   }
@@ -1809,9 +2164,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       * @param code
       *   Unique invite code
       */
-    def make20(channelId: GuildChannelId, guildId: UndefOr[GuildId] = UndefOrUndefined, code: String): InviteDelete =
-      makeRawFromFields("channel_id" := channelId, "guild_id" :=? guildId, "code" := code)
-
+    def make20(
+        channelId: GuildChannelId,
+        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        code: String
+    ): InviteDelete = makeRawFromFields("channel_id" := channelId, "guild_id" :=? guildId, "code" := code)
   }
 
   /**
@@ -1821,13 +2178,20 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class MessageCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def message: Message = Message.makeRaw(json, extensionCache("message"))
+
+    @inline def withMessage(newValue: Message): MessageCreate =
+      objWithJson(MessageCreate, newValue.json, newValue.cacheCopy)
 
     /**
       * ID of the guild the message was sent in - unless it is an ephemeral
       * message
       */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageCreate =
+      objWithUndef(MessageCreate, "guild_id", newValue)
 
     /**
       * Member properties for this message's author. Missing for ephemeral
@@ -1836,11 +2200,17 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     @inline def member: UndefOr[MessageCreate.MessageCreateGuildMember] =
       selectDynamic[UndefOr[MessageCreate.MessageCreateGuildMember]]("member")
 
+    @inline def withMember(
+        newValue: UndefOr[MessageCreate.MessageCreateGuildMember]
+    ): MessageCreate = objWithUndef(MessageCreate, "member", newValue)
+
     /**
       * Users specifically mentioned in the message. Array of user objects, with
       * an additional partial member field
       */
     @inline def mentions: Seq[User] = selectDynamic[Seq[User]]("mentions")
+
+    @inline def withMentions(newValue: Seq[User]): MessageCreate = objWith(MessageCreate, "mentions", newValue)
 
     override def values: Seq[() => Any] = Seq(() => message, () => guildId, () => member, () => mentions)
   }
@@ -1879,7 +2249,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         new MessageCreateGuildMember(json, cache)
 
       def make20(): MessageCreateGuildMember = makeRawFromFields()
-
     }
   }
 
@@ -1890,17 +2259,29 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class MessageUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def message: Message.Partial = Message.Partial.makeRaw(json, extensionCache("message"))
+
+    @inline def withMessage(newValue: Message.Partial): MessageUpdate =
+      objWithJson(MessageUpdate, newValue.json, newValue.cacheCopy)
 
     @inline def id: MessageId = selectDynamic[MessageId]("id")
 
+    @inline def withId(newValue: MessageId): MessageUpdate = objWith(MessageUpdate, "id", newValue)
+
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): MessageUpdate =
+      objWith(MessageUpdate, "channel_id", newValue)
 
     /**
       * ID of the guild the message was sent in - unless it is an ephemeral
       * message
       */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageUpdate =
+      objWithUndef(MessageUpdate, "guild_id", newValue)
 
     /**
       * Member properties for this message's author. Missing for ephemeral
@@ -1909,11 +2290,18 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     @inline def member: UndefOr[MessageCreate.MessageCreateGuildMember] =
       selectDynamic[UndefOr[MessageCreate.MessageCreateGuildMember]]("member")
 
+    @inline def withMember(
+        newValue: UndefOr[MessageCreate.MessageCreateGuildMember]
+    ): MessageUpdate = objWithUndef(MessageUpdate, "member", newValue)
+
     /**
       * Users specifically mentioned in the message. Array of user objects, with
       * an additional partial member field
       */
     @inline def mentions: UndefOr[Seq[User]] = selectDynamic[UndefOr[Seq[User]]]("mentions")
+
+    @inline def withMentions(newValue: UndefOr[Seq[User]]): MessageUpdate =
+      objWithUndef(MessageUpdate, "mentions", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => message, () => id, () => channelId, () => guildId, () => member, () => mentions)
@@ -1947,7 +2335,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "member"    :=? member,
       "mentions"  :=? mentions
     )
-
   }
 
   /** Sent when a message is deleted. */
@@ -1958,11 +2345,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the message */
     @inline def id: MessageId = selectDynamic[MessageId]("id")
 
+    @inline def withId(newValue: MessageId): MessageDelete = objWith(MessageDelete, "id", newValue)
+
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: TextChannelId): MessageDelete =
+      objWith(MessageDelete, "channel_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageDelete =
+      objWithUndef(MessageDelete, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => channelId, () => guildId)
   }
@@ -1977,9 +2372,11 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       * @param guildId
       *   ID of the guild
       */
-    def make20(id: MessageId, channelId: TextChannelId, guildId: UndefOr[GuildId] = UndefOrUndefined): MessageDelete =
-      makeRawFromFields("id" := id, "channel_id" := channelId, "guild_id" :=? guildId)
-
+    def make20(
+        id: MessageId,
+        channelId: TextChannelId,
+        guildId: UndefOr[GuildId] = UndefOrUndefined
+    ): MessageDelete = makeRawFromFields("id" := id, "channel_id" := channelId, "guild_id" :=? guildId)
   }
 
   /** Sent when multiple messages are deleted at once. */
@@ -1990,16 +2387,26 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** IDs of the messages */
     @inline def ids: Seq[MessageId] = selectDynamic[Seq[MessageId]]("ids")
 
+    @inline def withIds(newValue: Seq[MessageId]): MessageDeleteBulk =
+      objWith(MessageDeleteBulk, "ids", newValue)
+
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): MessageDeleteBulk =
+      objWith(MessageDeleteBulk, "channel_id", newValue)
 
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageDeleteBulk =
+      objWithUndef(MessageDeleteBulk, "guild_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => ids, () => channelId, () => guildId)
   }
   object MessageDeleteBulk extends DiscordObjectCompanion[MessageDeleteBulk] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageDeleteBulk = new MessageDeleteBulk(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageDeleteBulk =
+      new MessageDeleteBulk(json, cache)
 
     /**
       * @param ids
@@ -2014,7 +2421,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         channelId: TextChannelId,
         guildId: UndefOr[GuildId] = UndefOrUndefined
     ): MessageDeleteBulk = makeRawFromFields("ids" := ids, "channel_id" := channelId, "guild_id" :=? guildId)
-
   }
 
   /** Sent when a user adds a reaction to a message. */
@@ -2025,23 +2431,42 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+    @inline def withUserId(newValue: UserId): MessageReactionAdd = objWith(MessageReactionAdd, "user_id", newValue)
+
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): MessageReactionAdd =
+      objWith(MessageReactionAdd, "channel_id", newValue)
 
     /** ID of the message */
     @inline def messageId: MessageId = selectDynamic[MessageId]("message_id")
 
+    @inline def withMessageId(newValue: MessageId): MessageReactionAdd =
+      objWith(MessageReactionAdd, "message_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageReactionAdd =
+      objWithUndef(MessageReactionAdd, "guild_id", newValue)
 
     /** Member who reacted if this happened in a guild */
     @inline def member: UndefOr[GuildMember] = selectDynamic[UndefOr[GuildMember]]("member")
 
+    @inline def withMember(newValue: UndefOr[GuildMember]): MessageReactionAdd =
+      objWithUndef(MessageReactionAdd, "member", newValue)
+
     /** Emoji used to react - example */
     @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
 
+    @inline def withEmoji(newValue: Emoji): MessageReactionAdd = objWith(MessageReactionAdd, "emoji", newValue)
+
     /** ID of the user who authored the message which was reacted to */
     @inline def messageAuthorId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("message_author_id")
+
+    @inline def withMessageAuthorId(newValue: UndefOr[UserId]): MessageReactionAdd =
+      objWithUndef(MessageReactionAdd, "message_author_id", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => userId,
@@ -2054,7 +2479,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     )
   }
   object MessageReactionAdd extends DiscordObjectCompanion[MessageReactionAdd] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageReactionAdd = new MessageReactionAdd(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageReactionAdd =
+      new MessageReactionAdd(json, cache)
 
     /**
       * @param userId
@@ -2089,7 +2515,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "emoji"              := emoji,
       "message_author_id" :=? messageAuthorId
     )
-
   }
 
   /** Sent when a user removes a reaction from a message. */
@@ -2100,23 +2525,38 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+    @inline def withUserId(newValue: UserId): MessageReactionRemove =
+      objWith(MessageReactionRemove, "user_id", newValue)
+
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): MessageReactionRemove =
+      objWith(MessageReactionRemove, "channel_id", newValue)
 
     /** ID of the message */
     @inline def messageId: MessageId = selectDynamic[MessageId]("message_id")
 
+    @inline def withMessageId(newValue: MessageId): MessageReactionRemove =
+      objWith(MessageReactionRemove, "message_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageReactionRemove =
+      objWithUndef(MessageReactionRemove, "guild_id", newValue)
+
     /** Emoji used to react - example */
     @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
+
+    @inline def withEmoji(newValue: Emoji): MessageReactionRemove = objWith(MessageReactionRemove, "emoji", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => userId, () => channelId, () => messageId, () => guildId, () => emoji)
   }
   object MessageReactionRemove extends DiscordObjectCompanion[MessageReactionRemove] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageReactionRemove = new MessageReactionRemove(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageReactionRemove =
+      new MessageReactionRemove(json, cache)
 
     /**
       * @param userId
@@ -2143,7 +2583,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "guild_id"  :=? guildId,
       "emoji"      := emoji
     )
-
   }
 
   /** Sent when a user explicitly removes all reactions from a message. */
@@ -2154,11 +2593,20 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: TextChannelId): MessageReactionRemoveAll =
+      objWith(MessageReactionRemoveAll, "channel_id", newValue)
+
     /** ID of the message */
     @inline def messageId: MessageId = selectDynamic[MessageId]("message_id")
 
+    @inline def withMessageId(newValue: MessageId): MessageReactionRemoveAll =
+      objWith(MessageReactionRemoveAll, "message_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageReactionRemoveAll =
+      objWithUndef(MessageReactionRemoveAll, "guild_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => messageId, () => guildId)
   }
@@ -2180,7 +2628,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guildId: UndefOr[GuildId] = UndefOrUndefined
     ): MessageReactionRemoveAll =
       makeRawFromFields("channel_id" := channelId, "message_id" := messageId, "guild_id" :=? guildId)
-
   }
 
   /**
@@ -2194,14 +2641,26 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: TextChannelId): MessageReactionRemoveEmoji =
+      objWith(MessageReactionRemoveEmoji, "channel_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): MessageReactionRemoveEmoji =
+      objWithUndef(MessageReactionRemoveEmoji, "guild_id", newValue)
 
     /** ID of the message */
     @inline def messageId: MessageId = selectDynamic[MessageId]("message_id")
 
+    @inline def withMessageId(newValue: MessageId): MessageReactionRemoveEmoji =
+      objWith(MessageReactionRemoveEmoji, "message_id", newValue)
+
     /** Emoji that was removed */
     @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
+
+    @inline def withEmoji(newValue: Emoji): MessageReactionRemoveEmoji =
+      objWith(MessageReactionRemoveEmoji, "emoji", newValue)
 
     override def values: Seq[() => Any] = Seq(() => channelId, () => guildId, () => messageId, () => emoji)
   }
@@ -2226,7 +2685,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         emoji: Emoji
     ): MessageReactionRemoveEmoji =
       makeRawFromFields("channel_id" := channelId, "guild_id" :=? guildId, "message_id" := messageId, "emoji" := emoji)
-
   }
 
   /**
@@ -2240,24 +2698,40 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** User whose presence is being updated */
     @inline def user: User.Partial = User.Partial.makeRaw(json, extensionCache("user"))
 
+    @inline def withUser(newValue: User.Partial): PresenceUpdate =
+      objWithJson(PresenceUpdate, newValue.json, newValue.cacheCopy)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): PresenceUpdate =
+      objWithUndef(PresenceUpdate, "guild_id", newValue)
 
     /** Either "idle", "dnd", "online", or "offline" */
     @inline def status: UndefOr[Status] = selectDynamic[UndefOr[Status]]("status")
 
+    @inline def withStatus(newValue: UndefOr[Status]): PresenceUpdate =
+      objWithUndef(PresenceUpdate, "status", newValue)
+
     /** User's current activities */
     @inline def activities: UndefOr[Seq[Activity]] = selectDynamic[UndefOr[Seq[Activity]]]("activities")
+
+    @inline def withActivities(newValue: UndefOr[Seq[Activity]]): PresenceUpdate =
+      objWithUndef(PresenceUpdate, "activities", newValue)
 
     /** User's platform-dependent status */
     @inline def clientStatus: UndefOr[PresenceUpdate.ClientStatus] =
       selectDynamic[UndefOr[PresenceUpdate.ClientStatus]]("client_status")
 
+    @inline def withClientStatus(newValue: UndefOr[PresenceUpdate.ClientStatus]): PresenceUpdate =
+      objWithUndef(PresenceUpdate, "client_status", newValue)
+
     override def values: Seq[() => Any] =
       Seq(() => user, () => guildId, () => status, () => activities, () => clientStatus)
   }
   object PresenceUpdate extends DiscordObjectCompanion[PresenceUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): PresenceUpdate = new PresenceUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): PresenceUpdate =
+      new PresenceUpdate(json, cache)
 
     /**
       * @param user
@@ -2298,11 +2772,17 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         */
       @inline def desktop: UndefOr[Status] = selectDynamic[UndefOr[Status]]("desktop")
 
+      @inline def withDesktop(newValue: UndefOr[Status]): ClientStatus =
+        objWithUndef(ClientStatus, "desktop", newValue)
+
       /**
         * User's status set for an active mobile (iOS, Android) application
         * session
         */
       @inline def mobile: UndefOr[Status] = selectDynamic[UndefOr[Status]]("mobile")
+
+      @inline def withMobile(newValue: UndefOr[Status]): ClientStatus =
+        objWithUndef(ClientStatus, "mobile", newValue)
 
       /**
         * User's status set for an active web (browser, bot user) application
@@ -2310,10 +2790,13 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         */
       @inline def web: UndefOr[Status] = selectDynamic[UndefOr[Status]]("web")
 
+      @inline def withWeb(newValue: UndefOr[Status]): ClientStatus = objWithUndef(ClientStatus, "web", newValue)
+
       override def values: Seq[() => Any] = Seq(() => desktop, () => mobile, () => web)
     }
     object ClientStatus extends DiscordObjectCompanion[ClientStatus] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ClientStatus = new ClientStatus(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ClientStatus =
+        new ClientStatus(json, cache)
 
       /**
         * @param desktop
@@ -2331,7 +2814,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
           mobile: UndefOr[Status] = UndefOrUndefined,
           web: UndefOr[Status] = UndefOrUndefined
       ): ClientStatus = makeRawFromFields("desktop" :=? desktop, "mobile" :=? mobile, "web" :=? web)
-
     }
   }
 
@@ -2340,11 +2822,17 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** Activity's name */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): Activity = objWith(Activity, "name", newValue)
+
     /** Activity type */
     @inline def tpe: Activity.ActivityType = selectDynamic[Activity.ActivityType]("type")
 
+    @inline def withTpe(newValue: Activity.ActivityType): Activity = objWith(Activity, "type", newValue)
+
     /** Stream URL, is validated when type is 1 */
     @inline def url: JsonOption[String] = selectDynamic[JsonOption[String]]("url")
+
+    @inline def withUrl(newValue: JsonOption[String]): Activity = objWithUndef(Activity, "url", newValue)
 
     /**
       * Unix timestamp (in milliseconds) of when the activity was added to the
@@ -2352,40 +2840,72 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     @inline def createdAt: Int = selectDynamic[Int]("created_at")
 
+    @inline def withCreatedAt(newValue: Int): Activity = objWith(Activity, "created_at", newValue)
+
     /** Unix timestamps for start and/or end of the game */
     @inline def timestamps: UndefOr[Activity.ActivityTimestamps] =
       selectDynamic[UndefOr[Activity.ActivityTimestamps]]("timestamps")
 
+    @inline def withTimestamps(newValue: UndefOr[Activity.ActivityTimestamps]): Activity =
+      objWithUndef(Activity, "timestamps", newValue)
+
     /** Application ID for the game */
     @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
+
+    @inline def withApplicationId(newValue: UndefOr[ApplicationId]): Activity =
+      objWithUndef(Activity, "application_id", newValue)
 
     /** What the player is currently doing */
     @inline def details: JsonOption[String] = selectDynamic[JsonOption[String]]("details")
 
+    @inline def withDetails(newValue: JsonOption[String]): Activity = objWithUndef(Activity, "details", newValue)
+
     /** User's current party status */
     @inline def state: JsonOption[String] = selectDynamic[JsonOption[String]]("state")
+
+    @inline def withState(newValue: JsonOption[String]): Activity = objWithUndef(Activity, "state", newValue)
 
     /** Emoji used for a custom status */
     @inline def emoji: JsonOption[Activity.ActivityEmoji] = selectDynamic[JsonOption[Activity.ActivityEmoji]]("emoji")
 
+    @inline def withEmoji(newValue: JsonOption[Activity.ActivityEmoji]): Activity =
+      objWithUndef(Activity, "emoji", newValue)
+
     /** Information for the current party of the player */
     @inline def party: UndefOr[Activity.ActivityParty] = selectDynamic[UndefOr[Activity.ActivityParty]]("party")
+
+    @inline def withParty(newValue: UndefOr[Activity.ActivityParty]): Activity =
+      objWithUndef(Activity, "party", newValue)
 
     /** Images for the presence and their hover texts */
     @inline def assets: UndefOr[Activity.ActivityAssets] = selectDynamic[UndefOr[Activity.ActivityAssets]]("assets")
 
+    @inline def withAssets(newValue: UndefOr[Activity.ActivityAssets]): Activity =
+      objWithUndef(Activity, "assets", newValue)
+
     /** Secrets for Rich Presence joining and spectating */
     @inline def secrets: UndefOr[Activity.ActivitySecrets] = selectDynamic[UndefOr[Activity.ActivitySecrets]]("secrets")
+
+    @inline def withSecrets(newValue: UndefOr[Activity.ActivitySecrets]): Activity =
+      objWithUndef(Activity, "secrets", newValue)
 
     /** Whether or not the activity is an instanced game session */
     @inline def instance: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("instance")
 
+    @inline def withInstance(newValue: UndefOr[Boolean]): Activity = objWithUndef(Activity, "instance", newValue)
+
     /** Activity flags ORd together, describes what the payload includes */
     @inline def flags: UndefOr[Activity.ActivityFlags] = selectDynamic[UndefOr[Activity.ActivityFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[Activity.ActivityFlags]): Activity =
+      objWithUndef(Activity, "flags", newValue)
 
     /** Custom buttons shown in the Rich Presence (max 2) */
     @inline def buttons: UndefOr[Seq[Activity.ActivityButtons]] =
       selectDynamic[UndefOr[Seq[Activity.ActivityButtons]]]("buttons")
+
+    @inline def withButtons(newValue: UndefOr[Seq[Activity.ActivityButtons]]): Activity =
+      objWithUndef(Activity, "buttons", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => name,
@@ -2498,8 +3018,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
 
       def unknown(value: Int): ActivityType = new ActivityType(value)
 
-      def values: Seq[ActivityType] = Seq(Game, Streaming, Listening, Watching, Custom, Competing)
-
+      val values: Seq[ActivityType] = Seq(Game, Streaming, Listening, Watching, Custom, Competing)
     }
 
     class ActivityTimestamps(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2507,13 +3026,20 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** Unix time (in milliseconds) of when the activity started */
       @inline def start: UndefOr[Int] = selectDynamic[UndefOr[Int]]("start")
 
+      @inline def withStart(newValue: UndefOr[Int]): ActivityTimestamps =
+        objWithUndef(ActivityTimestamps, "start", newValue)
+
       /** Unix time (in milliseconds) of when the activity ends */
       @inline def end: UndefOr[Int] = selectDynamic[UndefOr[Int]]("end")
+
+      @inline def withEnd(newValue: UndefOr[Int]): ActivityTimestamps =
+        objWithUndef(ActivityTimestamps, "end", newValue)
 
       override def values: Seq[() => Any] = Seq(() => start, () => end)
     }
     object ActivityTimestamps extends DiscordObjectCompanion[ActivityTimestamps] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivityTimestamps = new ActivityTimestamps(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivityTimestamps =
+        new ActivityTimestamps(json, cache)
 
       /**
         * @param start
@@ -2521,9 +3047,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         * @param end
         *   Unix time (in milliseconds) of when the activity ends
         */
-      def make20(start: UndefOr[Int] = UndefOrUndefined, end: UndefOr[Int] = UndefOrUndefined): ActivityTimestamps =
-        makeRawFromFields("start" :=? start, "end" :=? end)
-
+      def make20(
+          start: UndefOr[Int] = UndefOrUndefined,
+          end: UndefOr[Int] = UndefOrUndefined
+      ): ActivityTimestamps = makeRawFromFields("start" :=? start, "end" :=? end)
     }
 
     class ActivityEmoji(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2531,16 +3058,25 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** Name of the emoji */
       @inline def name: String = selectDynamic[String]("name")
 
+      @inline def withName(newValue: String): ActivityEmoji = objWith(ActivityEmoji, "name", newValue)
+
       /** ID of the emoji */
       @inline def id: UndefOr[Snowflake[Emoji]] = selectDynamic[UndefOr[Snowflake[Emoji]]]("id")
+
+      @inline def withId(newValue: UndefOr[Snowflake[Emoji]]): ActivityEmoji =
+        objWithUndef(ActivityEmoji, "id", newValue)
 
       /** Whether the emoji is animated */
       @inline def animated: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("animated")
 
+      @inline def withAnimated(newValue: UndefOr[Boolean]): ActivityEmoji =
+        objWithUndef(ActivityEmoji, "animated", newValue)
+
       override def values: Seq[() => Any] = Seq(() => name, () => id, () => animated)
     }
     object ActivityEmoji extends DiscordObjectCompanion[ActivityEmoji] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivityEmoji = new ActivityEmoji(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivityEmoji =
+        new ActivityEmoji(json, cache)
 
       /**
         * @param name
@@ -2555,7 +3091,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
           id: UndefOr[Snowflake[Emoji]] = UndefOrUndefined,
           animated: UndefOr[Boolean] = UndefOrUndefined
       ): ActivityEmoji = makeRawFromFields("name" := name, "id" :=? id, "animated" :=? animated)
-
     }
 
     class ActivityParty(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2563,16 +3098,22 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** ID of the party */
       @inline def id: UndefOr[String] = selectDynamic[UndefOr[String]]("id")
 
+      @inline def withId(newValue: UndefOr[String]): ActivityParty = objWithUndef(ActivityParty, "id", newValue)
+
       /**
         * Array of two integers (current_size, max_size). Used to show the
         * party's current and maximum size
         */
       @inline def size: UndefOr[Seq[Int]] = selectDynamic[UndefOr[Seq[Int]]]("size")
 
+      @inline def withSize(newValue: UndefOr[Seq[Int]]): ActivityParty =
+        objWithUndef(ActivityParty, "size", newValue)
+
       override def values: Seq[() => Any] = Seq(() => id, () => size)
     }
     object ActivityParty extends DiscordObjectCompanion[ActivityParty] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivityParty = new ActivityParty(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivityParty =
+        new ActivityParty(json, cache)
 
       /**
         * @param id
@@ -2581,9 +3122,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   Array of two integers (current_size, max_size). Used to show the
         *   party's current and maximum size
         */
-      def make20(id: UndefOr[String] = UndefOrUndefined, size: UndefOr[Seq[Int]] = UndefOrUndefined): ActivityParty =
-        makeRawFromFields("id" :=? id, "size" :=? size)
-
+      def make20(
+          id: UndefOr[String] = UndefOrUndefined,
+          size: UndefOr[Seq[Int]] = UndefOrUndefined
+      ): ActivityParty = makeRawFromFields("id" :=? id, "size" :=? size)
     }
 
     class ActivityAssets(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2591,19 +3133,32 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** See Activity Asset Image */
       @inline def largeImage: UndefOr[String] = selectDynamic[UndefOr[String]]("large_image")
 
+      @inline def withLargeImage(newValue: UndefOr[String]): ActivityAssets =
+        objWithUndef(ActivityAssets, "large_image", newValue)
+
       /** Text displayed when hovering over the large image of the activity */
       @inline def largeText: UndefOr[String] = selectDynamic[UndefOr[String]]("large_text")
+
+      @inline def withLargeText(newValue: UndefOr[String]): ActivityAssets =
+        objWithUndef(ActivityAssets, "large_text", newValue)
 
       /** See Activity Asset Image */
       @inline def smallImage: UndefOr[String] = selectDynamic[UndefOr[String]]("small_image")
 
+      @inline def withSmallImage(newValue: UndefOr[String]): ActivityAssets =
+        objWithUndef(ActivityAssets, "small_image", newValue)
+
       /** Text displayed when hovering over the small image of the activity */
       @inline def smallText: UndefOr[String] = selectDynamic[UndefOr[String]]("small_text")
+
+      @inline def withSmallText(newValue: UndefOr[String]): ActivityAssets =
+        objWithUndef(ActivityAssets, "small_text", newValue)
 
       override def values: Seq[() => Any] = Seq(() => largeImage, () => largeText, () => smallImage, () => smallText)
     }
     object ActivityAssets extends DiscordObjectCompanion[ActivityAssets] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivityAssets = new ActivityAssets(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivityAssets =
+        new ActivityAssets(json, cache)
 
       /**
         * @param largeImage
@@ -2626,7 +3181,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         "small_image" :=? smallImage,
         "small_text"  :=? smallText
       )
-
     }
 
     class ActivitySecrets(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2634,16 +3188,26 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** Secret for joining a party */
       @inline def join: UndefOr[String] = selectDynamic[UndefOr[String]]("join")
 
+      @inline def withJoin(newValue: UndefOr[String]): ActivitySecrets =
+        objWithUndef(ActivitySecrets, "join", newValue)
+
       /** Secret for spectating a game */
       @inline def spectate: UndefOr[String] = selectDynamic[UndefOr[String]]("spectate")
+
+      @inline def withSpectate(newValue: UndefOr[String]): ActivitySecrets =
+        objWithUndef(ActivitySecrets, "spectate", newValue)
 
       /** Secret for a specific instanced match */
       @inline def matchSecret: UndefOr[String] = selectDynamic[UndefOr[String]]("match")
 
+      @inline def withMatchSecret(newValue: UndefOr[String]): ActivitySecrets =
+        objWithUndef(ActivitySecrets, "match", newValue)
+
       override def values: Seq[() => Any] = Seq(() => join, () => spectate, () => matchSecret)
     }
     object ActivitySecrets extends DiscordObjectCompanion[ActivitySecrets] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivitySecrets = new ActivitySecrets(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivitySecrets =
+        new ActivitySecrets(json, cache)
 
       /**
         * @param join
@@ -2658,7 +3222,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
           spectate: UndefOr[String] = UndefOrUndefined,
           matchSecret: UndefOr[String] = UndefOrUndefined
       ): ActivitySecrets = makeRawFromFields("join" :=? join, "spectate" :=? spectate, "match" :=? matchSecret)
-
     }
 
     sealed case class ActivityFlags private (value: Int) extends DiscordEnum[Int]
@@ -2693,7 +3256,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
 
       def unknown(value: Int): ActivityFlags = new ActivityFlags(value)
 
-      def values: Seq[ActivityFlags] = Seq(
+      val values: Seq[ActivityFlags] = Seq(
         INSTANCE,
         JOIN,
         SPECTATE,
@@ -2706,6 +3269,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       )
 
       implicit class ActivityFlagsBitFieldOps(private val here: ActivityFlags) extends AnyVal {
+
         def toInt: Int = here.value
 
         def ++(there: ActivityFlags): ActivityFlags = ActivityFlags(here.value | there.value)
@@ -2727,10 +3291,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       override def values: Seq[() => Any] = Seq()
     }
     object ActivityButtons extends DiscordObjectCompanion[ActivityButtons] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ActivityButtons = new ActivityButtons(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ActivityButtons =
+        new ActivityButtons(json, cache)
 
       def make20(): ActivityButtons = makeRawFromFields()
-
     }
   }
 
@@ -2742,17 +3306,29 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the channel */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: TextChannelId): TypingStart = objWith(TypingStart, "channel_id", newValue)
+
     /** ID of the guild */
     @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+    @inline def withGuildId(newValue: UndefOr[GuildId]): TypingStart =
+      objWithUndef(TypingStart, "guild_id", newValue)
 
     /** ID of the user */
     @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+    @inline def withUserId(newValue: UserId): TypingStart = objWith(TypingStart, "user_id", newValue)
+
     /** Unix time (in seconds) of when the user started typing */
     @inline def timestamp: Int = selectDynamic[Int]("timestamp")
 
+    @inline def withTimestamp(newValue: Int): TypingStart = objWith(TypingStart, "timestamp", newValue)
+
     /** Member who started typing if this happened in a guild */
     @inline def member: UndefOr[GuildMember] = selectDynamic[UndefOr[GuildMember]]("member")
+
+    @inline def withMember(newValue: UndefOr[GuildMember]): TypingStart =
+      objWithUndef(TypingStart, "member", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => channelId, () => guildId, () => userId, () => timestamp, () => member)
@@ -2785,7 +3361,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       "timestamp"  := timestamp,
       "member"    :=? member
     )
-
   }
 
   /**
@@ -2795,7 +3370,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class UserUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def user: User = User.makeRaw(json, extensionCache("user"))
+
+    @inline def withUser(newValue: User): UserUpdate = objWithJson(UserUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => user)
   }
@@ -2803,7 +3381,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def makeRaw(json: Json, cache: Map[String, Any]): UserUpdate = new UserUpdate(json, cache)
 
     def make20(user: User): UserUpdate = makeRawFromFields(DiscordObjectFrom.FromExtension("user", user))
-
   }
 
   /**
@@ -2813,17 +3390,21 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class VoiceStateUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def voiceState: VoiceState = VoiceState.makeRaw(json, extensionCache("voice_state"))
+
+    @inline def withVoiceState(newValue: VoiceState): VoiceStateUpdate =
+      objWithJson(VoiceStateUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => voiceState)
   }
   object VoiceStateUpdate extends DiscordObjectCompanion[VoiceStateUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): VoiceStateUpdate = new VoiceStateUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): VoiceStateUpdate =
+      new VoiceStateUpdate(json, cache)
 
     def make20(voiceState: VoiceState): VoiceStateUpdate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("voice_state", voiceState)
     )
-
   }
 
   /**
@@ -2838,16 +3419,24 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** Voice connection token */
     @inline def token: String = selectDynamic[String]("token")
 
+    @inline def withToken(newValue: String): VoiceServerUpdate = objWith(VoiceServerUpdate, "token", newValue)
+
     /** Guild this voice server update is for */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): VoiceServerUpdate = objWith(VoiceServerUpdate, "guild_id", newValue)
 
     /** Voice server host */
     @inline def endpoint: Option[String] = selectDynamic[Option[String]]("endpoint")
 
+    @inline def withEndpoint(newValue: Option[String]): VoiceServerUpdate =
+      objWith(VoiceServerUpdate, "endpoint", newValue)
+
     override def values: Seq[() => Any] = Seq(() => token, () => guildId, () => endpoint)
   }
   object VoiceServerUpdate extends DiscordObjectCompanion[VoiceServerUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): VoiceServerUpdate = new VoiceServerUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): VoiceServerUpdate =
+      new VoiceServerUpdate(json, cache)
 
     /**
       * @param token
@@ -2859,7 +3448,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(token: String, guildId: GuildId, endpoint: Option[String]): VoiceServerUpdate =
       makeRawFromFields("token" := token, "guild_id" := guildId, "endpoint" := endpoint)
-
   }
 
   /** Sent when a guild channel's webhook is created, updated, or deleted. */
@@ -2870,13 +3458,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     /** ID of the guild */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
 
+    @inline def withGuildId(newValue: GuildId): WebhooksUpdate = objWith(WebhooksUpdate, "guild_id", newValue)
+
     /** ID of the channel */
     @inline def channelId: GuildChannelId = selectDynamic[GuildChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: GuildChannelId): WebhooksUpdate =
+      objWith(WebhooksUpdate, "channel_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => guildId, () => channelId)
   }
   object WebhooksUpdate extends DiscordObjectCompanion[WebhooksUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): WebhooksUpdate = new WebhooksUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): WebhooksUpdate =
+      new WebhooksUpdate(json, cache)
 
     /**
       * @param guildId
@@ -2886,7 +3480,6 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(guildId: GuildId, channelId: GuildChannelId): WebhooksUpdate =
       makeRawFromFields("guild_id" := guildId, "channel_id" := channelId)
-
   }
 
   /**
@@ -2901,10 +3494,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     override def values: Seq[() => Any] = Seq()
   }
   object InteractionCreate extends DiscordObjectCompanion[InteractionCreate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): InteractionCreate = new InteractionCreate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): InteractionCreate =
+      new InteractionCreate(json, cache)
 
     def make20(): InteractionCreate = makeRawFromFields()
-
   }
 
   /**
@@ -2914,17 +3507,21 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class StageInstanceCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
+
+    @inline def withStageInstance(newValue: StageInstance): StageInstanceCreate =
+      objWithJson(StageInstanceCreate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
   }
   object StageInstanceCreate extends DiscordObjectCompanion[StageInstanceCreate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceCreate = new StageInstanceCreate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceCreate =
+      new StageInstanceCreate(json, cache)
 
     def make20(stageInstance: StageInstance): StageInstanceCreate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("stage_instance", stageInstance)
     )
-
   }
 
   /**
@@ -2934,17 +3531,21 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class StageInstanceUpdate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
+
+    @inline def withStageInstance(newValue: StageInstance): StageInstanceUpdate =
+      objWithJson(StageInstanceUpdate, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
   }
   object StageInstanceUpdate extends DiscordObjectCompanion[StageInstanceUpdate] {
-    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceUpdate = new StageInstanceUpdate(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceUpdate =
+      new StageInstanceUpdate(json, cache)
 
     def make20(stageInstance: StageInstance): StageInstanceUpdate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("stage_instance", stageInstance)
     )
-
   }
 
   /**
@@ -2954,17 +3555,21 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
   class StageInstanceDelete(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)
       with GatewayDispatchEvent {
+
     @inline def stageInstance: StageInstance = StageInstance.makeRaw(json, extensionCache("stage_instance"))
+
+    @inline def withStageInstance(newValue: StageInstance): StageInstanceDelete =
+      objWithJson(StageInstanceDelete, newValue.json, newValue.cacheCopy)
 
     override def values: Seq[() => Any] = Seq(() => stageInstance)
   }
   object StageInstanceDelete extends DiscordObjectCompanion[StageInstanceDelete] {
-    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceDelete = new StageInstanceDelete(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): StageInstanceDelete =
+      new StageInstanceDelete(json, cache)
 
     def make20(stageInstance: StageInstance): StageInstanceDelete = makeRawFromFields(
       DiscordObjectFrom.FromExtension("stage_instance", stageInstance)
     )
-
   }
 
   class UnknownGatewayDispatchEvent(json: Json, cache: Map[String, Any] = Map.empty)
@@ -2978,6 +3583,5 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       new UnknownGatewayDispatchEvent(json, cache)
 
     def make20(): UnknownGatewayDispatchEvent = makeRawFromFields()
-
   }
 }

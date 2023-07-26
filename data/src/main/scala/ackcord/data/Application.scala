@@ -15,20 +15,33 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   /** The id of the app */
   @inline def id: ApplicationId = selectDynamic[ApplicationId]("id")
 
+  @inline def withId(newValue: ApplicationId): Application = objWith(Application, "id", newValue)
+
   /** The name of the app */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): Application = objWith(Application, "name", newValue)
 
   /** The icon hash of the app */
   @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
+  @inline def withIcon(newValue: Option[ImageHash]): Application = objWith(Application, "icon", newValue)
+
   /** The description of the app */
   @inline def description: String = selectDynamic[String]("description")
+
+  @inline def withDescription(newValue: String): Application = objWith(Application, "description", newValue)
 
   /** An array of rpc origin urls, if rpc is enabled */
   @inline def rpcOrigins: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("rpc_origins")
 
+  @inline def withRpcOrigins(newValue: UndefOr[Seq[String]]): Application =
+    objWithUndef(Application, "rpc_origins", newValue)
+
   /** When false only app owner can join the app's bot to guilds */
   @inline def botPublic: Boolean = selectDynamic[Boolean]("bot_public")
+
+  @inline def withBotPublic(newValue: Boolean): Application = objWith(Application, "bot_public", newValue)
 
   /**
     * When true the app's bot will only join upon completion of the full oauth2
@@ -36,15 +49,27 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def botRequireCodeGrant: Boolean = selectDynamic[Boolean]("bot_require_code_grant")
 
+  @inline def withBotRequireCodeGrant(newValue: Boolean): Application =
+    objWith(Application, "bot_require_code_grant", newValue)
+
   /** The url of the app's terms of service */
   @inline def termsOfServiceUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("terms_of_service_url")
+
+  @inline def withTermsOfServiceUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "terms_of_service_url", newValue)
 
   /** The url of the app's privacy policy */
   @inline def privacyPolicyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("privacy_policy_url")
 
+  @inline def withPrivacyPolicyUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "privacy_policy_url", newValue)
+
   /** Partial user object containing info on the owner of the application */
   @inline def owner: UndefOr[Application.ApplicationOwner] =
     selectDynamic[UndefOr[Application.ApplicationOwner]]("owner")
+
+  @inline def withOwner(newValue: UndefOr[Application.ApplicationOwner]): Application =
+    objWithUndef(Application, "owner", newValue)
 
   /**
     * The hex encoded key for verification in interactions and the GameSDK's
@@ -52,18 +77,28 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def verifyKey: String = selectDynamic[String]("verify_key")
 
+  @inline def withVerifyKey(newValue: String): Application = objWith(Application, "verify_key", newValue)
+
   /**
     * If the application belongs to a team, this will be a list of the members
     * of that team
     */
   @inline def team: Option[Application.Team] = selectDynamic[Option[Application.Team]]("team")
 
+  @inline def withTeam(newValue: Option[Application.Team]): Application =
+    objWith(Application, "team", newValue)
+
   /** Guild associated with the app. For example, a developer support server. */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+  @inline def withGuildId(newValue: UndefOr[GuildId]): Application = objWithUndef(Application, "guild_id", newValue)
 
   /** A partial object of the associated guild */
   @inline def guild: UndefOr[Application.ApplicationGuild] =
     selectDynamic[UndefOr[Application.ApplicationGuild]]("guild")
+
+  @inline def withGuild(newValue: UndefOr[Application.ApplicationGuild]): Application =
+    objWithUndef(Application, "guild", newValue)
 
   /**
     * If this application is a game sold on Discord, this field will be the id
@@ -71,25 +106,41 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def primarySkuId: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("primary_sku_id")
 
+  @inline def withPrimarySkuId(newValue: UndefOr[RawSnowflake]): Application =
+    objWithUndef(Application, "primary_sku_id", newValue)
+
   /**
     * If this application is a game sold on Discord, this field will be the URL
     * slug that links to the store page
     */
   @inline def slug: UndefOr[String] = selectDynamic[UndefOr[String]]("slug")
 
+  @inline def withSlug(newValue: UndefOr[String]): Application = objWithUndef(Application, "slug", newValue)
+
   /** The application's default rich presence invite cover image hash */
   @inline def coverImage: UndefOr[ImageHash] = selectDynamic[UndefOr[ImageHash]]("cover_image")
+
+  @inline def withCoverImage(newValue: UndefOr[ImageHash]): Application =
+    objWithUndef(Application, "cover_image", newValue)
 
   /** The application's public flags */
   @inline def flags: UndefOr[Application.Flags] = selectDynamic[UndefOr[Application.Flags]]("flags")
 
+  @inline def withFlags(newValue: UndefOr[Application.Flags]): Application =
+    objWithUndef(Application, "flags", newValue)
+
   /** An approximate count of the app's guild membership */
   @inline def approximateGuildCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_guild_count")
+
+  @inline def withApproximateGuildCount(newValue: UndefOr[Int]): Application =
+    objWithUndef(Application, "approximate_guild_count", newValue)
 
   /**
     * Up to 5 tags describing the content and functionality of the application
     */
   @inline def tags: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("tags")
+
+  @inline def withTags(newValue: UndefOr[Seq[String]]): Application = objWithUndef(Application, "tags", newValue)
 
   /**
     * Settings for the application's default in-app authorization link, if
@@ -98,8 +149,14 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   @inline def installParams: UndefOr[Application.InstallParams] =
     selectDynamic[UndefOr[Application.InstallParams]]("install_params")
 
+  @inline def withInstallParams(newValue: UndefOr[Application.InstallParams]): Application =
+    objWithUndef(Application, "install_params", newValue)
+
   /** The application's default custom authorization link, if enabled */
   @inline def customInstallUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("custom_install_url")
+
+  @inline def withCustomInstallUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "custom_install_url", newValue)
 
   /**
     * The application's role connection verification entry point, which when
@@ -108,6 +165,9 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     */
   @inline def roleConnectionsVerificationUrl: UndefOr[String] =
     selectDynamic[UndefOr[String]]("role_connections_verification_url")
+
+  @inline def withRoleConnectionsVerificationUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "role_connections_verification_url", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -246,20 +306,27 @@ object Application extends DiscordObjectCompanion[Application] {
 
   sealed case class Flags private (value: Int) extends DiscordEnum[Int]
   object Flags extends DiscordEnumCompanion[Int, Flags] {
+    val GATEWAY_PRESENCE: Flags = Flags(1 << 12)
 
-    val GATEWAY_PRESENCE: Flags                 = Flags(1 << 12)
-    val GATEWAY_PRESENCE_LIMITED: Flags         = Flags(1 << 13)
-    val GATEWAY_GUILD_MEMBERS: Flags            = Flags(1 << 14)
-    val GATEWAY_GUILD_MEMBERS_LIMITED: Flags    = Flags(1 << 15)
+    val GATEWAY_PRESENCE_LIMITED: Flags = Flags(1 << 13)
+
+    val GATEWAY_GUILD_MEMBERS: Flags = Flags(1 << 14)
+
+    val GATEWAY_GUILD_MEMBERS_LIMITED: Flags = Flags(1 << 15)
+
     val VERIFICATION_PENDING_GUILD_LIMIT: Flags = Flags(1 << 16)
-    val EMBEDDED: Flags                         = Flags(1 << 17)
-    val GATEWAY_MESSAGE_CONTENT: Flags          = Flags(1 << 18)
-    val GATEWAY_MESSAGE_CONTENT_LIMITED: Flags  = Flags(1 << 19)
-    val APPLICATION_COMMAND_BADGE: Flags        = Flags(1 << 23)
+
+    val EMBEDDED: Flags = Flags(1 << 17)
+
+    val GATEWAY_MESSAGE_CONTENT: Flags = Flags(1 << 18)
+
+    val GATEWAY_MESSAGE_CONTENT_LIMITED: Flags = Flags(1 << 19)
+
+    val APPLICATION_COMMAND_BADGE: Flags = Flags(1 << 23)
 
     def unknown(value: Int): Flags = new Flags(value)
 
-    def values: Seq[Flags] = Seq(
+    val values: Seq[Flags] = Seq(
       GATEWAY_PRESENCE,
       GATEWAY_PRESENCE_LIMITED,
       GATEWAY_GUILD_MEMBERS,
@@ -272,6 +339,7 @@ object Application extends DiscordObjectCompanion[Application] {
     )
 
     implicit class FlagsBitFieldOps(private val here: Flags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: Flags): Flags = Flags(here.value | there.value)
@@ -287,16 +355,22 @@ object Application extends DiscordObjectCompanion[Application] {
     override def values: Seq[() => Any] = Seq()
   }
   object ApplicationGuild extends DiscordObjectCompanion[ApplicationGuild] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ApplicationGuild = new ApplicationGuild(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ApplicationGuild =
+      new ApplicationGuild(json, cache)
 
     def make20(): ApplicationGuild = makeRawFromFields()
-
   }
 
   class InstallParams(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def scopes: Seq[String] = selectDynamic[Seq[String]]("scopes")
 
+    @inline def withScopes(newValue: Seq[String]): InstallParams = objWith(InstallParams, "scopes", newValue)
+
     @inline def permissions: Permissions = selectDynamic[Permissions]("permissions")
+
+    @inline def withPermissions(newValue: Permissions): InstallParams =
+      objWith(InstallParams, "permissions", newValue)
 
     override def values: Seq[() => Any] = Seq(() => scopes, () => permissions)
   }
@@ -305,24 +379,37 @@ object Application extends DiscordObjectCompanion[Application] {
 
     def make20(scopes: Seq[String], permissions: Permissions): InstallParams =
       makeRawFromFields("scopes" := scopes, "permissions" := permissions)
-
   }
 
   class ApplicationOwner(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def avatar: Option[String] = selectDynamic[Option[String]]("avatar")
+
+    @inline def withAvatar(newValue: Option[String]): ApplicationOwner =
+      objWith(ApplicationOwner, "avatar", newValue)
 
     @inline def discriminator: String = selectDynamic[String]("discriminator")
 
+    @inline def withDiscriminator(newValue: String): ApplicationOwner =
+      objWith(ApplicationOwner, "discriminator", newValue)
+
     @inline def flags: Int = selectDynamic[Int]("flags")
+
+    @inline def withFlags(newValue: Int): ApplicationOwner = objWith(ApplicationOwner, "flags", newValue)
 
     @inline def id: UserId = selectDynamic[UserId]("id")
 
+    @inline def withId(newValue: UserId): ApplicationOwner = objWith(ApplicationOwner, "id", newValue)
+
     @inline def username: String = selectDynamic[String]("username")
+
+    @inline def withUsername(newValue: String): ApplicationOwner = objWith(ApplicationOwner, "username", newValue)
 
     override def values: Seq[() => Any] = Seq(() => avatar, () => discriminator, () => flags, () => id, () => username)
   }
   object ApplicationOwner extends DiscordObjectCompanion[ApplicationOwner] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ApplicationOwner = new ApplicationOwner(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ApplicationOwner =
+      new ApplicationOwner(json, cache)
 
     def make20(
         avatar: Option[String],
@@ -337,7 +424,6 @@ object Application extends DiscordObjectCompanion[Application] {
       "id"            := id,
       "username"      := username
     )
-
   }
 
   class Team(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -345,17 +431,27 @@ object Application extends DiscordObjectCompanion[Application] {
     /** A hash of the image of the team's icon */
     @inline def icon: ImageHash = selectDynamic[ImageHash]("icon")
 
+    @inline def withIcon(newValue: ImageHash): Team = objWith(Team, "icon", newValue)
+
     /** The unique id of the team */
     @inline def id: Snowflake[Team] = selectDynamic[Snowflake[Team]]("id")
+
+    @inline def withId(newValue: Snowflake[Team]): Team = objWith(Team, "id", newValue)
 
     /** The members of the team */
     @inline def members: Seq[Team.TeamMember] = selectDynamic[Seq[Team.TeamMember]]("members")
 
+    @inline def withMembers(newValue: Seq[Team.TeamMember]): Team = objWith(Team, "members", newValue)
+
     /** The name of the team */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): Team = objWith(Team, "name", newValue)
+
     /** The user id of the current team owner */
     @inline def ownerUserId: UserId = selectDynamic[UserId]("owner_user_id")
+
+    @inline def withOwnerUserId(newValue: UserId): Team = objWith(Team, "owner_user_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => icon, () => id, () => members, () => name, () => ownerUserId)
   }
@@ -394,14 +490,24 @@ object Application extends DiscordObjectCompanion[Application] {
       @inline def membershipState: Team.TeamMembershipState =
         selectDynamic[Team.TeamMembershipState]("membership_state")
 
+      @inline def withMembershipState(newValue: Team.TeamMembershipState): TeamMember =
+        objWith(TeamMember, "membership_state", newValue)
+
       /** Will always be ["*"] */
       @inline def permissions: Seq[String] = selectDynamic[Seq[String]]("permissions")
+
+      @inline def withPermissions(newValue: Seq[String]): TeamMember =
+        objWith(TeamMember, "permissions", newValue)
 
       /** the id of the parent team of which they are a member */
       @inline def teamId: Snowflake[Team] = selectDynamic[Snowflake[Team]]("team_id")
 
+      @inline def withTeamId(newValue: Snowflake[Team]): TeamMember = objWith(TeamMember, "team_id", newValue)
+
       /** The avatar, discriminator, id, and username of the user */
       @inline def user: Team.TeamUser = selectDynamic[Team.TeamUser]("user")
+
+      @inline def withUser(newValue: Team.TeamUser): TeamMember = objWith(TeamMember, "user", newValue)
 
       override def values: Seq[() => Any] = Seq(() => membershipState, () => permissions, () => teamId, () => user)
     }
@@ -429,38 +535,49 @@ object Application extends DiscordObjectCompanion[Application] {
         "team_id"          := teamId,
         "user"             := user
       )
-
     }
 
     sealed case class TeamMembershipState private (value: Int) extends DiscordEnum[Int]
     object TeamMembershipState extends DiscordEnumCompanion[Int, TeamMembershipState] {
+      val INVITED: TeamMembershipState = TeamMembershipState(1)
 
-      val INVITED: TeamMembershipState  = TeamMembershipState(1)
       val ACCEPTED: TeamMembershipState = TeamMembershipState(2)
 
       def unknown(value: Int): TeamMembershipState = new TeamMembershipState(value)
 
-      def values: Seq[TeamMembershipState] = Seq(INVITED, ACCEPTED)
-
+      val values: Seq[TeamMembershipState] = Seq(INVITED, ACCEPTED)
     }
 
     class TeamUser(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
       @inline def id: UserId = selectDynamic[UserId]("id")
+
+      @inline def withId(newValue: UserId): TeamUser = objWith(TeamUser, "id", newValue)
 
       @inline def username: String = selectDynamic[String]("username")
 
+      @inline def withUsername(newValue: String): TeamUser = objWith(TeamUser, "username", newValue)
+
       @inline def avatar: Option[ImageHash] = selectDynamic[Option[ImageHash]]("avatar")
 
+      @inline def withAvatar(newValue: Option[ImageHash]): TeamUser = objWith(TeamUser, "avatar", newValue)
+
       @inline def discriminator: String = selectDynamic[String]("discriminator")
+
+      @inline def withDiscriminator(newValue: String): TeamUser = objWith(TeamUser, "discriminator", newValue)
 
       override def values: Seq[() => Any] = Seq(() => id, () => username, () => avatar, () => discriminator)
     }
     object TeamUser extends DiscordObjectCompanion[TeamUser] {
       def makeRaw(json: Json, cache: Map[String, Any]): TeamUser = new TeamUser(json, cache)
 
-      def make20(id: UserId, username: String, avatar: Option[ImageHash], discriminator: String): TeamUser =
+      def make20(
+          id: UserId,
+          username: String,
+          avatar: Option[ImageHash],
+          discriminator: String
+      ): TeamUser =
         makeRawFromFields("id" := id, "username" := username, "avatar" := avatar, "discriminator" := discriminator)
-
     }
   }
 }

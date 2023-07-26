@@ -17,42 +17,72 @@ class VoiceState(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   /** The guild id this voice state is for */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): VoiceState = objWithUndef(VoiceState, "guild_id", newValue)
+
   /** The channel id this user is connected to */
   @inline def channelId: Option[VoiceGuildChannelId] = selectDynamic[Option[VoiceGuildChannelId]]("channel_id")
+
+  @inline def withChannelId(newValue: Option[VoiceGuildChannelId]): VoiceState =
+    objWith(VoiceState, "channel_id", newValue)
 
   /** The user id this voice state is for */
   @inline def userId: UserId = selectDynamic[UserId]("user_id")
 
+  @inline def withUserId(newValue: UserId): VoiceState = objWith(VoiceState, "user_id", newValue)
+
   /** The guild member this voice state is for */
   @inline def member: UndefOr[GuildMember] = selectDynamic[UndefOr[GuildMember]]("member")
+
+  @inline def withMember(newValue: UndefOr[GuildMember]): VoiceState =
+    objWithUndef(VoiceState, "member", newValue)
 
   /** The session id for this voice state */
   @inline def sessionId: String = selectDynamic[String]("session_id")
 
+  @inline def withSessionId(newValue: String): VoiceState = objWith(VoiceState, "session_id", newValue)
+
   /** Whether this user is deafened by the server */
   @inline def deaf: Boolean = selectDynamic[Boolean]("deaf")
+
+  @inline def withDeaf(newValue: Boolean): VoiceState = objWith(VoiceState, "deaf", newValue)
 
   /** Whether this user is muted by the server */
   @inline def mute: Boolean = selectDynamic[Boolean]("mute")
 
+  @inline def withMute(newValue: Boolean): VoiceState = objWith(VoiceState, "mute", newValue)
+
   /** Whether this user is locally deafened */
   @inline def selfDeaf: Boolean = selectDynamic[Boolean]("self_deaf")
+
+  @inline def withSelfDeaf(newValue: Boolean): VoiceState = objWith(VoiceState, "self_deaf", newValue)
 
   /** Whether this user is locally muted */
   @inline def selfMute: Boolean = selectDynamic[Boolean]("self_mute")
 
+  @inline def withSelfMute(newValue: Boolean): VoiceState = objWith(VoiceState, "self_mute", newValue)
+
   /** Whether this user is streaming using "Go Live" */
   @inline def selfStream: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("self_stream")
+
+  @inline def withSelfStream(newValue: UndefOr[Boolean]): VoiceState =
+    objWithUndef(VoiceState, "self_stream", newValue)
 
   /** Whether this user's camera is enabled */
   @inline def selfVideo: Boolean = selectDynamic[Boolean]("self_video")
 
+  @inline def withSelfVideo(newValue: Boolean): VoiceState = objWith(VoiceState, "self_video", newValue)
+
   /** Whether this user's permission to speak is denied */
   @inline def suppress: Boolean = selectDynamic[Boolean]("suppress")
+
+  @inline def withSuppress(newValue: Boolean): VoiceState = objWith(VoiceState, "suppress", newValue)
 
   /** The time at which the user requested to speak */
   @inline def requestToSpeakTimestamp: Option[OffsetDateTime] =
     selectDynamic[Option[OffsetDateTime]]("request_to_speak_timestamp")
+
+  @inline def withRequestToSpeakTimestamp(newValue: Option[OffsetDateTime]): VoiceState =
+    objWith(VoiceState, "request_to_speak_timestamp", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => guildId,
@@ -130,7 +160,6 @@ object VoiceState extends DiscordObjectCompanion[VoiceState] {
     "suppress"                   := suppress,
     "request_to_speak_timestamp" := requestToSpeakTimestamp
   )
-
 }
 
 class VoiceRegion(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -138,17 +167,27 @@ class VoiceRegion(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   /** Unique ID for the region */
   @inline def id: String = selectDynamic[String]("id")
 
+  @inline def withId(newValue: String): VoiceRegion = objWith(VoiceRegion, "id", newValue)
+
   /** Name of the region */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): VoiceRegion = objWith(VoiceRegion, "name", newValue)
 
   /** True for a single server that is closest to the current user's client */
   @inline def optimal: Boolean = selectDynamic[Boolean]("optimal")
 
+  @inline def withOptimal(newValue: Boolean): VoiceRegion = objWith(VoiceRegion, "optimal", newValue)
+
   /** Whether this is a deprecated voice region (avoid switching to these) */
   @inline def deprecated: Boolean = selectDynamic[Boolean]("deprecated")
 
+  @inline def withDeprecated(newValue: Boolean): VoiceRegion = objWith(VoiceRegion, "deprecated", newValue)
+
   /** Whether this is a custom voice region (used for events/etc) */
   @inline def custom: Boolean = selectDynamic[Boolean]("custom")
+
+  @inline def withCustom(newValue: Boolean): VoiceRegion = objWith(VoiceRegion, "custom", newValue)
 
   override def values: Seq[() => Any] = Seq(() => id, () => name, () => optimal, () => deprecated, () => custom)
 }
@@ -167,7 +206,12 @@ object VoiceRegion extends DiscordObjectCompanion[VoiceRegion] {
     * @param custom
     *   Whether this is a custom voice region (used for events/etc)
     */
-  def make20(id: String, name: String, optimal: Boolean, deprecated: Boolean, custom: Boolean): VoiceRegion =
+  def make20(
+      id: String,
+      name: String,
+      optimal: Boolean,
+      deprecated: Boolean,
+      custom: Boolean
+  ): VoiceRegion =
     makeRawFromFields("id" := id, "name" := name, "optimal" := optimal, "deprecated" := deprecated, "custom" := custom)
-
 }

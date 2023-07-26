@@ -18,17 +18,27 @@ object InviteRequests {
     /** Whether the invite should contain approximate member counts */
     @inline def withCounts: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_counts")
 
+    @inline def withWithCounts(newValue: UndefOr[Boolean]): GetInviteQuery =
+      objWithUndef(GetInviteQuery, "with_counts", newValue)
+
     /** Whether the invite should contain the expiration date */
     @inline def withExpiration: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("with_expiration")
+
+    @inline def withWithExpiration(newValue: UndefOr[Boolean]): GetInviteQuery =
+      objWithUndef(GetInviteQuery, "with_expiration", newValue)
 
     /** The guild scheduled event to include with the invite */
     @inline def guildScheduledEventId: UndefOr[Snowflake[GuildScheduledEvent]] =
       selectDynamic[UndefOr[Snowflake[GuildScheduledEvent]]]("guild_scheduled_event_id")
 
+    @inline def withGuildScheduledEventId(newValue: UndefOr[Snowflake[GuildScheduledEvent]]): GetInviteQuery =
+      objWithUndef(GetInviteQuery, "guild_scheduled_event_id", newValue)
+
     override def values: Seq[() => Any] = Seq(() => withCounts, () => withExpiration, () => guildScheduledEventId)
   }
   object GetInviteQuery extends DiscordObjectCompanion[GetInviteQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetInviteQuery = new GetInviteQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetInviteQuery =
+      new GetInviteQuery(json, cache)
 
     /**
       * @param withCounts
@@ -47,7 +57,6 @@ object InviteRequests {
       "with_expiration"          :=? withExpiration,
       "guild_scheduled_event_id" :=? guildScheduledEventId
     )
-
   }
 
   /** Returns an invite object for the given code. */
@@ -69,13 +78,9 @@ object InviteRequests {
     * guild. Returns an invite object on success. Fires an Invite Delete Gateway
     * event.
     */
-  def deleteInvite(
-      inviteCode: String,
-      reason: Option[String]
-  ): Request[Unit, Invite] =
+  def deleteInvite(inviteCode: String, reason: Option[String]): Request[Unit, Invite] =
     Request.restRequest(
       route = (Route.Empty / "invites" / Parameters[String]("inviteCode", inviteCode)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
-
 }

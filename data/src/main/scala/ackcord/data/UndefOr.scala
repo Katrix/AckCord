@@ -30,6 +30,11 @@ sealed trait UndefOr[+A] {
 object UndefOr {
   implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = (c: HCursor) =>
     if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined)
+
+  def fromOption[A](opt: Option[A]): UndefOr[A] = opt match {
+    case Some(value) => UndefOrSome(value)
+    case None        => UndefOrUndefined
+  }
 }
 
 case class UndefOrSome[A](value: A) extends UndefOr[A] {

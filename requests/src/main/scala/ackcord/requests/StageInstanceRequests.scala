@@ -18,21 +18,34 @@ object StageInstanceRequests {
     /** The id of the Stage channel */
     @inline def channelId: StageChannelId = selectDynamic[StageChannelId]("channel_id")
 
+    @inline def withChannelId(newValue: StageChannelId): CreateStageInstanceBody =
+      objWith(CreateStageInstanceBody, "channel_id", newValue)
+
     /** The topic of the Stage instance (1-120 characters) */
     @inline def topic: String = selectDynamic[String]("topic")
+
+    @inline def withTopic(newValue: String): CreateStageInstanceBody =
+      objWith(CreateStageInstanceBody, "topic", newValue)
 
     /** The privacy level of the Stage instance (default GUILD_ONLY) */
     @inline def privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] =
       selectDynamic[UndefOr[StageInstance.StagePrivacyLevel]]("privacy_level")
 
+    @inline def withPrivacyLevel(newValue: UndefOr[StageInstance.StagePrivacyLevel]): CreateStageInstanceBody =
+      objWithUndef(CreateStageInstanceBody, "privacy_level", newValue)
+
     /** Notify @everyone that a Stage instance has started */
     @inline def sendStartNotification: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("send_start_notification")
+
+    @inline def withSendStartNotification(newValue: UndefOr[Boolean]): CreateStageInstanceBody =
+      objWithUndef(CreateStageInstanceBody, "send_start_notification", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => channelId, () => topic, () => privacyLevel, () => sendStartNotification)
   }
   object CreateStageInstanceBody extends DiscordObjectCompanion[CreateStageInstanceBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateStageInstanceBody = new CreateStageInstanceBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateStageInstanceBody =
+      new CreateStageInstanceBody(json, cache)
 
     /**
       * @param channelId
@@ -55,11 +68,10 @@ object StageInstanceRequests {
       "privacy_level"           :=? privacyLevel,
       "send_start_notification" :=? sendStartNotification
     )
-
   }
 
   /**
-    * * Creates a new Stage instance associated to a Stage channel. Returns that
+    * Creates a new Stage instance associated to a Stage channel. Returns that
     * Stage instance. Fires a Stage Instance Create Gateway event.
     *
     * Requires the user to be a moderator of the Stage channel.
@@ -77,9 +89,7 @@ object StageInstanceRequests {
   /**
     * Gets the stage instance associated with the Stage channel, if it exists.
     */
-  def getStageInstance(
-      channelId: ChannelId
-  ): Request[Unit, StageInstance] =
+  def getStageInstance(channelId: ChannelId): Request[Unit, StageInstance] =
     Request.restRequest(
       route = (Route.Empty / "stage-instances" / Parameters[ChannelId]("channelId", channelId, major = true))
         .toRequest(Method.GET)
@@ -90,14 +100,21 @@ object StageInstanceRequests {
     /** The topic of the Stage instance (1-120 characters) */
     @inline def topic: UndefOr[String] = selectDynamic[UndefOr[String]]("topic")
 
+    @inline def withTopic(newValue: UndefOr[String]): ModifyStageInstanceBody =
+      objWithUndef(ModifyStageInstanceBody, "topic", newValue)
+
     /** The privacy level of the Stage instance */
     @inline def privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] =
       selectDynamic[UndefOr[StageInstance.StagePrivacyLevel]]("privacy_level")
 
+    @inline def withPrivacyLevel(newValue: UndefOr[StageInstance.StagePrivacyLevel]): ModifyStageInstanceBody =
+      objWithUndef(ModifyStageInstanceBody, "privacy_level", newValue)
+
     override def values: Seq[() => Any] = Seq(() => topic, () => privacyLevel)
   }
   object ModifyStageInstanceBody extends DiscordObjectCompanion[ModifyStageInstanceBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyStageInstanceBody = new ModifyStageInstanceBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyStageInstanceBody =
+      new ModifyStageInstanceBody(json, cache)
 
     /**
       * @param topic
@@ -109,11 +126,10 @@ object StageInstanceRequests {
         topic: UndefOr[String] = UndefOrUndefined,
         privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined
     ): ModifyStageInstanceBody = makeRawFromFields("topic" :=? topic, "privacy_level" :=? privacyLevel)
-
   }
 
   /**
-    * * Updates fields of an existing Stage instance. Returns the updated Stage
+    * Updates fields of an existing Stage instance. Returns the updated Stage
     * instance. Fires a Stage Instance Update Gateway event.
     *
     * Requires the user to be a moderator of the Stage channel.
@@ -131,19 +147,15 @@ object StageInstanceRequests {
     )
 
   /**
-    * * Deletes the Stage instance. Returns 204 No Content. Fires a Stage
-    * Instance Delete Gateway event.
+    * Deletes the Stage instance. Returns 204 No Content. Fires a Stage Instance
+    * Delete Gateway event.
     *
     * Requires the user to be a moderator of the Stage channel.
     */
-  def deleteStageInstance(
-      channelId: ChannelId,
-      reason: Option[String]
-  ): Request[Unit, Unit] =
+  def deleteStageInstance(channelId: ChannelId, reason: Option[String]): Request[Unit, Unit] =
     Request.restRequest(
       route = (Route.Empty / "stage-instances" / Parameters[ChannelId]("channelId", channelId, major = true))
         .toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
-
 }

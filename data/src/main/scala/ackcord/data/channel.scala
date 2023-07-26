@@ -17,8 +17,12 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   /** The id of this channel */
   @inline def id: ChannelId = selectDynamic[ChannelId]("id")
 
+  @inline def withId(newValue: ChannelId): RawChannel = objWith(RawChannel, "id", newValue)
+
   /** The type of channel */
   @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
+
+  @inline def withTpe(newValue: Channel.ChannelType): RawChannel = objWith(RawChannel, "type", newValue)
 
   /**
     * The id of the guild (may be missing for some channel objects received over
@@ -26,15 +30,24 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): RawChannel = objWithUndef(RawChannel, "guild_id", newValue)
+
   /** Sorting position of the channel */
   @inline def position: UndefOr[Int] = selectDynamic[UndefOr[Int]]("position")
+
+  @inline def withPosition(newValue: UndefOr[Int]): RawChannel = objWithUndef(RawChannel, "position", newValue)
 
   /** Explicit permission overwrites for members and roles */
   @inline def permissionOverwrites: UndefOr[Seq[Channel.PermissionOverwrite]] =
     selectDynamic[UndefOr[Seq[Channel.PermissionOverwrite]]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: UndefOr[Seq[Channel.PermissionOverwrite]]): RawChannel =
+    objWithUndef(RawChannel, "permission_overwrites", newValue)
+
   /** The name of the channel (1-100 characters) */
   @inline def name: JsonOption[String] = selectDynamic[JsonOption[String]]("name")
+
+  @inline def withName(newValue: JsonOption[String]): RawChannel = objWithUndef(RawChannel, "name", newValue)
 
   /**
     * The channel topic (0-4096 characters for GUILD_FORUM channels, 0-1024
@@ -42,8 +55,12 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def topic: JsonOption[String] = selectDynamic[JsonOption[String]]("topic")
 
+  @inline def withTopic(newValue: JsonOption[String]): RawChannel = objWithUndef(RawChannel, "topic", newValue)
+
   /** Whether the channel is nsfw */
   @inline def nsfw: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("nsfw")
+
+  @inline def withNsfw(newValue: UndefOr[Boolean]): RawChannel = objWithUndef(RawChannel, "nsfw", newValue)
 
   /**
     * The id of the last message sent in this channel (or thread for GUILD_FORUM
@@ -51,11 +68,18 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def lastMessageId: JsonOption[MessageId] = selectDynamic[JsonOption[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: JsonOption[MessageId]): RawChannel =
+    objWithUndef(RawChannel, "last_message_id", newValue)
+
   /** The bitrate (in bits) of the voice channel */
   @inline def bitrate: UndefOr[Int] = selectDynamic[UndefOr[Int]]("bitrate")
 
+  @inline def withBitrate(newValue: UndefOr[Int]): RawChannel = objWithUndef(RawChannel, "bitrate", newValue)
+
   /** The user limit of the voice channel */
   @inline def userLimit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("user_limit")
+
+  @inline def withUserLimit(newValue: UndefOr[Int]): RawChannel = objWithUndef(RawChannel, "user_limit", newValue)
 
   /**
     * Amount of seconds a user has to wait before sending another message
@@ -64,23 +88,38 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def rateLimitPerUser: UndefOr[Int] = selectDynamic[UndefOr[Int]]("rate_limit_per_user")
 
+  @inline def withRateLimitPerUser(newValue: UndefOr[Int]): RawChannel =
+    objWithUndef(RawChannel, "rate_limit_per_user", newValue)
+
   /** The recipients of the DM */
   @inline def recipients: UndefOr[Seq[User]] = selectDynamic[UndefOr[Seq[User]]]("recipients")
+
+  @inline def withRecipients(newValue: UndefOr[Seq[User]]): RawChannel =
+    objWithUndef(RawChannel, "recipients", newValue)
 
   /** Icon hash of the group DM */
   @inline def icon: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("icon")
 
+  @inline def withIcon(newValue: JsonOption[ImageHash]): RawChannel = objWithUndef(RawChannel, "icon", newValue)
+
   /** Id of the creator of the group DM or thread */
   @inline def ownerId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("owner_id")
 
+  @inline def withOwnerId(newValue: UndefOr[UserId]): RawChannel = objWithUndef(RawChannel, "owner_id", newValue)
+
   /** Application id of the group DM creator if it is bot-created */
   @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
+
+  @inline def withApplicationId(newValue: UndefOr[ApplicationId]): RawChannel =
+    objWithUndef(RawChannel, "application_id", newValue)
 
   /**
     * For group DM channels: whether the channel is managed by an application
     * via the gdm.join OAuth2 scope
     */
   @inline def managed: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("managed")
+
+  @inline def withManaged(newValue: UndefOr[Boolean]): RawChannel = objWithUndef(RawChannel, "managed", newValue)
 
   /**
     * For guild channels: id of the parent category for a channel (each parent
@@ -89,6 +128,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def parentId: UndefOr[GuildChannelId] = selectDynamic[UndefOr[GuildChannelId]]("parent_id")
 
+  @inline def withParentId(newValue: UndefOr[GuildChannelId]): RawChannel =
+    objWithUndef(RawChannel, "parent_id", newValue)
+
   /**
     * When the last pinned message was pinned. This may be null in events such
     * as GUILD_CREATE when a message is not pinned.
@@ -96,12 +138,21 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def lastPinTimestamp: JsonOption[OffsetDateTime] =
     selectDynamic[JsonOption[OffsetDateTime]]("last_pin_timestamp")
 
+  @inline def withLastPinTimestamp(newValue: JsonOption[OffsetDateTime]): RawChannel =
+    objWithUndef(RawChannel, "last_pin_timestamp", newValue)
+
   /** Voice region id for the voice channel, automatic when set to null */
   @inline def rtcRegion: JsonOption[VoiceRegion] = selectDynamic[JsonOption[VoiceRegion]]("rtc_region")
+
+  @inline def withRtcRegion(newValue: JsonOption[VoiceRegion]): RawChannel =
+    objWithUndef(RawChannel, "rtc_region", newValue)
 
   /** The camera video quality mode of the voice channel, 1 when not present */
   @inline def videoQualityMode: UndefOr[Channel.VideoQualityMode] =
     selectDynamic[UndefOr[Channel.VideoQualityMode]]("video_quality_mode")
+
+  @inline def withVideoQualityMode(newValue: UndefOr[Channel.VideoQualityMode]): RawChannel =
+    objWithUndef(RawChannel, "video_quality_mode", newValue)
 
   /**
     * Number of messages (not including the initial message or deleted messages)
@@ -109,18 +160,28 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def messageCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("message_count")
 
+  @inline def withMessageCount(newValue: UndefOr[Int]): RawChannel = objWithUndef(RawChannel, "message_count", newValue)
+
   /** An approximate count of users in a thread, stops counting at 50 */
   @inline def memberCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("member_count")
+
+  @inline def withMemberCount(newValue: UndefOr[Int]): RawChannel = objWithUndef(RawChannel, "member_count", newValue)
 
   /** Thread-specific fields not needed by other channels */
   @inline def threadMetadata: UndefOr[Channel.ThreadMetadata] =
     selectDynamic[UndefOr[Channel.ThreadMetadata]]("thread_metadata")
+
+  @inline def withThreadMetadata(newValue: UndefOr[Channel.ThreadMetadata]): RawChannel =
+    objWithUndef(RawChannel, "thread_metadata", newValue)
 
   /**
     * Thread member object for the current user, if they have joined the thread,
     * only included on certain API endpoints
     */
   @inline def member: UndefOr[Channel.ThreadMember] = selectDynamic[UndefOr[Channel.ThreadMember]]("member")
+
+  @inline def withMember(newValue: UndefOr[Channel.ThreadMember]): RawChannel =
+    objWithUndef(RawChannel, "member", newValue)
 
   /**
     * Default duration, copied onto newly created threads, in minutes, threads
@@ -129,6 +190,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def defaultAutoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("default_auto_archive_duration")
 
+  @inline def withDefaultAutoArchiveDuration(newValue: UndefOr[Int]): RawChannel =
+    objWithUndef(RawChannel, "default_auto_archive_duration", newValue)
+
   /**
     * Computed permissions for the invoking user in the channel, including
     * overwrites, only included when part of the resolved data received on a
@@ -136,8 +200,14 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
 
+  @inline def withPermissions(newValue: UndefOr[Permissions]): RawChannel =
+    objWithUndef(RawChannel, "permissions", newValue)
+
   /** Channel flags combined as a bitfield */
   @inline def flags: UndefOr[Channel.ChannelFlags] = selectDynamic[UndefOr[Channel.ChannelFlags]]("flags")
+
+  @inline def withFlags(newValue: UndefOr[Channel.ChannelFlags]): RawChannel =
+    objWithUndef(RawChannel, "flags", newValue)
 
   /**
     * Number of messages ever sent in a thread, it's similar to message_count on
@@ -146,9 +216,15 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def totalMessageSent: UndefOr[Int] = selectDynamic[UndefOr[Int]]("total_message_sent")
 
+  @inline def withTotalMessageSent(newValue: UndefOr[Int]): RawChannel =
+    objWithUndef(RawChannel, "total_message_sent", newValue)
+
   /** The set of tags that can be used in a GUILD_FORUM channel */
   @inline def availableTags: UndefOr[Seq[Channel.ForumTag]] =
     selectDynamic[UndefOr[Seq[Channel.ForumTag]]]("available_tags")
+
+  @inline def withAvailableTags(newValue: UndefOr[Seq[Channel.ForumTag]]): RawChannel =
+    objWithUndef(RawChannel, "available_tags", newValue)
 
   /**
     * The IDs of the set of tags that have been applied to a thread in a
@@ -157,12 +233,18 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] =
     selectDynamic[UndefOr[Seq[Snowflake[Channel.ForumTag]]]]("applied_tags")
 
+  @inline def withAppliedTags(newValue: UndefOr[Seq[Snowflake[Channel.ForumTag]]]): RawChannel =
+    objWithUndef(RawChannel, "applied_tags", newValue)
+
   /**
     * The emoji to show in the add reaction button on a thread in a GUILD_FORUM
     * channel
     */
   @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
     selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
+
+  @inline def withDefaultReactionEmoji(newValue: JsonOption[Channel.DefaultReaction]): RawChannel =
+    objWithUndef(RawChannel, "default_reaction_emoji", newValue)
 
   /**
     * The initial rate_limit_per_user to set on newly created threads in a
@@ -172,6 +254,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def defaultThreadRateLimitPerUser: UndefOr[Int] =
     selectDynamic[UndefOr[Int]]("default_thread_rate_limit_per_user")
 
+  @inline def withDefaultThreadRateLimitPerUser(newValue: UndefOr[Int]): RawChannel =
+    objWithUndef(RawChannel, "default_thread_rate_limit_per_user", newValue)
+
   /**
     * The default sort order type used to order posts in GUILD_FORUM channels.
     * Defaults to null, which indicates a preferred sort order hasn't been set
@@ -180,6 +265,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
     selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
 
+  @inline def withDefaultSortOrder(newValue: JsonOption[Channel.ForumSortOrder]): RawChannel =
+    objWithUndef(RawChannel, "default_sort_order", newValue)
+
   /**
     * The default forum layout view used to display posts in GUILD_FORUM
     * channels. Defaults to 0, which indicates a layout view has not been set by
@@ -187,6 +275,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def defaultForumLayout: UndefOr[Channel.ForumLayout] =
     selectDynamic[UndefOr[Channel.ForumLayout]]("default_forum_layout")
+
+  @inline def withDefaultForumLayout(newValue: UndefOr[Channel.ForumLayout]): RawChannel =
+    objWithUndef(RawChannel, "default_forum_layout", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -400,7 +491,6 @@ object RawChannel extends DiscordObjectCompanion[RawChannel] {
     "default_sort_order"                 :=? defaultSortOrder,
     "default_forum_layout"               :=? defaultForumLayout
   )
-
 }
 
 sealed trait Channel extends DiscordObject {
@@ -463,30 +553,66 @@ object VoiceGuildChannel extends DiscordObjectCompanion[VoiceGuildChannel] {
 class TopLevelTextGuildChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with TextGuildChannel {
+
   @inline override def id: TopLevelTextGuildChannelId = selectDynamic[TopLevelTextGuildChannelId]("id")
+
+  @inline def withId(newValue: TopLevelTextGuildChannelId): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "id", newValue)
 
   @inline def lastMessageId: Option[MessageId] = selectDynamic[Option[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[MessageId]): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "last_message_id", newValue)
+
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): TopLevelTextGuildChannel =
+    objWithUndef(TopLevelTextGuildChannel, "guild_id", newValue)
+
   @inline def position: Int = selectDynamic[Int]("position")
+
+  @inline def withPosition(newValue: Int): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "position", newValue)
 
   @inline def permissionOverwrites: Seq[Channel.PermissionOverwrite] =
     selectDynamic[Seq[Channel.PermissionOverwrite]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: Seq[Channel.PermissionOverwrite]): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "permission_overwrites", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): TopLevelTextGuildChannel = objWith(TopLevelTextGuildChannel, "name", newValue)
 
   @inline def parentId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("parent_id")
 
+  @inline def withParentId(newValue: Option[GuildChannelId]): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "parent_id", newValue)
+
   @inline def topic: Option[String] = selectDynamic[Option[String]]("topic")
+
+  @inline def withTopic(newValue: Option[String]): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "topic", newValue)
 
   @inline def lastPinTimestamp: Option[OffsetDateTime] = selectDynamic[Option[OffsetDateTime]]("last_pin_timestamp")
 
+  @inline def withLastPinTimestamp(newValue: Option[OffsetDateTime]): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "last_pin_timestamp", newValue)
+
   @inline def defaultAutoArchiveDuration: Int = selectDynamic[Int]("default_auto_archive_duration")
+
+  @inline def withDefaultAutoArchiveDuration(newValue: Int): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "default_auto_archive_duration", newValue)
 
   @inline def rateLimitPerUser: UndefOr[Int] = selectDynamic[UndefOr[Int]]("rate_limit_per_user")
 
+  @inline def withRateLimitPerUser(newValue: UndefOr[Int]): TopLevelTextGuildChannel =
+    objWithUndef(TopLevelTextGuildChannel, "rate_limit_per_user", newValue)
+
   @inline def defaultThreadRateLimitPerUser: Int = selectDynamic[Int]("default_thread_rate_limit_per_user")
+
+  @inline def withDefaultThreadRateLimitPerUser(newValue: Int): TopLevelTextGuildChannel =
+    objWith(TopLevelTextGuildChannel, "default_thread_rate_limit_per_user", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -504,7 +630,8 @@ class TopLevelTextGuildChannel(json: Json, cache: Map[String, Any] = Map.empty)
   )
 }
 object TopLevelTextGuildChannel extends DiscordObjectCompanion[TopLevelTextGuildChannel] {
-  def makeRaw(json: Json, cache: Map[String, Any]): TopLevelTextGuildChannel = new TopLevelTextGuildChannel(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): TopLevelTextGuildChannel =
+    new TopLevelTextGuildChannel(json, cache)
 
   def make20(
       id: TopLevelTextGuildChannelId,
@@ -533,36 +660,71 @@ object TopLevelTextGuildChannel extends DiscordObjectCompanion[TopLevelTextGuild
     "rate_limit_per_user"               :=? rateLimitPerUser,
     "default_thread_rate_limit_per_user" := defaultThreadRateLimitPerUser
   )
-
 }
 
 class NormalVoiceGuildChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with TextGuildChannel {
+
   @inline override def id: NormalVoiceGuildChannelId = selectDynamic[NormalVoiceGuildChannelId]("id")
+
+  @inline def withId(newValue: NormalVoiceGuildChannelId): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "id", newValue)
 
   @inline def lastMessageId: Option[MessageId] = selectDynamic[Option[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[MessageId]): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "last_message_id", newValue)
+
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): NormalVoiceGuildChannel =
+    objWithUndef(NormalVoiceGuildChannel, "guild_id", newValue)
+
   @inline def position: Int = selectDynamic[Int]("position")
+
+  @inline def withPosition(newValue: Int): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "position", newValue)
 
   @inline def permissionOverwrites: Seq[Channel.PermissionOverwrite] =
     selectDynamic[Seq[Channel.PermissionOverwrite]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: Seq[Channel.PermissionOverwrite]): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "permission_overwrites", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): NormalVoiceGuildChannel = objWith(NormalVoiceGuildChannel, "name", newValue)
 
   @inline def parentId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("parent_id")
 
+  @inline def withParentId(newValue: Option[GuildChannelId]): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "parent_id", newValue)
+
   @inline def rateLimitPerUser: UndefOr[Int] = selectDynamic[UndefOr[Int]]("rate_limit_per_user")
+
+  @inline def withRateLimitPerUser(newValue: UndefOr[Int]): NormalVoiceGuildChannel =
+    objWithUndef(NormalVoiceGuildChannel, "rate_limit_per_user", newValue)
 
   @inline def bitrate: Int = selectDynamic[Int]("bitrate")
 
+  @inline def withBitrate(newValue: Int): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "bitrate", newValue)
+
   @inline def userLimit: Int = selectDynamic[Int]("user_limit")
+
+  @inline def withUserLimit(newValue: Int): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "user_limit", newValue)
 
   @inline def rtcRegion: Option[String] = selectDynamic[Option[String]]("rtc_region")
 
+  @inline def withRtcRegion(newValue: Option[String]): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "rtc_region", newValue)
+
   @inline def videoQualityMode: Channel.VideoQualityMode = selectDynamic[Channel.VideoQualityMode]("video_quality_mode")
+
+  @inline def withVideoQualityMode(newValue: Channel.VideoQualityMode): NormalVoiceGuildChannel =
+    objWith(NormalVoiceGuildChannel, "video_quality_mode", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -580,7 +742,8 @@ class NormalVoiceGuildChannel(json: Json, cache: Map[String, Any] = Map.empty)
   )
 }
 object NormalVoiceGuildChannel extends DiscordObjectCompanion[NormalVoiceGuildChannel] {
-  def makeRaw(json: Json, cache: Map[String, Any]): NormalVoiceGuildChannel = new NormalVoiceGuildChannel(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): NormalVoiceGuildChannel =
+    new NormalVoiceGuildChannel(json, cache)
 
   def make20(
       id: NormalVoiceGuildChannelId,
@@ -609,24 +772,39 @@ object NormalVoiceGuildChannel extends DiscordObjectCompanion[NormalVoiceGuildCh
     "rtc_region"            := rtcRegion,
     "video_quality_mode"    := videoQualityMode
   )
-
 }
 
 class GuildCategory(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with GuildChannel {
+
   @inline override def id: GuildCategoryId = selectDynamic[GuildCategoryId]("id")
+
+  @inline def withId(newValue: GuildCategoryId): GuildCategory = objWith(GuildCategory, "id", newValue)
 
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): GuildCategory =
+    objWithUndef(GuildCategory, "guild_id", newValue)
+
   @inline def position: Int = selectDynamic[Int]("position")
+
+  @inline def withPosition(newValue: Int): GuildCategory = objWith(GuildCategory, "position", newValue)
 
   @inline def permissionOverwrites: Seq[Channel.PermissionOverwrite] =
     selectDynamic[Seq[Channel.PermissionOverwrite]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: Seq[Channel.PermissionOverwrite]): GuildCategory =
+    objWith(GuildCategory, "permission_overwrites", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
 
+  @inline def withName(newValue: String): GuildCategory = objWith(GuildCategory, "name", newValue)
+
   @inline def parentId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("parent_id")
+
+  @inline def withParentId(newValue: Option[GuildChannelId]): GuildCategory =
+    objWith(GuildCategory, "parent_id", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => id, () => guildId, () => position, () => permissionOverwrites, () => name, () => parentId)
@@ -649,33 +827,61 @@ object GuildCategory extends DiscordObjectCompanion[GuildCategory] {
     "name"                  := name,
     "parent_id"             := parentId
   )
-
 }
 
 class ThreadChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with TextChannel {
+
   @inline override def id: ThreadChannelId = selectDynamic[ThreadChannelId]("id")
+
+  @inline def withId(newValue: ThreadChannelId): ThreadChannel = objWith(ThreadChannel, "id", newValue)
 
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): ThreadChannel =
+    objWithUndef(ThreadChannel, "guild_id", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): ThreadChannel = objWith(ThreadChannel, "name", newValue)
 
   @inline def lastMessageId: Option[MessageId] = selectDynamic[Option[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[MessageId]): ThreadChannel =
+    objWith(ThreadChannel, "last_message_id", newValue)
+
   @inline def lastPinTimestamp: Option[OffsetDateTime] = selectDynamic[Option[OffsetDateTime]]("last_pin_timestamp")
+
+  @inline def withLastPinTimestamp(newValue: Option[OffsetDateTime]): ThreadChannel =
+    objWith(ThreadChannel, "last_pin_timestamp", newValue)
 
   @inline def rateLimitPerUser: Option[Int] = selectDynamic[Option[Int]]("rate_limit_per_user")
 
+  @inline def withRateLimitPerUser(newValue: Option[Int]): ThreadChannel =
+    objWith(ThreadChannel, "rate_limit_per_user", newValue)
+
   @inline def ownerId: UserId = selectDynamic[UserId]("owner_id")
+
+  @inline def withOwnerId(newValue: UserId): ThreadChannel = objWith(ThreadChannel, "owner_id", newValue)
 
   @inline def memberCount: Int = selectDynamic[Int]("member_count")
 
+  @inline def withMemberCount(newValue: Int): ThreadChannel = objWith(ThreadChannel, "member_count", newValue)
+
   @inline def messageCount: Int = selectDynamic[Int]("message_count")
+
+  @inline def withMessageCount(newValue: Int): ThreadChannel = objWith(ThreadChannel, "message_count", newValue)
 
   @inline def totalMessageSent: Int = selectDynamic[Int]("total_message_sent")
 
+  @inline def withTotalMessageSent(newValue: Int): ThreadChannel =
+    objWith(ThreadChannel, "total_message_sent", newValue)
+
   @inline def threadMetadata: Channel.ThreadMetadata = selectDynamic[Channel.ThreadMetadata]("thread_metadata")
+
+  @inline def withThreadMetadata(newValue: Channel.ThreadMetadata): ThreadChannel =
+    objWith(ThreadChannel, "thread_metadata", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -719,32 +925,55 @@ object ThreadChannel extends DiscordObjectCompanion[ThreadChannel] {
     "total_message_sent"  := totalMessageSent,
     "thread_metadata"     := threadMetadata
   )
-
 }
 
 class StageChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with VoiceGuildChannel {
+
   @inline override def id: StageChannelId = selectDynamic[StageChannelId]("id")
+
+  @inline def withId(newValue: StageChannelId): StageChannel = objWith(StageChannel, "id", newValue)
 
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): StageChannel = objWithUndef(StageChannel, "guild_id", newValue)
+
   @inline def position: Int = selectDynamic[Int]("position")
+
+  @inline def withPosition(newValue: Int): StageChannel = objWith(StageChannel, "position", newValue)
 
   @inline def permissionOverwrites: Seq[Channel.PermissionOverwrite] =
     selectDynamic[Seq[Channel.PermissionOverwrite]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: Seq[Channel.PermissionOverwrite]): StageChannel =
+    objWith(StageChannel, "permission_overwrites", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): StageChannel = objWith(StageChannel, "name", newValue)
 
   @inline def parentId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("parent_id")
 
+  @inline def withParentId(newValue: Option[GuildChannelId]): StageChannel =
+    objWith(StageChannel, "parent_id", newValue)
+
   @inline def bitrate: Int = selectDynamic[Int]("bitrate")
+
+  @inline def withBitrate(newValue: Int): StageChannel = objWith(StageChannel, "bitrate", newValue)
 
   @inline def userLimit: Int = selectDynamic[Int]("user_limit")
 
+  @inline def withUserLimit(newValue: Int): StageChannel = objWith(StageChannel, "user_limit", newValue)
+
   @inline def rtcRegion: Option[String] = selectDynamic[Option[String]]("rtc_region")
 
+  @inline def withRtcRegion(newValue: Option[String]): StageChannel = objWith(StageChannel, "rtc_region", newValue)
+
   @inline def videoQualityMode: Channel.VideoQualityMode = selectDynamic[Channel.VideoQualityMode]("video_quality_mode")
+
+  @inline def withVideoQualityMode(newValue: Channel.VideoQualityMode): StageChannel =
+    objWith(StageChannel, "video_quality_mode", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -785,45 +1014,88 @@ object StageChannel extends DiscordObjectCompanion[StageChannel] {
     "rtc_region"            := rtcRegion,
     "video_quality_mode"    := videoQualityMode
   )
-
 }
 
 class ForumChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with GuildChannel {
+
   @inline override def id: ForumChannelId = selectDynamic[ForumChannelId]("id")
+
+  @inline def withId(newValue: ForumChannelId): ForumChannel = objWith(ForumChannel, "id", newValue)
 
   @inline def lastMessageId: Option[ThreadChannelId] = selectDynamic[Option[ThreadChannelId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[ThreadChannelId]): ForumChannel =
+    objWith(ForumChannel, "last_message_id", newValue)
+
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
 
+  @inline def withGuildId(newValue: UndefOr[GuildId]): ForumChannel = objWithUndef(ForumChannel, "guild_id", newValue)
+
   @inline def position: Int = selectDynamic[Int]("position")
+
+  @inline def withPosition(newValue: Int): ForumChannel = objWith(ForumChannel, "position", newValue)
 
   @inline def permissionOverwrites: Seq[Channel.PermissionOverwrite] =
     selectDynamic[Seq[Channel.PermissionOverwrite]]("permission_overwrites")
 
+  @inline def withPermissionOverwrites(newValue: Seq[Channel.PermissionOverwrite]): ForumChannel =
+    objWith(ForumChannel, "permission_overwrites", newValue)
+
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): ForumChannel = objWith(ForumChannel, "name", newValue)
 
   @inline def parentId: Option[GuildChannelId] = selectDynamic[Option[GuildChannelId]]("parent_id")
 
+  @inline def withParentId(newValue: Option[GuildChannelId]): ForumChannel =
+    objWith(ForumChannel, "parent_id", newValue)
+
   @inline def topic: Option[String] = selectDynamic[Option[String]]("topic")
+
+  @inline def withTopic(newValue: Option[String]): ForumChannel = objWith(ForumChannel, "topic", newValue)
 
   @inline def rateLimitPerUser: Option[Int] = selectDynamic[Option[Int]]("rate_limit_per_user")
 
+  @inline def withRateLimitPerUser(newValue: Option[Int]): ForumChannel =
+    objWith(ForumChannel, "rate_limit_per_user", newValue)
+
   @inline def defaultAutoArchiveDuration: Option[Int] = selectDynamic[Option[Int]]("default_auto_archive_duration")
+
+  @inline def withDefaultAutoArchiveDuration(newValue: Option[Int]): ForumChannel =
+    objWith(ForumChannel, "default_auto_archive_duration", newValue)
 
   @inline def flags: Channel.ChannelFlags = selectDynamic[Channel.ChannelFlags]("flags")
 
+  @inline def withFlags(newValue: Channel.ChannelFlags): ForumChannel =
+    objWith(ForumChannel, "flags", newValue)
+
   @inline def availableTags: Seq[Channel.ForumTag] = selectDynamic[Seq[Channel.ForumTag]]("available_tags")
+
+  @inline def withAvailableTags(newValue: Seq[Channel.ForumTag]): ForumChannel =
+    objWith(ForumChannel, "available_tags", newValue)
 
   @inline def defaultReactionEmoji: Option[Channel.DefaultReaction] =
     selectDynamic[Option[Channel.DefaultReaction]]("default_reaction_emoji")
 
+  @inline def withDefaultReactionEmoji(newValue: Option[Channel.DefaultReaction]): ForumChannel =
+    objWith(ForumChannel, "default_reaction_emoji", newValue)
+
   @inline def defaultThreadRateLimitPerUser: Int = selectDynamic[Int]("default_thread_rate_limit_per_user")
+
+  @inline def withDefaultThreadRateLimitPerUser(newValue: Int): ForumChannel =
+    objWith(ForumChannel, "default_thread_rate_limit_per_user", newValue)
 
   @inline def defaultSortOrder: Channel.ForumSortOrder = selectDynamic[Channel.ForumSortOrder]("default_sort_order")
 
+  @inline def withDefaultSortOrder(newValue: Channel.ForumSortOrder): ForumChannel =
+    objWith(ForumChannel, "default_sort_order", newValue)
+
   @inline def defaultForumLayout: Channel.ForumLayout = selectDynamic[Channel.ForumLayout]("default_forum_layout")
+
+  @inline def withDefaultForumLayout(newValue: Channel.ForumLayout): ForumChannel =
+    objWith(ForumChannel, "default_forum_layout", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -882,42 +1154,69 @@ object ForumChannel extends DiscordObjectCompanion[ForumChannel] {
     "default_sort_order"                 := defaultSortOrder,
     "default_forum_layout"               := defaultForumLayout
   )
-
 }
 
 class DMChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with TextChannel {
+
   @inline override def id: DMChannelId = selectDynamic[DMChannelId]("id")
+
+  @inline def withId(newValue: DMChannelId): DMChannel = objWith(DMChannel, "id", newValue)
 
   @inline def lastMessageId: Option[MessageId] = selectDynamic[Option[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[MessageId]): DMChannel =
+    objWith(DMChannel, "last_message_id", newValue)
+
   @inline def recipients: Seq[User] = selectDynamic[Seq[User]]("recipients")
+
+  @inline def withRecipients(newValue: Seq[User]): DMChannel = objWith(DMChannel, "recipients", newValue)
 
   override def values: Seq[() => Any] = Seq(() => id, () => lastMessageId, () => recipients)
 }
 object DMChannel extends DiscordObjectCompanion[DMChannel] {
   def makeRaw(json: Json, cache: Map[String, Any]): DMChannel = new DMChannel(json, cache)
 
-  def make20(id: DMChannelId, lastMessageId: Option[MessageId], recipients: Seq[User]): DMChannel =
-    makeRawFromFields("id" := id, "last_message_id" := lastMessageId, "recipients" := recipients)
-
+  def make20(
+      id: DMChannelId,
+      lastMessageId: Option[MessageId],
+      recipients: Seq[User]
+  ): DMChannel = makeRawFromFields("id" := id, "last_message_id" := lastMessageId, "recipients" := recipients)
 }
 
 class GroupDMChannel(json: Json, cache: Map[String, Any] = Map.empty)
     extends DiscordObject(json, cache)
     with TextChannel {
+
   @inline override def id: GroupDMChannelId = selectDynamic[GroupDMChannelId]("id")
+
+  @inline def withId(newValue: GroupDMChannelId): GroupDMChannel = objWith(GroupDMChannel, "id", newValue)
 
   @inline def lastMessageId: Option[MessageId] = selectDynamic[Option[MessageId]]("last_message_id")
 
+  @inline def withLastMessageId(newValue: Option[MessageId]): GroupDMChannel =
+    objWith(GroupDMChannel, "last_message_id", newValue)
+
   @inline def recipients: Seq[User] = selectDynamic[Seq[User]]("recipients")
+
+  @inline def withRecipients(newValue: Seq[User]): GroupDMChannel = objWith(GroupDMChannel, "recipients", newValue)
 
   @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
+  @inline def withIcon(newValue: Option[ImageHash]): GroupDMChannel = objWith(GroupDMChannel, "icon", newValue)
+
   @inline def ownerId: UserId = selectDynamic[UserId]("owner_id")
+
+  @inline def withOwnerId(newValue: UserId): GroupDMChannel = objWith(GroupDMChannel, "owner_id", newValue)
 
   @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
 
+  @inline def withApplicationId(newValue: UndefOr[ApplicationId]): GroupDMChannel =
+    objWithUndef(GroupDMChannel, "application_id", newValue)
+
   @inline def managed: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("managed")
+
+  @inline def withManaged(newValue: UndefOr[Boolean]): GroupDMChannel =
+    objWithUndef(GroupDMChannel, "managed", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => id, () => lastMessageId, () => recipients, () => icon, () => ownerId, () => applicationId, () => managed)
@@ -942,7 +1241,6 @@ object GroupDMChannel extends DiscordObjectCompanion[GroupDMChannel] {
     "application_id" :=? applicationId,
     "managed"        :=? managed
   )
-
 }
 
 object Channel extends DiscordObjectCompanion[Channel] {
@@ -1011,7 +1309,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def unknown(value: Int): ChannelType = new ChannelType(value)
 
-    def values: Seq[ChannelType] = Seq(
+    val values: Seq[ChannelType] = Seq(
       GUILD_TEXT,
       DM,
       GUILD_VOICE,
@@ -1025,7 +1323,6 @@ object Channel extends DiscordObjectCompanion[Channel] {
       GUILD_DIRECTORY,
       GUILD_FORUM
     )
-
   }
 
   sealed case class VideoQualityMode private (value: Int) extends DiscordEnum[Int]
@@ -1039,8 +1336,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def unknown(value: Int): VideoQualityMode = new VideoQualityMode(value)
 
-    def values: Seq[VideoQualityMode] = Seq(AUTO, FULL)
-
+    val values: Seq[VideoQualityMode] = Seq(AUTO, FULL)
   }
 
   sealed case class ChannelFlags private (value: Int) extends DiscordEnum[Int]
@@ -1057,9 +1353,10 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def unknown(value: Int): ChannelFlags = new ChannelFlags(value)
 
-    def values: Seq[ChannelFlags] = Seq(PINNED, REQUIRE_TAG)
+    val values: Seq[ChannelFlags] = Seq(PINNED, REQUIRE_TAG)
 
     implicit class ChannelFlagsBitFieldOps(private val here: ChannelFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: ChannelFlags): ChannelFlags = ChannelFlags(here.value | there.value)
@@ -1081,8 +1378,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def unknown(value: Int): ForumSortOrder = new ForumSortOrder(value)
 
-    def values: Seq[ForumSortOrder] = Seq(LATEST_ACTIVITY, CREATION_DATE)
-
+    val values: Seq[ForumSortOrder] = Seq(LATEST_ACTIVITY, CREATION_DATE)
   }
 
   sealed case class ForumLayout private (value: Int) extends DiscordEnum[Int]
@@ -1099,8 +1395,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     def unknown(value: Int): ForumLayout = new ForumLayout(value)
 
-    def values: Seq[ForumLayout] = Seq(NOT_SET, LIST_VIEW, GALLERY_VIEW)
-
+    val values: Seq[ForumLayout] = Seq(NOT_SET, LIST_VIEW, GALLERY_VIEW)
   }
 
   class PermissionOverwrite(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -1108,20 +1403,32 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** Role or user id */
     @inline def id: UserOrRoleId = selectDynamic[UserOrRoleId]("id")
 
+    @inline def withId(newValue: UserOrRoleId): PermissionOverwrite = objWith(PermissionOverwrite, "id", newValue)
+
     /** Either 0 (role) or 1 (member) */
     @inline def tpe: PermissionOverwrite.PermissionOverwriteType =
       selectDynamic[PermissionOverwrite.PermissionOverwriteType]("type")
 
+    @inline def withTpe(newValue: PermissionOverwrite.PermissionOverwriteType): PermissionOverwrite =
+      objWith(PermissionOverwrite, "type", newValue)
+
     /** Permission bit set */
     @inline def allow: Permissions = selectDynamic[Permissions]("allow")
+
+    @inline def withAllow(newValue: Permissions): PermissionOverwrite =
+      objWith(PermissionOverwrite, "allow", newValue)
 
     /** Permission bit set */
     @inline def deny: Permissions = selectDynamic[Permissions]("deny")
 
+    @inline def withDeny(newValue: Permissions): PermissionOverwrite =
+      objWith(PermissionOverwrite, "deny", newValue)
+
     override def values: Seq[() => Any] = Seq(() => id, () => tpe, () => allow, () => deny)
   }
   object PermissionOverwrite extends DiscordObjectCompanion[PermissionOverwrite] {
-    def makeRaw(json: Json, cache: Map[String, Any]): PermissionOverwrite = new PermissionOverwrite(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): PermissionOverwrite =
+      new PermissionOverwrite(json, cache)
 
     /**
       * @param id
@@ -1142,14 +1449,13 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
     sealed case class PermissionOverwriteType private (value: Int) extends DiscordEnum[Int]
     object PermissionOverwriteType extends DiscordEnumCompanion[Int, PermissionOverwriteType] {
+      val Role: PermissionOverwriteType = PermissionOverwriteType(0)
 
-      val Role: PermissionOverwriteType   = PermissionOverwriteType(0)
       val Member: PermissionOverwriteType = PermissionOverwriteType(1)
 
       def unknown(value: Int): PermissionOverwriteType = new PermissionOverwriteType(value)
 
-      def values: Seq[PermissionOverwriteType] = Seq(Role, Member)
-
+      val values: Seq[PermissionOverwriteType] = Seq(Role, Member)
     }
   }
 
@@ -1162,6 +1468,8 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** Whether the thread is archived */
     @inline def archived: Boolean = selectDynamic[Boolean]("archived")
 
+    @inline def withArchived(newValue: Boolean): ThreadMetadata = objWith(ThreadMetadata, "archived", newValue)
+
     /**
       * The thread will stop showing in the channel list after
       * auto_archive_duration minutes of inactivity, can be set to: 60, 1440,
@@ -1169,11 +1477,17 @@ object Channel extends DiscordObjectCompanion[Channel] {
       */
     @inline def autoArchiveDuration: Int = selectDynamic[Int]("auto_archive_duration")
 
+    @inline def withAutoArchiveDuration(newValue: Int): ThreadMetadata =
+      objWith(ThreadMetadata, "auto_archive_duration", newValue)
+
     /**
       * Timestamp when the thread's archive status was last changed, used for
       * calculating recent activity
       */
     @inline def archiveTimestamp: OffsetDateTime = selectDynamic[OffsetDateTime]("archive_timestamp")
+
+    @inline def withArchiveTimestamp(newValue: OffsetDateTime): ThreadMetadata =
+      objWith(ThreadMetadata, "archive_timestamp", newValue)
 
     /**
       * Whether the thread is locked; when a thread is locked, only users with
@@ -1181,17 +1495,25 @@ object Channel extends DiscordObjectCompanion[Channel] {
       */
     @inline def locked: Boolean = selectDynamic[Boolean]("locked")
 
+    @inline def withLocked(newValue: Boolean): ThreadMetadata = objWith(ThreadMetadata, "locked", newValue)
+
     /**
       * Whether non-moderators can add other non-moderators to a thread; only
       * available on private threads
       */
     @inline def invitable: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("invitable")
 
+    @inline def withInvitable(newValue: UndefOr[Boolean]): ThreadMetadata =
+      objWithUndef(ThreadMetadata, "invitable", newValue)
+
     /**
       * Timestamp when the thread was created; only populated for threads
       * created after 2022-01-09
       */
     @inline def createTimestamp: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("create_timestamp")
+
+    @inline def withCreateTimestamp(newValue: UndefOr[OffsetDateTime]): ThreadMetadata =
+      objWithUndef(ThreadMetadata, "create_timestamp", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => archived,
@@ -1203,7 +1525,8 @@ object Channel extends DiscordObjectCompanion[Channel] {
     )
   }
   object ThreadMetadata extends DiscordObjectCompanion[ThreadMetadata] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMetadata = new ThreadMetadata(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ThreadMetadata =
+      new ThreadMetadata(json, cache)
 
     /**
       * @param archived
@@ -1240,7 +1563,6 @@ object Channel extends DiscordObjectCompanion[Channel] {
       "invitable"            :=? invitable,
       "create_timestamp"     :=? createTimestamp
     )
-
   }
 
   /**
@@ -1252,17 +1574,30 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** ID of the thread */
     @inline def id: UndefOr[ThreadChannelId] = selectDynamic[UndefOr[ThreadChannelId]]("id")
 
+    @inline def withId(newValue: UndefOr[ThreadChannelId]): ThreadMember =
+      objWithUndef(ThreadMember, "id", newValue)
+
     /** ID of the user */
     @inline def userId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("user_id")
+
+    @inline def withUserId(newValue: UndefOr[UserId]): ThreadMember = objWithUndef(ThreadMember, "user_id", newValue)
 
     /** Time the user last joined the thread */
     @inline def joinTimestamp: OffsetDateTime = selectDynamic[OffsetDateTime]("join_timestamp")
 
+    @inline def withJoinTimestamp(newValue: OffsetDateTime): ThreadMember =
+      objWith(ThreadMember, "join_timestamp", newValue)
+
     /** Any user-thread settings, currently only used for notifications */
     @inline def flags: Int = selectDynamic[Int]("flags")
 
+    @inline def withFlags(newValue: Int): ThreadMember = objWith(ThreadMember, "flags", newValue)
+
     /** Additional information about the user */
     @inline def member: UndefOr[GuildMember] = selectDynamic[UndefOr[GuildMember]]("member")
+
+    @inline def withMember(newValue: UndefOr[GuildMember]): ThreadMember =
+      objWithUndef(ThreadMember, "member", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => userId, () => joinTimestamp, () => flags, () => member)
   }
@@ -1294,7 +1629,6 @@ object Channel extends DiscordObjectCompanion[Channel] {
       "flags"          := flags,
       "member"        :=? member
     )
-
   }
 
   /**
@@ -1306,13 +1640,20 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** The id of a guild's custom emoji */
     @inline def emojiId: Option[EmojiId] = selectDynamic[Option[EmojiId]]("emoji_id")
 
+    @inline def withEmojiId(newValue: Option[EmojiId]): DefaultReaction =
+      objWith(DefaultReaction, "emoji_id", newValue)
+
     /** The unicode character of the emoji */
     @inline def emojiName: Option[String] = selectDynamic[Option[String]]("emoji_name")
+
+    @inline def withEmojiName(newValue: Option[String]): DefaultReaction =
+      objWith(DefaultReaction, "emoji_name", newValue)
 
     override def values: Seq[() => Any] = Seq(() => emojiId, () => emojiName)
   }
   object DefaultReaction extends DiscordObjectCompanion[DefaultReaction] {
-    def makeRaw(json: Json, cache: Map[String, Any]): DefaultReaction = new DefaultReaction(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): DefaultReaction =
+      new DefaultReaction(json, cache)
 
     /**
       * @param emojiId
@@ -1322,7 +1663,6 @@ object Channel extends DiscordObjectCompanion[Channel] {
       */
     def make20(emojiId: Option[EmojiId], emojiName: Option[String]): DefaultReaction =
       makeRawFromFields("emoji_id" := emojiId, "emoji_name" := emojiName)
-
   }
 
   /**
@@ -1334,8 +1674,12 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** The id of the tag */
     @inline def id: Snowflake[ForumTag] = selectDynamic[Snowflake[ForumTag]]("id")
 
+    @inline def withId(newValue: Snowflake[ForumTag]): ForumTag = objWith(ForumTag, "id", newValue)
+
     /** The name of the tag (0-20 characters) */
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): ForumTag = objWith(ForumTag, "name", newValue)
 
     /**
       * Whether this tag can only be added to or removed from threads by a
@@ -1343,11 +1687,17 @@ object Channel extends DiscordObjectCompanion[Channel] {
       */
     @inline def moderated: Boolean = selectDynamic[Boolean]("moderated")
 
+    @inline def withModerated(newValue: Boolean): ForumTag = objWith(ForumTag, "moderated", newValue)
+
     /** The id of a guild's custom emoji */
     @inline def emojiId: Option[EmojiId] = selectDynamic[Option[EmojiId]]("emoji_id")
 
+    @inline def withEmojiId(newValue: Option[EmojiId]): ForumTag = objWith(ForumTag, "emoji_id", newValue)
+
     /** The unicode character of the emoji */
     @inline def emojiName: Option[String] = selectDynamic[Option[String]]("emoji_name")
+
+    @inline def withEmojiName(newValue: Option[String]): ForumTag = objWith(ForumTag, "emoji_name", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => moderated, () => emojiId, () => emojiName)
   }
@@ -1380,7 +1730,6 @@ object Channel extends DiscordObjectCompanion[Channel] {
       "emoji_id"   := emojiId,
       "emoji_name" := emojiName
     )
-
   }
 }
 
@@ -1390,72 +1739,120 @@ class Message(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
   /** Id of the message */
   @inline def id: MessageId = selectDynamic[MessageId]("id")
 
+  @inline def withId(newValue: MessageId): Message = objWith(Message, "id", newValue)
+
   /** Id of the channel the message was sent in */
   @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+  @inline def withChannelId(newValue: TextChannelId): Message = objWith(Message, "channel_id", newValue)
 
   /**
     * The author of this message (not guaranteed to be a valid user, see below)
     */
   @inline def author: MessageAuthor = selectDynamic[MessageAuthor]("author")
 
+  @inline def withAuthor(newValue: MessageAuthor): Message = objWith(Message, "author", newValue)
+
   /** Contents of the message */
   @inline def content: String = selectDynamic[String]("content")
+
+  @inline def withContent(newValue: String): Message = objWith(Message, "content", newValue)
 
   /** When this message was sent */
   @inline def timestamp: OffsetDateTime = selectDynamic[OffsetDateTime]("timestamp")
 
+  @inline def withTimestamp(newValue: OffsetDateTime): Message = objWith(Message, "timestamp", newValue)
+
   /** When this message was edited (or null if never) */
   @inline def editedTimestamp: Option[OffsetDateTime] = selectDynamic[Option[OffsetDateTime]]("edited_timestamp")
+
+  @inline def withEditedTimestamp(newValue: Option[OffsetDateTime]): Message =
+    objWith(Message, "edited_timestamp", newValue)
 
   /** Whether this was a TTS message */
   @inline def tts: Boolean = selectDynamic[Boolean]("tts")
 
+  @inline def withTts(newValue: Boolean): Message = objWith(Message, "tts", newValue)
+
   /** Whether this message mentions everyone */
   @inline def mentionEveryone: Boolean = selectDynamic[Boolean]("mention_everyone")
+
+  @inline def withMentionEveryone(newValue: Boolean): Message = objWith(Message, "mention_everyone", newValue)
 
   /** Users specifically mentioned in the message */
   @inline def mentions: Seq[User] = selectDynamic[Seq[User]]("mentions")
 
+  @inline def withMentions(newValue: Seq[User]): Message = objWith(Message, "mentions", newValue)
+
   /** Roles specifically mentioned in this message */
   @inline def mentionRoles: Seq[RoleId] = selectDynamic[Seq[RoleId]]("mention_roles")
+
+  @inline def withMentionRoles(newValue: Seq[RoleId]): Message = objWith(Message, "mention_roles", newValue)
 
   /** Channels specifically mentioned in this message */
   @inline def mentionChannels: UndefOr[Seq[Message.ChannelMention]] =
     selectDynamic[UndefOr[Seq[Message.ChannelMention]]]("mention_channels")
 
+  @inline def withMentionChannels(newValue: UndefOr[Seq[Message.ChannelMention]]): Message =
+    objWithUndef(Message, "mention_channels", newValue)
+
   /** Any attached files */
   @inline def attachments: Seq[Attachment] = selectDynamic[Seq[Attachment]]("attachments")
+
+  @inline def withAttachments(newValue: Seq[Attachment]): Message = objWith(Message, "attachments", newValue)
 
   /** Any embedded content */
   @inline def embeds: Seq[Embed] = selectDynamic[Seq[Embed]]("embeds")
 
+  @inline def withEmbeds(newValue: Seq[Embed]): Message = objWith(Message, "embeds", newValue)
+
   /** Reactions to the message */
   @inline def reactions: UndefOr[Seq[Reaction]] = selectDynamic[UndefOr[Seq[Reaction]]]("reactions")
+
+  @inline def withReactions(newValue: UndefOr[Seq[Reaction]]): Message =
+    objWithUndef(Message, "reactions", newValue)
 
   /** Used for validating a message was sent */
   @inline def nonce: UndefOr[IntOrString] = selectDynamic[UndefOr[IntOrString]]("nonce")
 
+  @inline def withNonce(newValue: UndefOr[IntOrString]): Message = objWithUndef(Message, "nonce", newValue)
+
   /** Whether this message is pinned */
   @inline def pinned: Boolean = selectDynamic[Boolean]("pinned")
+
+  @inline def withPinned(newValue: Boolean): Message = objWith(Message, "pinned", newValue)
 
   /** If the message is generated by a webhook, this is the webhook's id */
   @inline def webhookId: UndefOr[WebhookId] = selectDynamic[UndefOr[WebhookId]]("webhook_id")
 
+  @inline def withWebhookId(newValue: UndefOr[WebhookId]): Message = objWithUndef(Message, "webhook_id", newValue)
+
   /** Type of message */
   @inline def tpe: Message.MessageType = selectDynamic[Message.MessageType]("type")
+
+  @inline def withTpe(newValue: Message.MessageType): Message = objWith(Message, "type", newValue)
 
   /** Sent with Rich Presence-related chat embeds */
   @inline def activity: UndefOr[Message.MessageActivity] = selectDynamic[UndefOr[Message.MessageActivity]]("activity")
 
+  @inline def withActivity(newValue: UndefOr[Message.MessageActivity]): Message =
+    objWithUndef(Message, "activity", newValue)
+
   /** Sent with Rich Presence-related chat embeds */
   @inline def application: UndefOr[Message.MessageApplicationStub] =
     selectDynamic[UndefOr[Message.MessageApplicationStub]]("application")
+
+  @inline def withApplication(newValue: UndefOr[Message.MessageApplicationStub]): Message =
+    objWithUndef(Message, "application", newValue)
 
   /**
     * If the message is an Interaction or application-owned webhook, this is the
     * id of the application
     */
   @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
+
+  @inline def withApplicationId(newValue: UndefOr[ApplicationId]): Message =
+    objWithUndef(Message, "application_id", newValue)
 
   /**
     * Data showing the source of a crosspost, channel follow add, pin, or reply
@@ -1464,15 +1861,27 @@ class Message(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
   @inline def messageReference: UndefOr[MessageReference] =
     selectDynamic[UndefOr[MessageReference]]("message_reference")
 
+  @inline def withMessageReference(newValue: UndefOr[MessageReference]): Message =
+    objWithUndef(Message, "message_reference", newValue)
+
   /** Message flags combined as a bitfield */
   @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
+
+  @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): Message =
+    objWithUndef(Message, "flags", newValue)
 
   /** The message associated with the message_reference */
   @inline def referencedMessage: JsonOption[Message] = selectDynamic[JsonOption[Message]]("referenced_message")
 
+  @inline def withReferencedMessage(newValue: JsonOption[Message]): Message =
+    objWithUndef(Message, "referenced_message", newValue)
+
   /** Sent if the message is a response to an Interaction */
   @inline def interaction: UndefOr[Message.MessageInteractionStub] =
     selectDynamic[UndefOr[Message.MessageInteractionStub]]("interaction")
+
+  @inline def withInteraction(newValue: UndefOr[Message.MessageInteractionStub]): Message =
+    objWithUndef(Message, "interaction", newValue)
 
   /**
     * The thread that was started from this message, includes thread member
@@ -1480,15 +1889,23 @@ class Message(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
     */
   @inline def thread: UndefOr[Channel] = selectDynamic[UndefOr[Channel]]("thread")
 
+  @inline def withThread(newValue: UndefOr[Channel]): Message = objWithUndef(Message, "thread", newValue)
+
   /**
     * Sent if the message contains components like buttons, action rows, or
     * other interactive components
     */
   @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
 
+  @inline def withComponents(newValue: UndefOr[Seq[Component]]): Message =
+    objWithUndef(Message, "components", newValue)
+
   /** Sent if the message contains stickers */
   @inline def stickerItems: UndefOr[Seq[Sticker.StickerItem]] =
     selectDynamic[UndefOr[Seq[Sticker.StickerItem]]]("sticker_items")
+
+  @inline def withStickerItems(newValue: UndefOr[Seq[Sticker.StickerItem]]): Message =
+    objWithUndef(Message, "sticker_items", newValue)
 
   /**
     * A generally increasing integer (there may be gaps or duplicates) that
@@ -1498,12 +1915,17 @@ class Message(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordOb
     */
   @inline def position: UndefOr[Int] = selectDynamic[UndefOr[Int]]("position")
 
+  @inline def withPosition(newValue: UndefOr[Int]): Message = objWithUndef(Message, "position", newValue)
+
   /**
     * Data of the role subscription purchase or renewal that prompted this
     * ROLE_SUBSCRIPTION_PURCHASE message
     */
   @inline def roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] =
     selectDynamic[UndefOr[Message.RoleSubscriptionData]]("role_subscription_data")
+
+  @inline def withRoleSubscriptionData(newValue: UndefOr[Message.RoleSubscriptionData]): Message =
+    objWithUndef(Message, "role_subscription_data", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -1682,8 +2104,12 @@ object Message extends DiscordObjectCompanion[Message] {
     /** Id of the message */
     @inline def id: MessageId = selectDynamic[MessageId]("id")
 
+    @inline def withId(newValue: MessageId): Partial = objWith(Partial, "id", newValue)
+
     /** Id of the channel the message was sent in */
     @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
+
+    @inline def withChannelId(newValue: TextChannelId): Partial = objWith(Partial, "channel_id", newValue)
 
     /**
       * The author of this message (not guaranteed to be a valid user, see
@@ -1691,65 +2117,116 @@ object Message extends DiscordObjectCompanion[Message] {
       */
     @inline def author: UndefOr[MessageAuthor] = selectDynamic[UndefOr[MessageAuthor]]("author")
 
+    @inline def withAuthor(newValue: UndefOr[MessageAuthor]): Partial =
+      objWithUndef(Partial, "author", newValue)
+
     /** Contents of the message */
     @inline def content: UndefOr[String] = selectDynamic[UndefOr[String]]("content")
 
+    @inline def withContent(newValue: UndefOr[String]): Partial = objWithUndef(Partial, "content", newValue)
+
     /** When this message was sent */
     @inline def timestamp: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("timestamp")
+
+    @inline def withTimestamp(newValue: UndefOr[OffsetDateTime]): Partial =
+      objWithUndef(Partial, "timestamp", newValue)
 
     /** When this message was edited (or null if never) */
     @inline def editedTimestamp: JsonOption[OffsetDateTime] =
       selectDynamic[JsonOption[OffsetDateTime]]("edited_timestamp")
 
+    @inline def withEditedTimestamp(newValue: JsonOption[OffsetDateTime]): Partial =
+      objWithUndef(Partial, "edited_timestamp", newValue)
+
     /** Whether this was a TTS message */
     @inline def tts: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("tts")
+
+    @inline def withTts(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "tts", newValue)
 
     /** Whether this message mentions everyone */
     @inline def mentionEveryone: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mention_everyone")
 
+    @inline def withMentionEveryone(newValue: UndefOr[Boolean]): Partial =
+      objWithUndef(Partial, "mention_everyone", newValue)
+
     /** Users specifically mentioned in the message */
     @inline def mentions: UndefOr[Seq[User]] = selectDynamic[UndefOr[Seq[User]]]("mentions")
 
+    @inline def withMentions(newValue: UndefOr[Seq[User]]): Partial = objWithUndef(Partial, "mentions", newValue)
+
     /** Roles specifically mentioned in this message */
     @inline def mentionRoles: UndefOr[Seq[RoleId]] = selectDynamic[UndefOr[Seq[RoleId]]]("mention_roles")
+
+    @inline def withMentionRoles(newValue: UndefOr[Seq[RoleId]]): Partial =
+      objWithUndef(Partial, "mention_roles", newValue)
 
     /** Channels specifically mentioned in this message */
     @inline def mentionChannels: UndefOr[Seq[Message.ChannelMention]] =
       selectDynamic[UndefOr[Seq[Message.ChannelMention]]]("mention_channels")
 
+    @inline def withMentionChannels(newValue: UndefOr[Seq[Message.ChannelMention]]): Partial =
+      objWithUndef(Partial, "mention_channels", newValue)
+
     /** Any attached files */
     @inline def attachments: UndefOr[Seq[Attachment]] = selectDynamic[UndefOr[Seq[Attachment]]]("attachments")
+
+    @inline def withAttachments(newValue: UndefOr[Seq[Attachment]]): Partial =
+      objWithUndef(Partial, "attachments", newValue)
 
     /** Any embedded content */
     @inline def embeds: UndefOr[Seq[Embed]] = selectDynamic[UndefOr[Seq[Embed]]]("embeds")
 
+    @inline def withEmbeds(newValue: UndefOr[Seq[Embed]]): Partial = objWithUndef(Partial, "embeds", newValue)
+
     /** Reactions to the message */
     @inline def reactions: UndefOr[Seq[Reaction]] = selectDynamic[UndefOr[Seq[Reaction]]]("reactions")
+
+    @inline def withReactions(newValue: UndefOr[Seq[Reaction]]): Partial =
+      objWithUndef(Partial, "reactions", newValue)
 
     /** Used for validating a message was sent */
     @inline def nonce: UndefOr[IntOrString] = selectDynamic[UndefOr[IntOrString]]("nonce")
 
+    @inline def withNonce(newValue: UndefOr[IntOrString]): Partial = objWithUndef(Partial, "nonce", newValue)
+
     /** Whether this message is pinned */
     @inline def pinned: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("pinned")
+
+    @inline def withPinned(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "pinned", newValue)
 
     /** If the message is generated by a webhook, this is the webhook's id */
     @inline def webhookId: UndefOr[WebhookId] = selectDynamic[UndefOr[WebhookId]]("webhook_id")
 
+    @inline def withWebhookId(newValue: UndefOr[WebhookId]): Partial =
+      objWithUndef(Partial, "webhook_id", newValue)
+
     /** Type of message */
     @inline def tpe: UndefOr[Message.MessageType] = selectDynamic[UndefOr[Message.MessageType]]("type")
+
+    @inline def withTpe(newValue: UndefOr[Message.MessageType]): Partial =
+      objWithUndef(Partial, "type", newValue)
 
     /** Sent with Rich Presence-related chat embeds */
     @inline def activity: UndefOr[Message.MessageActivity] = selectDynamic[UndefOr[Message.MessageActivity]]("activity")
 
+    @inline def withActivity(newValue: UndefOr[Message.MessageActivity]): Partial =
+      objWithUndef(Partial, "activity", newValue)
+
     /** Sent with Rich Presence-related chat embeds */
     @inline def application: UndefOr[Message.MessageApplicationStub] =
       selectDynamic[UndefOr[Message.MessageApplicationStub]]("application")
+
+    @inline def withApplication(newValue: UndefOr[Message.MessageApplicationStub]): Partial =
+      objWithUndef(Partial, "application", newValue)
 
     /**
       * If the message is an Interaction or application-owned webhook, this is
       * the id of the application
       */
     @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
+
+    @inline def withApplicationId(newValue: UndefOr[ApplicationId]): Partial =
+      objWithUndef(Partial, "application_id", newValue)
 
     /**
       * Data showing the source of a crosspost, channel follow add, pin, or
@@ -1758,15 +2235,27 @@ object Message extends DiscordObjectCompanion[Message] {
     @inline def messageReference: UndefOr[MessageReference] =
       selectDynamic[UndefOr[MessageReference]]("message_reference")
 
+    @inline def withMessageReference(newValue: UndefOr[MessageReference]): Partial =
+      objWithUndef(Partial, "message_reference", newValue)
+
     /** Message flags combined as a bitfield */
     @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): Partial =
+      objWithUndef(Partial, "flags", newValue)
 
     /** The message associated with the message_reference */
     @inline def referencedMessage: JsonOption[Message] = selectDynamic[JsonOption[Message]]("referenced_message")
 
+    @inline def withReferencedMessage(newValue: JsonOption[Message]): Partial =
+      objWithUndef(Partial, "referenced_message", newValue)
+
     /** Sent if the message is a response to an Interaction */
     @inline def interaction: UndefOr[Message.MessageInteractionStub] =
       selectDynamic[UndefOr[Message.MessageInteractionStub]]("interaction")
+
+    @inline def withInteraction(newValue: UndefOr[Message.MessageInteractionStub]): Partial =
+      objWithUndef(Partial, "interaction", newValue)
 
     /**
       * The thread that was started from this message, includes thread member
@@ -1774,15 +2263,23 @@ object Message extends DiscordObjectCompanion[Message] {
       */
     @inline def thread: UndefOr[Channel] = selectDynamic[UndefOr[Channel]]("thread")
 
+    @inline def withThread(newValue: UndefOr[Channel]): Partial = objWithUndef(Partial, "thread", newValue)
+
     /**
       * Sent if the message contains components like buttons, action rows, or
       * other interactive components
       */
     @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
 
+    @inline def withComponents(newValue: UndefOr[Seq[Component]]): Partial =
+      objWithUndef(Partial, "components", newValue)
+
     /** Sent if the message contains stickers */
     @inline def stickerItems: UndefOr[Seq[Sticker.StickerItem]] =
       selectDynamic[UndefOr[Seq[Sticker.StickerItem]]]("sticker_items")
+
+    @inline def withStickerItems(newValue: UndefOr[Seq[Sticker.StickerItem]]): Partial =
+      objWithUndef(Partial, "sticker_items", newValue)
 
     /**
       * A generally increasing integer (there may be gaps or duplicates) that
@@ -1792,12 +2289,17 @@ object Message extends DiscordObjectCompanion[Message] {
       */
     @inline def position: UndefOr[Int] = selectDynamic[UndefOr[Int]]("position")
 
+    @inline def withPosition(newValue: UndefOr[Int]): Partial = objWithUndef(Partial, "position", newValue)
+
     /**
       * Data of the role subscription purchase or renewal that prompted this
       * ROLE_SUBSCRIPTION_PURCHASE message
       */
     @inline def roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] =
       selectDynamic[UndefOr[Message.RoleSubscriptionData]]("role_subscription_data")
+
+    @inline def withRoleSubscriptionData(newValue: UndefOr[Message.RoleSubscriptionData]): Partial =
+      objWithUndef(Partial, "role_subscription_data", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -1972,42 +2474,71 @@ object Message extends DiscordObjectCompanion[Message] {
 
     sealed case class MessageType private (value: Int) extends DiscordEnum[Int]
     object MessageType extends DiscordEnumCompanion[Int, MessageType] {
+      val DEFAULT: MessageType = MessageType(0)
 
-      val DEFAULT: MessageType                                      = MessageType(0)
-      val RECIPIENT_ADD: MessageType                                = MessageType(1)
-      val RECIPIENT_REMOVE: MessageType                             = MessageType(2)
-      val CALL: MessageType                                         = MessageType(3)
-      val CHANNEL_NAME_CHANGE: MessageType                          = MessageType(4)
-      val CHANNEL_ICON_CHANGE: MessageType                          = MessageType(5)
-      val CHANNEL_PINNED_MESSAGE: MessageType                       = MessageType(6)
-      val USER_JOIN: MessageType                                    = MessageType(7)
-      val GUILD_BOOST: MessageType                                  = MessageType(8)
-      val GUILD_BOOST_TIER_1: MessageType                           = MessageType(9)
-      val GUILD_BOOST_TIER_2: MessageType                           = MessageType(10)
-      val GUILD_BOOST_TIER_3: MessageType                           = MessageType(11)
-      val CHANNEL_FOLLOW_ADD: MessageType                           = MessageType(12)
-      val GUILD_DISCOVERY_DISQUALIFIED: MessageType                 = MessageType(14)
-      val GUILD_DISCOVERY_REQUALIFIED: MessageType                  = MessageType(15)
+      val RECIPIENT_ADD: MessageType = MessageType(1)
+
+      val RECIPIENT_REMOVE: MessageType = MessageType(2)
+
+      val CALL: MessageType = MessageType(3)
+
+      val CHANNEL_NAME_CHANGE: MessageType = MessageType(4)
+
+      val CHANNEL_ICON_CHANGE: MessageType = MessageType(5)
+
+      val CHANNEL_PINNED_MESSAGE: MessageType = MessageType(6)
+
+      val USER_JOIN: MessageType = MessageType(7)
+
+      val GUILD_BOOST: MessageType = MessageType(8)
+
+      val GUILD_BOOST_TIER_1: MessageType = MessageType(9)
+
+      val GUILD_BOOST_TIER_2: MessageType = MessageType(10)
+
+      val GUILD_BOOST_TIER_3: MessageType = MessageType(11)
+
+      val CHANNEL_FOLLOW_ADD: MessageType = MessageType(12)
+
+      val GUILD_DISCOVERY_DISQUALIFIED: MessageType = MessageType(14)
+
+      val GUILD_DISCOVERY_REQUALIFIED: MessageType = MessageType(15)
+
       val GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING: MessageType = MessageType(16)
-      val GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: MessageType   = MessageType(17)
-      val THREAD_CREATED: MessageType                               = MessageType(18)
-      val REPLY: MessageType                                        = MessageType(19)
-      val CHAT_INPUT_COMMAND: MessageType                           = MessageType(20)
-      val THREAD_STARTER_MESSAGE: MessageType                       = MessageType(21)
-      val GUILD_INVITE_REMINDER: MessageType                        = MessageType(22)
-      val CONTEXT_MENU_COMMAND: MessageType                         = MessageType(23)
-      val AUTO_MODERATION_ACTION: MessageType                       = MessageType(24)
-      val ROLE_SUBSCRIPTION_PURCHASE: MessageType                   = MessageType(25)
-      val INTERACTION_PREMIUM_UPSELL: MessageType                   = MessageType(26)
-      val STAGE_START: MessageType                                  = MessageType(27)
-      val STAGE_END: MessageType                                    = MessageType(28)
-      val STAGE_SPEAKER: MessageType                                = MessageType(29)
-      val STAGE_TOPIC: MessageType                                  = MessageType(31)
-      val GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: MessageType       = MessageType(32)
+
+      val GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: MessageType = MessageType(17)
+
+      val THREAD_CREATED: MessageType = MessageType(18)
+
+      val REPLY: MessageType = MessageType(19)
+
+      val CHAT_INPUT_COMMAND: MessageType = MessageType(20)
+
+      val THREAD_STARTER_MESSAGE: MessageType = MessageType(21)
+
+      val GUILD_INVITE_REMINDER: MessageType = MessageType(22)
+
+      val CONTEXT_MENU_COMMAND: MessageType = MessageType(23)
+
+      val AUTO_MODERATION_ACTION: MessageType = MessageType(24)
+
+      val ROLE_SUBSCRIPTION_PURCHASE: MessageType = MessageType(25)
+
+      val INTERACTION_PREMIUM_UPSELL: MessageType = MessageType(26)
+
+      val STAGE_START: MessageType = MessageType(27)
+
+      val STAGE_END: MessageType = MessageType(28)
+
+      val STAGE_SPEAKER: MessageType = MessageType(29)
+
+      val STAGE_TOPIC: MessageType = MessageType(31)
+
+      val GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: MessageType = MessageType(32)
 
       def unknown(value: Int): MessageType = new MessageType(value)
 
-      def values: Seq[MessageType] = Seq(
+      val values: Seq[MessageType] = Seq(
         DEFAULT,
         RECIPIENT_ADD,
         RECIPIENT_REMOVE,
@@ -2042,6 +2573,7 @@ object Message extends DiscordObjectCompanion[Message] {
       )
 
       implicit class MessageTypeBitFieldOps(private val here: MessageType) extends AnyVal {
+
         def toInt: Int = here.value
 
         def ++(there: MessageType): MessageType = MessageType(here.value | there.value)
@@ -2057,10 +2589,10 @@ object Message extends DiscordObjectCompanion[Message] {
       override def values: Seq[() => Any] = Seq()
     }
     object MessageInteractionStub extends DiscordObjectCompanion[MessageInteractionStub] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageInteractionStub = new MessageInteractionStub(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): MessageInteractionStub =
+        new MessageInteractionStub(json, cache)
 
       def make20(): MessageInteractionStub = makeRawFromFields()
-
     }
 
     class MessageApplicationStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2068,10 +2600,10 @@ object Message extends DiscordObjectCompanion[Message] {
       override def values: Seq[() => Any] = Seq()
     }
     object MessageApplicationStub extends DiscordObjectCompanion[MessageApplicationStub] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageApplicationStub = new MessageApplicationStub(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): MessageApplicationStub =
+        new MessageApplicationStub(json, cache)
 
       def make20(): MessageApplicationStub = makeRawFromFields()
-
     }
 
     class ChannelMention(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2079,19 +2611,30 @@ object Message extends DiscordObjectCompanion[Message] {
       /** Id of the channel */
       @inline def id: TextGuildChannelId = selectDynamic[TextGuildChannelId]("id")
 
+      @inline def withId(newValue: TextGuildChannelId): ChannelMention =
+        objWith(ChannelMention, "id", newValue)
+
       /** Id of the guild containing the channel */
       @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+      @inline def withGuildId(newValue: GuildId): ChannelMention = objWith(ChannelMention, "guild_id", newValue)
 
       /** The type of channel */
       @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
 
+      @inline def withTpe(newValue: Channel.ChannelType): ChannelMention =
+        objWith(ChannelMention, "type", newValue)
+
       /** The name of the channel */
       @inline def name: String = selectDynamic[String]("name")
+
+      @inline def withName(newValue: String): ChannelMention = objWith(ChannelMention, "name", newValue)
 
       override def values: Seq[() => Any] = Seq(() => id, () => guildId, () => tpe, () => name)
     }
     object ChannelMention extends DiscordObjectCompanion[ChannelMention] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ChannelMention = new ChannelMention(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): ChannelMention =
+        new ChannelMention(json, cache)
 
       /**
         * @param id
@@ -2103,9 +2646,12 @@ object Message extends DiscordObjectCompanion[Message] {
         * @param name
         *   The name of the channel
         */
-      def make20(id: TextGuildChannelId, guildId: GuildId, tpe: Channel.ChannelType, name: String): ChannelMention =
-        makeRawFromFields("id" := id, "guild_id" := guildId, "type" := tpe, "name" := name)
-
+      def make20(
+          id: TextGuildChannelId,
+          guildId: GuildId,
+          tpe: Channel.ChannelType,
+          name: String
+      ): ChannelMention = makeRawFromFields("id" := id, "guild_id" := guildId, "type" := tpe, "name" := name)
     }
 
     class MessageActivity(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2113,13 +2659,20 @@ object Message extends DiscordObjectCompanion[Message] {
       /** Type of message activity */
       @inline def tpe: MessageActivity.MessageActivityType = selectDynamic[MessageActivity.MessageActivityType]("type")
 
+      @inline def withTpe(newValue: MessageActivity.MessageActivityType): MessageActivity =
+        objWith(MessageActivity, "type", newValue)
+
       /** party_id from a Rich Presence event */
       @inline def partyId: UndefOr[String] = selectDynamic[UndefOr[String]]("party_id")
+
+      @inline def withPartyId(newValue: UndefOr[String]): MessageActivity =
+        objWithUndef(MessageActivity, "party_id", newValue)
 
       override def values: Seq[() => Any] = Seq(() => tpe, () => partyId)
     }
     object MessageActivity extends DiscordObjectCompanion[MessageActivity] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageActivity = new MessageActivity(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): MessageActivity =
+        new MessageActivity(json, cache)
 
       /**
         * @param tpe
@@ -2134,16 +2687,17 @@ object Message extends DiscordObjectCompanion[Message] {
 
       sealed case class MessageActivityType private (value: Int) extends DiscordEnum[Int]
       object MessageActivityType extends DiscordEnumCompanion[Int, MessageActivityType] {
+        val JOIN: MessageActivityType = MessageActivityType(1)
 
-        val JOIN: MessageActivityType         = MessageActivityType(1)
-        val SPECTATE: MessageActivityType     = MessageActivityType(2)
-        val LISTEN: MessageActivityType       = MessageActivityType(3)
+        val SPECTATE: MessageActivityType = MessageActivityType(2)
+
+        val LISTEN: MessageActivityType = MessageActivityType(3)
+
         val JOIN_REQUEST: MessageActivityType = MessageActivityType(5)
 
         def unknown(value: Int): MessageActivityType = new MessageActivityType(value)
 
-        def values: Seq[MessageActivityType] = Seq(JOIN, SPECTATE, LISTEN, JOIN_REQUEST)
-
+        val values: Seq[MessageActivityType] = Seq(JOIN, SPECTATE, LISTEN, JOIN_REQUEST)
       }
     }
 
@@ -2201,7 +2755,7 @@ object Message extends DiscordObjectCompanion[Message] {
 
       def unknown(value: Int): MessageFlags = new MessageFlags(value)
 
-      def values: Seq[MessageFlags] = Seq(
+      val values: Seq[MessageFlags] = Seq(
         CROSSPOSTED,
         IS_CROSSPOST,
         SUPPRESS_EMBEDS,
@@ -2216,6 +2770,7 @@ object Message extends DiscordObjectCompanion[Message] {
       )
 
       implicit class MessageFlagsBitFieldOps(private val here: MessageFlags) extends AnyVal {
+
         def toInt: Int = here.value
 
         def ++(there: MessageFlags): MessageFlags = MessageFlags(here.value | there.value)
@@ -2231,24 +2786,37 @@ object Message extends DiscordObjectCompanion[Message] {
       /** The id of the sku and listing that the user is subscribed to */
       @inline def roleSubscriptionListingId: RawSnowflake = selectDynamic[RawSnowflake]("role_subscription_listing_id")
 
+      @inline def withRoleSubscriptionListingId(newValue: RawSnowflake): RoleSubscriptionData =
+        objWith(RoleSubscriptionData, "role_subscription_listing_id", newValue)
+
       /** The name of the tier that the user is subscribed to */
       @inline def tierName: String = selectDynamic[String]("tier_name")
+
+      @inline def withTierName(newValue: String): RoleSubscriptionData =
+        objWith(RoleSubscriptionData, "tier_name", newValue)
 
       /**
         * The cumulative number of months that the user has been subscribed for
         */
       @inline def totalMonthsSubscribed: Int = selectDynamic[Int]("total_months_subscribed")
 
+      @inline def withTotalMonthsSubscribed(newValue: Int): RoleSubscriptionData =
+        objWith(RoleSubscriptionData, "total_months_subscribed", newValue)
+
       /**
         * Whether this notification is for a renewal rather than a new purchase
         */
       @inline def isRenewal: Boolean = selectDynamic[Boolean]("is_renewal")
 
+      @inline def withIsRenewal(newValue: Boolean): RoleSubscriptionData =
+        objWith(RoleSubscriptionData, "is_renewal", newValue)
+
       override def values: Seq[() => Any] =
         Seq(() => roleSubscriptionListingId, () => tierName, () => totalMonthsSubscribed, () => isRenewal)
     }
     object RoleSubscriptionData extends DiscordObjectCompanion[RoleSubscriptionData] {
-      def makeRaw(json: Json, cache: Map[String, Any]): RoleSubscriptionData = new RoleSubscriptionData(json, cache)
+      def makeRaw(json: Json, cache: Map[String, Any]): RoleSubscriptionData =
+        new RoleSubscriptionData(json, cache)
 
       /**
         * @param roleSubscriptionListingId
@@ -2273,48 +2841,76 @@ object Message extends DiscordObjectCompanion[Message] {
         "total_months_subscribed"      := totalMonthsSubscribed,
         "is_renewal"                   := isRenewal
       )
-
     }
   }
 
   sealed case class MessageType private (value: Int) extends DiscordEnum[Int]
   object MessageType extends DiscordEnumCompanion[Int, MessageType] {
+    val DEFAULT: MessageType = MessageType(0)
 
-    val DEFAULT: MessageType                                      = MessageType(0)
-    val RECIPIENT_ADD: MessageType                                = MessageType(1)
-    val RECIPIENT_REMOVE: MessageType                             = MessageType(2)
-    val CALL: MessageType                                         = MessageType(3)
-    val CHANNEL_NAME_CHANGE: MessageType                          = MessageType(4)
-    val CHANNEL_ICON_CHANGE: MessageType                          = MessageType(5)
-    val CHANNEL_PINNED_MESSAGE: MessageType                       = MessageType(6)
-    val USER_JOIN: MessageType                                    = MessageType(7)
-    val GUILD_BOOST: MessageType                                  = MessageType(8)
-    val GUILD_BOOST_TIER_1: MessageType                           = MessageType(9)
-    val GUILD_BOOST_TIER_2: MessageType                           = MessageType(10)
-    val GUILD_BOOST_TIER_3: MessageType                           = MessageType(11)
-    val CHANNEL_FOLLOW_ADD: MessageType                           = MessageType(12)
-    val GUILD_DISCOVERY_DISQUALIFIED: MessageType                 = MessageType(14)
-    val GUILD_DISCOVERY_REQUALIFIED: MessageType                  = MessageType(15)
+    val RECIPIENT_ADD: MessageType = MessageType(1)
+
+    val RECIPIENT_REMOVE: MessageType = MessageType(2)
+
+    val CALL: MessageType = MessageType(3)
+
+    val CHANNEL_NAME_CHANGE: MessageType = MessageType(4)
+
+    val CHANNEL_ICON_CHANGE: MessageType = MessageType(5)
+
+    val CHANNEL_PINNED_MESSAGE: MessageType = MessageType(6)
+
+    val USER_JOIN: MessageType = MessageType(7)
+
+    val GUILD_BOOST: MessageType = MessageType(8)
+
+    val GUILD_BOOST_TIER_1: MessageType = MessageType(9)
+
+    val GUILD_BOOST_TIER_2: MessageType = MessageType(10)
+
+    val GUILD_BOOST_TIER_3: MessageType = MessageType(11)
+
+    val CHANNEL_FOLLOW_ADD: MessageType = MessageType(12)
+
+    val GUILD_DISCOVERY_DISQUALIFIED: MessageType = MessageType(14)
+
+    val GUILD_DISCOVERY_REQUALIFIED: MessageType = MessageType(15)
+
     val GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING: MessageType = MessageType(16)
-    val GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: MessageType   = MessageType(17)
-    val THREAD_CREATED: MessageType                               = MessageType(18)
-    val REPLY: MessageType                                        = MessageType(19)
-    val CHAT_INPUT_COMMAND: MessageType                           = MessageType(20)
-    val THREAD_STARTER_MESSAGE: MessageType                       = MessageType(21)
-    val GUILD_INVITE_REMINDER: MessageType                        = MessageType(22)
-    val CONTEXT_MENU_COMMAND: MessageType                         = MessageType(23)
-    val AUTO_MODERATION_ACTION: MessageType                       = MessageType(24)
-    val ROLE_SUBSCRIPTION_PURCHASE: MessageType                   = MessageType(25)
-    val INTERACTION_PREMIUM_UPSELL: MessageType                   = MessageType(26)
-    val STAGE_START: MessageType                                  = MessageType(27)
-    val STAGE_END: MessageType                                    = MessageType(28)
-    val STAGE_SPEAKER: MessageType                                = MessageType(29)
-    val STAGE_TOPIC: MessageType                                  = MessageType(31)
-    val GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: MessageType       = MessageType(32)
+
+    val GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: MessageType = MessageType(17)
+
+    val THREAD_CREATED: MessageType = MessageType(18)
+
+    val REPLY: MessageType = MessageType(19)
+
+    val CHAT_INPUT_COMMAND: MessageType = MessageType(20)
+
+    val THREAD_STARTER_MESSAGE: MessageType = MessageType(21)
+
+    val GUILD_INVITE_REMINDER: MessageType = MessageType(22)
+
+    val CONTEXT_MENU_COMMAND: MessageType = MessageType(23)
+
+    val AUTO_MODERATION_ACTION: MessageType = MessageType(24)
+
+    val ROLE_SUBSCRIPTION_PURCHASE: MessageType = MessageType(25)
+
+    val INTERACTION_PREMIUM_UPSELL: MessageType = MessageType(26)
+
+    val STAGE_START: MessageType = MessageType(27)
+
+    val STAGE_END: MessageType = MessageType(28)
+
+    val STAGE_SPEAKER: MessageType = MessageType(29)
+
+    val STAGE_TOPIC: MessageType = MessageType(31)
+
+    val GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: MessageType = MessageType(32)
 
     def unknown(value: Int): MessageType = new MessageType(value)
 
-    def values: Seq[MessageType] = Seq(
+    val values: Seq[MessageType] = Seq(
       DEFAULT,
       RECIPIENT_ADD,
       RECIPIENT_REMOVE,
@@ -2349,6 +2945,7 @@ object Message extends DiscordObjectCompanion[Message] {
     )
 
     implicit class MessageTypeBitFieldOps(private val here: MessageType) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: MessageType): MessageType = MessageType(here.value | there.value)
@@ -2364,10 +2961,10 @@ object Message extends DiscordObjectCompanion[Message] {
     override def values: Seq[() => Any] = Seq()
   }
   object MessageInteractionStub extends DiscordObjectCompanion[MessageInteractionStub] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageInteractionStub = new MessageInteractionStub(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageInteractionStub =
+      new MessageInteractionStub(json, cache)
 
     def make20(): MessageInteractionStub = makeRawFromFields()
-
   }
 
   class MessageApplicationStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2375,10 +2972,10 @@ object Message extends DiscordObjectCompanion[Message] {
     override def values: Seq[() => Any] = Seq()
   }
   object MessageApplicationStub extends DiscordObjectCompanion[MessageApplicationStub] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageApplicationStub = new MessageApplicationStub(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageApplicationStub =
+      new MessageApplicationStub(json, cache)
 
     def make20(): MessageApplicationStub = makeRawFromFields()
-
   }
 
   class ChannelMention(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2386,19 +2983,30 @@ object Message extends DiscordObjectCompanion[Message] {
     /** Id of the channel */
     @inline def id: TextGuildChannelId = selectDynamic[TextGuildChannelId]("id")
 
+    @inline def withId(newValue: TextGuildChannelId): ChannelMention =
+      objWith(ChannelMention, "id", newValue)
+
     /** Id of the guild containing the channel */
     @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+    @inline def withGuildId(newValue: GuildId): ChannelMention = objWith(ChannelMention, "guild_id", newValue)
 
     /** The type of channel */
     @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
 
+    @inline def withTpe(newValue: Channel.ChannelType): ChannelMention =
+      objWith(ChannelMention, "type", newValue)
+
     /** The name of the channel */
     @inline def name: String = selectDynamic[String]("name")
+
+    @inline def withName(newValue: String): ChannelMention = objWith(ChannelMention, "name", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => guildId, () => tpe, () => name)
   }
   object ChannelMention extends DiscordObjectCompanion[ChannelMention] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ChannelMention = new ChannelMention(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ChannelMention =
+      new ChannelMention(json, cache)
 
     /**
       * @param id
@@ -2410,9 +3018,12 @@ object Message extends DiscordObjectCompanion[Message] {
       * @param name
       *   The name of the channel
       */
-    def make20(id: TextGuildChannelId, guildId: GuildId, tpe: Channel.ChannelType, name: String): ChannelMention =
-      makeRawFromFields("id" := id, "guild_id" := guildId, "type" := tpe, "name" := name)
-
+    def make20(
+        id: TextGuildChannelId,
+        guildId: GuildId,
+        tpe: Channel.ChannelType,
+        name: String
+    ): ChannelMention = makeRawFromFields("id" := id, "guild_id" := guildId, "type" := tpe, "name" := name)
   }
 
   class MessageActivity(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2420,13 +3031,20 @@ object Message extends DiscordObjectCompanion[Message] {
     /** Type of message activity */
     @inline def tpe: MessageActivity.MessageActivityType = selectDynamic[MessageActivity.MessageActivityType]("type")
 
+    @inline def withTpe(newValue: MessageActivity.MessageActivityType): MessageActivity =
+      objWith(MessageActivity, "type", newValue)
+
     /** party_id from a Rich Presence event */
     @inline def partyId: UndefOr[String] = selectDynamic[UndefOr[String]]("party_id")
+
+    @inline def withPartyId(newValue: UndefOr[String]): MessageActivity =
+      objWithUndef(MessageActivity, "party_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => tpe, () => partyId)
   }
   object MessageActivity extends DiscordObjectCompanion[MessageActivity] {
-    def makeRaw(json: Json, cache: Map[String, Any]): MessageActivity = new MessageActivity(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): MessageActivity =
+      new MessageActivity(json, cache)
 
     /**
       * @param tpe
@@ -2434,21 +3052,24 @@ object Message extends DiscordObjectCompanion[Message] {
       * @param partyId
       *   party_id from a Rich Presence event
       */
-    def make20(tpe: MessageActivity.MessageActivityType, partyId: UndefOr[String] = UndefOrUndefined): MessageActivity =
-      makeRawFromFields("type" := tpe, "party_id" :=? partyId)
+    def make20(
+        tpe: MessageActivity.MessageActivityType,
+        partyId: UndefOr[String] = UndefOrUndefined
+    ): MessageActivity = makeRawFromFields("type" := tpe, "party_id" :=? partyId)
 
     sealed case class MessageActivityType private (value: Int) extends DiscordEnum[Int]
     object MessageActivityType extends DiscordEnumCompanion[Int, MessageActivityType] {
+      val JOIN: MessageActivityType = MessageActivityType(1)
 
-      val JOIN: MessageActivityType         = MessageActivityType(1)
-      val SPECTATE: MessageActivityType     = MessageActivityType(2)
-      val LISTEN: MessageActivityType       = MessageActivityType(3)
+      val SPECTATE: MessageActivityType = MessageActivityType(2)
+
+      val LISTEN: MessageActivityType = MessageActivityType(3)
+
       val JOIN_REQUEST: MessageActivityType = MessageActivityType(5)
 
       def unknown(value: Int): MessageActivityType = new MessageActivityType(value)
 
-      def values: Seq[MessageActivityType] = Seq(JOIN, SPECTATE, LISTEN, JOIN_REQUEST)
-
+      val values: Seq[MessageActivityType] = Seq(JOIN, SPECTATE, LISTEN, JOIN_REQUEST)
     }
   }
 
@@ -2504,7 +3125,7 @@ object Message extends DiscordObjectCompanion[Message] {
 
     def unknown(value: Int): MessageFlags = new MessageFlags(value)
 
-    def values: Seq[MessageFlags] = Seq(
+    val values: Seq[MessageFlags] = Seq(
       CROSSPOSTED,
       IS_CROSSPOST,
       SUPPRESS_EMBEDS,
@@ -2519,6 +3140,7 @@ object Message extends DiscordObjectCompanion[Message] {
     )
 
     implicit class MessageFlagsBitFieldOps(private val here: MessageFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: MessageFlags): MessageFlags = MessageFlags(here.value | there.value)
@@ -2534,20 +3156,33 @@ object Message extends DiscordObjectCompanion[Message] {
     /** The id of the sku and listing that the user is subscribed to */
     @inline def roleSubscriptionListingId: RawSnowflake = selectDynamic[RawSnowflake]("role_subscription_listing_id")
 
+    @inline def withRoleSubscriptionListingId(newValue: RawSnowflake): RoleSubscriptionData =
+      objWith(RoleSubscriptionData, "role_subscription_listing_id", newValue)
+
     /** The name of the tier that the user is subscribed to */
     @inline def tierName: String = selectDynamic[String]("tier_name")
+
+    @inline def withTierName(newValue: String): RoleSubscriptionData =
+      objWith(RoleSubscriptionData, "tier_name", newValue)
 
     /** The cumulative number of months that the user has been subscribed for */
     @inline def totalMonthsSubscribed: Int = selectDynamic[Int]("total_months_subscribed")
 
+    @inline def withTotalMonthsSubscribed(newValue: Int): RoleSubscriptionData =
+      objWith(RoleSubscriptionData, "total_months_subscribed", newValue)
+
     /** Whether this notification is for a renewal rather than a new purchase */
     @inline def isRenewal: Boolean = selectDynamic[Boolean]("is_renewal")
+
+    @inline def withIsRenewal(newValue: Boolean): RoleSubscriptionData =
+      objWith(RoleSubscriptionData, "is_renewal", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => roleSubscriptionListingId, () => tierName, () => totalMonthsSubscribed, () => isRenewal)
   }
   object RoleSubscriptionData extends DiscordObjectCompanion[RoleSubscriptionData] {
-    def makeRaw(json: Json, cache: Map[String, Any]): RoleSubscriptionData = new RoleSubscriptionData(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): RoleSubscriptionData =
+      new RoleSubscriptionData(json, cache)
 
     /**
       * @param roleSubscriptionListingId
@@ -2570,7 +3205,6 @@ object Message extends DiscordObjectCompanion[Message] {
       "total_months_subscribed"      := totalMonthsSubscribed,
       "is_renewal"                   := isRenewal
     )
-
   }
 }
 
@@ -2579,11 +3213,20 @@ class MessageReference(json: Json, cache: Map[String, Any] = Map.empty) extends 
   /** Id of the originating message */
   @inline def messageId: UndefOr[MessageId] = selectDynamic[UndefOr[MessageId]]("message_id")
 
+  @inline def withMessageId(newValue: UndefOr[MessageId]): MessageReference =
+    objWithUndef(MessageReference, "message_id", newValue)
+
   /** Id of the originating message's channel */
   @inline def channelId: UndefOr[TextChannelId] = selectDynamic[UndefOr[TextChannelId]]("channel_id")
 
+  @inline def withChannelId(newValue: UndefOr[TextChannelId]): MessageReference =
+    objWithUndef(MessageReference, "channel_id", newValue)
+
   /** Id of the originating message's guild */
   @inline def guildId: UndefOr[GuildId] = selectDynamic[UndefOr[GuildId]]("guild_id")
+
+  @inline def withGuildId(newValue: UndefOr[GuildId]): MessageReference =
+    objWithUndef(MessageReference, "guild_id", newValue)
 
   /**
     * When sending, whether to error if the referenced message doesn't exist
@@ -2591,10 +3234,14 @@ class MessageReference(json: Json, cache: Map[String, Any] = Map.empty) extends 
     */
   @inline def failIfNotExists: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("fail_if_not_exists")
 
+  @inline def withFailIfNotExists(newValue: UndefOr[Boolean]): MessageReference =
+    objWithUndef(MessageReference, "fail_if_not_exists", newValue)
+
   override def values: Seq[() => Any] = Seq(() => messageId, () => channelId, () => guildId, () => failIfNotExists)
 }
 object MessageReference extends DiscordObjectCompanion[MessageReference] {
-  def makeRaw(json: Json, cache: Map[String, Any]): MessageReference = new MessageReference(json, cache)
+  def makeRaw(json: Json, cache: Map[String, Any]): MessageReference =
+    new MessageReference(json, cache)
 
   /**
     * @param messageId
@@ -2618,7 +3265,6 @@ object MessageReference extends DiscordObjectCompanion[MessageReference] {
     "guild_id"           :=? guildId,
     "fail_if_not_exists" :=? failIfNotExists
   )
-
 }
 
 class FollowedChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2626,8 +3272,13 @@ class FollowedChannel(json: Json, cache: Map[String, Any] = Map.empty) extends D
   /** Source channel id */
   @inline def channelId: TextChannelId = selectDynamic[TextChannelId]("channel_id")
 
+  @inline def withChannelId(newValue: TextChannelId): FollowedChannel =
+    objWith(FollowedChannel, "channel_id", newValue)
+
   /** Created target webhook id */
   @inline def webhookId: WebhookId = selectDynamic[WebhookId]("webhook_id")
+
+  @inline def withWebhookId(newValue: WebhookId): FollowedChannel = objWith(FollowedChannel, "webhook_id", newValue)
 
   override def values: Seq[() => Any] = Seq(() => channelId, () => webhookId)
 }
@@ -2642,7 +3293,6 @@ object FollowedChannel extends DiscordObjectCompanion[FollowedChannel] {
     */
   def make20(channelId: TextChannelId, webhookId: WebhookId): FollowedChannel =
     makeRawFromFields("channel_id" := channelId, "webhook_id" := webhookId)
-
 }
 
 class Reaction(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2650,11 +3300,17 @@ class Reaction(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordO
   /** Times this emoji has been used to react */
   @inline def count: Int = selectDynamic[Int]("count")
 
+  @inline def withCount(newValue: Int): Reaction = objWith(Reaction, "count", newValue)
+
   /** Whether the current user reacted using this emoji */
   @inline def me: Boolean = selectDynamic[Boolean]("me")
 
+  @inline def withMe(newValue: Boolean): Reaction = objWith(Reaction, "me", newValue)
+
   /** Emoji information */
   @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
+
+  @inline def withEmoji(newValue: Emoji): Reaction = objWith(Reaction, "emoji", newValue)
 
   override def values: Seq[() => Any] = Seq(() => count, () => me, () => emoji)
 }
@@ -2671,7 +3327,6 @@ object Reaction extends DiscordObjectCompanion[Reaction] {
     */
   def make20(count: Int, me: Boolean, emoji: Emoji): Reaction =
     makeRawFromFields("count" := count, "me" := me, "emoji" := emoji)
-
 }
 
 class Embed(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2679,41 +3334,73 @@ class Embed(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
   /** Title of embed */
   @inline def title: UndefOr[String] = selectDynamic[UndefOr[String]]("title")
 
+  @inline def withTitle(newValue: UndefOr[String]): Embed = objWithUndef(Embed, "title", newValue)
+
   /** Type of embed (always "rich" for webhook embeds) */
   @inline def tpe: UndefOr[Embed.EmbedType] = selectDynamic[UndefOr[Embed.EmbedType]]("type")
+
+  @inline def withTpe(newValue: UndefOr[Embed.EmbedType]): Embed = objWithUndef(Embed, "type", newValue)
 
   /** Description of embed */
   @inline def description: UndefOr[String] = selectDynamic[UndefOr[String]]("description")
 
+  @inline def withDescription(newValue: UndefOr[String]): Embed = objWithUndef(Embed, "description", newValue)
+
   /** Url of embed */
   @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
+
+  @inline def withUrl(newValue: UndefOr[String]): Embed = objWithUndef(Embed, "url", newValue)
 
   /** Timestamp of embed content */
   @inline def timestamp: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("timestamp")
 
+  @inline def withTimestamp(newValue: UndefOr[OffsetDateTime]): Embed =
+    objWithUndef(Embed, "timestamp", newValue)
+
   /** Color code of the embed */
   @inline def color: UndefOr[Int] = selectDynamic[UndefOr[Int]]("color")
+
+  @inline def withColor(newValue: UndefOr[Int]): Embed = objWithUndef(Embed, "color", newValue)
 
   /** Footer information */
   @inline def footer: UndefOr[Embed.EmbedFooter] = selectDynamic[UndefOr[Embed.EmbedFooter]]("footer")
 
+  @inline def withFooter(newValue: UndefOr[Embed.EmbedFooter]): Embed =
+    objWithUndef(Embed, "footer", newValue)
+
   /** Image information */
   @inline def image: UndefOr[Embed.EmbedImage] = selectDynamic[UndefOr[Embed.EmbedImage]]("image")
+
+  @inline def withImage(newValue: UndefOr[Embed.EmbedImage]): Embed = objWithUndef(Embed, "image", newValue)
 
   /** Thumbnail information */
   @inline def thumbnail: UndefOr[Embed.EmbedThumbnail] = selectDynamic[UndefOr[Embed.EmbedThumbnail]]("thumbnail")
 
+  @inline def withThumbnail(newValue: UndefOr[Embed.EmbedThumbnail]): Embed =
+    objWithUndef(Embed, "thumbnail", newValue)
+
   /** Video information */
   @inline def video: UndefOr[Embed.EmbedVideo] = selectDynamic[UndefOr[Embed.EmbedVideo]]("video")
+
+  @inline def withVideo(newValue: UndefOr[Embed.EmbedVideo]): Embed = objWithUndef(Embed, "video", newValue)
 
   /** Provider information */
   @inline def provider: UndefOr[Embed.EmbedProvider] = selectDynamic[UndefOr[Embed.EmbedProvider]]("provider")
 
+  @inline def withProvider(newValue: UndefOr[Embed.EmbedProvider]): Embed =
+    objWithUndef(Embed, "provider", newValue)
+
   /** Author information */
   @inline def author: UndefOr[Embed.EmbedAuthor] = selectDynamic[UndefOr[Embed.EmbedAuthor]]("author")
 
+  @inline def withAuthor(newValue: UndefOr[Embed.EmbedAuthor]): Embed =
+    objWithUndef(Embed, "author", newValue)
+
   /** Fields information */
   @inline def fields: UndefOr[Seq[Embed.EmbedField]] = selectDynamic[UndefOr[Seq[Embed.EmbedField]]]("fields")
+
+  @inline def withFields(newValue: UndefOr[Seq[Embed.EmbedField]]): Embed =
+    objWithUndef(Embed, "fields", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => title,
@@ -2815,8 +3502,7 @@ object Embed extends DiscordObjectCompanion[Embed] {
 
     def unknown(value: String): EmbedType = new EmbedType(value)
 
-    def values: Seq[EmbedType] = Seq(Rich, Image, Video, Gifv, Article, Link)
-
+    val values: Seq[EmbedType] = Seq(Rich, Image, Video, Gifv, Article, Link)
   }
 
   class EmbedThumbnail(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2824,19 +3510,29 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Source url of thumbnail (only supports http(s) and attachments) */
     @inline def url: String = selectDynamic[String]("url")
 
+    @inline def withUrl(newValue: String): EmbedThumbnail = objWith(EmbedThumbnail, "url", newValue)
+
     /** A proxied url of the thumbnail */
     @inline def proxyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_url")
+
+    @inline def withProxyUrl(newValue: UndefOr[String]): EmbedThumbnail =
+      objWithUndef(EmbedThumbnail, "proxy_url", newValue)
 
     /** Height of thumbnail */
     @inline def height: UndefOr[Int] = selectDynamic[UndefOr[Int]]("height")
 
+    @inline def withHeight(newValue: UndefOr[Int]): EmbedThumbnail = objWithUndef(EmbedThumbnail, "height", newValue)
+
     /** Width of thumbnail */
     @inline def width: UndefOr[Int] = selectDynamic[UndefOr[Int]]("width")
+
+    @inline def withWidth(newValue: UndefOr[Int]): EmbedThumbnail = objWithUndef(EmbedThumbnail, "width", newValue)
 
     override def values: Seq[() => Any] = Seq(() => url, () => proxyUrl, () => height, () => width)
   }
   object EmbedThumbnail extends DiscordObjectCompanion[EmbedThumbnail] {
-    def makeRaw(json: Json, cache: Map[String, Any]): EmbedThumbnail = new EmbedThumbnail(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): EmbedThumbnail =
+      new EmbedThumbnail(json, cache)
 
     /**
       * @param url
@@ -2855,7 +3551,6 @@ object Embed extends DiscordObjectCompanion[Embed] {
         width: UndefOr[Int] = UndefOrUndefined
     ): EmbedThumbnail =
       makeRawFromFields("url" := url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
-
   }
 
   class EmbedVideo(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2863,14 +3558,22 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Source url of video */
     @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
 
+    @inline def withUrl(newValue: UndefOr[String]): EmbedVideo = objWithUndef(EmbedVideo, "url", newValue)
+
     /** A proxied url of the video */
     @inline def proxyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_url")
+
+    @inline def withProxyUrl(newValue: UndefOr[String]): EmbedVideo = objWithUndef(EmbedVideo, "proxy_url", newValue)
 
     /** Height of video */
     @inline def height: UndefOr[Int] = selectDynamic[UndefOr[Int]]("height")
 
+    @inline def withHeight(newValue: UndefOr[Int]): EmbedVideo = objWithUndef(EmbedVideo, "height", newValue)
+
     /** Width of video */
     @inline def width: UndefOr[Int] = selectDynamic[UndefOr[Int]]("width")
+
+    @inline def withWidth(newValue: UndefOr[Int]): EmbedVideo = objWithUndef(EmbedVideo, "width", newValue)
 
     override def values: Seq[() => Any] = Seq(() => url, () => proxyUrl, () => height, () => width)
   }
@@ -2893,7 +3596,6 @@ object Embed extends DiscordObjectCompanion[Embed] {
         height: UndefOr[Int] = UndefOrUndefined,
         width: UndefOr[Int] = UndefOrUndefined
     ): EmbedVideo = makeRawFromFields("url" :=? url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
-
   }
 
   class EmbedImage(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2901,14 +3603,22 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Source url of image (only supports http(s) and attachments) */
     @inline def url: String = selectDynamic[String]("url")
 
+    @inline def withUrl(newValue: String): EmbedImage = objWith(EmbedImage, "url", newValue)
+
     /** A proxied url of the image */
     @inline def proxyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_url")
+
+    @inline def withProxyUrl(newValue: UndefOr[String]): EmbedImage = objWithUndef(EmbedImage, "proxy_url", newValue)
 
     /** Height of image */
     @inline def height: UndefOr[Int] = selectDynamic[UndefOr[Int]]("height")
 
+    @inline def withHeight(newValue: UndefOr[Int]): EmbedImage = objWithUndef(EmbedImage, "height", newValue)
+
     /** Width of image */
     @inline def width: UndefOr[Int] = selectDynamic[UndefOr[Int]]("width")
+
+    @inline def withWidth(newValue: UndefOr[Int]): EmbedImage = objWithUndef(EmbedImage, "width", newValue)
 
     override def values: Seq[() => Any] = Seq(() => url, () => proxyUrl, () => height, () => width)
   }
@@ -2931,7 +3641,6 @@ object Embed extends DiscordObjectCompanion[Embed] {
         height: UndefOr[Int] = UndefOrUndefined,
         width: UndefOr[Int] = UndefOrUndefined
     ): EmbedImage = makeRawFromFields("url" := url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
-
   }
 
   class EmbedProvider(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2939,8 +3648,12 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Name of provider */
     @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+    @inline def withName(newValue: UndefOr[String]): EmbedProvider = objWithUndef(EmbedProvider, "name", newValue)
+
     /** Url of provider */
     @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
+
+    @inline def withUrl(newValue: UndefOr[String]): EmbedProvider = objWithUndef(EmbedProvider, "url", newValue)
 
     override def values: Seq[() => Any] = Seq(() => name, () => url)
   }
@@ -2953,9 +3666,10 @@ object Embed extends DiscordObjectCompanion[Embed] {
       * @param url
       *   Url of provider
       */
-    def make20(name: UndefOr[String] = UndefOrUndefined, url: UndefOr[String] = UndefOrUndefined): EmbedProvider =
-      makeRawFromFields("name" :=? name, "url" :=? url)
-
+    def make20(
+        name: UndefOr[String] = UndefOrUndefined,
+        url: UndefOr[String] = UndefOrUndefined
+    ): EmbedProvider = makeRawFromFields("name" :=? name, "url" :=? url)
   }
 
   class EmbedAuthor(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -2963,14 +3677,23 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Name of author */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): EmbedAuthor = objWith(EmbedAuthor, "name", newValue)
+
     /** Url of author (only supports http(s)) */
     @inline def url: UndefOr[String] = selectDynamic[UndefOr[String]]("url")
+
+    @inline def withUrl(newValue: UndefOr[String]): EmbedAuthor = objWithUndef(EmbedAuthor, "url", newValue)
 
     /** Url of author icon (only supports http(s) and attachments) */
     @inline def iconUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("icon_url")
 
+    @inline def withIconUrl(newValue: UndefOr[String]): EmbedAuthor = objWithUndef(EmbedAuthor, "icon_url", newValue)
+
     /** A proxied url of author icon */
     @inline def proxyIconUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_icon_url")
+
+    @inline def withProxyIconUrl(newValue: UndefOr[String]): EmbedAuthor =
+      objWithUndef(EmbedAuthor, "proxy_icon_url", newValue)
 
     override def values: Seq[() => Any] = Seq(() => name, () => url, () => iconUrl, () => proxyIconUrl)
   }
@@ -2994,7 +3717,6 @@ object Embed extends DiscordObjectCompanion[Embed] {
         proxyIconUrl: UndefOr[String] = UndefOrUndefined
     ): EmbedAuthor =
       makeRawFromFields("name" := name, "url" :=? url, "icon_url" :=? iconUrl, "proxy_icon_url" :=? proxyIconUrl)
-
   }
 
   class EmbedFooter(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -3002,11 +3724,18 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Footer text */
     @inline def text: String = selectDynamic[String]("text")
 
+    @inline def withText(newValue: String): EmbedFooter = objWith(EmbedFooter, "text", newValue)
+
     /** Url of footer icon (only supports http(s) and attachments) */
     @inline def iconUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("icon_url")
 
+    @inline def withIconUrl(newValue: UndefOr[String]): EmbedFooter = objWithUndef(EmbedFooter, "icon_url", newValue)
+
     /** A proxied url of footer icon */
     @inline def proxyIconUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("proxy_icon_url")
+
+    @inline def withProxyIconUrl(newValue: UndefOr[String]): EmbedFooter =
+      objWithUndef(EmbedFooter, "proxy_icon_url", newValue)
 
     override def values: Seq[() => Any] = Seq(() => text, () => iconUrl, () => proxyIconUrl)
   }
@@ -3026,7 +3755,6 @@ object Embed extends DiscordObjectCompanion[Embed] {
         iconUrl: UndefOr[String] = UndefOrUndefined,
         proxyIconUrl: UndefOr[String] = UndefOrUndefined
     ): EmbedFooter = makeRawFromFields("text" := text, "icon_url" :=? iconUrl, "proxy_icon_url" :=? proxyIconUrl)
-
   }
 
   class EmbedField(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -3034,11 +3762,17 @@ object Embed extends DiscordObjectCompanion[Embed] {
     /** Name of the field */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): EmbedField = objWith(EmbedField, "name", newValue)
+
     /** Value of the field */
     @inline def value: String = selectDynamic[String]("value")
 
+    @inline def withValue(newValue: String): EmbedField = objWith(EmbedField, "value", newValue)
+
     /** Whether or not this field should display inline */
     @inline def inline: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("inline")
+
+    @inline def withInline(newValue: UndefOr[Boolean]): EmbedField = objWithUndef(EmbedField, "inline", newValue)
 
     override def values: Seq[() => Any] = Seq(() => name, () => value, () => inline)
   }
@@ -3053,9 +3787,11 @@ object Embed extends DiscordObjectCompanion[Embed] {
       * @param inline
       *   Whether or not this field should display inline
       */
-    def make20(name: String, value: String, inline: UndefOr[Boolean] = UndefOrUndefined): EmbedField =
-      makeRawFromFields("name" := name, "value" := value, "inline" :=? inline)
-
+    def make20(
+        name: String,
+        value: String,
+        inline: UndefOr[Boolean] = UndefOrUndefined
+    ): EmbedField = makeRawFromFields("name" := name, "value" := value, "inline" :=? inline)
   }
 }
 
@@ -3064,35 +3800,60 @@ class Attachment(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   /** Attachment id */
   @inline def id: Snowflake[Attachment] = selectDynamic[Snowflake[Attachment]]("id")
 
+  @inline def withId(newValue: Snowflake[Attachment]): Attachment = objWith(Attachment, "id", newValue)
+
   /** Name of file attached */
   @inline def filename: String = selectDynamic[String]("filename")
+
+  @inline def withFilename(newValue: String): Attachment = objWith(Attachment, "filename", newValue)
 
   /** Description for the file (max 1024 characters) */
   @inline def description: UndefOr[String] = selectDynamic[UndefOr[String]]("description")
 
+  @inline def withDescription(newValue: UndefOr[String]): Attachment =
+    objWithUndef(Attachment, "description", newValue)
+
   /** The attachment's media type */
   @inline def contentType: UndefOr[String] = selectDynamic[UndefOr[String]]("content_type")
+
+  @inline def withContentType(newValue: UndefOr[String]): Attachment =
+    objWithUndef(Attachment, "content_type", newValue)
 
   /** Size of file in bytes */
   @inline def size: Int = selectDynamic[Int]("size")
 
+  @inline def withSize(newValue: Int): Attachment = objWith(Attachment, "size", newValue)
+
   /** Source url of file */
   @inline def url: String = selectDynamic[String]("url")
+
+  @inline def withUrl(newValue: String): Attachment = objWith(Attachment, "url", newValue)
 
   /** A proxied url of file */
   @inline def proxyUrl: String = selectDynamic[String]("proxy_url")
 
+  @inline def withProxyUrl(newValue: String): Attachment = objWith(Attachment, "proxy_url", newValue)
+
   /** Height of file (if image) */
   @inline def height: JsonOption[Int] = selectDynamic[JsonOption[Int]]("height")
+
+  @inline def withHeight(newValue: JsonOption[Int]): Attachment = objWithUndef(Attachment, "height", newValue)
 
   /** Width of file (if image) */
   @inline def width: JsonOption[Int] = selectDynamic[JsonOption[Int]]("width")
 
+  @inline def withWidth(newValue: JsonOption[Int]): Attachment = objWithUndef(Attachment, "width", newValue)
+
   /** Whether this attachment is ephemeral */
   @inline def ephemeral: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("ephemeral")
 
+  @inline def withEphemeral(newValue: UndefOr[Boolean]): Attachment = objWithUndef(Attachment, "ephemeral", newValue)
+
   /** The duration of the audio file (currently for voice messages) */
   @inline def durationSecs: UndefOr[Float] = selectDynamic[UndefOr[Float]]("duration_secs")
+
+  @inline def withDurationSecs(newValue: UndefOr[Float]): Attachment =
+    objWithUndef(Attachment, "duration_secs", newValue)
 
   /**
     * Base64 encoded bytearray representing a sampled waveform (currently for
@@ -3100,8 +3861,13 @@ class Attachment(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     */
   @inline def waveform: UndefOr[String] = selectDynamic[UndefOr[String]]("waveform")
 
+  @inline def withWaveform(newValue: UndefOr[String]): Attachment = objWithUndef(Attachment, "waveform", newValue)
+
   /** Attachment flags combined as a bitfield */
   @inline def flags: UndefOr[Attachment.AttachmentFlags] = selectDynamic[UndefOr[Attachment.AttachmentFlags]]("flags")
+
+  @inline def withFlags(newValue: UndefOr[Attachment.AttachmentFlags]): Attachment =
+    objWithUndef(Attachment, "flags", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -3189,9 +3955,10 @@ object Attachment extends DiscordObjectCompanion[Attachment] {
 
     def unknown(value: Int): AttachmentFlags = new AttachmentFlags(value)
 
-    def values: Seq[AttachmentFlags] = Seq(IS_REMIX)
+    val values: Seq[AttachmentFlags] = Seq(IS_REMIX)
 
     implicit class AttachmentFlagsBitFieldOps(private val here: AttachmentFlags) extends AnyVal {
+
       def toInt: Int = here.value
 
       def ++(there: AttachmentFlags): AttachmentFlags = AttachmentFlags(here.value | there.value)
@@ -3209,17 +3976,30 @@ class AllowedMentions(json: Json, cache: Map[String, Any] = Map.empty) extends D
   @inline def parse: UndefOr[Seq[AllowedMentions.AllowedMentionsType]] =
     selectDynamic[UndefOr[Seq[AllowedMentions.AllowedMentionsType]]]("parse")
 
+  @inline def withParse(
+      newValue: UndefOr[Seq[AllowedMentions.AllowedMentionsType]]
+  ): AllowedMentions = objWithUndef(AllowedMentions, "parse", newValue)
+
   /** Array of role_ids to mention (Max size of 100) */
   @inline def roles: UndefOr[Seq[RoleId]] = selectDynamic[UndefOr[Seq[RoleId]]]("roles")
 
+  @inline def withRoles(newValue: UndefOr[Seq[RoleId]]): AllowedMentions =
+    objWithUndef(AllowedMentions, "roles", newValue)
+
   /** Array of user_ids to mention (Max size of 100) */
   @inline def users: UndefOr[Seq[UserId]] = selectDynamic[UndefOr[Seq[UserId]]]("users")
+
+  @inline def withUsers(newValue: UndefOr[Seq[UserId]]): AllowedMentions =
+    objWithUndef(AllowedMentions, "users", newValue)
 
   /**
     * For replies, whether to mention the author of the message being replied to
     * (default false)
     */
   @inline def repliedUser: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("replied_user")
+
+  @inline def withRepliedUser(newValue: UndefOr[Boolean]): AllowedMentions =
+    objWithUndef(AllowedMentions, "replied_user", newValue)
 
   override def values: Seq[() => Any] = Seq(() => parse, () => roles, () => users, () => repliedUser)
 }
@@ -3259,7 +4039,6 @@ object AllowedMentions extends DiscordObjectCompanion[AllowedMentions] {
 
     def unknown(value: String): AllowedMentionsType = new AllowedMentionsType(value)
 
-    def values: Seq[AllowedMentionsType] = Seq(RoleMentions, UserMentions, EveryoneMentions)
-
+    val values: Seq[AllowedMentionsType] = Seq(RoleMentions, UserMentions, EveryoneMentions)
   }
 }

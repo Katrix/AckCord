@@ -18,23 +18,39 @@ object AuditLogRequests {
     /** Entries from a specific user ID */
     @inline def userId: UndefOr[UserId] = selectDynamic[UndefOr[UserId]]("user_id")
 
+    @inline def withUserId(newValue: UndefOr[UserId]): GetGuildAuditLogQuery =
+      objWithUndef(GetGuildAuditLogQuery, "user_id", newValue)
+
     /** Entries for a specific audit log event */
     @inline def actionType: UndefOr[AuditLog.AuditLogEvent] =
       selectDynamic[UndefOr[AuditLog.AuditLogEvent]]("action_type")
 
+    @inline def withActionType(newValue: UndefOr[AuditLog.AuditLogEvent]): GetGuildAuditLogQuery =
+      objWithUndef(GetGuildAuditLogQuery, "action_type", newValue)
+
     /** Entries with ID less than a specific audit log entry ID */
     @inline def before: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("before")
+
+    @inline def withBefore(newValue: UndefOr[RawSnowflake]): GetGuildAuditLogQuery =
+      objWithUndef(GetGuildAuditLogQuery, "before", newValue)
 
     /** Entries with ID greater than a specific audit log entry ID */
     @inline def after: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("after")
 
+    @inline def withAfter(newValue: UndefOr[RawSnowflake]): GetGuildAuditLogQuery =
+      objWithUndef(GetGuildAuditLogQuery, "after", newValue)
+
     /** Maximum number of entries (between 1-100) to return, defaults to 50 */
     @inline def limit: UndefOr[Int] = selectDynamic[UndefOr[Int]]("limit")
+
+    @inline def withLimit(newValue: UndefOr[Int]): GetGuildAuditLogQuery =
+      objWithUndef(GetGuildAuditLogQuery, "limit", newValue)
 
     override def values: Seq[() => Any] = Seq(() => userId, () => actionType, () => before, () => after, () => limit)
   }
   object GetGuildAuditLogQuery extends DiscordObjectCompanion[GetGuildAuditLogQuery] {
-    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildAuditLogQuery = new GetGuildAuditLogQuery(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): GetGuildAuditLogQuery =
+      new GetGuildAuditLogQuery(json, cache)
 
     /**
       * @param userId
@@ -61,7 +77,6 @@ object AuditLogRequests {
       "after"       :=? after,
       "limit"       :=? limit
     )
-
   }
 
   def getGuildAuditLog(
@@ -76,5 +91,4 @@ object AuditLogRequests {
           query.before
         ) +? Parameters.query("after", query.after) +? Parameters.query("limit", query.limit)).toRequest(Method.GET)
     )
-
 }

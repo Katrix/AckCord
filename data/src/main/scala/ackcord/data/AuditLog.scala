@@ -15,30 +15,51 @@ class AuditLog(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordO
   @inline def applicationCommands: Seq[AuditLog.AuditLogApplicationCommandStub] =
     selectDynamic[Seq[AuditLog.AuditLogApplicationCommandStub]]("application_commands")
 
+  @inline def withApplicationCommands(newValue: Seq[AuditLog.AuditLogApplicationCommandStub]): AuditLog =
+    objWith(AuditLog, "application_commands", newValue)
+
   /** List of audit log entries, sorted from most to least recent */
   @inline def auditLogEntries: Seq[AuditLog.AuditLogEntry] =
     selectDynamic[Seq[AuditLog.AuditLogEntry]]("audit_log_entries")
+
+  @inline def withAuditLogEntries(newValue: Seq[AuditLog.AuditLogEntry]): AuditLog =
+    objWith(AuditLog, "audit_log_entries", newValue)
 
   /** List of auto moderation rules referenced in the audit log */
   @inline def autoModerationRules: Seq[AutoModerationRule] =
     selectDynamic[Seq[AutoModerationRule]]("auto_moderation_rules")
 
+  @inline def withAutoModerationRules(newValue: Seq[AutoModerationRule]): AuditLog =
+    objWith(AuditLog, "auto_moderation_rules", newValue)
+
   /** List of guild scheduled events referenced in the audit log */
   @inline def guildScheduledEvents: Seq[GuildScheduledEvent] =
     selectDynamic[Seq[GuildScheduledEvent]]("guild_scheduled_events")
+
+  @inline def withGuildScheduledEvents(newValue: Seq[GuildScheduledEvent]): AuditLog =
+    objWith(AuditLog, "guild_scheduled_events", newValue)
 
   /** List of partial integration objects */
   @inline def integrations: Seq[AuditLog.AuditLogIntegration] =
     selectDynamic[Seq[AuditLog.AuditLogIntegration]]("integrations")
 
+  @inline def withIntegrations(newValue: Seq[AuditLog.AuditLogIntegration]): AuditLog =
+    objWith(AuditLog, "integrations", newValue)
+
   /** List of threads referenced in the audit log */
   @inline def threads: Seq[ThreadChannel] = selectDynamic[Seq[ThreadChannel]]("threads")
+
+  @inline def withThreads(newValue: Seq[ThreadChannel]): AuditLog = objWith(AuditLog, "threads", newValue)
 
   /** List of users referenced in the audit log */
   @inline def users: Seq[User] = selectDynamic[Seq[User]]("users")
 
+  @inline def withUsers(newValue: Seq[User]): AuditLog = objWith(AuditLog, "users", newValue)
+
   /** List of webhooks referenced in the audit log */
   @inline def webhooks: Seq[Webhook] = selectDynamic[Seq[Webhook]]("webhooks")
+
+  @inline def withWebhooks(newValue: Seq[Webhook]): AuditLog = objWith(AuditLog, "webhooks", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => applicationCommands,
@@ -102,25 +123,39 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       new AuditLogApplicationCommandStub(json, cache)
 
     def make20(): AuditLogApplicationCommandStub = makeRawFromFields()
-
   }
 
   class AuditLogIntegration(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: Snowflake[Integration] = selectDynamic[Snowflake[Integration]]("id")
+
+    @inline def withId(newValue: Snowflake[Integration]): AuditLogIntegration =
+      objWith(AuditLogIntegration, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): AuditLogIntegration = objWith(AuditLogIntegration, "name", newValue)
+
     @inline def tpe: String = selectDynamic[String]("type")
+
+    @inline def withTpe(newValue: String): AuditLogIntegration = objWith(AuditLogIntegration, "type", newValue)
 
     @inline def account: AuditLogIntegration.AuditLogIntegrationAccount =
       selectDynamic[AuditLogIntegration.AuditLogIntegrationAccount]("account")
 
+    @inline def withAccount(newValue: AuditLogIntegration.AuditLogIntegrationAccount): AuditLogIntegration =
+      objWith(AuditLogIntegration, "account", newValue)
+
     @inline def applicationId: ApplicationId = selectDynamic[ApplicationId]("application_id")
+
+    @inline def withApplicationId(newValue: ApplicationId): AuditLogIntegration =
+      objWith(AuditLogIntegration, "application_id", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => tpe, () => account, () => applicationId)
   }
   object AuditLogIntegration extends DiscordObjectCompanion[AuditLogIntegration] {
-    def makeRaw(json: Json, cache: Map[String, Any]): AuditLogIntegration = new AuditLogIntegration(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): AuditLogIntegration =
+      new AuditLogIntegration(json, cache)
 
     def make20(
         id: Snowflake[Integration],
@@ -146,7 +181,6 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
         new AuditLogIntegrationAccount(json, cache)
 
       def make20(): AuditLogIntegrationAccount = makeRawFromFields()
-
     }
   }
 
@@ -155,22 +189,42 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
     /** ID of the affected entity (webhook, user, role, etc.) */
     @inline def targetId: Option[String] = selectDynamic[Option[String]]("target_id")
 
+    @inline def withTargetId(newValue: Option[String]): AuditLogEntry =
+      objWith(AuditLogEntry, "target_id", newValue)
+
     /** Changes made to the target_id */
     @inline def changes: UndefOr[Seq[AuditLog.AuditLogChange]] =
       selectDynamic[UndefOr[Seq[AuditLog.AuditLogChange]]]("changes")
 
+    @inline def withChanges(newValue: UndefOr[Seq[AuditLog.AuditLogChange]]): AuditLogEntry =
+      objWithUndef(AuditLogEntry, "changes", newValue)
+
     /** User or app that made the changes */
     @inline def userId: Option[UserId] = selectDynamic[Option[UserId]]("user_id")
+
+    @inline def withUserId(newValue: Option[UserId]): AuditLogEntry = objWith(AuditLogEntry, "user_id", newValue)
 
     /** ID of the entry */
     @inline def id: Snowflake[AuditLogEntry] = selectDynamic[Snowflake[AuditLogEntry]]("id")
 
+    @inline def withId(newValue: Snowflake[AuditLogEntry]): AuditLogEntry =
+      objWith(AuditLogEntry, "id", newValue)
+
     /** Type of action that occurred */
     @inline def actionType: AuditLog.AuditLogEvent = selectDynamic[AuditLog.AuditLogEvent]("action_type")
 
+    @inline def withActionType(newValue: AuditLog.AuditLogEvent): AuditLogEntry =
+      objWith(AuditLogEntry, "action_type", newValue)
+
     @inline def options: UndefOr[AuditLog.AuditEntryInfo] = selectDynamic[UndefOr[AuditLog.AuditEntryInfo]]("options")
 
+    @inline def withOptions(newValue: UndefOr[AuditLog.AuditEntryInfo]): AuditLogEntry =
+      objWithUndef(AuditLogEntry, "options", newValue)
+
     @inline def reason: UndefOr[String] = selectDynamic[UndefOr[String]]("reason")
+
+    @inline def withReason(newValue: UndefOr[String]): AuditLogEntry =
+      objWithUndef(AuditLogEntry, "reason", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => targetId, () => changes, () => userId, () => id, () => actionType, () => options, () => reason)
@@ -207,7 +261,6 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       "options"    :=? options,
       "reason"     :=? reason
     )
-
   }
 
   class AuditEntryInfo(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -215,36 +268,68 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
     /** ID of the app whose permissions were targeted */
     @inline def applicationId: UndefOr[ApplicationId] = selectDynamic[UndefOr[ApplicationId]]("application_id")
 
+    @inline def withApplicationId(newValue: UndefOr[ApplicationId]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "application_id", newValue)
+
     /** Name of the Auto Moderation rule that was triggered */
     @inline def autoModerationRuleName: UndefOr[String] = selectDynamic[UndefOr[String]]("auto_moderation_rule_name")
+
+    @inline def withAutoModerationRuleName(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "auto_moderation_rule_name", newValue)
 
     /** Trigger type of the Auto Moderation rule that was triggered */
     @inline def autoModerationRuleTriggerType: UndefOr[String] =
       selectDynamic[UndefOr[String]]("auto_moderation_rule_trigger_type")
 
+    @inline def withAutoModerationRuleTriggerType(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "auto_moderation_rule_trigger_type", newValue)
+
     /** Channel in which the entities were targeted */
     @inline def channelId: UndefOr[ChannelId] = selectDynamic[UndefOr[ChannelId]]("channel_id")
+
+    @inline def withChannelId(newValue: UndefOr[ChannelId]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "channel_id", newValue)
 
     /** Number of entities that were targeted */
     @inline def count: UndefOr[String] = selectDynamic[UndefOr[String]]("count")
 
+    @inline def withCount(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "count", newValue)
+
     /** Number of days after which inactive members were kicked */
     @inline def deleteMemberDays: UndefOr[String] = selectDynamic[UndefOr[String]]("delete_member_days")
+
+    @inline def withDeleteMemberDays(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "delete_member_days", newValue)
 
     /** ID of the overwritten entity */
     @inline def id: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("id")
 
+    @inline def withId(newValue: UndefOr[RawSnowflake]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "id", newValue)
+
     /** Number of members removed by the prune */
     @inline def membersRemoved: UndefOr[String] = selectDynamic[UndefOr[String]]("members_removed")
+
+    @inline def withMembersRemoved(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "members_removed", newValue)
 
     /** ID of the message that was targeted */
     @inline def messageId: UndefOr[MessageId] = selectDynamic[UndefOr[MessageId]]("message_id")
 
+    @inline def withMessageId(newValue: UndefOr[MessageId]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "message_id", newValue)
+
     /** Name of the role if type is "0" (not present if type is "1") */
     @inline def roleName: UndefOr[String] = selectDynamic[UndefOr[String]]("role_name")
 
+    @inline def withRoleName(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "role_name", newValue)
+
     /** Type of overwritten entity - role ("0") or member ("1") */
     @inline def tpe: UndefOr[String] = selectDynamic[UndefOr[String]]("type")
+
+    @inline def withTpe(newValue: UndefOr[String]): AuditEntryInfo = objWithUndef(AuditEntryInfo, "type", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => applicationId,
@@ -261,7 +346,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
     )
   }
   object AuditEntryInfo extends DiscordObjectCompanion[AuditEntryInfo] {
-    def makeRaw(json: Json, cache: Map[String, Any]): AuditEntryInfo = new AuditEntryInfo(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): AuditEntryInfo =
+      new AuditEntryInfo(json, cache)
 
     /**
       * @param applicationId
@@ -312,7 +398,6 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       "role_name"                         :=? roleName,
       "type"                              :=? tpe
     )
-
   }
 
   class AuditLogChange(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -320,16 +405,25 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
     /** New value of the key */
     @inline def newValue: UndefOr[Json] = selectDynamic[UndefOr[Json]]("new_value")
 
+    @inline def withNewValue(newValue: UndefOr[Json]): AuditLogChange =
+      objWithUndef(AuditLogChange, "new_value", newValue)
+
     /** Old value of the key */
     @inline def oldValue: UndefOr[Json] = selectDynamic[UndefOr[Json]]("old_value")
+
+    @inline def withOldValue(newValue: UndefOr[Json]): AuditLogChange =
+      objWithUndef(AuditLogChange, "old_value", newValue)
 
     /** Name of the changed entity, with a few exceptions */
     @inline def key: String = selectDynamic[String]("key")
 
+    @inline def withKey(newValue: String): AuditLogChange = objWith(AuditLogChange, "key", newValue)
+
     override def values: Seq[() => Any] = Seq(() => newValue, () => oldValue, () => key)
   }
   object AuditLogChange extends DiscordObjectCompanion[AuditLogChange] {
-    def makeRaw(json: Json, cache: Map[String, Any]): AuditLogChange = new AuditLogChange(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): AuditLogChange =
+      new AuditLogChange(json, cache)
 
     /**
       * @param newValue
@@ -344,7 +438,6 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
         oldValue: UndefOr[Json] = UndefOrUndefined,
         key: String
     ): AuditLogChange = makeRawFromFields("new_value" :=? newValue, "old_value" :=? oldValue, "key" := key)
-
   }
 
   sealed case class AuditLogEvent private (value: Int) extends DiscordEnum[Int]
@@ -520,7 +613,7 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
 
     def unknown(value: Int): AuditLogEvent = new AuditLogEvent(value)
 
-    def values: Seq[AuditLogEvent] = Seq(
+    val values: Seq[AuditLogEvent] = Seq(
       GUILD_UPDATE,
       CHANNEL_CREATE,
       CHANNEL_UPDATE,
@@ -578,6 +671,5 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       CREATOR_MONETIZATION_REQUEST_CREATED,
       CREATOR_MONETIZATION_TERMS_ACCEPTED
     )
-
   }
 }

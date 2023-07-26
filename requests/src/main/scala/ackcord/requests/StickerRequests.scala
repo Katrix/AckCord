@@ -14,16 +14,18 @@ import sttp.model.Method
 object StickerRequests {
 
   /** Returns a sticker object for the given sticker ID. */
-  def getSticker(
-      stickerId: Snowflake[Sticker]
-  ): Request[Unit, Sticker] =
+  def getSticker(stickerId: Snowflake[Sticker]): Request[Unit, Sticker] =
     Request.restRequest(
       route = (Route.Empty / "stickers" / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.GET)
     )
 
   class ListNitroStickerPacksResult(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache) {
+
     @inline def stickerPacks: Seq[Sticker.StickerPack] = selectDynamic[Seq[Sticker.StickerPack]]("sticker_packs")
+
+    @inline def withStickerPacks(newValue: Seq[Sticker.StickerPack]): ListNitroStickerPacksResult =
+      objWith(ListNitroStickerPacksResult, "sticker_packs", newValue)
 
     override def values: Seq[() => Any] = Seq(() => stickerPacks)
   }
@@ -31,10 +33,8 @@ object StickerRequests {
     def makeRaw(json: Json, cache: Map[String, Any]): ListNitroStickerPacksResult =
       new ListNitroStickerPacksResult(json, cache)
 
-    def make20(stickerPacks: Seq[Sticker.StickerPack]): ListNitroStickerPacksResult = makeRawFromFields(
-      "sticker_packs" := stickerPacks
-    )
-
+    def make20(stickerPacks: Seq[Sticker.StickerPack]): ListNitroStickerPacksResult =
+      makeRawFromFields("sticker_packs" := stickerPacks)
   }
 
   /** Returns the list of sticker packs available to Nitro subscribers. */
@@ -47,9 +47,7 @@ object StickerRequests {
     * Returns an array of sticker objects for the given guild. Includes user
     * fields if the bot has the MANAGE_GUILD_EXPRESSIONS permission.
     */
-  def listGuildStickers(
-      guildId: GuildId
-  ): Request[Unit, Seq[Sticker]] =
+  def listGuildStickers(guildId: GuildId): Request[Unit, Seq[Sticker]] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers")
         .toRequest(Method.GET)
@@ -59,10 +57,7 @@ object StickerRequests {
     * Returns a sticker object for the given guild and sticker IDs. Includes the
     * user field if the bot has the MANAGE_GUILD_EXPRESSIONS permission.
     */
-  def getGuildSticker(
-      guildId: GuildId,
-      stickerId: Snowflake[Sticker]
-  ): Request[Unit, Sticker] =
+  def getGuildSticker(guildId: GuildId, stickerId: Snowflake[Sticker]): Request[Unit, Sticker] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "stickers" / Parameters[
         Snowflake[Sticker]
@@ -74,16 +69,24 @@ object StickerRequests {
     /** Name of the sticker (2-30 characters) */
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): CreateGuildStickerBody = objWith(CreateGuildStickerBody, "name", newValue)
+
     /** Description of the sticker (empty or 2-100 characters) */
     @inline def description: Option[String] = selectDynamic[Option[String]]("description")
+
+    @inline def withDescription(newValue: Option[String]): CreateGuildStickerBody =
+      objWith(CreateGuildStickerBody, "description", newValue)
 
     /** Autocomplete/suggestion tags for the sticker (max 200 characters) */
     @inline def tags: String = selectDynamic[String]("tags")
 
+    @inline def withTags(newValue: String): CreateGuildStickerBody = objWith(CreateGuildStickerBody, "tags", newValue)
+
     override def values: Seq[() => Any] = Seq(() => name, () => description, () => tags)
   }
   object CreateGuildStickerBody extends DiscordObjectCompanion[CreateGuildStickerBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildStickerBody = new CreateGuildStickerBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): CreateGuildStickerBody =
+      new CreateGuildStickerBody(json, cache)
 
     /**
       * @param name
@@ -95,11 +98,10 @@ object StickerRequests {
       */
     def make20(name: String, description: Option[String], tags: String): CreateGuildStickerBody =
       makeRawFromFields("name" := name, "description" := description, "tags" := tags)
-
   }
 
   /**
-    * * Create a new sticker for the guild. Send a multipart/form-data body.
+    * Create a new sticker for the guild. Send a multipart/form-data body.
     * Requires the MANAGE_GUILD_EXPRESSIONS permission. Returns the new sticker
     * object on success. Fires a Guild Stickers Update Gateway event.
     *
@@ -133,16 +135,26 @@ object StickerRequests {
     /** Name of the sticker (2-30 characters) */
     @inline def name: UndefOr[String] = selectDynamic[UndefOr[String]]("name")
 
+    @inline def withName(newValue: UndefOr[String]): ModifyGuildStickerBody =
+      objWithUndef(ModifyGuildStickerBody, "name", newValue)
+
     /** Description of the sticker (2-100 characters) */
     @inline def description: JsonOption[String] = selectDynamic[JsonOption[String]]("description")
+
+    @inline def withDescription(newValue: JsonOption[String]): ModifyGuildStickerBody =
+      objWithUndef(ModifyGuildStickerBody, "description", newValue)
 
     /** Autocomplete/suggestion tags for the sticker (max 200 characters) */
     @inline def tags: UndefOr[String] = selectDynamic[UndefOr[String]]("tags")
 
+    @inline def withTags(newValue: UndefOr[String]): ModifyGuildStickerBody =
+      objWithUndef(ModifyGuildStickerBody, "tags", newValue)
+
     override def values: Seq[() => Any] = Seq(() => name, () => description, () => tags)
   }
   object ModifyGuildStickerBody extends DiscordObjectCompanion[ModifyGuildStickerBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildStickerBody = new ModifyGuildStickerBody(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): ModifyGuildStickerBody =
+      new ModifyGuildStickerBody(json, cache)
 
     /**
       * @param name
@@ -157,7 +169,6 @@ object StickerRequests {
         description: JsonOption[String] = JsonUndefined,
         tags: UndefOr[String] = UndefOrUndefined
     ): ModifyGuildStickerBody = makeRawFromFields("name" :=? name, "description" :=? description, "tags" :=? tags)
-
   }
 
   /**
@@ -195,5 +206,4 @@ object StickerRequests {
       ]("stickerId", stickerId)).toRequest(Method.DELETE),
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
-
 }

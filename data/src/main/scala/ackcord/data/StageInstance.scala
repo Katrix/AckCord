@@ -14,22 +14,38 @@ class StageInstance(json: Json, cache: Map[String, Any] = Map.empty) extends Dis
   /** The id of this Stage instance */
   @inline def id: Snowflake[StageInstance] = selectDynamic[Snowflake[StageInstance]]("id")
 
+  @inline def withId(newValue: Snowflake[StageInstance]): StageInstance =
+    objWith(StageInstance, "id", newValue)
+
   /** The guild id of the associated Stage channel */
   @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
+
+  @inline def withGuildId(newValue: GuildId): StageInstance = objWith(StageInstance, "guild_id", newValue)
 
   /** The id of the associated Stage channel */
   @inline def channelId: StageChannelId = selectDynamic[StageChannelId]("channel_id")
 
+  @inline def withChannelId(newValue: StageChannelId): StageInstance =
+    objWith(StageInstance, "channel_id", newValue)
+
   /** The topic of the Stage instance (1-120 characters) */
   @inline def topic: String = selectDynamic[String]("topic")
+
+  @inline def withTopic(newValue: String): StageInstance = objWith(StageInstance, "topic", newValue)
 
   /** The privacy level of the Stage instance */
   @inline def privacyLevel: StageInstance.StagePrivacyLevel =
     selectDynamic[StageInstance.StagePrivacyLevel]("privacy_level")
 
+  @inline def withPrivacyLevel(newValue: StageInstance.StagePrivacyLevel): StageInstance =
+    objWith(StageInstance, "privacy_level", newValue)
+
   /** The id of the scheduled event for this Stage instance */
   @inline def guildScheduledEventId: Option[Snowflake[GuildScheduledEvent]] =
     selectDynamic[Option[Snowflake[GuildScheduledEvent]]]("guild_scheduled_event_id")
+
+  @inline def withGuildScheduledEventId(newValue: Option[Snowflake[GuildScheduledEvent]]): StageInstance =
+    objWith(StageInstance, "guild_scheduled_event_id", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => id, () => guildId, () => channelId, () => topic, () => privacyLevel, () => guildScheduledEventId)
@@ -75,7 +91,6 @@ object StageInstance extends DiscordObjectCompanion[StageInstance] {
 
     def unknown(value: Int): StagePrivacyLevel = new StagePrivacyLevel(value)
 
-    def values: Seq[StagePrivacyLevel] = Seq(GUILD_ONLY)
-
+    val values: Seq[StagePrivacyLevel] = Seq(GUILD_ONLY)
   }
 }

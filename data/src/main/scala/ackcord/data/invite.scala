@@ -20,21 +20,36 @@ class Invite(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObj
   /** The invite code (unique ID) */
   @inline def code: String = selectDynamic[String]("code")
 
+  @inline def withCode(newValue: String): Invite = objWith(Invite, "code", newValue)
+
   /** The guild this invite is for */
   @inline def guild: UndefOr[Invite.InviteGuild] = selectDynamic[UndefOr[Invite.InviteGuild]]("guild")
+
+  @inline def withGuild(newValue: UndefOr[Invite.InviteGuild]): Invite =
+    objWithUndef(Invite, "guild", newValue)
 
   /** The channel this invite is for */
   @inline def channel: Option[Invite.InviteChannel] = selectDynamic[Option[Invite.InviteChannel]]("channel")
 
+  @inline def withChannel(newValue: Option[Invite.InviteChannel]): Invite =
+    objWith(Invite, "channel", newValue)
+
   /** The user who created the invite */
   @inline def inviter: UndefOr[User] = selectDynamic[UndefOr[User]]("inviter")
+
+  @inline def withInviter(newValue: UndefOr[User]): Invite = objWithUndef(Invite, "inviter", newValue)
 
   /** The type of target for this voice channel invite */
   @inline def targetType: UndefOr[Invite.InviteTargetType] =
     selectDynamic[UndefOr[Invite.InviteTargetType]]("target_type")
 
+  @inline def withTargetType(newValue: UndefOr[Invite.InviteTargetType]): Invite =
+    objWithUndef(Invite, "target_type", newValue)
+
   /** The user whose stream to display for this voice channel stream invite */
   @inline def targetUser: UndefOr[User] = selectDynamic[UndefOr[User]]("target_user")
+
+  @inline def withTargetUser(newValue: UndefOr[User]): Invite = objWithUndef(Invite, "target_user", newValue)
 
   /**
     * The embedded application to open for this voice channel embedded
@@ -43,11 +58,17 @@ class Invite(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObj
   @inline def targetApplication: UndefOr[Invite.InviteApplication] =
     selectDynamic[UndefOr[Invite.InviteApplication]]("target_application")
 
+  @inline def withTargetApplication(newValue: UndefOr[Invite.InviteApplication]): Invite =
+    objWithUndef(Invite, "target_application", newValue)
+
   /**
     * Approximate count of online members, returned from the GET /invites/<code>
     * endpoint when with_counts is true
     */
   @inline def approximatePresenceCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_presence_count")
+
+  @inline def withApproximatePresenceCount(newValue: UndefOr[Int]): Invite =
+    objWithUndef(Invite, "approximate_presence_count", newValue)
 
   /**
     * Approximate count of total members, returned from the GET /invites/<code>
@@ -55,11 +76,17 @@ class Invite(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObj
     */
   @inline def approximateMemberCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_member_count")
 
+  @inline def withApproximateMemberCount(newValue: UndefOr[Int]): Invite =
+    objWithUndef(Invite, "approximate_member_count", newValue)
+
   /**
     * The expiration date of this invite, returned from the GET /invites/<code>
     * endpoint when with_expiration is true
     */
   @inline def expiresAt: JsonOption[OffsetDateTime] = selectDynamic[JsonOption[OffsetDateTime]]("expires_at")
+
+  @inline def withExpiresAt(newValue: JsonOption[OffsetDateTime]): Invite =
+    objWithUndef(Invite, "expires_at", newValue)
 
   /**
     * Guild scheduled event data, only included if guild_scheduled_event_id
@@ -67,6 +94,9 @@ class Invite(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObj
     */
   @inline def guildScheduledEvent: UndefOr[GuildScheduledEvent] =
     selectDynamic[UndefOr[GuildScheduledEvent]]("guild_scheduled_event")
+
+  @inline def withGuildScheduledEvent(newValue: UndefOr[GuildScheduledEvent]): Invite =
+    objWithUndef(Invite, "guild_scheduled_event", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => code,
@@ -142,40 +172,69 @@ object Invite extends DiscordObjectCompanion[Invite] {
 
   sealed case class InviteTargetType private (value: Int) extends DiscordEnum[Int]
   object InviteTargetType extends DiscordEnumCompanion[Int, InviteTargetType] {
+    val STREAM: InviteTargetType = InviteTargetType(1)
 
-    val STREAM: InviteTargetType               = InviteTargetType(1)
     val EMBEDDED_APPLICATION: InviteTargetType = InviteTargetType(2)
 
     def unknown(value: Int): InviteTargetType = new InviteTargetType(value)
 
-    def values: Seq[InviteTargetType] = Seq(STREAM, EMBEDDED_APPLICATION)
-
+    val values: Seq[InviteTargetType] = Seq(STREAM, EMBEDDED_APPLICATION)
   }
 
   class InviteGuild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: GuildId = selectDynamic[GuildId]("id")
+
+    @inline def withId(newValue: GuildId): InviteGuild = objWith(InviteGuild, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): InviteGuild = objWith(InviteGuild, "name", newValue)
+
     @inline def splash: Option[ImageHash] = selectDynamic[Option[ImageHash]]("splash")
+
+    @inline def withSplash(newValue: Option[ImageHash]): InviteGuild =
+      objWith(InviteGuild, "splash", newValue)
 
     @inline def banner: Option[ImageHash] = selectDynamic[Option[ImageHash]]("banner")
 
+    @inline def withBanner(newValue: Option[ImageHash]): InviteGuild =
+      objWith(InviteGuild, "banner", newValue)
+
     @inline def description: String = selectDynamic[String]("description")
+
+    @inline def withDescription(newValue: String): InviteGuild = objWith(InviteGuild, "description", newValue)
 
     @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
+    @inline def withIcon(newValue: Option[ImageHash]): InviteGuild = objWith(InviteGuild, "icon", newValue)
+
     @inline def features: Seq[Guild.GuildFeature] = selectDynamic[Seq[Guild.GuildFeature]]("features")
+
+    @inline def withFeatures(newValue: Seq[Guild.GuildFeature]): InviteGuild =
+      objWith(InviteGuild, "features", newValue)
 
     @inline def verificationLevel: Guild.VerificationLevel =
       selectDynamic[Guild.VerificationLevel]("verification_level")
 
+    @inline def withVerificationLevel(newValue: Guild.VerificationLevel): InviteGuild =
+      objWith(InviteGuild, "verification_level", newValue)
+
     @inline def vanityUrlCode: Option[String] = selectDynamic[Option[String]]("vanity_url_code")
+
+    @inline def withVanityUrlCode(newValue: Option[String]): InviteGuild =
+      objWith(InviteGuild, "vanity_url_code", newValue)
 
     @inline def nsfwLevel: Guild.ExplicitContentFilterLevel =
       selectDynamic[Guild.ExplicitContentFilterLevel]("nsfw_level")
 
+    @inline def withNsfwLevel(newValue: Guild.ExplicitContentFilterLevel): InviteGuild =
+      objWith(InviteGuild, "nsfw_level", newValue)
+
     @inline def premiumSubscriptionCount: Int = selectDynamic[Int]("premium_subscription_count")
+
+    @inline def withPremiumSubscriptionCount(newValue: Int): InviteGuild =
+      objWith(InviteGuild, "premium_subscription_count", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => id,
@@ -219,15 +278,22 @@ object Invite extends DiscordObjectCompanion[Invite] {
       "nsfw_level"                 := nsfwLevel,
       "premium_subscription_count" := premiumSubscriptionCount
     )
-
   }
 
   class InviteChannel(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
     @inline def id: GuildChannelId = selectDynamic[GuildChannelId]("id")
+
+    @inline def withId(newValue: GuildChannelId): InviteChannel = objWith(InviteChannel, "id", newValue)
 
     @inline def name: String = selectDynamic[String]("name")
 
+    @inline def withName(newValue: String): InviteChannel = objWith(InviteChannel, "name", newValue)
+
     @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
+
+    @inline def withTpe(newValue: Channel.ChannelType): InviteChannel =
+      objWith(InviteChannel, "type", newValue)
 
     override def values: Seq[() => Any] = Seq(() => id, () => name, () => tpe)
   }
@@ -236,7 +302,6 @@ object Invite extends DiscordObjectCompanion[Invite] {
 
     def make20(id: GuildChannelId, name: String, tpe: Channel.ChannelType): InviteChannel =
       makeRawFromFields("id" := id, "name" := name, "type" := tpe)
-
   }
 
   class InviteApplication(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -244,10 +309,10 @@ object Invite extends DiscordObjectCompanion[Invite] {
     override def values: Seq[() => Any] = Seq()
   }
   object InviteApplication extends DiscordObjectCompanion[InviteApplication] {
-    def makeRaw(json: Json, cache: Map[String, Any]): InviteApplication = new InviteApplication(json, cache)
+    def makeRaw(json: Json, cache: Map[String, Any]): InviteApplication =
+      new InviteApplication(json, cache)
 
     def make20(): InviteApplication = makeRawFromFields()
-
   }
 }
 
@@ -257,20 +322,34 @@ class InviteMetadata(json: Json, cache: Map[String, Any] = Map.empty) extends Di
   /** Rest of the invite object */
   @inline def invite: Invite = Invite.makeRaw(json, extensionCache("invite"))
 
+  @inline def withInvite(newValue: Invite): InviteMetadata =
+    objWithJson(InviteMetadata, newValue.json, newValue.cacheCopy)
+
   /** Number of times this invite has been used */
   @inline def uses: Int = selectDynamic[Int]("uses")
+
+  @inline def withUses(newValue: Int): InviteMetadata = objWith(InviteMetadata, "uses", newValue)
 
   /** Max number of times this invite can be used */
   @inline def maxUses: Int = selectDynamic[Int]("max_uses")
 
+  @inline def withMaxUses(newValue: Int): InviteMetadata = objWith(InviteMetadata, "max_uses", newValue)
+
   /** Duration (in seconds) after which the invite expires */
   @inline def maxAge: Int = selectDynamic[Int]("max_age")
+
+  @inline def withMaxAge(newValue: Int): InviteMetadata = objWith(InviteMetadata, "max_age", newValue)
 
   /** Whether this invite only grants temporary membership */
   @inline def temporary: Boolean = selectDynamic[Boolean]("temporary")
 
+  @inline def withTemporary(newValue: Boolean): InviteMetadata = objWith(InviteMetadata, "temporary", newValue)
+
   /** When this invite was created */
   @inline def createdAt: OffsetDateTime = selectDynamic[OffsetDateTime]("created_at")
+
+  @inline def withCreatedAt(newValue: OffsetDateTime): InviteMetadata =
+    objWith(InviteMetadata, "created_at", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => invite, () => uses, () => maxUses, () => maxAge, () => temporary, () => createdAt)
@@ -307,5 +386,4 @@ object InviteMetadata extends DiscordObjectCompanion[InviteMetadata] {
     "temporary"  := temporary,
     "created_at" := createdAt
   )
-
 }

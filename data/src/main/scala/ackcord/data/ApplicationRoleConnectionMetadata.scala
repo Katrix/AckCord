@@ -16,25 +16,44 @@ class ApplicationRoleConnectionMetadata(json: Json, cache: Map[String, Any] = Ma
   @inline def tpe: ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType =
     selectDynamic[ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType]("type")
 
+  @inline def withTpe(
+      newValue: ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType
+  ): ApplicationRoleConnectionMetadata = objWith(ApplicationRoleConnectionMetadata, "type", newValue)
+
   /**
     * Dictionary key for the metadata field (must be a-z, 0-9, or _ characters;
     * 1-50 characters)
     */
   @inline def key: String = selectDynamic[String]("key")
 
+  @inline def withKey(newValue: String): ApplicationRoleConnectionMetadata =
+    objWith(ApplicationRoleConnectionMetadata, "key", newValue)
+
   /** Name of the metadata field (1-100 characters) */
   @inline def name: String = selectDynamic[String]("name")
+
+  @inline def withName(newValue: String): ApplicationRoleConnectionMetadata =
+    objWith(ApplicationRoleConnectionMetadata, "name", newValue)
 
   /** Translations of the name */
   @inline def nameLocalizations: UndefOr[Map[String, String]] =
     selectDynamic[UndefOr[Map[String, String]]]("name_localizations")
 
+  @inline def withNameLocalizations(newValue: UndefOr[Map[String, String]]): ApplicationRoleConnectionMetadata =
+    objWithUndef(ApplicationRoleConnectionMetadata, "name_localizations", newValue)
+
   /** Description of the metadata field (1-200 characters) */
   @inline def description: String = selectDynamic[String]("description")
+
+  @inline def withDescription(newValue: String): ApplicationRoleConnectionMetadata =
+    objWith(ApplicationRoleConnectionMetadata, "description", newValue)
 
   /** Translations of the description */
   @inline def descriptionLocalizations: UndefOr[Map[String, String]] =
     selectDynamic[UndefOr[Map[String, String]]]("description_localizations")
+
+  @inline def withDescriptionLocalizations(newValue: UndefOr[Map[String, String]]): ApplicationRoleConnectionMetadata =
+    objWithUndef(ApplicationRoleConnectionMetadata, "description_localizations", newValue)
 
   override def values: Seq[() => Any] =
     Seq(() => tpe, () => key, () => name, () => nameLocalizations, () => description, () => descriptionLocalizations)
@@ -82,13 +101,15 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
       * The metadata value (integer) is less than or equal to the guild's
       * configured value (integer)
       */
-    val INTEGER_LESS_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType = ApplicationRoleConnectionMetadataType(1)
+    val INTEGER_LESS_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType =
+      ApplicationRoleConnectionMetadataType(1)
 
     /**
       * The metadata value (integer) is greater than or equal to the guild's
       * configured value (integer)
       */
-    val INTEGER_GREATER_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType = ApplicationRoleConnectionMetadataType(2)
+    val INTEGER_GREATER_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType =
+      ApplicationRoleConnectionMetadataType(2)
 
     /**
       * The metadata value (integer) is equal to the guild's configured value
@@ -106,13 +127,15 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
       * The metadata value (ISO8601 string) is less than or equal to the guild's
       * configured value (integer; days before current date)
       */
-    val DATETIME_LESS_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType = ApplicationRoleConnectionMetadataType(5)
+    val DATETIME_LESS_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType =
+      ApplicationRoleConnectionMetadataType(5)
 
     /**
       * The metadata value (ISO8601 string) is greater than or equal to the
       * guild's configured value (integer; days before current date)
       */
-    val DATETIME_GREATER_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType = ApplicationRoleConnectionMetadataType(6)
+    val DATETIME_GREATER_THAN_OR_EQUAL: ApplicationRoleConnectionMetadataType =
+      ApplicationRoleConnectionMetadataType(6)
 
     /**
       * The metadata value (integer) is equal to the guild's configured value
@@ -128,7 +151,7 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
 
     def unknown(value: Int): ApplicationRoleConnectionMetadataType = new ApplicationRoleConnectionMetadataType(value)
 
-    def values: Seq[ApplicationRoleConnectionMetadataType] = Seq(
+    val values: Seq[ApplicationRoleConnectionMetadataType] = Seq(
       INTEGER_LESS_THAN_OR_EQUAL,
       INTEGER_GREATER_THAN_OR_EQUAL,
       INTEGER_EQUAL,
@@ -138,6 +161,5 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
       BOOLEAN_EQUAL,
       BOOLEAN_NOT_EQUAL
     )
-
   }
 }

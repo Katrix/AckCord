@@ -17,5 +17,4 @@ object ApplicationRequests {
     Request.restRequest(
       route = (Route.Empty / "applications" / "@me").toRequest(Method.GET)
     )
-
 }
