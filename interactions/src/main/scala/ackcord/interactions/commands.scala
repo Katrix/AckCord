@@ -3,6 +3,7 @@ package ackcord.interactions
 import java.util.Locale
 
 import ackcord.data._
+import ackcord.gateway.Context
 import ackcord.interactions.data.ApplicationCommand
 import ackcord.interactions.data.ApplicationCommand.ApplicationCommandOption.ApplicationCommandOptionType
 import ackcord.interactions.data.ApplicationCommand.{ApplicationCommandOption, ApplicationCommandType}
@@ -52,7 +53,8 @@ sealed trait CreatedApplicationCommand[F[_]] {
 
   /** Handle an interaction with the application command. */
   def handleRaw(
-      rawInteraction: Interaction
+      rawInteraction: Interaction,
+      context: Context
   )(implicit F: MonadError[F, Throwable]): F[HighInteractionResponse[F]]
 
   /** The application command type. */
@@ -97,13 +99,19 @@ object CreatedApplicationCommand {
 
   def handleCommon[F[_], A](
       interaction: Interaction,
+      data: ApplicationCommandData,
+      context: Context,
       optArgs: Either[String, A],
-      handle: (Interaction, A) => HighInteractionResponse[F]
+      handle: CommandInvocation[A] => HighInteractionResponse[F]
   )(
       implicit F: ApplicativeError[F, Throwable]
   ): HighInteractionResponse[F] =
     optArgs
-      .map(args => handle(interaction, args))
+      .map(args =>
+        handle(
+          CommandInvocation(interaction, data, args, context)
+        )
+      )
       .leftMap { error =>
         HighInteractionResponse.ChannelMessage(
           MessageData.make20(content = UndefOrSome(s"An error occurred: $error")),
@@ -114,10 +122,11 @@ object CreatedApplicationCommand {
 
   def handleCommonFull[F[_], A](
       interaction: Interaction,
+      context: Context,
       tpe: ApplicationCommandType,
       commandTypeStr: String,
       makeArgs: (ApplicationCommandData, ResolvedData) => Either[String, A],
-      handle: (Interaction, A) => HighInteractionResponse[F]
+      handle: CommandInvocation[A] => HighInteractionResponse[F]
   )(
       implicit F: ApplicativeError[F, Throwable]
   ): F[HighInteractionResponse[F]] = {
@@ -125,7 +134,7 @@ object CreatedApplicationCommand {
       val resolved = data.resolved.getOrElse(ResolvedData.makeRaw(Json.obj(), Map.empty))
       val optArgs  = makeArgs(data, resolved)
 
-      handleCommon(interaction, optArgs, handle)
+      handleCommon(interaction, data, context, optArgs, handle)
     }
   }
 }
@@ -148,7 +157,7 @@ case class SlashCommand[F[_], A] private (
     nsfw: Boolean,
     extra: Map[String, String],
     paramList: Either[Unit =:= A, ParamList[A]],
-    handle: (Interaction, A) => HighInteractionResponse[F]
+    handle: CommandInvocation[A] => HighInteractionResponse[F]
 ) extends SlashCommandOrGroup[F] {
 
   override def description: Option[String] = Some(descriptionSome)
@@ -170,7 +179,8 @@ case class SlashCommand[F[_], A] private (
   )
 
   override def handleRaw(
-      interaction: Interaction
+      interaction: Interaction,
+      context: Context
   )(implicit F: MonadError[F, Throwable]): F[HighInteractionResponse[F]] =
     CreatedApplicationCommand
       .verifyDataAndType(
@@ -197,7 +207,7 @@ case class SlashCommand[F[_], A] private (
               case Left(ev) => Right(ev(()))
             }
 
-            CreatedApplicationCommand.handleCommon(interaction, optArgs, handle)
+            CreatedApplicationCommand.handleCommon(interaction, data, context, optArgs, handle)
 
           case InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE =>
             paramList match {
@@ -249,7 +259,8 @@ case class SlashCommandGroup[F[_]] private (
   private lazy val subCommandsByName: Map[String, CreatedApplicationCommand[F]] = commands.map(c => c.name -> c).toMap
 
   override def handleRaw(
-      interaction: Interaction
+      interaction: Interaction,
+      context: Context
   )(implicit F: MonadError[F, Throwable]): F[HighInteractionResponse[F]] = {
     CreatedApplicationCommand
       .verifyDataAndType(
@@ -266,7 +277,7 @@ case class SlashCommandGroup[F[_]] private (
 
         subcommandExecution match {
           case Some((subcommand, options)) =>
-            subcommand.handleRaw(interaction.withData(UndefOrSome(data.withOptions(options))))
+            subcommand.handleRaw(interaction.withData(UndefOrSome(data.withOptions(options))), context)
           case None =>
             F.pure(
               HighInteractionResponse.ChannelMessage(
@@ -285,7 +296,7 @@ case class UserCommand[F[_]] private (
     defaultMemberPermissions: Option[Permissions],
     nsfw: Boolean,
     extra: Map[String, String],
-    handle: (Interaction, (User, Option[GuildMember.Partial])) => HighInteractionResponse[F]
+    handle: CommandInvocation[(User, Option[GuildMember.Partial])] => HighInteractionResponse[F]
 ) extends CreatedApplicationCommand[F] {
   override def description: Option[String] = None
 
@@ -298,10 +309,12 @@ case class UserCommand[F[_]] private (
   override def commandType: ApplicationCommandType = ApplicationCommandType.User
 
   override def handleRaw(
-      interaction: Interaction
+      interaction: Interaction,
+      context: Context
   )(implicit F: MonadError[F, Throwable]): F[HighInteractionResponse[F]] =
     CreatedApplicationCommand.handleCommonFull(
       interaction,
+      context,
       ApplicationCommandType.User,
       "user command",
       (data, resolved) =>
@@ -325,7 +338,7 @@ case class MessageCommand[F[_]] private (
     defaultMemberPermissions: Option[Permissions],
     nsfw: Boolean,
     extra: Map[String, String],
-    handle: (Interaction, Message) => HighInteractionResponse[F]
+    handle: CommandInvocation[Message] => HighInteractionResponse[F]
 ) extends CreatedApplicationCommand[F] {
   override def description: Option[String] = None
 
@@ -338,10 +351,12 @@ case class MessageCommand[F[_]] private (
   override def commandType: ApplicationCommandType = ApplicationCommandType.Message
 
   override def handleRaw(
-      interaction: Interaction
+      interaction: Interaction,
+      context: Context
   )(implicit F: MonadError[F, Throwable]): F[HighInteractionResponse[F]] =
     CreatedApplicationCommand.handleCommonFull(
       interaction,
+      context,
       ApplicationCommandType.Message,
       "message command",
       (data, resolved) =>

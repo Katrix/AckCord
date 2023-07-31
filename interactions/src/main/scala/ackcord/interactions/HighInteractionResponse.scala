@@ -40,7 +40,7 @@ object HighInteractionResponse {
   sealed trait AsyncMessageable[F[_]] extends HighInteractionResponse[F] {
 
     /** Do something extra async after sending the response. */
-    def doAsync[A](interaction: Interaction)(action: AsyncMessageToken => F[A]): HighInteractionResponse[F]
+    def doAsync[A](invocation: InteractionInvocation[_])(action: AsyncMessageToken => F[A]): HighInteractionResponse[F]
   }
 
   case class Pong[F[_]]()                                 extends HighInteractionResponse[F]
@@ -52,7 +52,10 @@ object HighInteractionResponse {
   ) extends HighInteractionResponse[F]
       with AsyncMessageable[F] {
 
-    override def doAsync[B](interaction: Interaction)(action: AsyncMessageToken => F[B]): HighInteractionResponse[F] = copy(andThenDo = action(AsyncToken.fromInteractionWithMessage(interaction)))
+    override def doAsync[B](invocation: InteractionInvocation[_])(
+        action: AsyncMessageToken => F[B]
+    ): HighInteractionResponse[F] =
+      copy(andThenDo = action(AsyncToken.fromInteractionWithMessage(invocation.interaction)))
   }
   case class ChannelMessage[F[_], A](
       message: InteractionResponse.MessageData,
@@ -60,8 +63,8 @@ object HighInteractionResponse {
   ) extends HighInteractionResponse[F]
       with AsyncMessageable[F] {
 
-    def doAsync[B](interaction: Interaction)(action: AsyncMessageToken => F[B]): ChannelMessage[F, B] =
-      copy(andThenDo = action(AsyncToken.fromInteractionWithMessage(interaction)))
+    def doAsync[B](invocation: InteractionInvocation[_])(action: AsyncMessageToken => F[B]): ChannelMessage[F, B] =
+      copy(andThenDo = action(AsyncToken.fromInteractionWithMessage(invocation.interaction)))
   }
   case class Modal[F[_], A](
       modal: InteractionResponse.ModalData,

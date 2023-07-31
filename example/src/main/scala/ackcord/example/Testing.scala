@@ -51,10 +51,10 @@ object Testing extends ResourceApp {
 
   class MyCommands(requests: Requests[IO, Any], components: Components[IO], respondToPing: Boolean)
       extends ApplicationCommandController.Base[IO](requests, components, respondToPing) {
-    val infoCommand: SlashCommand[IO, Unit] = SlashCommand.command("info", "Get some info") { (interaction, _) =>
+    val infoCommand: SlashCommand[IO, Unit] = SlashCommand.command("info", "Get some info") { invocation =>
       sendMessage(
         MessageData.ofContent("Hello from AckCord 2.0 application commands")
-      ).doAsync(interaction) { implicit async =>
+      ).doAsync(invocation) { implicit async =>
         sendAsyncMessage(
           CreateFollowupMessageBody.ofContent("Here's another message")
         )
@@ -62,8 +62,8 @@ object Testing extends ResourceApp {
     }
 
     val infoCommandAsync: SlashCommand[IO, Unit] = SlashCommand.command("infoAsync", "Get some info async") {
-      (interaction, _) =>
-        async(interaction) { implicit a =>
+      invocation =>
+        async(invocation) { implicit a =>
           sendAsyncMessage(
             CreateFollowupMessageBody.ofContent("Hello from AckCord 2.0 async application commands")
           )

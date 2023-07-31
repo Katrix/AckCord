@@ -29,8 +29,8 @@ trait InteractionHandlerOps[F[_]] {
   val EditFollowupMessageBody: InteractionRequests.EditFollowupMessageBody.type =
     InteractionRequests.EditFollowupMessageBody
 
-  def async[A](interaction: Interaction)(handle: AsyncToken => F[_]): HighInteractionResponse[F] =
-    interactions.HighInteractionResponse.Acknowledge(handle(AsyncToken.fromInteraction(interaction)))
+  def async[A](invocation: InteractionInvocation[_])(handle: AsyncToken => F[A]): HighInteractionResponse[F] =
+    interactions.HighInteractionResponse.Acknowledge(handle(AsyncToken.fromInteraction(invocation.interaction)))
 
   def sendMessage(data: MessageData): HighInteractionResponse.AsyncMessageable[F] =
     HighInteractionResponse.ChannelMessage(data, doNothing)

@@ -1,7 +1,6 @@
 package ackcord.interactions
 
 import ackcord.data.{JsonOption, JsonUndefined, Message, Permissions}
-import ackcord.interactions.data.Interaction
 
 /** A builder for message commands. */
 class MessageCommandBuilder[F[_]](
@@ -27,7 +26,7 @@ class MessageCommandBuilder[F[_]](
     *   The handler for the command.
     */
   def handle(name: String, nameLocalizations: JsonOption[Map[String, String]] = JsonUndefined())(
-      handler: (Interaction, Message) => HighInteractionResponse[F]
+      handler: CommandInvocation[Message] => HighInteractionResponse[F]
   ): MessageCommand[F] =
     MessageCommand(name, nameLocalizations, defaultMemberPermissions, nsfw, extra, handler)
 }

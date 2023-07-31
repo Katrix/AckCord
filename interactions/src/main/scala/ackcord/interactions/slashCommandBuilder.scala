@@ -1,7 +1,6 @@
 package ackcord.interactions
 
 import ackcord.data.{JsonOption, JsonUndefined, Permissions}
-import ackcord.interactions.data.Interaction
 
 /** A slash command builder. */
 class SlashCommandBuilder[F[_], A](
@@ -83,7 +82,7 @@ class SlashCommandBuilder[F[_], A](
       nameLocalizations: JsonOption[Map[String, String]] = JsonUndefined(),
       descriptionLocalizations: JsonOption[Map[String, String]] = JsonUndefined()
   )(
-      handle: (Interaction, A) => HighInteractionResponse[F]
+      handle: CommandInvocation[A] => HighInteractionResponse[F]
   ): SlashCommand[F, A] = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     SlashCommand(
@@ -221,7 +220,7 @@ class NamedSlashCommandBuilder[F[_], A](
     * @param handler
     *   A handler for the slash command.
     */
-  def handle(handler: (Interaction, A) => HighInteractionResponse[F]): SlashCommand[F, A] =
+  def handle(handler: CommandInvocation[A] => HighInteractionResponse[F]): SlashCommand[F, A] =
     SlashCommand(
       name,
       nameLocalizations,

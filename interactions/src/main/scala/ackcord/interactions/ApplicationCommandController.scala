@@ -359,7 +359,7 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
     implicit val monad: MonadError[F, Throwable] = F
     interaction.data match {
       case UndefOrSome(data: Interaction.ApplicationCommandData) =>
-        allCommandsByName.get(data.name).traverse(_.handleRaw(interaction))
+        allCommandsByName.get(data.name).traverse(_.handleRaw(interaction, context))
       case _ => F.pure(None)
     }
   }

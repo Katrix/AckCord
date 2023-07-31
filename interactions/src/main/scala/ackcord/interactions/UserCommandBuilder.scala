@@ -25,7 +25,7 @@ class UserCommandBuilder[F[_]](
     *   The handler for the command.
     */
   def handle(name: String, nameLocalizations: JsonOption[Map[String, String]] = JsonUndefined())(
-      handler: (Interaction, (User, Option[GuildMember.Partial])) => HighInteractionResponse[F]
+      handler: CommandInvocation[(User, Option[GuildMember.Partial])] => HighInteractionResponse[F]
   ): UserCommand[F] =
     UserCommand(name, nameLocalizations, defaultMemberPermissions, nsfw, extra, handler)
 }

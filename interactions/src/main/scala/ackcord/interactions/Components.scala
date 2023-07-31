@@ -17,7 +17,7 @@ trait Components[F[_]] extends InteractionsProcess[F] {
 
   def makeRandomCustomId: F[String]
 
-  def registerRawHandler(customId: String)(handler: Interaction => F[HighInteractionResponse[F]]): F[Unit]
+  def registerRawHandler(customId: String)(handler: (Interaction, Context) => F[HighInteractionResponse[F]]): F[Unit]
 
   def buttons: ButtonComponents[F]
   def textInputs: TextInputComponents[F]
@@ -44,7 +44,7 @@ object Components {
   class CatsInteractions[F[_]](
       val requests: Requests[F, Any],
       val respondToPing: Boolean,
-      handlers: MapRef[F, String, Option[Interaction => F[HighInteractionResponse[F]]]]
+      handlers: MapRef[F, String, Option[(Interaction, Context) => F[HighInteractionResponse[F]]]]
   )(
       implicit override val F: Sync[F]
   ) extends Base[F] {
@@ -52,7 +52,9 @@ object Components {
 
     override def makeRandomCustomId: F[String] = F.delay(UUID.randomUUID().toString)
 
-    override def registerRawHandler(customId: String)(handler: Interaction => F[HighInteractionResponse[F]]): F[Unit] =
+    override def registerRawHandler(customId: String)(
+        handler: (Interaction, Context) => F[HighInteractionResponse[F]]
+    ): F[Unit] =
       handlers(customId).set(Some(handler))
 
     override def processComponentInteraction(
@@ -61,7 +63,7 @@ object Components {
     ): F[Option[HighInteractionResponse[F]]] = {
       interaction.data match {
         case UndefOrSome(data: Interaction.MessageComponentData) =>
-          handlers(data.customId).get.flatMap(_.traverse(f => f(interaction)))
+          handlers(data.customId).get.flatMap(_.traverse(f => f(interaction, context)))
         case _ => F.pure(None)
       }
     }
@@ -69,22 +71,29 @@ object Components {
 
   def ofCats[F[_]](requests: Requests[F, Any], respondToPing: Boolean)(implicit F: Sync[F]): F[CatsInteractions[F]] =
     MapRef
-      .ofConcurrentHashMap[F, String, Interaction => F[HighInteractionResponse[F]]]()
+      .ofConcurrentHashMap[F, String, (Interaction, Context) => F[HighInteractionResponse[F]]]()
       .map(new CatsInteractions[F](requests, respondToPing, _))
 
-  trait SpecificComponent[F[_], C <: Component, CD] {
+  abstract class SpecificComponent[F[_], C <: Component, CD](implicit F: MonadError[F, Throwable]) {
     def top: Components[F]
 
     def tpe: ComponentType
 
     def extractData(interaction: Interaction, customId: String): F[CD]
 
-    def registerHandler(customId: String)(handler: (Interaction, CD) => F[HighInteractionResponse[F]]): F[Unit]
+    def registerHandler(customId: String)(handler: ComponentInvocation[CD] => F[HighInteractionResponse[F]]): F[Unit] =
+      top.registerRawHandler(customId) { (interaction, context) =>
+        extractData(interaction, customId).flatMap(cd =>
+          handler(
+            ComponentInvocation(interaction, interaction.data.get.retype(Interaction.MessageComponentData), cd, context)
+          )
+        )
+      }
   }
   object SpecificComponent {
     def makeBase[F[_], C <: Component, CD](
         interactions: SpecificComponent[F, C, CD],
-        handler: (Interaction, CD) => F[HighInteractionResponse[F]]
+        handler: ComponentInvocation[CD] => F[HighInteractionResponse[F]]
     )(make: String => C)(implicit F: MonadError[F, Throwable]): F[C] =
       interactions.top.makeRandomCustomId
         .flatTap(interactions.registerHandler(_)(handler))
@@ -99,7 +108,7 @@ object Components {
         emoji: Option[ComponentEmoji] = None,
         style: Button.ButtonStyle = Button.ButtonStyle.Primary,
         disabled: Boolean = false
-    )(handler: (Interaction, Unit) => F[HighInteractionResponse[F]]): F[Button]
+    )(handler: ComponentInvocation[Unit] => F[HighInteractionResponse[F]]): F[Button]
 
     def makeLink(
         url: String,
@@ -118,17 +127,12 @@ object Components {
   }
   object ButtonComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable]) extends ButtonComponents[F] {
-      override def registerHandler(customId: String)(handler: (Interaction, Unit) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(
           label: Option[String],
           emoji: Option[ComponentEmoji],
           style: Button.ButtonStyle,
           disabled: Boolean
-      )(handler: (Interaction, Unit) => F[HighInteractionResponse[F]]): F[Button] =
+      )(handler: ComponentInvocation[Unit] => F[HighInteractionResponse[F]]): F[Button] =
         SpecificComponent.makeBase(this, handler) { customId =>
           Button.make20(
             customId = UndefOrSome(customId),
@@ -154,15 +158,10 @@ object Components {
         required: Boolean = false,
         value: Option[String] = None,
         placeholder: Option[String] = None
-    )(handler: (Interaction, String) => F[HighInteractionResponse[F]]): F[TextInput]
+    )(handler: ComponentInvocation[String] => F[HighInteractionResponse[F]]): F[TextInput]
   }
   object TextInputComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable]) extends TextInputComponents[F] {
-      override def registerHandler(customId: String)(handler: (Interaction, String) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(
           label: String,
           style: TextInput.TextInputStyle,
@@ -171,7 +170,7 @@ object Components {
           required: Boolean,
           value: Option[String],
           placeholder: Option[String]
-      )(handler: (Interaction, String) => F[HighInteractionResponse[F]]): F[TextInput] =
+      )(handler: ComponentInvocation[String] => F[HighInteractionResponse[F]]): F[TextInput] =
         SpecificComponent.makeBase(this, handler) { customId =>
           TextInput.make20(
             customId = customId,
@@ -214,23 +213,18 @@ object Components {
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
-    )(handler: (Interaction, Seq[String]) => F[HighInteractionResponse[F]]): F[SelectMenu]
+    )(handler: ComponentInvocation[Seq[String]] => F[HighInteractionResponse[F]]): F[SelectMenu]
   }
   object StringSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends StringSelectMenuComponents[F] {
-      override def registerHandler(customId: String)(handler: (Interaction, Seq[String]) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(
           options: Seq[SelectOption],
           placeholder: Option[String],
           minValues: Int,
           maxValues: Int,
           disabled: Boolean
-      )(handler: (Interaction, Seq[String]) => F[HighInteractionResponse[F]]): F[SelectMenu] =
+      )(handler: ComponentInvocation[Seq[String]] => F[HighInteractionResponse[F]]): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
           SelectMenu.make20(
             tpe = ComponentType.StringSelect,
@@ -303,20 +297,13 @@ object Components {
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
-    )(handler: (Interaction, Seq[(User, GuildMember.Partial)]) => F[HighInteractionResponse[F]]): F[SelectMenu]
+    )(handler: ComponentInvocation[Seq[(User, GuildMember.Partial)]] => F[HighInteractionResponse[F]]): F[SelectMenu]
   }
   object UserSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends UserSelectMenuComponents[F] {
-      override def registerHandler(
-          customId: String
-      )(handler: (Interaction, Seq[(User, GuildMember.Partial)]) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
-          handler: (Interaction, Seq[(User, GuildMember.Partial)]) => F[HighInteractionResponse[F]]
+          handler: ComponentInvocation[Seq[(User, GuildMember.Partial)]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
           SelectMenu.make20(
@@ -368,18 +355,13 @@ object Components {
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
-    )(handler: (Interaction, Seq[Role]) => F[HighInteractionResponse[F]]): F[SelectMenu]
+    )(handler: ComponentInvocation[Seq[Role]] => F[HighInteractionResponse[F]]): F[SelectMenu]
   }
   object RoleSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends RoleSelectMenuComponents[F] {
-      override def registerHandler(customId: String)(handler: (Interaction, Seq[Role]) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
-          handler: (Interaction, Seq[Role]) => F[HighInteractionResponse[F]]
+          handler: ComponentInvocation[Seq[Role]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
           SelectMenu.make20(
@@ -426,20 +408,16 @@ object Components {
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
-    )(handler: (Interaction, Seq[(UserOrRole, Option[GuildMember.Partial])]) => F[HighInteractionResponse[F]]): F[SelectMenu]
+    )(
+        handler: ComponentInvocation[Seq[(UserOrRole, Option[GuildMember.Partial])]] => F[HighInteractionResponse[F]]
+    ): F[SelectMenu]
   }
   object MentionableSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends MentionableSelectMenuComponents[F] {
-      override def registerHandler(
-          customId: String
-      )(handler: (Interaction, Seq[(UserOrRole, Option[GuildMember.Partial])]) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
 
       override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
-          handler: (Interaction, Seq[(UserOrRole, Option[GuildMember.Partial])]) => F[HighInteractionResponse[F]]
+          handler: ComponentInvocation[Seq[(UserOrRole, Option[GuildMember.Partial])]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
           SelectMenu.make20(
@@ -510,25 +488,20 @@ object Components {
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
-    )(handler: (Interaction, Seq[Interaction.ResolvedChannel]) => F[HighInteractionResponse[F]]): F[SelectMenu]
+    )(handler: ComponentInvocation[Seq[Interaction.ResolvedChannel]] => F[HighInteractionResponse[F]]): F[SelectMenu]
   }
   object ChannelSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends ChannelSelectMenuComponents[F] {
-      override def registerHandler(
-          customId: String
-      )(handler: (Interaction, Seq[Interaction.ResolvedChannel]) => F[HighInteractionResponse[F]]): F[Unit] =
-        top.registerRawHandler(customId) { interaction =>
-          extractData(interaction, customId).flatMap(cd => handler(interaction, cd))
-        }
-
       override def make(
           channelTypes: Seq[Channel.ChannelType],
           placeholder: Option[String],
           minValues: Int,
           maxValues: Int,
           disabled: Boolean
-      )(handler: (Interaction, Seq[Interaction.ResolvedChannel]) => F[HighInteractionResponse[F]]): F[SelectMenu] =
+      )(
+          handler: ComponentInvocation[Seq[Interaction.ResolvedChannel]] => F[HighInteractionResponse[F]]
+      ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
           SelectMenu.make20(
             tpe = ComponentType.UserSelect,
