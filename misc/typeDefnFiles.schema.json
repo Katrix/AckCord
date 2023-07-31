@@ -494,7 +494,9 @@
                       "RoleId",
                       "GuildScheduledEventId",
                       "WebhookId",
-                      "webhookToken"
+                      "webhookToken",
+                      "InteractionId",
+                      "interactionToken"
                     ]
                   },
                   "name": {

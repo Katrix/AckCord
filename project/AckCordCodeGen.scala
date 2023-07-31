@@ -374,11 +374,13 @@ object AckCordCodeGen {
       "Emoji",
       "RoleId",
       "WebhookId",
-      "GuildScheduledEventId"
+      "GuildScheduledEventId",
+      "InteractionId"
     )
 
     elem.argOf match {
       case "webhookToken"                 => custom("String", Some("webhookToken"))
+      case "interactionToken"             => custom("String", Some("interactionToken"))
       case s if allowedNormal.contains(s) => custom(s)
       case _ =>
         sys.error(s"Unknown path arg element ${elem.argOf}")

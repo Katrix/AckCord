@@ -4,7 +4,8 @@ import ackcord.BotSettings
 import ackcord.data._
 import ackcord.gateway._
 import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEventBase}
-import ackcord.requests.ChannelRequests
+import ackcord.interactions.{ApplicationCommandController, Components, CreatedApplicationCommand, SlashCommand}
+import ackcord.requests.{ChannelRequests, Requests}
 import cats.effect.std.Console
 import cats.effect.{ExitCode, IO, Resource, ResourceApp}
 import cats.syntax.all._
@@ -13,7 +14,7 @@ import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
 object Testing extends ResourceApp {
   class StringCommandProcessor(commands: Map[String, (String, ChannelId) => IO[Unit]], log: Logger[IO])
-      extends DispatchEventProcess[IO] {
+      extends DispatchEventProcess.Base[IO] {
     override def name: String = "StringCommandProcessor"
 
     override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): IO[Context] = event match {
@@ -32,7 +33,7 @@ object Testing extends ResourceApp {
   }
 
   class PrintlnProcessor[Handler <: GatewayHandler[IO]](console: Console[IO], handlerKey: ContextKey[Handler])
-      extends GatewayProcess[IO] {
+      extends GatewayProcess.Base[IO] {
     override def name: String = "PrintlnProcessor"
 
     override def onCreateHandler(context: Context): IO[Context] =
@@ -46,6 +47,32 @@ object Testing extends ResourceApp {
 
     override def onDisconnected(behavior: DisconnectBehavior): IO[DisconnectBehavior] =
       console.println(behavior).as(behavior)
+  }
+
+  class MyCommands(requests: Requests[IO, Any], components: Components[IO], respondToPing: Boolean)
+      extends ApplicationCommandController.Base[IO](requests, components, respondToPing) {
+    val infoCommand: SlashCommand[IO, Unit] = SlashCommand.command("info", "Get some info") { (interaction, _) =>
+      sendMessage(
+        MessageData.ofContent("Hello from AckCord 2.0 application commands")
+      ).doAsync(interaction) { implicit async =>
+        sendAsyncMessage(
+          CreateFollowupMessageBody.ofContent("Here's another message")
+        )
+      }
+    }
+
+    val infoCommandAsync: SlashCommand[IO, Unit] = SlashCommand.command("infoAsync", "Get some info async") {
+      (interaction, _) =>
+        async(interaction) { implicit a =>
+          sendAsyncMessage(
+            CreateFollowupMessageBody.ofContent("Hello from AckCord 2.0 async application commands")
+          )
+        }
+    }
+
+    override val allCommands: Seq[CreatedApplicationCommand[IO]] = Seq(
+      infoCommand
+    )
   }
 
   override def run(args: List[String]): Resource[IO, ExitCode] = {
@@ -96,6 +123,15 @@ object Testing extends ResourceApp {
               log
             )
           )
+      }
+      .flatMap { settings =>
+        settings.useResource(
+          Resource.eval(
+            Components
+              .ofCats(settings.requests, respondToPing = false)
+              .map(new MyCommands(settings.requests, _, respondToPing = true))
+          )
+        )
       }
       .flatMap(_.startResource)
   }

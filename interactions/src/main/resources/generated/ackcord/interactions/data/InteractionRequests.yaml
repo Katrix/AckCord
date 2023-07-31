@@ -1,0 +1,209 @@
+name: InteractionRequests
+defType: ObjectOnly
+imports:
+  - ackcord.data._
+  - ackcord.requests._
+  - sttp.model.Method
+innerTypes:
+  - name: createInteractionResponse
+    defType: Request
+    documentation: |-
+      Create a response to an Interaction from the gateway. Body is an interaction response. Returns 204 No Content.
+
+      This endpoint also supports file attachments similar to the webhook endpoints. Refer to Uploading Files for details on uploading files and multipart/form-data requests.
+    method: POST
+    path: [ interactions, { argOf: InteractionId }, { argOf: interactionToken },callback ]
+    body: InteractionResponse
+
+  - name: getOriginalInteractionResponse
+    defType: Request
+    documentation: >-
+      Returns the initial Interaction response. Functions the same as Get Webhook
+      Message.
+    method: GET
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, "@original" ]
+    return: Message
+
+  - name: editOriginalInteractionResponse
+    defType: Request
+    documentation: >-
+      Edits the initial Interaction response. Functions the same as Edit Webhook
+      Message.
+    method: PATCH
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, "@original" ]
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[EditOriginalInteractionResponseBody]"]
+      fields:
+        2.0.x:
+          content:
+            type: String
+            documentation: Message contents (up to 2000 characters)
+            verification:
+              max_length: 2000
+
+          embeds:
+            type: Seq[OutgoingEmbed]
+            documentation: Up to 10 rich embeds (up to 6000 characters)
+            verification:
+              max_length: 10
+
+          allowed_mentions:
+            type: AllowedMentions
+            documentation: Allowed mentions for the message
+
+          components:
+            type: Seq[Component]
+            documentation: Components to include with the message
+
+          attachments:
+            type: Seq[ChannelRequests.MessageCreateEditAttachment]
+            documentation: Attachment objects with filename and description
+    return: Message
+
+  - name: deleteOriginalInteractionResponse
+    defType: Request
+    documentation: >-
+      Deletes the initial Interaction response. Returns 204 No Content on success.
+    method: DELETE
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, "@original" ]
+
+  - name: createFollowupMessage
+    defType: Request
+    documentation: |-
+      Create a followup message for an Interaction. Functions the same as Execute Webhook, but wait is always true. The thread_id, avatar_url, and username parameters are not supported when using this endpoint for interaction followups.
+
+      flags can be set to 64 to mark the message as ephemeral, except when it is the first followup message to a deferred Interactions Response. In that case, the flags field will be ignored, and the ephemerality of the message will be determined by the flags value in your original ACK.
+    method: POST
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken } ]
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[CreateFollowupMessageBody]"]
+      fields:
+        2.0.x:
+          content:
+            type: String
+            documentation: Message contents (up to 2000 characters)
+            verification:
+              max_length: 2000
+
+          tts:
+            type: Boolean
+            documentation: true if this is a TTS message
+
+          embeds:
+            type: Seq[OutgoingEmbed]
+            documentation: Up to 10 rich embeds (up to 6000 characters)
+            verification:
+              max_length: 10
+
+          allowed_mentions:
+            type: AllowedMentions
+            documentation: Allowed mentions for the message
+
+          components:
+            type: Seq[Component]
+            documentation: Components to include with the message
+
+          attachments:
+            type: Seq[ChannelRequests.MessageCreateEditAttachment]
+            documentation: Attachment objects with filename and description
+
+          flags:
+            type: Message.MessageFlags
+            documentation: Message flags combined as a bitfield (only SUPPRESS_EMBEDS and SUPPRESS_NOTIFICATIONS can be set)
+
+          thread_name:
+            type: String
+            documentation: Name of thread to create (requires the webhook channel to be a forum channel)
+    return: Message
+
+  - name: getFollowupMessage
+    defType: Request
+    documentation: >-
+      Returns a followup message for an Interaction. Functions the same as Get
+      Webhook Message.
+    method: GET
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, { argOf: MessageId } ]
+    return: Message
+
+  - name: editFollowupMessage
+    defType: Request
+    documentation: >-
+      Edits a followup message for an Interaction. Functions the same as Edit
+      Webhook Message.
+    method: PATCH
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, { argOf: MessageId } ]
+    additionalTypeParams: [ "MPR" ]
+    additionalParams:
+      parts:
+        type: Seq[EncodeBody.Multipart[_, MPR]]
+        default: Nil
+    complexType:
+      R1: MPR
+    encodeBody: |-
+      EncodeBody.MultipartBody(
+        EncodeBody.Multipart.EncodeJson(body, "payload_json"), 
+        parts.zipWithIndex.map(t => t._1.withName(s"files[${t._2}]"))
+      )
+    body:
+      allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[EditFollowupMessageBody]"]
+      fields:
+        2.0.x:
+          content:
+            type: String
+            documentation: Message contents (up to 2000 characters)
+            verification:
+              max_length: 2000
+
+          embeds:
+            type: Seq[OutgoingEmbed]
+            documentation: Up to 10 rich embeds (up to 6000 characters)
+            verification:
+              max_length: 10
+
+          allowed_mentions:
+            type: AllowedMentions
+            documentation: Allowed mentions for the message
+
+          components:
+            type: Seq[Component]
+            documentation: Components to include with the message
+
+          attachments:
+            type: Seq[ChannelRequests.MessageCreateEditAttachment]
+            documentation: Attachment objects with filename and description
+    return: Message
+
+  - name: deleteFollowupMessage
+    defType: Request
+    documentation: >-
+      Deletes a followup message for an Interaction. Returns 204 No Content on
+      success.
+    method: DELETE
+    path: [ webhooks, { argOf: ApplicationId }, { argOf: interactionToken }, messages, { argOf: MessageId } ]

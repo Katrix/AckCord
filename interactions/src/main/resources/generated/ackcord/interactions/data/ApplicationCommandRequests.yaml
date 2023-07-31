@@ -8,17 +8,30 @@ innerTypes:
   # Global command requests
   - name: getGlobalApplicationCommands
     defType: Request
+    documentation: >-
+      Fetch all of the global commands for your application. Returns an array of
+      application command objects.
     method: GET
     path: [ applications, { argOf: ApplicationId }, commands ]
     query:
       allUndefined: true
       fields:
         2.0.x:
-          with_localizations: Boolean
+          with_localizations:
+            type: Boolean
+            documentation: Whether to include full localization dictionaries
+              (name_localizations and description_localizations) in the returned
+              objects, instead of the name_localized and description_localized
+              fields. Default false.
     return: Seq[ApplicationCommand]
 
   - name: createGlobalApplicationCommand
     defType: Request
+    documentation: >-
+      Create a new global command. Returns 201 if a command with the same name
+      does not already exist, or a 200 if it does (in which case the previous
+      command will be overwritten). Both responses include an application command
+      object.
     method: POST
     path: [ applications, { argOf: ApplicationId }, commands ]
     body:
@@ -26,6 +39,7 @@ innerTypes:
         2.0.x:
           name:
             type: String
+            documentation: Name of command, 1-32 characters
             verification:
               min_length: 1
               max_length: 32
@@ -34,10 +48,13 @@ innerTypes:
             type: Map[String, String]
             withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the name field. Values follow the
+              same restrictions as name
 
           description:
             type: String
             withUndefined: true
+            documentation: 1-100 character description for CHAT_INPUT commands
             verification:
               min_length: 1
               max_length: 100
@@ -46,39 +63,54 @@ innerTypes:
             type: Map[String, String]
             withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the description field. Values follow
+              the same restrictions as description
 
           options:
             type: Seq[ApplicationCommand.ApplicationCommandOption]
             withUndefined: true
+            documentation: The parameters for the command
 
           default_member_permissions:
             type: Permissions
             withUndefined: true
             withNull: true
+            documentation: Set of permissions represented as a bit set
 
           dm_permission:
             type: Boolean
             withUndefined: true
+            withNull: true
+            documentation: Indicates whether the command is available in DMs with the app,
+              only for globally-scoped commands. By default, commands are visible.
 
           tpe:
             jsonName: type
             type: ApplicationCommand.ApplicationCommandType
             withUndefined: true
+            documentation: Type of command, defaults 1 if not set
 
           nsfw:
             type: Boolean
             withUndefined: true
-
+            documentation: Indicates whether the command is age-restricted
     return: ApplicationCommand
 
   - name: getGlobalApplicationCommand
     defType: Request
+    documentation: >-
+      Fetch a global command for your application. Returns an application command
+      object.
     method: GET
     path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
     return: ApplicationCommand
 
   - name: editGlobalApplicationCommand
     defType: Request
+    documentation: >-
+      Edit a global command. Returns 200 and an application command object. All
+      fields are optional, but any fields provided will entirely overwrite the
+      existing values of those fields.
     method: PATCH
     path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
     body:
@@ -87,6 +119,7 @@ innerTypes:
         2.0.x:
           name:
             type: String
+            documentation: Name of command, 1-32 characters
             verification:
               min_length: 1
               max_length: 32
@@ -94,37 +127,56 @@ innerTypes:
           name_localizations:
             type: Map[String, String]
             withNull: true
+            documentation: Localization dictionary for the name field. Values follow the
+              same restrictions as name
 
           description:
             type: String
+            documentation: 1-100 character description
             verification:
               min_length: 1
               max_length: 100
 
           description_localizations:
             type: Map[String, String]
-            withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the description field. Values follow
+              the same restrictions as description
 
-          options: Seq[ApplicationCommand.ApplicationCommandOption]
+          options:
+            type: Seq[ApplicationCommand.ApplicationCommandOption]
+            documentation: The parameters for the command
 
           default_member_permissions:
             type: Permissions
             withNull: true
+            documentation: Set of permissions represented as a bit set
 
-          dm_permission: Boolean
+          dm_permission:
+            type: Boolean
+            withNull: true
+            documentation: Indicates whether the command is available in DMs with the app,
+              only for globally-scoped commands. By default, commands are visible.
 
-          nsfw: Boolean
-
+          nsfw:
+            type: Boolean
+            documentation: Indicates whether the command is age-restricted
     return: ApplicationCommand
 
   - name: deleteGlobalApplicationCommand
     defType: Request
+    documentation: >-
+      Deletes a global command. Returns 204 No Content on success.
     method: DELETE
     path: [ applications, { argOf: ApplicationId }, commands, { argOf: CommandId } ]
 
   - name: bulkOverwriteGlobalApplicationCommands
     defType: Request
+    documentation: >-
+      Takes a list of application commands, overwriting the existing global
+      command list for this application. Returns 200 and a list of application
+      command objects. Commands that do not already exist will count toward daily
+      application command create limits.
     method: PUT
     path: [ applications, { argOf: ApplicationId }, commands ]
     body: Seq[ApplicationCommand]
@@ -133,17 +185,30 @@ innerTypes:
   # Guild command requests
   - name: getGuildApplicationCommands
     defType: Request
+    documentation: >-
+      Fetch all of the guild commands for your application for a specific guild.
+      Returns an array of application command objects.
     method: GET
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
     query:
       allUndefined: true
       fields:
         2.0.x:
-          with_localizations: Boolean
+          with_localizations:
+            type: Boolean
+            documentation: Whether to include full localization dictionaries
+              (name_localizations and description_localizations) in the returned
+              objects, instead of the name_localized and description_localized
+              fields. Default false.
     return: Seq[ApplicationCommand]
 
   - name: createGuildApplicationCommand
     defType: Request
+    documentation: >-
+      Create a new guild command. New guild commands will be available in the
+      guild immediately. Returns 201 if a command with the same name does not
+      already exist, or a 200 if it does (in which case the previous command will
+      be overwritten). Both responses include an application command object.
     method: POST
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
     body:
@@ -151,6 +216,7 @@ innerTypes:
         2.0.x:
           name:
             type: String
+            documentation: Name of command, 1-32 characters
             verification:
               min_length: 1
               max_length: 32
@@ -159,10 +225,13 @@ innerTypes:
             type: Map[String, String]
             withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the name field. Values follow the
+              same restrictions as name
 
           description:
             type: String
             withUndefined: true
+            documentation: 1-100 character description for CHAT_INPUT commands
             verification:
               min_length: 1
               max_length: 100
@@ -171,39 +240,48 @@ innerTypes:
             type: Map[String, String]
             withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the description field. Values follow
+              the same restrictions as description
 
           options:
             type: Seq[ApplicationCommand.ApplicationCommandOption]
             withUndefined: true
+            documentation: Parameters for the command
 
           default_member_permissions:
             type: Permissions
             withUndefined: true
             withNull: true
-
-          dm_permission:
-            type: Boolean
-            withUndefined: true
+            documentation: Set of permissions represented as a bit set
 
           tpe:
             jsonName: type
             type: ApplicationCommand.ApplicationCommandType
             withUndefined: true
+            documentation: Type of command, defaults 1 if not set
 
           nsfw:
             type: Boolean
             withUndefined: true
-
+            documentation: Indicates whether the command is age-restricted
     return: ApplicationCommand
 
   - name: getGuildApplicationCommand
     defType: Request
+    documentation: >-
+      Fetch a guild command for your application. Returns an application command
+      object.
     method: GET
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
     return: ApplicationCommand
 
   - name: editGuildApplicationCommand
     defType: Request
+    documentation: >-
+      Edit a guild command. Updates for guild commands will be available
+      immediately. Returns 200 and an application command object. All fields are
+      optional, but any fields provided will entirely overwrite the existing
+      values of those fields.
     method: PATCH
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
     body:
@@ -212,6 +290,7 @@ innerTypes:
         2.0.x:
           name:
             type: String
+            documentation: Name of command, 1-32 characters
             verification:
               min_length: 1
               max_length: 32
@@ -219,37 +298,49 @@ innerTypes:
           name_localizations:
             type: Map[String, String]
             withNull: true
+            documentation: Localization dictionary for the name field. Values follow the
+              same restrictions as name
 
           description:
             type: String
+            documentation: 1-100 character description
             verification:
               min_length: 1
               max_length: 100
 
           description_localizations:
             type: Map[String, String]
-            withUndefined: true
             withNull: true
+            documentation: Localization dictionary for the description field. Values follow
+              the same restrictions as description
 
-          options: Seq[ApplicationCommand.ApplicationCommandOption]
+          options:
+            type: Seq[ApplicationCommand.ApplicationCommandOption]
+            documentation: Parameters for the command
 
           default_member_permissions:
             type: Permissions
             withNull: true
+            documentation: Set of permissions represented as a bit set
 
-          dm_permission: Boolean
-
-          nsfw: Boolean
-
+          nsfw:
+            type: Boolean
+            documentation: Indicates whether the command is age-restricted
     return: ApplicationCommand
 
   - name: deleteGuildApplicationCommand
     defType: Request
+    documentation: >-
+      Delete a guild command. Returns 204 No Content on success.
     method: DELETE
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId } ]
 
   - name: bulkOverwriteGuildApplicationCommands
     defType: Request
+    documentation: >-
+      Takes a list of application commands, overwriting the existing command list
+      for this application for the targeted guild. Returns 200 and a list of
+      application command objects.
     method: PUT
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands ]
     body: Seq[ApplicationCommand]
@@ -257,22 +348,34 @@ innerTypes:
 
   - name: getGuildApplicationCommandPermissions
     defType: Request
+    documentation: >-
+      Fetches permissions for all commands for your application in a guild.
+      Returns an array of guild application command permissions objects.
     method: GET
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, permissions ]
     return: Seq[ApplicationCommand.GuildApplicationCommandPermissions]
 
   - name: getApplicationCommandPermissions
     defType: Request
+    documentation: >-
+      Fetches permissions for a specific command for your application in a guild.
+      Returns a guild application command permissions object.
     method: GET
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId }, permissions ]
     return: ApplicationCommand.GuildApplicationCommandPermissions
 
   - name: editApplicationCommandPermissions
     defType: Request
+    documentation: |-
+      Edits command permissions for a specific command for your application in a guild and returns a guild application command permissions object. Fires an Application Command Permissions Update Gateway event.
+
+      You can add up to 100 permission overwrites for a command.
     method: PUT
     path: [ applications, { argOf: ApplicationId }, guilds, { argOf: GuildId }, commands, { argOf: CommandId }, permissions ]
     body:
       fields:
         2.0.x:
-          permissions: Seq[ApplicationCommand.GuildApplicationCommandPermissions.ApplicationCommandPermissions]
+          permissions:
+            type: Seq[ApplicationCommand.GuildApplicationCommandPermissions.ApplicationCommandPermissions]
+            documentation: Permissions for the command in the guild
     return: ApplicationCommand.GuildApplicationCommandPermissions
