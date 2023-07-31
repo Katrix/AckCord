@@ -60,8 +60,8 @@ object StageInstanceRequests {
     def make20(
         channelId: StageChannelId,
         topic: String,
-        privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined,
-        sendStartNotification: UndefOr[Boolean] = UndefOrUndefined
+        privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined(Some("privacy_level")),
+        sendStartNotification: UndefOr[Boolean] = UndefOrUndefined(Some("send_start_notification"))
     ): CreateStageInstanceBody = makeRawFromFields(
       "channel_id"               := channelId,
       "topic"                    := topic,
@@ -123,8 +123,8 @@ object StageInstanceRequests {
       *   The privacy level of the Stage instance
       */
     def make20(
-        topic: UndefOr[String] = UndefOrUndefined,
-        privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined
+        topic: UndefOr[String] = UndefOrUndefined(Some("topic")),
+        privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined(Some("privacy_level"))
     ): ModifyStageInstanceBody = makeRawFromFields("topic" :=? topic, "privacy_level" :=? privacyLevel)
   }
 

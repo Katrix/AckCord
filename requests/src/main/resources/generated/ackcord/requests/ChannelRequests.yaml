@@ -281,6 +281,7 @@ innerTypes:
       )
     body:
       allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[CreateMessageBody]"]
       fields:
         2.0.x:
           content:
@@ -501,6 +502,7 @@ innerTypes:
       )
     body:
       allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[EditMessageBody]"]
       fields:
         2.0.x:
           content:

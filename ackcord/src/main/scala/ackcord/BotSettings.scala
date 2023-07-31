@@ -71,26 +71,26 @@ object BotSettings {
     def useEventListener(
         f: gateway.Context => PartialFunction[GatewayDispatchEvent, F[gateway.Context]]
     ): NormalBotSettings[F, P, Handler] =
-      use(new DispatchEventProcess[F] {
+      use(new DispatchEventProcess.Base[F] {
         override def name: String = "AnonymousEventListener"
 
         override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] = {
           val f2 = f(context)
 
           if (f2.isDefinedAt(event)) f2(event)
-          else context.pure
+          else F.pure(context)
         }
       })
 
     def useEventListenerNoContext(
         f: PartialFunction[GatewayDispatchEvent, F[Unit]]
     ): NormalBotSettings[F, P, Handler] =
-      use(new DispatchEventProcess[F] {
+      use(new DispatchEventProcess.Base[F] {
         override def name: String = "AnonymousEventListener"
 
         override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] =
-          if (f.isDefinedAt(event)) f(event).as(context)
-          else context.pure
+          if (f.isDefinedAt(event)) F.as(f(event), context)
+          else F.pure(context)
       })
 
     def assembledProcessor: GatewayProcess[F] = {

@@ -115,9 +115,9 @@ object AckCordCodeGen {
           default = realDefault.map { s =>
             (s, undef, fieldInfo.withNull) match {
               case ("null", true, true)       => "JsonNull"
-              case ("undefined", true, true)  => "JsonUndefined"
+              case ("undefined", true, true)  => s"""JsonUndefined(Some("$field"))"""
               case ("null", false, true)      => "None"
-              case ("undefined", true, false) => "UndefOrUndefined"
+              case ("undefined", true, false) => s"""UndefOrUndefined(Some("$field"))"""
               case (d, true, true)            => s"JsonSome($d)"
               case (d, false, true)           => s"Some($d)"
               case (d, true, false)           => s"UndefOrSome($d)"
@@ -205,7 +205,7 @@ object AckCordCodeGen {
 
     val partialDef =
       if (classTypeDef.anonPart.makePartial)
-        List(classTypeDef.anonPart.copy(allUndefined = true, makePartial = false).named("Partial"))
+        List(classTypeDef.anonPart.copy(allUndefined = true, makePartial = false, innerTypes = Nil).named("Partial"))
       else Nil
     val allInnerTypes = partialDef ++ classTypeDef.anonPart.innerTypes
 

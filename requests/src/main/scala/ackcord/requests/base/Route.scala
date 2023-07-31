@@ -83,7 +83,7 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
           applied,
           queryParts.appended((query.name, query.print(value)))
         )
-      case UndefOrUndefined =>
+      case UndefOrUndefined(_, _) =>
         this
     }
 
@@ -92,7 +92,7 @@ case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri, qu
     */
   def ++?[A](query: SeqQueryParameter[A]): Route =
     query.value match {
-      case UndefOrUndefined | UndefOrSome(Nil) => Route(uriWithMajor, uriWithoutMajor, applied, queryParts)
+      case UndefOrUndefined(_, _) | UndefOrSome(Nil) => Route(uriWithMajor, uriWithoutMajor, applied, queryParts)
       case UndefOrSome(values) =>
         Route(
           uriWithMajor,

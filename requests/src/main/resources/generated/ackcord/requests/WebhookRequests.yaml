@@ -172,6 +172,7 @@ innerTypes:
       )
     body:
       allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[ExecuteWebhookBody]"]
       fields:
         2.0.x:
           content:
@@ -324,6 +325,7 @@ innerTypes:
       )
     body:
       allUndefined: true
+      objectExtends: ["CreateMessageLikeMixin[EditWebhookMessageBody]"]
       fields:
         2.0.x:
           content:

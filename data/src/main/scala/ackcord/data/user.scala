@@ -240,18 +240,18 @@ object User extends DiscordObjectCompanion[User] {
       discriminator: String,
       globalName: Option[String],
       avatar: Option[ImageHash],
-      bot: UndefOr[Boolean] = UndefOrUndefined,
-      system: UndefOr[Boolean] = UndefOrUndefined,
-      mfaEnabled: UndefOr[Boolean] = UndefOrUndefined,
-      banner: JsonOption[ImageHash] = JsonUndefined,
-      accentColor: JsonOption[Int] = JsonUndefined,
-      locale: UndefOr[String] = UndefOrUndefined,
-      verified: UndefOr[Boolean] = UndefOrUndefined,
-      email: JsonOption[String] = JsonUndefined,
-      flags: UndefOr[User.UserFlags] = UndefOrUndefined,
-      premiumType: UndefOr[User.PremiumType] = UndefOrUndefined,
-      publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined,
-      avatarDecoration: JsonOption[ImageHash] = JsonUndefined
+      bot: UndefOr[Boolean] = UndefOrUndefined(Some("bot")),
+      system: UndefOr[Boolean] = UndefOrUndefined(Some("system")),
+      mfaEnabled: UndefOr[Boolean] = UndefOrUndefined(Some("mfa_enabled")),
+      banner: JsonOption[ImageHash] = JsonUndefined(Some("banner")),
+      accentColor: JsonOption[Int] = JsonUndefined(Some("accent_color")),
+      locale: UndefOr[String] = UndefOrUndefined(Some("locale")),
+      verified: UndefOr[Boolean] = UndefOrUndefined(Some("verified")),
+      email: JsonOption[String] = JsonUndefined(Some("email")),
+      flags: UndefOr[User.UserFlags] = UndefOrUndefined(Some("flags")),
+      premiumType: UndefOr[User.PremiumType] = UndefOrUndefined(Some("premium_type")),
+      publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined(Some("public_flags")),
+      avatarDecoration: JsonOption[ImageHash] = JsonUndefined(Some("avatar_decoration"))
   ): User = makeRawFromFields(
     "id"                 := id,
     "username"           := username,
@@ -451,22 +451,22 @@ object User extends DiscordObjectCompanion[User] {
       */
     def make20(
         id: UserId,
-        username: UndefOr[String] = UndefOrUndefined,
-        discriminator: UndefOr[String] = UndefOrUndefined,
-        globalName: JsonOption[String] = JsonUndefined,
-        avatar: JsonOption[ImageHash] = JsonUndefined,
-        bot: UndefOr[Boolean] = UndefOrUndefined,
-        system: UndefOr[Boolean] = UndefOrUndefined,
-        mfaEnabled: UndefOr[Boolean] = UndefOrUndefined,
-        banner: JsonOption[ImageHash] = JsonUndefined,
-        accentColor: JsonOption[Int] = JsonUndefined,
-        locale: UndefOr[String] = UndefOrUndefined,
-        verified: UndefOr[Boolean] = UndefOrUndefined,
-        email: JsonOption[String] = JsonUndefined,
-        flags: UndefOr[User.UserFlags] = UndefOrUndefined,
-        premiumType: UndefOr[User.PremiumType] = UndefOrUndefined,
-        publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined,
-        avatarDecoration: JsonOption[ImageHash] = JsonUndefined
+        username: UndefOr[String] = UndefOrUndefined(Some("username")),
+        discriminator: UndefOr[String] = UndefOrUndefined(Some("discriminator")),
+        globalName: JsonOption[String] = JsonUndefined(Some("global_name")),
+        avatar: JsonOption[ImageHash] = JsonUndefined(Some("avatar")),
+        bot: UndefOr[Boolean] = UndefOrUndefined(Some("bot")),
+        system: UndefOr[Boolean] = UndefOrUndefined(Some("system")),
+        mfaEnabled: UndefOr[Boolean] = UndefOrUndefined(Some("mfa_enabled")),
+        banner: JsonOption[ImageHash] = JsonUndefined(Some("banner")),
+        accentColor: JsonOption[Int] = JsonUndefined(Some("accent_color")),
+        locale: UndefOr[String] = UndefOrUndefined(Some("locale")),
+        verified: UndefOr[Boolean] = UndefOrUndefined(Some("verified")),
+        email: JsonOption[String] = JsonUndefined(Some("email")),
+        flags: UndefOr[User.UserFlags] = UndefOrUndefined(Some("flags")),
+        premiumType: UndefOr[User.PremiumType] = UndefOrUndefined(Some("premium_type")),
+        publicFlags: UndefOr[User.UserFlags] = UndefOrUndefined(Some("public_flags")),
+        avatarDecoration: JsonOption[ImageHash] = JsonUndefined(Some("avatar_decoration"))
     ): Partial = makeRawFromFields(
       "id"                 := id,
       "username"          :=? username,
@@ -486,107 +486,6 @@ object User extends DiscordObjectCompanion[User] {
       "public_flags"      :=? publicFlags,
       "avatar_decoration" :=? avatarDecoration
     )
-
-    sealed case class UserFlags private (value: Int) extends DiscordEnum[Int]
-    object UserFlags                                 extends DiscordEnumCompanion[Int, UserFlags] {
-
-      /** Discord Employee */
-      val STAFF: UserFlags = UserFlags(1 << 0)
-
-      /** Partnered Server Owner */
-      val PARTNER: UserFlags = UserFlags(1 << 1)
-
-      /** HypeSquad Events Member */
-      val HYPESQUAD: UserFlags = UserFlags(1 << 2)
-
-      /** Bug Hunter Level 1 */
-      val BUG_HUNTER_LEVEL_1: UserFlags = UserFlags(1 << 3)
-
-      /** House Bravery Member */
-      val HYPESQUAD_ONLINE_HOUSE_1: UserFlags = UserFlags(1 << 6)
-
-      /** House Brilliance Member */
-      val HYPESQUAD_ONLINE_HOUSE_2: UserFlags = UserFlags(1 << 7)
-
-      /** House Balance Member */
-      val HYPESQUAD_ONLINE_HOUSE_3: UserFlags = UserFlags(1 << 8)
-
-      /** Early Nitro Supporter */
-      val PREMIUM_EARLY_SUPPORTER: UserFlags = UserFlags(1 << 9)
-
-      /** User is a team */
-      val TEAM_PSEUDO_USER: UserFlags = UserFlags(1 << 10)
-
-      /** Bug Hunter Level 2 */
-      val BUG_HUNTER_LEVEL_2: UserFlags = UserFlags(1 << 14)
-
-      /** Verified Bot */
-      val VERIFIED_BOT: UserFlags = UserFlags(1 << 16)
-
-      /** Early Verified Bot Developer */
-      val VERIFIED_DEVELOPER: UserFlags = UserFlags(1 << 17)
-
-      /** Moderator Programs Alumni */
-      val CERTIFIED_MODERATOR: UserFlags = UserFlags(1 << 18)
-
-      /**
-        * Bot uses only HTTP interactions and is shown in the online member list
-        */
-      val BOT_HTTP_INTERACTIONS: UserFlags = UserFlags(1 << 19)
-
-      /** User is an Active Developer */
-      val ACTIVE_DEVELOPER: UserFlags = UserFlags(1 << 22)
-
-      def unknown(value: Int): UserFlags = new UserFlags(value)
-
-      val values: Seq[UserFlags] = Seq(
-        STAFF,
-        PARTNER,
-        HYPESQUAD,
-        BUG_HUNTER_LEVEL_1,
-        HYPESQUAD_ONLINE_HOUSE_1,
-        HYPESQUAD_ONLINE_HOUSE_2,
-        HYPESQUAD_ONLINE_HOUSE_3,
-        PREMIUM_EARLY_SUPPORTER,
-        TEAM_PSEUDO_USER,
-        BUG_HUNTER_LEVEL_2,
-        VERIFIED_BOT,
-        VERIFIED_DEVELOPER,
-        CERTIFIED_MODERATOR,
-        BOT_HTTP_INTERACTIONS,
-        ACTIVE_DEVELOPER
-      )
-
-      implicit class UserFlagsBitFieldOps(private val here: UserFlags) extends AnyVal {
-
-        def toInt: Int = here.value
-
-        def ++(there: UserFlags): UserFlags = UserFlags(here.value | there.value)
-
-        def --(there: UserFlags): UserFlags = UserFlags(here.value & ~there.value)
-
-        def isNone: Boolean = here.value == 0
-      }
-    }
-
-    /**
-      * Premium types denote the level of premium a user has. Visit the Nitro
-      * page to learn more about the premium plans we currently offer.
-      */
-    sealed case class PremiumType private (value: Int) extends DiscordEnum[Int]
-    object PremiumType extends DiscordEnumCompanion[Int, PremiumType] {
-      val None: PremiumType = PremiumType(0)
-
-      val NitroClassic: PremiumType = PremiumType(1)
-
-      val Nitro: PremiumType = PremiumType(2)
-
-      val NitroBasic: PremiumType = PremiumType(3)
-
-      def unknown(value: Int): PremiumType = new PremiumType(value)
-
-      val values: Seq[PremiumType] = Seq(None, NitroClassic, Nitro, NitroBasic)
-    }
   }
 
   sealed case class UserFlags private (value: Int) extends DiscordEnum[Int]
@@ -794,8 +693,8 @@ object Connection extends DiscordObjectCompanion[Connection] {
       id: String,
       name: String,
       tpe: Connection.ConnectionServiceType,
-      revoked: UndefOr[Boolean] = UndefOrUndefined,
-      integrations: UndefOr[Seq[Connection.ConnectionIntegration]] = UndefOrUndefined,
+      revoked: UndefOr[Boolean] = UndefOrUndefined(Some("revoked")),
+      integrations: UndefOr[Seq[Connection.ConnectionIntegration]] = UndefOrUndefined(Some("integrations")),
       verified: Boolean,
       friendSync: Boolean,
       showActivity: Boolean,
@@ -1092,8 +991,8 @@ object Role extends DiscordObjectCompanion[Role] {
       name: String,
       color: Int,
       hoist: Boolean,
-      icon: JsonOption[ImageHash] = JsonUndefined,
-      unicodeEmoji: JsonOption[String] = JsonUndefined,
+      icon: JsonOption[ImageHash] = JsonUndefined(Some("icon")),
+      unicodeEmoji: JsonOption[String] = JsonUndefined(Some("unicode_emoji")),
       position: Int,
       permissions: Permissions,
       managed: Boolean,
@@ -1185,12 +1084,12 @@ object Role extends DiscordObjectCompanion[Role] {
       *   Whether this role is a guild's linked role
       */
     def make20(
-        botId: UndefOr[UserId] = UndefOrUndefined,
-        integrationId: UndefOr[Snowflake[Integration]] = UndefOrUndefined,
-        premiumSubscriber: JsonOption[Unit] = JsonUndefined,
-        subscriptionListingId: UndefOr[RawSnowflake] = UndefOrUndefined,
-        availableForPurchase: JsonOption[Unit] = JsonUndefined,
-        guildConnections: JsonOption[Unit] = JsonUndefined
+        botId: UndefOr[UserId] = UndefOrUndefined(Some("bot_id")),
+        integrationId: UndefOr[Snowflake[Integration]] = UndefOrUndefined(Some("integration_id")),
+        premiumSubscriber: JsonOption[Unit] = JsonUndefined(Some("premium_subscriber")),
+        subscriptionListingId: UndefOr[RawSnowflake] = UndefOrUndefined(Some("subscription_listing_id")),
+        availableForPurchase: JsonOption[Unit] = JsonUndefined(Some("available_for_purchase")),
+        guildConnections: JsonOption[Unit] = JsonUndefined(Some("guild_connections"))
     ): RoleTag = makeRawFromFields(
       "bot_id"                  :=? botId,
       "integration_id"          :=? integrationId,

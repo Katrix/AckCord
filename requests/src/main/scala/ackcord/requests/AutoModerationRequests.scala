@@ -135,7 +135,7 @@ object AutoModerationRequests {
         triggerType: AutoModerationRule.AutoModerationRuleTriggerType,
         triggerMetadata: AutoModerationRule.AutoModerationRuleTriggerMetadata,
         actions: Seq[AutoModerationRule.AutoModerationRuleAction],
-        enabled: UndefOr[Boolean] = UndefOrUndefined,
+        enabled: UndefOr[Boolean] = UndefOrUndefined(Some("enabled")),
         exemptRoles: Seq[RoleId],
         exemptChannels: Seq[GuildChannelId]
     ): CreateAutoModerationRuleBody = makeRawFromFields(
@@ -249,13 +249,15 @@ object AutoModerationRequests {
       *   50)
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        eventType: UndefOr[AutoModerationRule.AutoModerationRuleEventType] = UndefOrUndefined,
-        triggerMetadata: UndefOr[AutoModerationRule.AutoModerationRuleTriggerMetadata] = UndefOrUndefined,
-        actions: UndefOr[Seq[AutoModerationRule.AutoModerationRuleAction]] = UndefOrUndefined,
-        enabled: UndefOr[Boolean] = UndefOrUndefined,
-        exemptRoles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
-        exemptChannels: UndefOr[Seq[GuildChannelId]] = UndefOrUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        eventType: UndefOr[AutoModerationRule.AutoModerationRuleEventType] = UndefOrUndefined(Some("event_type")),
+        triggerMetadata: UndefOr[AutoModerationRule.AutoModerationRuleTriggerMetadata] = UndefOrUndefined(
+          Some("trigger_metadata")
+        ),
+        actions: UndefOr[Seq[AutoModerationRule.AutoModerationRuleAction]] = UndefOrUndefined(Some("actions")),
+        enabled: UndefOr[Boolean] = UndefOrUndefined(Some("enabled")),
+        exemptRoles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("exempt_roles")),
+        exemptChannels: UndefOr[Seq[GuildChannelId]] = UndefOrUndefined(Some("exempt_channels"))
     ): ModifyAutoModerationRuleBody = makeRawFromFields(
       "name"             :=? name,
       "event_type"       :=? eventType,

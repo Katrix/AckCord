@@ -7,19 +7,23 @@ import cats.syntax.all._
 import cats.{Applicative, ApplicativeError, Monad}
 import org.typelevel.log4cats.Logger
 
-abstract class GatewayProcess[F[_]: Applicative] {
+trait GatewayProcess[F[_]] {
+
+  def F: Applicative[F]
 
   def name: String
 
-  def onCreateHandler(context: Context): F[Context] = context.pure
+  def onCreateHandler(context: Context): F[Context] = F.pure(context)
 
-  def onEvent(event: GatewayEventBase[_], context: Context): F[Context] = context.pure
+  def onEvent(event: GatewayEventBase[_], context: Context): F[Context] = F.pure(context)
 
-  def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] = behavior.pure
+  def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] = F.pure(behavior)
 
   override def toString: String = name
 }
 object GatewayProcess {
+
+  abstract class Base[F[_]](implicit val F: Applicative[F]) extends GatewayProcess[F]
 
   class Context(map: Map[ContextKey[_], Any]) {
     def access[A](key: ContextKey[A]): A = map(key).asInstanceOf[A]
@@ -35,8 +39,10 @@ object GatewayProcess {
     def make[A]: ContextKey[A] = new ContextKey[A] {}
   }
 
-  def sequenced[F[_]: Monad](callbacks: GatewayProcess[F]*): GatewayProcess[F] = new GatewayProcess[F] {
+  def sequenced[F[_]](callbacks: GatewayProcess[F]*)(implicit FM: Monad[F]): GatewayProcess[F] = new GatewayProcess[F] {
     override def name: String = s"SequencedProcessor(${callbacks.map(_.name).mkString(", ")})"
+
+    override def F: Applicative[F] = FM
 
     override def onCreateHandler(context: Context): F[Context] =
       callbacks.foldLeftM(context)((c, cb) => cb.onCreateHandler(c))
@@ -48,11 +54,13 @@ object GatewayProcess {
       callbacks.foldLeftM(behavior)((b, cb) => cb.onDisconnected(b))
   }
 
-  def superviseIgnoreContext[F[_]: Applicative](
+  def superviseIgnoreContext[F[_]](
       supervisor: Supervisor[F],
       process: GatewayProcess[F]
-  ): GatewayProcess[F] = new GatewayProcess[F] {
+  )(implicit FApp: Applicative[F]): GatewayProcess[F] = new GatewayProcess[F] {
     override def name: String = s"Supervisor(${process.name})"
+
+    override def F: Applicative[F] = FApp
 
     override def onCreateHandler(context: Context): F[Context] =
       supervisor.supervise(process.onCreateHandler(context)).as(context)
@@ -65,9 +73,11 @@ object GatewayProcess {
   }
 
   def logErrors[F[_]](log: Logger[F], process: GatewayProcess[F])(
-      implicit F: ApplicativeError[F, Throwable]
+      implicit FApp: ApplicativeError[F, Throwable]
   ): GatewayProcess[F] = new GatewayProcess[F] {
     override def name: String = s"LoggErrors(${process.name})"
+
+    override def F: Applicative[F] = FApp
 
     override def onCreateHandler(context: Context): F[Context] =
       process

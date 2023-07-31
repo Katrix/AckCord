@@ -2,7 +2,7 @@ package ackcord.data.base
 
 import scala.language.implicitConversions
 
-import ackcord.data.{JsonOption, UndefOr, UndefOrSome, UndefOrUndefined}
+import ackcord.data.{JsonNull, JsonOption, JsonSome, JsonUndefined, UndefOr, UndefOrSome, UndefOrUndefined}
 import io.circe._
 import io.circe.syntax._
 
@@ -22,8 +22,16 @@ class DiscordObject(val json: Json, startCache: Map[String, Any]) {
   def objWithUndef[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: UndefOr[V])(
       implicit encoder: Encoder[V]
   ): A = obj match {
-    case UndefOrSome(value) => objWith(companion, name, value)
-    case UndefOrUndefined   => objWithout(companion, name)
+    case UndefOrSome(value)     => objWith(companion, name, value)
+    case UndefOrUndefined(_, _) => objWithout(companion, name)
+  }
+
+  def objWithUndef[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: JsonOption[V])(
+      implicit encoder: Encoder[V]
+  ): A = obj match {
+    case JsonSome(value)     => objWith(companion, name, value)
+    case JsonNull            => objWith(companion, name, None)
+    case JsonUndefined(_, _) => objWithout(companion, name)
   }
 
   def objWithJson[A <: DiscordObject](
@@ -40,7 +48,16 @@ class DiscordObject(val json: Json, startCache: Map[String, Any]) {
 
   def selectDynamic[A](name: String)(implicit decoder: Decoder[A]): A =
     cache
-      .getOrElseUpdate(name, json.hcursor.get[A](name).getOrElse(throw new MissingFieldException(name, json)))
+      .getOrElseUpdate(
+        name, {
+          val ret = json.hcursor.get[A](name).getOrElse(throw MissingFieldException.default(name, json))
+          ret match {
+            case UndefOrUndefined(_, _) => UndefOrUndefined(Some(name), this)
+            case JsonUndefined(_, _)    => JsonUndefined(Some(name), this)
+            case _                      => ret
+          }
+        }
+      )
       .asInstanceOf[A]
 
   override def toString = s"${getClass.getSimpleName}($json)"

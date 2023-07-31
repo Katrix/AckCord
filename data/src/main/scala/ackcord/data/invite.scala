@@ -146,16 +146,16 @@ object Invite extends DiscordObjectCompanion[Invite] {
     */
   def make20(
       code: String,
-      guild: UndefOr[Invite.InviteGuild] = UndefOrUndefined,
+      guild: UndefOr[Invite.InviteGuild] = UndefOrUndefined(Some("guild")),
       channel: Option[Invite.InviteChannel],
-      inviter: UndefOr[User] = UndefOrUndefined,
-      targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined,
-      targetUser: UndefOr[User] = UndefOrUndefined,
-      targetApplication: UndefOr[Invite.InviteApplication] = UndefOrUndefined,
-      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined,
-      approximateMemberCount: UndefOr[Int] = UndefOrUndefined,
-      expiresAt: JsonOption[OffsetDateTime] = JsonUndefined,
-      guildScheduledEvent: UndefOr[GuildScheduledEvent] = UndefOrUndefined
+      inviter: UndefOr[User] = UndefOrUndefined(Some("inviter")),
+      targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined(Some("target_type")),
+      targetUser: UndefOr[User] = UndefOrUndefined(Some("target_user")),
+      targetApplication: UndefOr[Invite.InviteApplication] = UndefOrUndefined(Some("target_application")),
+      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_presence_count")),
+      approximateMemberCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_member_count")),
+      expiresAt: JsonOption[OffsetDateTime] = JsonUndefined(Some("expires_at")),
+      guildScheduledEvent: UndefOr[GuildScheduledEvent] = UndefOrUndefined(Some("guild_scheduled_event"))
   ): Invite = makeRawFromFields(
     "code"                        := code,
     "guild"                      :=? guild,

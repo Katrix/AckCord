@@ -183,9 +183,9 @@ object GuildScheduledEvent extends DiscordObjectCompanion[GuildScheduledEvent] {
       id: Snowflake[GuildScheduledEvent],
       guildId: GuildId,
       channelId: Option[VoiceGuildChannelId],
-      creatorId: JsonOption[UserId] = JsonUndefined,
+      creatorId: JsonOption[UserId] = JsonUndefined(Some("creator_id")),
       name: String,
-      description: JsonOption[String] = JsonUndefined,
+      description: JsonOption[String] = JsonUndefined(Some("description")),
       scheduledStartTime: OffsetDateTime,
       scheduledEndTime: Option[OffsetDateTime],
       privacyLevel: GuildScheduledEvent.GuildScheduledEventPrivacyLevel,
@@ -193,9 +193,9 @@ object GuildScheduledEvent extends DiscordObjectCompanion[GuildScheduledEvent] {
       entityType: GuildScheduledEvent.GuildScheduledEventEntityType,
       entityId: Option[RawSnowflake],
       entityMetadata: Option[GuildScheduledEvent.GuildScheduledEventEntityMetadata],
-      creator: UndefOr[User] = UndefOrUndefined,
-      userCount: UndefOr[Int] = UndefOrUndefined,
-      image: JsonOption[String] = JsonUndefined
+      creator: UndefOr[User] = UndefOrUndefined(Some("creator")),
+      userCount: UndefOr[Int] = UndefOrUndefined(Some("user_count")),
+      image: JsonOption[String] = JsonUndefined(Some("image"))
   ): GuildScheduledEvent = makeRawFromFields(
     "id"                   := id,
     "guild_id"             := guildId,
@@ -275,5 +275,51 @@ object GuildScheduledEvent extends DiscordObjectCompanion[GuildScheduledEvent] {
       *   The location of the scheduled event (1-100 characters)
       */
     def make20(location: String): GuildScheduledEventEntityMetadata = makeRawFromFields("location" := location)
+  }
+
+  class GuildScheduledEventUser(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+    /** The scheduled event id which the user subscribed to */
+    @inline def guildScheduledEventId: GuildScheduledEventId =
+      selectDynamic[GuildScheduledEventId]("guild_scheduled_event_id")
+
+    @inline def withGuildScheduledEventId(newValue: GuildScheduledEventId): GuildScheduledEventUser =
+      objWith(GuildScheduledEventUser, "guild_scheduled_event_id", newValue)
+
+    /** User which subscribed to an event */
+    @inline def user: User = selectDynamic[User]("user")
+
+    @inline def withUser(newValue: User): GuildScheduledEventUser = objWith(GuildScheduledEventUser, "user", newValue)
+
+    /**
+      * Guild member data for this user for the guild which this event belongs
+      * to, if any
+      */
+    @inline def member: UndefOr[GuildMember] = selectDynamic[UndefOr[GuildMember]]("member")
+
+    @inline def withMember(newValue: UndefOr[GuildMember]): GuildScheduledEventUser =
+      objWithUndef(GuildScheduledEventUser, "member", newValue)
+
+    override def values: Seq[() => Any] = Seq(() => guildScheduledEventId, () => user, () => member)
+  }
+  object GuildScheduledEventUser extends DiscordObjectCompanion[GuildScheduledEventUser] {
+    def makeRaw(json: Json, cache: Map[String, Any]): GuildScheduledEventUser =
+      new GuildScheduledEventUser(json, cache)
+
+    /**
+      * @param guildScheduledEventId
+      *   The scheduled event id which the user subscribed to
+      * @param user
+      *   User which subscribed to an event
+      * @param member
+      *   Guild member data for this user for the guild which this event belongs
+      *   to, if any
+      */
+    def make20(
+        guildScheduledEventId: GuildScheduledEventId,
+        user: User,
+        member: UndefOr[GuildMember] = UndefOrUndefined(Some("member"))
+    ): GuildScheduledEventUser =
+      makeRawFromFields("guild_scheduled_event_id" := guildScheduledEventId, "user" := user, "member" :=? member)
   }
 }

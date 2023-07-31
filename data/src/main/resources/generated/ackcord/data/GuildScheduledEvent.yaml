@@ -117,3 +117,20 @@ innerTypes:
           verification:
             max_length: 100
             min_length: 1
+
+  - name: GuildScheduledEventUser
+    defType: Class
+    fields:
+      2.0.x:
+        guild_scheduled_event_id:
+          type: GuildScheduledEventId
+          documentation: The scheduled event id which the user subscribed to
+
+        user:
+          type: User
+          documentation: User which subscribed to an event
+
+        member:
+          type: GuildMember
+          withUndefined: true
+          documentation: Guild member data for this user for the guild which this event belongs to, if any

@@ -132,16 +132,16 @@ object VoiceState extends DiscordObjectCompanion[VoiceState] {
     *   The time at which the user requested to speak
     */
   def make20(
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       channelId: Option[VoiceGuildChannelId],
       userId: UserId,
-      member: UndefOr[GuildMember] = UndefOrUndefined,
+      member: UndefOr[GuildMember] = UndefOrUndefined(Some("member")),
       sessionId: String,
       deaf: Boolean,
       mute: Boolean,
       selfDeaf: Boolean,
       selfMute: Boolean,
-      selfStream: UndefOr[Boolean] = UndefOrUndefined,
+      selfStream: UndefOr[Boolean] = UndefOrUndefined(Some("self_stream")),
       selfVideo: Boolean,
       suppress: Boolean,
       requestToSpeakTimestamp: Option[OffsetDateTime]

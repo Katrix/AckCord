@@ -143,16 +143,16 @@ object Webhook extends DiscordObjectCompanion[Webhook] {
   def make20(
       id: WebhookId,
       tpe: Webhook.WebhookType,
-      guildId: JsonOption[GuildId] = JsonUndefined,
+      guildId: JsonOption[GuildId] = JsonUndefined(Some("guild_id")),
       channelId: Option[TextGuildChannelId],
-      user: UndefOr[User] = UndefOrUndefined,
+      user: UndefOr[User] = UndefOrUndefined(Some("user")),
       name: Option[String],
       avatar: Option[ImageHash],
-      token: UndefOr[String] = UndefOrUndefined,
+      token: UndefOr[String] = UndefOrUndefined(Some("token")),
       applicationId: Option[ApplicationId],
-      sourceGuild: UndefOr[Webhook.WebhookGuild] = UndefOrUndefined,
-      sourceChannel: UndefOr[Webhook.WebhookChannel] = UndefOrUndefined,
-      url: UndefOr[String] = UndefOrUndefined
+      sourceGuild: UndefOr[Webhook.WebhookGuild] = UndefOrUndefined(Some("source_guild")),
+      sourceChannel: UndefOr[Webhook.WebhookChannel] = UndefOrUndefined(Some("source_channel")),
+      url: UndefOr[String] = UndefOrUndefined(Some("url"))
   ): Webhook = makeRawFromFields(
     "id"              := id,
     "type"            := tpe,

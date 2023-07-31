@@ -246,12 +246,12 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       */
     def make20(
         targetId: Option[String],
-        changes: UndefOr[Seq[AuditLog.AuditLogChange]] = UndefOrUndefined,
+        changes: UndefOr[Seq[AuditLog.AuditLogChange]] = UndefOrUndefined(Some("changes")),
         userId: Option[UserId],
         id: Snowflake[AuditLogEntry],
         actionType: AuditLog.AuditLogEvent,
-        options: UndefOr[AuditLog.AuditEntryInfo] = UndefOrUndefined,
-        reason: UndefOr[String] = UndefOrUndefined
+        options: UndefOr[AuditLog.AuditEntryInfo] = UndefOrUndefined(Some("options")),
+        reason: UndefOr[String] = UndefOrUndefined(Some("reason"))
     ): AuditLogEntry = makeRawFromFields(
       "target_id"   := targetId,
       "changes"    :=? changes,
@@ -374,17 +374,17 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       *   Type of overwritten entity - role ("0") or member ("1")
       */
     def make20(
-        applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-        autoModerationRuleName: UndefOr[String] = UndefOrUndefined,
-        autoModerationRuleTriggerType: UndefOr[String] = UndefOrUndefined,
-        channelId: UndefOr[ChannelId] = UndefOrUndefined,
-        count: UndefOr[String] = UndefOrUndefined,
-        deleteMemberDays: UndefOr[String] = UndefOrUndefined,
-        id: UndefOr[RawSnowflake] = UndefOrUndefined,
-        membersRemoved: UndefOr[String] = UndefOrUndefined,
-        messageId: UndefOr[MessageId] = UndefOrUndefined,
-        roleName: UndefOr[String] = UndefOrUndefined,
-        tpe: UndefOr[String] = UndefOrUndefined
+        applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+        autoModerationRuleName: UndefOr[String] = UndefOrUndefined(Some("auto_moderation_rule_name")),
+        autoModerationRuleTriggerType: UndefOr[String] = UndefOrUndefined(Some("auto_moderation_rule_trigger_type")),
+        channelId: UndefOr[ChannelId] = UndefOrUndefined(Some("channel_id")),
+        count: UndefOr[String] = UndefOrUndefined(Some("count")),
+        deleteMemberDays: UndefOr[String] = UndefOrUndefined(Some("delete_member_days")),
+        id: UndefOr[RawSnowflake] = UndefOrUndefined(Some("id")),
+        membersRemoved: UndefOr[String] = UndefOrUndefined(Some("members_removed")),
+        messageId: UndefOr[MessageId] = UndefOrUndefined(Some("message_id")),
+        roleName: UndefOr[String] = UndefOrUndefined(Some("role_name")),
+        tpe: UndefOr[String] = UndefOrUndefined(Some("tpe"))
     ): AuditEntryInfo = makeRawFromFields(
       "application_id"                    :=? applicationId,
       "auto_moderation_rule_name"         :=? autoModerationRuleName,
@@ -434,8 +434,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       *   Name of the changed entity, with a few exceptions
       */
     def make20(
-        newValue: UndefOr[Json] = UndefOrUndefined,
-        oldValue: UndefOr[Json] = UndefOrUndefined,
+        newValue: UndefOr[Json] = UndefOrUndefined(Some("new_value")),
+        oldValue: UndefOr[Json] = UndefOrUndefined(Some("old_value")),
         key: String
     ): AuditLogChange = makeRawFromFields("new_value" :=? newValue, "old_value" :=? oldValue, "key" := key)
   }

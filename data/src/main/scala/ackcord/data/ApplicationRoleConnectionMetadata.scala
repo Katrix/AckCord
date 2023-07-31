@@ -81,9 +81,9 @@ object ApplicationRoleConnectionMetadata extends DiscordObjectCompanion[Applicat
       tpe: ApplicationRoleConnectionMetadata.ApplicationRoleConnectionMetadataType,
       key: String,
       name: String,
-      nameLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined,
+      nameLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined(Some("name_localizations")),
       description: String,
-      descriptionLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined
+      descriptionLocalizations: UndefOr[Map[String, String]] = UndefOrUndefined(Some("description_localizations"))
   ): ApplicationRoleConnectionMetadata = makeRawFromFields(
     "type"                       := tpe,
     "key"                        := key,

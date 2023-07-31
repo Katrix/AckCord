@@ -166,7 +166,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guilds: Seq[UnavailableGuild],
         sessionId: String,
         resumeGatewayUrl: String,
-        shard: UndefOr[Seq[Int]] = UndefOrUndefined,
+        shard: UndefOr[Seq[Int]] = UndefOrUndefined(Some("shard")),
         application: Ready.ReadyApplication
     ): Ready = makeRawFromFields(
       "v"                  := v,
@@ -457,9 +457,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         ruleId: Snowflake[AutoModerationRule],
         ruleTriggerType: AutoModerationRule.AutoModerationRuleTriggerType,
         userId: UserId,
-        channelId: UndefOr[TextGuildChannelId] = UndefOrUndefined,
-        messageId: UndefOr[MessageId] = UndefOrUndefined,
-        alertSystemMessageId: UndefOr[MessageId] = UndefOrUndefined,
+        channelId: UndefOr[TextGuildChannelId] = UndefOrUndefined(Some("channel_id")),
+        messageId: UndefOr[MessageId] = UndefOrUndefined(Some("message_id")),
+        alertSystemMessageId: UndefOr[MessageId] = UndefOrUndefined(Some("alert_system_message_id")),
         content: String,
         matchedKeyword: Option[String],
         matchedContent: Option[String]
@@ -802,8 +802,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         id: ThreadChannelId,
         guildId: GuildId,
         memberCount: Int,
-        addedMembers: UndefOr[Seq[Channel.ThreadMember]] = UndefOrUndefined,
-        removedMemberIds: UndefOr[Seq[UserId]] = UndefOrUndefined
+        addedMembers: UndefOr[Seq[Channel.ThreadMember]] = UndefOrUndefined(Some("added_members")),
+        removedMemberIds: UndefOr[Seq[UserId]] = UndefOrUndefined(Some("removed_member_ids"))
     ): ThreadMembersUpdate = makeRawFromFields(
       "id"                  := id,
       "guild_id"            := guildId,
@@ -855,9 +855,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       *   Time at which the most recent pinned message was pinned
       */
     def make20(
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
         channelId: TextChannelId,
-        lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined
+        lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined(Some("last_pin_timestamp"))
     ): ChannelPinsUpdate =
       makeRawFromFields("guild_id" :=? guildId, "channel_id" := channelId, "last_pin_timestamp" :=? lastPinTimestamp)
   }
@@ -1498,14 +1498,14 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         guildId: GuildId,
         roles: Seq[RoleId],
         user: User,
-        nick: JsonOption[String] = JsonUndefined,
+        nick: JsonOption[String] = JsonUndefined(Some("nick")),
         avatar: Option[ImageHash],
         joinedAt: Option[OffsetDateTime],
-        premiumSince: JsonOption[OffsetDateTime] = JsonUndefined,
-        deaf: UndefOr[Boolean] = UndefOrUndefined,
-        mute: UndefOr[Boolean] = UndefOrUndefined,
-        pending: UndefOr[Boolean] = UndefOrUndefined,
-        communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined
+        premiumSince: JsonOption[OffsetDateTime] = JsonUndefined(Some("premium_since")),
+        deaf: UndefOr[Boolean] = UndefOrUndefined(Some("deaf")),
+        mute: UndefOr[Boolean] = UndefOrUndefined(Some("mute")),
+        pending: UndefOr[Boolean] = UndefOrUndefined(Some("pending")),
+        communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined(Some("communication_disabled_until"))
     ): GuildMemberUpdate = makeRawFromFields(
       "guild_id"                      := guildId,
       "roles"                         := roles,
@@ -1615,9 +1615,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         members: Seq[GuildMember],
         chunkIndex: Int,
         chunkCount: Int,
-        notFound: UndefOr[Seq[UserId]] = UndefOrUndefined,
-        presences: UndefOr[Seq[PresenceUpdate]] = UndefOrUndefined,
-        nonce: UndefOr[String] = UndefOrUndefined
+        notFound: UndefOr[Seq[UserId]] = UndefOrUndefined(Some("not_found")),
+        presences: UndefOr[Seq[PresenceUpdate]] = UndefOrUndefined(Some("presences")),
+        nonce: UndefOr[String] = UndefOrUndefined(Some("nonce"))
     ): GuildMembersChunk = makeRawFromFields(
       "guild_id"    := guildId,
       "members"     := members,
@@ -1971,7 +1971,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(
         id: Snowflake[Integration],
         guildId: GuildId,
-        applicationId: UndefOr[ApplicationId] = UndefOrUndefined
+        applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id"))
     ): IntegrationDelete = makeRawFromFields("id" := id, "guild_id" := guildId, "application_id" :=? applicationId)
   }
 
@@ -2104,13 +2104,13 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         channelId: GuildChannelId,
         code: String,
         createdAt: OffsetDateTime,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
-        inviter: UndefOr[User] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+        inviter: UndefOr[User] = UndefOrUndefined(Some("inviter")),
         maxAge: Int,
         maxUses: Int,
-        targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined,
-        targetUser: UndefOr[User] = UndefOrUndefined,
-        targetApplication: UndefOr[Invite.InviteApplication] = UndefOrUndefined,
+        targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined(Some("target_type")),
+        targetUser: UndefOr[User] = UndefOrUndefined(Some("target_user")),
+        targetApplication: UndefOr[Invite.InviteApplication] = UndefOrUndefined(Some("target_application")),
         temporary: Boolean,
         uses: Int
     ): InviteCreate = makeRawFromFields(
@@ -2166,7 +2166,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(
         channelId: GuildChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
         code: String
     ): InviteDelete = makeRawFromFields("channel_id" := channelId, "guild_id" :=? guildId, "code" := code)
   }
@@ -2230,8 +2230,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(
         message: Message,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
-        member: UndefOr[MessageCreate.MessageCreateGuildMember] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+        member: UndefOr[MessageCreate.MessageCreateGuildMember] = UndefOrUndefined(Some("member")),
         mentions: Seq[User]
     ): MessageCreate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("message", message),
@@ -2324,9 +2324,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         message: Message.Partial,
         id: MessageId,
         channelId: TextChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
-        member: UndefOr[MessageCreate.MessageCreateGuildMember] = UndefOrUndefined,
-        mentions: UndefOr[Seq[User]] = UndefOrUndefined
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+        member: UndefOr[MessageCreate.MessageCreateGuildMember] = UndefOrUndefined(Some("member")),
+        mentions: UndefOr[Seq[User]] = UndefOrUndefined(Some("mentions"))
     ): MessageUpdate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("message", message),
       "id"         := id,
@@ -2375,7 +2375,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(
         id: MessageId,
         channelId: TextChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id"))
     ): MessageDelete = makeRawFromFields("id" := id, "channel_id" := channelId, "guild_id" :=? guildId)
   }
 
@@ -2419,7 +2419,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(
         ids: Seq[MessageId],
         channelId: TextChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id"))
     ): MessageDeleteBulk = makeRawFromFields("ids" := ids, "channel_id" := channelId, "guild_id" :=? guildId)
   }
 
@@ -2502,10 +2502,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         userId: UserId,
         channelId: TextChannelId,
         messageId: MessageId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
-        member: UndefOr[GuildMember] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+        member: UndefOr[GuildMember] = UndefOrUndefined(Some("member")),
         emoji: Emoji,
-        messageAuthorId: UndefOr[UserId] = UndefOrUndefined
+        messageAuthorId: UndefOr[UserId] = UndefOrUndefined(Some("message_author_id"))
     ): MessageReactionAdd = makeRawFromFields(
       "user_id"            := userId,
       "channel_id"         := channelId,
@@ -2574,7 +2574,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         userId: UserId,
         channelId: TextChannelId,
         messageId: MessageId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
         emoji: Emoji
     ): MessageReactionRemove = makeRawFromFields(
       "user_id"    := userId,
@@ -2625,7 +2625,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(
         channelId: TextChannelId,
         messageId: MessageId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id"))
     ): MessageReactionRemoveAll =
       makeRawFromFields("channel_id" := channelId, "message_id" := messageId, "guild_id" :=? guildId)
   }
@@ -2680,7 +2680,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(
         channelId: TextChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
         messageId: MessageId,
         emoji: Emoji
     ): MessageReactionRemoveEmoji =
@@ -2747,10 +2747,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(
         user: User.Partial,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
-        status: UndefOr[Status] = UndefOrUndefined,
-        activities: UndefOr[Seq[Activity]] = UndefOrUndefined,
-        clientStatus: UndefOr[PresenceUpdate.ClientStatus] = UndefOrUndefined
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+        status: UndefOr[Status] = UndefOrUndefined(Some("status")),
+        activities: UndefOr[Seq[Activity]] = UndefOrUndefined(Some("activities")),
+        clientStatus: UndefOr[PresenceUpdate.ClientStatus] = UndefOrUndefined(Some("client_status"))
     ): PresenceUpdate = makeRawFromFields(
       DiscordObjectFrom.FromExtension("user", user),
       "guild_id"      :=? guildId,
@@ -2810,9 +2810,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   session
         */
       def make20(
-          desktop: UndefOr[Status] = UndefOrUndefined,
-          mobile: UndefOr[Status] = UndefOrUndefined,
-          web: UndefOr[Status] = UndefOrUndefined
+          desktop: UndefOr[Status] = UndefOrUndefined(Some("desktop")),
+          mobile: UndefOr[Status] = UndefOrUndefined(Some("mobile")),
+          web: UndefOr[Status] = UndefOrUndefined(Some("web"))
       ): ClientStatus = makeRawFromFields("desktop" :=? desktop, "mobile" :=? mobile, "web" :=? web)
     }
   }
@@ -2964,19 +2964,19 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     def make20(
         name: String,
         tpe: Activity.ActivityType,
-        url: JsonOption[String] = JsonUndefined,
+        url: JsonOption[String] = JsonUndefined(Some("url")),
         createdAt: Int,
-        timestamps: UndefOr[Activity.ActivityTimestamps] = UndefOrUndefined,
-        applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-        details: JsonOption[String] = JsonUndefined,
-        state: JsonOption[String] = JsonUndefined,
-        emoji: JsonOption[Activity.ActivityEmoji] = JsonUndefined,
-        party: UndefOr[Activity.ActivityParty] = UndefOrUndefined,
-        assets: UndefOr[Activity.ActivityAssets] = UndefOrUndefined,
-        secrets: UndefOr[Activity.ActivitySecrets] = UndefOrUndefined,
-        instance: UndefOr[Boolean] = UndefOrUndefined,
-        flags: UndefOr[Activity.ActivityFlags] = UndefOrUndefined,
-        buttons: UndefOr[Seq[Activity.ActivityButtons]] = UndefOrUndefined
+        timestamps: UndefOr[Activity.ActivityTimestamps] = UndefOrUndefined(Some("timestamps")),
+        applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+        details: JsonOption[String] = JsonUndefined(Some("details")),
+        state: JsonOption[String] = JsonUndefined(Some("state")),
+        emoji: JsonOption[Activity.ActivityEmoji] = JsonUndefined(Some("emoji")),
+        party: UndefOr[Activity.ActivityParty] = UndefOrUndefined(Some("party")),
+        assets: UndefOr[Activity.ActivityAssets] = UndefOrUndefined(Some("assets")),
+        secrets: UndefOr[Activity.ActivitySecrets] = UndefOrUndefined(Some("secrets")),
+        instance: UndefOr[Boolean] = UndefOrUndefined(Some("instance")),
+        flags: UndefOr[Activity.ActivityFlags] = UndefOrUndefined(Some("flags")),
+        buttons: UndefOr[Seq[Activity.ActivityButtons]] = UndefOrUndefined(Some("buttons"))
     ): Activity = makeRawFromFields(
       "name"            := name,
       "type"            := tpe,
@@ -3048,8 +3048,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   Unix time (in milliseconds) of when the activity ends
         */
       def make20(
-          start: UndefOr[Int] = UndefOrUndefined,
-          end: UndefOr[Int] = UndefOrUndefined
+          start: UndefOr[Int] = UndefOrUndefined(Some("start")),
+          end: UndefOr[Int] = UndefOrUndefined(Some("end"))
       ): ActivityTimestamps = makeRawFromFields("start" :=? start, "end" :=? end)
     }
 
@@ -3088,8 +3088,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         */
       def make20(
           name: String,
-          id: UndefOr[Snowflake[Emoji]] = UndefOrUndefined,
-          animated: UndefOr[Boolean] = UndefOrUndefined
+          id: UndefOr[Snowflake[Emoji]] = UndefOrUndefined(Some("id")),
+          animated: UndefOr[Boolean] = UndefOrUndefined(Some("animated"))
       ): ActivityEmoji = makeRawFromFields("name" := name, "id" :=? id, "animated" :=? animated)
     }
 
@@ -3123,8 +3123,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   party's current and maximum size
         */
       def make20(
-          id: UndefOr[String] = UndefOrUndefined,
-          size: UndefOr[Seq[Int]] = UndefOrUndefined
+          id: UndefOr[String] = UndefOrUndefined(Some("id")),
+          size: UndefOr[Seq[Int]] = UndefOrUndefined(Some("size"))
       ): ActivityParty = makeRawFromFields("id" :=? id, "size" :=? size)
     }
 
@@ -3171,10 +3171,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   Text displayed when hovering over the small image of the activity
         */
       def make20(
-          largeImage: UndefOr[String] = UndefOrUndefined,
-          largeText: UndefOr[String] = UndefOrUndefined,
-          smallImage: UndefOr[String] = UndefOrUndefined,
-          smallText: UndefOr[String] = UndefOrUndefined
+          largeImage: UndefOr[String] = UndefOrUndefined(Some("large_image")),
+          largeText: UndefOr[String] = UndefOrUndefined(Some("large_text")),
+          smallImage: UndefOr[String] = UndefOrUndefined(Some("small_image")),
+          smallText: UndefOr[String] = UndefOrUndefined(Some("small_text"))
       ): ActivityAssets = makeRawFromFields(
         "large_image" :=? largeImage,
         "large_text"  :=? largeText,
@@ -3218,9 +3218,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         *   Secret for a specific instanced match
         */
       def make20(
-          join: UndefOr[String] = UndefOrUndefined,
-          spectate: UndefOr[String] = UndefOrUndefined,
-          matchSecret: UndefOr[String] = UndefOrUndefined
+          join: UndefOr[String] = UndefOrUndefined(Some("join")),
+          spectate: UndefOr[String] = UndefOrUndefined(Some("spectate")),
+          matchSecret: UndefOr[String] = UndefOrUndefined(Some("matchSecret"))
       ): ActivitySecrets = makeRawFromFields("join" :=? join, "spectate" :=? spectate, "match" :=? matchSecret)
     }
 
@@ -3350,10 +3350,10 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       */
     def make20(
         channelId: TextChannelId,
-        guildId: UndefOr[GuildId] = UndefOrUndefined,
+        guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
         userId: UserId,
         timestamp: Int,
-        member: UndefOr[GuildMember] = UndefOrUndefined
+        member: UndefOr[GuildMember] = UndefOrUndefined(Some("member"))
     ): TypingStart = makeRawFromFields(
       "channel_id" := channelId,
       "guild_id"  :=? guildId,
@@ -3484,8 +3484,8 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
 
   /**
     * Sent when a user uses an Application Command or Message Component. Inner
-    * payload is an Interaction. This is intentionally a stub. A proper type can
-    * be found in the interactions module.
+    * payload is an Interaction. This is intentionally a stub. It should be
+    * retyped to Interaction, found in the interactions module.
     */
   class InteractionCreate(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache)

@@ -30,16 +30,17 @@ import io.circe._
 object JsonOption {
 
   implicit def decodeRestOption[A](implicit decodeOpt: Decoder[Option[A]]): Decoder[JsonOption[A]] =
-    Decoder.withReattempt(c => if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(JsonUndefined))
+    Decoder.withReattempt(c => if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(JsonUndefined()))
 
   def fromOptionWithNull[A](opt: Option[A]): JsonOption[A] = opt.fold[JsonOption[A]](JsonNull)(JsonSome.apply)
 
-  def fromOptionWithUndefined[A](opt: Option[A]): JsonOption[A] = opt.fold[JsonOption[A]](JsonUndefined)(JsonSome.apply)
+  def fromOptionWithUndefined[A](opt: Option[A]): JsonOption[A] =
+    opt.fold[JsonOption[A]](JsonUndefined())(JsonSome.apply)
 
   def removeUndefined[A](seq: Seq[(String, JsonOption[Json])]): Seq[(String, Json)] = seq.flatMap {
-    case (name, JsonSome(json)) => Some(name -> json)
-    case (name, JsonNull)       => Some(name -> Json.Null)
-    case (_, JsonUndefined)     => None
+    case (name, JsonSome(json))   => Some(name -> json)
+    case (name, JsonNull)         => Some(name -> Json.Null)
+    case (_, JsonUndefined(_, _)) => None
   }
 
   def removeUndefinedToObj(seq: (String, JsonOption[Json])*): Json = Json.obj(removeUndefined(seq): _*)
@@ -88,7 +89,7 @@ case class JsonSome[+A](value: A) extends JsonOption[A] {
   override def map[B](f: A => B): JsonOption[B]                 = JsonSome(f(value))
   override def flatMap[B](f: A => JsonOption[B]): JsonOption[B] = f(value)
 
-  override def filterToUndefined(f: A => Boolean): JsonOption[A] = if (f(value)) this else JsonUndefined
+  override def filterToUndefined(f: A => Boolean): JsonOption[A] = if (f(value)) this else JsonUndefined()
   override def filterToNull(f: A => Boolean): JsonOption[A]      = if (f(value)) this else JsonNull
 
   override def toJson(implicit encoder: Encoder[A @uncheckedVariance]): JsonOption[Json] = JsonSome(encoder(value))
@@ -138,7 +139,7 @@ case object JsonNull extends JsonOption[Nothing] {
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
 }
 
-case object JsonUndefined extends JsonOption[Nothing] {
+case class JsonUndefined(missingField: Option[String] = None, missingObj: AnyRef = null) extends JsonOption[Nothing] {
   override def isNull: Boolean      = false
   override def isUndefined: Boolean = true
   override def isEmpty: Boolean     = true

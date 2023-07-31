@@ -1610,7 +1610,8 @@ innerTypes:
         extends: [GatewayDispatchEvent]
         documentation: >-
           Sent when a user uses an Application Command or Message Component. Inner
-          payload is an Interaction. This is intentionally a stub. A proper type can be found in the interactions module.
+          payload is an Interaction. This is intentionally a stub. It should be 
+          retyped to Interaction, found in the interactions module.
         fields:
           2.0.x: { }
 

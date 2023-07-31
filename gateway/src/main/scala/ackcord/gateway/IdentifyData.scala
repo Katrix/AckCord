@@ -36,9 +36,9 @@ object IdentifyData {
       token = token,
       properties = Map("os" -> System.getProperty("os.name"), "browser" -> "AckCord 2", "device" -> "AckCord 2"),
       compress = Compress.ZLibStreamCompress,
-      largeThreshold = UndefOrUndefined,
-      shard = UndefOrUndefined,
-      presence = UndefOrUndefined,
+      largeThreshold = UndefOrUndefined(),
+      shard = UndefOrUndefined(),
+      presence = UndefOrUndefined(),
       intents = intents
     )
 }

@@ -3,6 +3,7 @@ defType: ObjectOnly
 imports:
   - ackcord.data._
   - sttp.model.Method
+  - java.time.OffsetDateTime
 innerTypes:
   - name: listGuildScheduledEvents
     defType: Request
@@ -139,4 +140,4 @@ innerTypes:
           with_member:
             type: Boolean
             documentation: Whether to include the guild members of the returned users
-    return: Seq[GuildScheduledEventUser]
+    return: Seq[GuildScheduledEvent.GuildScheduledEventUser]

@@ -117,16 +117,16 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
     */
   def make20(
       id: Snowflake[Sticker],
-      packId: UndefOr[Snowflake[Sticker.StickerPack]] = UndefOrUndefined,
+      packId: UndefOr[Snowflake[Sticker.StickerPack]] = UndefOrUndefined(Some("pack_id")),
       name: String,
       description: Option[String],
       tags: String,
       tpe: Sticker.StickerType,
       formatType: Sticker.StickerFormatType,
-      available: UndefOr[Boolean] = UndefOrUndefined,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
-      user: UndefOr[User] = UndefOrUndefined,
-      sortValue: UndefOr[Int] = UndefOrUndefined
+      available: UndefOr[Boolean] = UndefOrUndefined(Some("available")),
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+      user: UndefOr[User] = UndefOrUndefined(Some("user")),
+      sortValue: UndefOr[Int] = UndefOrUndefined(Some("sort_value"))
   ): Sticker = makeRawFromFields(
     "id"          := id,
     "pack_id"    :=? packId,
@@ -290,9 +290,9 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
         stickers: Seq[Sticker],
         name: String,
         skuId: RawSnowflake,
-        coverStickerId: UndefOr[Snowflake[Sticker]] = UndefOrUndefined,
+        coverStickerId: UndefOr[Snowflake[Sticker]] = UndefOrUndefined(Some("cover_sticker_id")),
         description: String,
-        bannerAssetId: UndefOr[RawSnowflake] = UndefOrUndefined
+        bannerAssetId: UndefOr[RawSnowflake] = UndefOrUndefined(Some("banner_asset_id"))
     ): StickerPack = makeRawFromFields(
       "id"                := id,
       "stickers"          := stickers,

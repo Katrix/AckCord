@@ -101,7 +101,7 @@ object EmojiRequests {
       */
     def make20(
         name: String,
-        roles: UndefOr[Seq[RoleId]] = UndefOrUndefined
+        roles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("roles"))
     ): ModifyGuildEmojiBody = makeRawFromFields("name" := name, "roles" :=? roles)
   }
 

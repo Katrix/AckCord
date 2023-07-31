@@ -184,9 +184,9 @@ object GatewayEvent extends GatewayEventBase.TopMixin {
           token: String,
           properties: Map[String, String],
           compress: UndefOr[Boolean] = UndefOrSome(false),
-          largeThreshold: UndefOr[Int] = UndefOrUndefined,
-          shard: UndefOr[Seq[Int]] = UndefOrUndefined,
-          presence: UndefOr[GatewayEvent.UpdatePresence.Data] = UndefOrUndefined,
+          largeThreshold: UndefOr[Int] = UndefOrUndefined(Some("largeThreshold")),
+          shard: UndefOr[Seq[Int]] = UndefOrUndefined(Some("shard")),
+          presence: UndefOr[GatewayEvent.UpdatePresence.Data] = UndefOrUndefined(Some("presence")),
           intents: GatewayIntents
       ): Data = makeRawFromFields(
         "token"            := token,
@@ -523,11 +523,11 @@ object GatewayEvent extends GatewayEventBase.TopMixin {
         */
       def make20(
           guildId: GuildId,
-          query: UndefOr[String] = UndefOrUndefined,
+          query: UndefOr[String] = UndefOrUndefined(Some("query")),
           limit: Int,
-          presences: UndefOr[Boolean] = UndefOrUndefined,
-          userIds: UndefOr[Seq[UserId]] = UndefOrUndefined,
-          nonce: UndefOr[String] = UndefOrUndefined
+          presences: UndefOr[Boolean] = UndefOrUndefined(Some("presences")),
+          userIds: UndefOr[Seq[UserId]] = UndefOrUndefined(Some("userIds")),
+          nonce: UndefOr[String] = UndefOrUndefined(Some("nonce"))
       ): Data = makeRawFromFields(
         "guild_id"   := guildId,
         "query"     :=? query,

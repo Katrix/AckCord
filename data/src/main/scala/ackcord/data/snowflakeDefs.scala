@@ -74,6 +74,9 @@ trait SnowflakeDefs {
 
   type WebhookId = Snowflake[Webhook]
   object WebhookId extends SnowflakeCompanion[Webhook]
+
+  type GuildScheduledEventId = Snowflake[GuildScheduledEvent]
+  object GuildScheduledEventId extends SnowflakeCompanion[GuildScheduledEvent]
 }
 
 object Snowflake {
@@ -132,7 +135,7 @@ object Snowflake {
   }
 }
 
-private[data] trait SnowflakeCompanion[Type] {
+trait SnowflakeCompanion[Type] {
   def apply(content: String): Snowflake[Type]     = JLong.parseUnsignedLong(content).asInstanceOf[Snowflake[Type]]
   def apply(long: Long): Snowflake[Type]          = long.asInstanceOf[Snowflake[Type]]
   def apply(other: Snowflake[_]): Snowflake[Type] = other.asInstanceOf[Snowflake[Type]]

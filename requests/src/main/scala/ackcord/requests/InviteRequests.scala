@@ -49,9 +49,11 @@ object InviteRequests {
       *   The guild scheduled event to include with the invite
       */
     def make20(
-        withCounts: UndefOr[Boolean] = UndefOrUndefined,
-        withExpiration: UndefOr[Boolean] = UndefOrUndefined,
-        guildScheduledEventId: UndefOr[Snowflake[GuildScheduledEvent]] = UndefOrUndefined
+        withCounts: UndefOr[Boolean] = UndefOrUndefined(Some("with_counts")),
+        withExpiration: UndefOr[Boolean] = UndefOrUndefined(Some("with_expiration")),
+        guildScheduledEventId: UndefOr[Snowflake[GuildScheduledEvent]] = UndefOrUndefined(
+          Some("guild_scheduled_event_id")
+        )
     ): GetInviteQuery = makeRawFromFields(
       "with_counts"              :=? withCounts,
       "with_expiration"          :=? withExpiration,

@@ -136,16 +136,20 @@ object GuildRequests {
       */
     def make20(
         name: String,
-        icon: UndefOr[ImageData] = UndefOrUndefined,
-        verificationLevel: UndefOr[Guild.VerificationLevel] = UndefOrUndefined,
-        defaultMessageNotifications: UndefOr[Guild.MessageNotificationLevel] = UndefOrUndefined,
-        explicitContentFilter: UndefOr[Guild.ExplicitContentFilterLevel] = UndefOrUndefined,
-        roles: UndefOr[Seq[Role]] = UndefOrUndefined,
-        channels: UndefOr[Seq[CreateGuildPartialChannel]] = UndefOrUndefined,
-        afkChannelId: UndefOr[GuildChannelId] = UndefOrUndefined,
-        afkTimeout: UndefOr[Int] = UndefOrUndefined,
-        systemChannelId: UndefOr[TextGuildChannelId] = UndefOrUndefined,
-        systemChannelFlags: UndefOr[Guild.SystemChannelFlags] = UndefOrUndefined
+        icon: UndefOr[ImageData] = UndefOrUndefined(Some("icon")),
+        verificationLevel: UndefOr[Guild.VerificationLevel] = UndefOrUndefined(Some("verification_level")),
+        defaultMessageNotifications: UndefOr[Guild.MessageNotificationLevel] = UndefOrUndefined(
+          Some("default_message_notifications")
+        ),
+        explicitContentFilter: UndefOr[Guild.ExplicitContentFilterLevel] = UndefOrUndefined(
+          Some("explicit_content_filter")
+        ),
+        roles: UndefOr[Seq[Role]] = UndefOrUndefined(Some("roles")),
+        channels: UndefOr[Seq[CreateGuildPartialChannel]] = UndefOrUndefined(Some("channels")),
+        afkChannelId: UndefOr[GuildChannelId] = UndefOrUndefined(Some("afk_channel_id")),
+        afkTimeout: UndefOr[Int] = UndefOrUndefined(Some("afk_timeout")),
+        systemChannelId: UndefOr[TextGuildChannelId] = UndefOrUndefined(Some("system_channel_id")),
+        systemChannelFlags: UndefOr[Guild.SystemChannelFlags] = UndefOrUndefined(Some("system_channel_flags"))
     ): CreateGuildBody = makeRawFromFields(
       "name"                           := name,
       "icon"                          :=? icon,
@@ -201,9 +205,9 @@ object GuildRequests {
 
     def make20(
         name: String,
-        id: UndefOr[GuildChannelId] = UndefOrUndefined,
+        id: UndefOr[GuildChannelId] = UndefOrUndefined(Some("id")),
         tpe: Channel.ChannelType,
-        parentId: UndefOr[GuildChannelId] = UndefOrUndefined
+        parentId: UndefOr[GuildChannelId] = UndefOrUndefined(Some("parent_id"))
     ): CreateGuildPartialChannel =
       makeRawFromFields("name" := name, "id" :=? id, "type" := tpe, "parent_id" :=? parentId)
   }
@@ -229,8 +233,9 @@ object GuildRequests {
       *   When true, will return approximate member and presence counts for the
       *   guild
       */
-    def make20(withCounts: UndefOr[Boolean] = UndefOrUndefined): GetGuildQuery =
-      makeRawFromFields("with_counts" :=? withCounts)
+    def make20(
+        withCounts: UndefOr[Boolean] = UndefOrUndefined(Some("with_counts"))
+    ): GetGuildQuery = makeRawFromFields("with_counts" :=? withCounts)
   }
 
   /**
@@ -497,26 +502,30 @@ object GuildRequests {
       *   receive safety alerts from Discord
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        verificationLevel: JsonOption[Guild.VerificationLevel] = JsonUndefined,
-        defaultMessageNotifications: JsonOption[Guild.MessageNotificationLevel] = JsonUndefined,
-        explicitContentFilter: JsonOption[Guild.ExplicitContentFilterLevel] = JsonUndefined,
-        afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
-        afkTimeout: UndefOr[Int] = UndefOrUndefined,
-        icon: JsonOption[ImageData] = JsonUndefined,
-        ownerId: UndefOr[UserId] = UndefOrUndefined,
-        splash: JsonOption[ImageData] = JsonUndefined,
-        discoverySplash: JsonOption[ImageData] = JsonUndefined,
-        banner: JsonOption[ImageData] = JsonUndefined,
-        systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
-        systemChannelFlags: UndefOr[Guild.SystemChannelFlags] = UndefOrUndefined,
-        rulesChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
-        publicUpdatesChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
-        preferredLocale: JsonOption[String] = JsonUndefined,
-        features: UndefOr[Seq[Guild.GuildFeature]] = UndefOrUndefined,
-        description: JsonOption[String] = JsonUndefined,
-        premiumProgressBarEnabled: UndefOr[Boolean] = UndefOrUndefined,
-        safetyAlertsChannelId: JsonOption[TextGuildChannelId] = JsonUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        verificationLevel: JsonOption[Guild.VerificationLevel] = JsonUndefined(Some("verification_level")),
+        defaultMessageNotifications: JsonOption[Guild.MessageNotificationLevel] = JsonUndefined(
+          Some("default_message_notifications")
+        ),
+        explicitContentFilter: JsonOption[Guild.ExplicitContentFilterLevel] = JsonUndefined(
+          Some("explicit_content_filter")
+        ),
+        afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined(Some("afk_channel_id")),
+        afkTimeout: UndefOr[Int] = UndefOrUndefined(Some("afk_timeout")),
+        icon: JsonOption[ImageData] = JsonUndefined(Some("icon")),
+        ownerId: UndefOr[UserId] = UndefOrUndefined(Some("owner_id")),
+        splash: JsonOption[ImageData] = JsonUndefined(Some("splash")),
+        discoverySplash: JsonOption[ImageData] = JsonUndefined(Some("discovery_splash")),
+        banner: JsonOption[ImageData] = JsonUndefined(Some("banner")),
+        systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined(Some("system_channel_id")),
+        systemChannelFlags: UndefOr[Guild.SystemChannelFlags] = UndefOrUndefined(Some("system_channel_flags")),
+        rulesChannelId: JsonOption[TextGuildChannelId] = JsonUndefined(Some("rules_channel_id")),
+        publicUpdatesChannelId: JsonOption[TextGuildChannelId] = JsonUndefined(Some("public_updates_channel_id")),
+        preferredLocale: JsonOption[String] = JsonUndefined(Some("preferred_locale")),
+        features: UndefOr[Seq[Guild.GuildFeature]] = UndefOrUndefined(Some("features")),
+        description: JsonOption[String] = JsonUndefined(Some("description")),
+        premiumProgressBarEnabled: UndefOr[Boolean] = UndefOrUndefined(Some("premium_progress_bar_enabled")),
+        safetyAlertsChannelId: JsonOption[TextGuildChannelId] = JsonUndefined(Some("safety_alerts_channel_id"))
     ): ModifyGuildBody = makeRawFromFields(
       "name"                          :=? name,
       "verification_level"            :=? verificationLevel,
@@ -774,23 +783,23 @@ object GuildRequests {
       */
     def make20(
         name: String,
-        tpe: JsonOption[Channel.ChannelType] = JsonUndefined,
-        topic: JsonOption[String] = JsonUndefined,
-        bitrate: JsonOption[Int] = JsonUndefined,
-        userLimit: JsonOption[Int] = JsonUndefined,
-        rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-        position: JsonOption[Int] = JsonUndefined,
+        tpe: JsonOption[Channel.ChannelType] = JsonUndefined(Some("tpe")),
+        topic: JsonOption[String] = JsonUndefined(Some("topic")),
+        bitrate: JsonOption[Int] = JsonUndefined(Some("bitrate")),
+        userLimit: JsonOption[Int] = JsonUndefined(Some("user_limit")),
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user")),
+        position: JsonOption[Int] = JsonUndefined(Some("position")),
         permissionOverwrites: JsonOption[
           Seq[ChannelRequests.ModifyChannelBody.ModifyGuildChannelBody.EditChannelPartialOverwrite]
-        ] = JsonUndefined,
-        parentId: JsonOption[GuildChannelId] = JsonUndefined,
-        nsfw: JsonOption[Boolean] = JsonUndefined,
-        rtcRegion: JsonOption[String] = JsonUndefined,
-        videoQualityMode: JsonOption[Channel.VideoQualityMode] = JsonUndefined,
-        defaultAutoArchiveDuration: JsonOption[Int] = JsonUndefined,
-        defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined,
-        availableTags: JsonOption[Seq[Channel.ForumTag]] = JsonUndefined,
-        defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined,
+        ] = JsonUndefined(Some("permission_overwrites")),
+        parentId: JsonOption[GuildChannelId] = JsonUndefined(Some("parent_id")),
+        nsfw: JsonOption[Boolean] = JsonUndefined(Some("nsfw")),
+        rtcRegion: JsonOption[String] = JsonUndefined(Some("rtc_region")),
+        videoQualityMode: JsonOption[Channel.VideoQualityMode] = JsonUndefined(Some("video_quality_mode")),
+        defaultAutoArchiveDuration: JsonOption[Int] = JsonUndefined(Some("default_auto_archive_duration")),
+        defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined(Some("default_reaction_emoji")),
+        availableTags: JsonOption[Seq[Channel.ForumTag]] = JsonUndefined(Some("available_tags")),
+        defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined(Some("default_sort_order")),
         defaultForumLayout: Channel.ForumLayout
     ): CreateGuildChannelBody = makeRawFromFields(
       "name"                           := name,
@@ -881,9 +890,9 @@ object GuildRequests {
       */
     def make20(
         id: GuildChannelId,
-        position: JsonOption[Int] = JsonUndefined,
-        lockPermissions: JsonOption[Boolean] = JsonUndefined,
-        parentId: JsonOption[GuildChannelId] = JsonUndefined
+        position: JsonOption[Int] = JsonUndefined(Some("position")),
+        lockPermissions: JsonOption[Boolean] = JsonUndefined(Some("lock_permissions")),
+        parentId: JsonOption[GuildChannelId] = JsonUndefined(Some("parent_id"))
     ): ModifyGuildChannelPositionsBody = makeRawFromFields(
       "id"                := id,
       "position"         :=? position,
@@ -989,8 +998,8 @@ object GuildRequests {
       *   The highest user id in the previous page
       */
     def make20(
-        limit: UndefOr[Int] = UndefOrUndefined,
-        after: UndefOr[UserId] = UndefOrUndefined
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit")),
+        after: UndefOr[UserId] = UndefOrUndefined(Some("after"))
     ): ListGuildMembersQuery = makeRawFromFields("limit" :=? limit, "after" :=? after)
   }
 
@@ -1030,8 +1039,10 @@ object GuildRequests {
       * @param limit
       *   Max number of members to return (1-1000)
       */
-    def make20(query: String, limit: UndefOr[Int] = UndefOrUndefined): SearchGuildMembersQuery =
-      makeRawFromFields("query" := query, "limit" :=? limit)
+    def make20(
+        query: String,
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
+    ): SearchGuildMembersQuery = makeRawFromFields("query" := query, "limit" :=? limit)
   }
 
   /**
@@ -1104,10 +1115,10 @@ object GuildRequests {
       */
     def make20(
         accessToken: String,
-        nick: UndefOr[String] = UndefOrUndefined,
-        roles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
-        mute: UndefOr[Boolean] = UndefOrUndefined,
-        deaf: UndefOr[Boolean] = UndefOrUndefined
+        nick: UndefOr[String] = UndefOrUndefined(Some("nick")),
+        roles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("roles")),
+        mute: UndefOr[Boolean] = UndefOrUndefined(Some("mute")),
+        deaf: UndefOr[Boolean] = UndefOrUndefined(Some("deaf"))
     ): AddGuildMemberBody = makeRawFromFields(
       "access_token" := accessToken,
       "nick"        :=? nick,
@@ -1255,13 +1266,13 @@ object GuildRequests {
       *   Guild member flags
       */
     def make20(
-        nick: JsonOption[String] = JsonUndefined,
-        roles: JsonOption[Seq[RoleId]] = JsonUndefined,
-        mute: JsonOption[Boolean] = JsonUndefined,
-        deaf: JsonOption[Boolean] = JsonUndefined,
-        channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
-        communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined,
-        flags: JsonOption[GuildMember.GuildMemberFlags] = JsonUndefined
+        nick: JsonOption[String] = JsonUndefined(Some("nick")),
+        roles: JsonOption[Seq[RoleId]] = JsonUndefined(Some("roles")),
+        mute: JsonOption[Boolean] = JsonUndefined(Some("mute")),
+        deaf: JsonOption[Boolean] = JsonUndefined(Some("deaf")),
+        channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined(Some("channel_id")),
+        communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined(Some("communication_disabled_until")),
+        flags: JsonOption[GuildMember.GuildMemberFlags] = JsonUndefined(Some("flags"))
     ): ModifyGuildMemberBody = makeRawFromFields(
       "nick"                         :=? nick,
       "roles"                        :=? roles,
@@ -1311,7 +1322,7 @@ object GuildRequests {
       * @param nick
       *   Value to set user's nickname to
       */
-    def make20(nick: JsonOption[String] = JsonUndefined): ModifyCurrentMemberBody =
+    def make20(nick: JsonOption[String] = JsonUndefined(Some("nick"))): ModifyCurrentMemberBody =
       makeRawFromFields("nick" :=? nick)
   }
 
@@ -1414,9 +1425,9 @@ object GuildRequests {
       *   Consider only users after given user id
       */
     def make20(
-        limit: UndefOr[Int] = UndefOrUndefined,
-        before: UndefOr[UserId] = UndefOrUndefined,
-        after: UndefOr[UserId] = UndefOrUndefined
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit")),
+        before: UndefOr[UserId] = UndefOrUndefined(Some("before")),
+        after: UndefOr[UserId] = UndefOrUndefined(Some("after"))
     ): GetGuildBansQuery = makeRawFromFields("limit" :=? limit, "before" :=? before, "after" :=? after)
   }
 
@@ -1470,8 +1481,9 @@ object GuildRequests {
       *   Number of seconds to delete messages for, between 0 and 604800 (7
       *   days)
       */
-    def make20(deleteMessageSeconds: UndefOr[Int] = UndefOrUndefined): CreateGuildBanBody =
-      makeRawFromFields("delete_message_seconds" :=? deleteMessageSeconds)
+    def make20(
+        deleteMessageSeconds: UndefOr[Int] = UndefOrUndefined(Some("delete_message_seconds"))
+    ): CreateGuildBanBody = makeRawFromFields("delete_message_seconds" :=? deleteMessageSeconds)
   }
 
   /**
@@ -1588,13 +1600,13 @@ object GuildRequests {
       *   Whether the role should be mentionable
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        permissions: UndefOr[Permissions] = UndefOrUndefined,
-        color: UndefOr[Int] = UndefOrUndefined,
-        hoist: UndefOr[Boolean] = UndefOrUndefined,
-        icon: JsonOption[ImageData] = JsonUndefined,
-        unicodeEmoji: JsonOption[String] = JsonUndefined,
-        mentionable: UndefOr[Boolean] = UndefOrUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        permissions: UndefOr[Permissions] = UndefOrUndefined(Some("permissions")),
+        color: UndefOr[Int] = UndefOrUndefined(Some("color")),
+        hoist: UndefOr[Boolean] = UndefOrUndefined(Some("hoist")),
+        icon: JsonOption[ImageData] = JsonUndefined(Some("icon")),
+        unicodeEmoji: JsonOption[String] = JsonUndefined(Some("unicode_emoji")),
+        mentionable: UndefOr[Boolean] = UndefOrUndefined(Some("mentionable"))
     ): CreateGuildRoleBody = makeRawFromFields(
       "name"          :=? name,
       "permissions"   :=? permissions,
@@ -1743,13 +1755,13 @@ object GuildRequests {
       *   Whether the role should be mentionable
       */
     def make20(
-        name: JsonOption[String] = JsonUndefined,
-        permissions: JsonOption[Permissions] = JsonUndefined,
-        color: JsonOption[Int] = JsonUndefined,
-        hoist: JsonOption[Boolean] = JsonUndefined,
-        icon: JsonOption[ImageData] = JsonUndefined,
-        unicodeEmoji: JsonOption[String] = JsonUndefined,
-        mentionable: JsonOption[Boolean] = JsonUndefined
+        name: JsonOption[String] = JsonUndefined(Some("name")),
+        permissions: JsonOption[Permissions] = JsonUndefined(Some("permissions")),
+        color: JsonOption[Int] = JsonUndefined(Some("color")),
+        hoist: JsonOption[Boolean] = JsonUndefined(Some("hoist")),
+        icon: JsonOption[ImageData] = JsonUndefined(Some("icon")),
+        unicodeEmoji: JsonOption[String] = JsonUndefined(Some("unicode_emoji")),
+        mentionable: JsonOption[Boolean] = JsonUndefined(Some("mentionable"))
     ): ModifyGuildRoleBody = makeRawFromFields(
       "name"          :=? name,
       "permissions"   :=? permissions,
@@ -1859,8 +1871,8 @@ object GuildRequests {
       *   Role(s) to include. Comma-delimited array of snowflakes
       */
     def make20(
-        days: UndefOr[Int] = UndefOrUndefined,
-        includeRoles: UndefOr[String] = UndefOrUndefined
+        days: UndefOr[Int] = UndefOrUndefined(Some("days")),
+        includeRoles: UndefOr[String] = UndefOrUndefined(Some("include_roles"))
     ): GetGuildPruneCountQuery = makeRawFromFields("days" :=? days, "include_roles" :=? includeRoles)
   }
 
@@ -2114,8 +2126,9 @@ object GuildRequests {
       * @param style
       *   Style of the widget image returned (see below)
       */
-    def make20(style: UndefOr[GuildWidgetImageStyle] = UndefOrUndefined): GetGuildWidgetImageQuery =
-      makeRawFromFields("style" :=? style)
+    def make20(
+        style: UndefOr[GuildWidgetImageStyle] = UndefOrUndefined(Some("style"))
+    ): GetGuildWidgetImageQuery = makeRawFromFields("style" :=? style)
   }
 
   /**
@@ -2223,9 +2236,9 @@ object GuildRequests {
       *   The server description to show in the welcome screen
       */
     def make20(
-        enabled: JsonOption[Boolean] = JsonUndefined,
-        welcomeChannels: JsonOption[Seq[WelcomeScreen.WelcomeScreenChannel]] = JsonUndefined,
-        description: JsonOption[String] = JsonUndefined
+        enabled: JsonOption[Boolean] = JsonUndefined(Some("enabled")),
+        welcomeChannels: JsonOption[Seq[WelcomeScreen.WelcomeScreenChannel]] = JsonUndefined(Some("welcome_channels")),
+        description: JsonOption[String] = JsonUndefined(Some("description"))
     ): ModifyGuildWelcomeScreenBody =
       makeRawFromFields("enabled" :=? enabled, "welcome_channels" :=? welcomeChannels, "description" :=? description)
   }
@@ -2364,9 +2377,9 @@ object GuildRequests {
       *   Sets the user's request to speak
       */
     def make20(
-        channelId: UndefOr[StageChannelId] = UndefOrUndefined,
-        suppress: UndefOr[Boolean] = UndefOrUndefined,
-        requestToSpeakTimestamp: JsonOption[OffsetDateTime] = JsonUndefined
+        channelId: UndefOr[StageChannelId] = UndefOrUndefined(Some("channel_id")),
+        suppress: UndefOr[Boolean] = UndefOrUndefined(Some("suppress")),
+        requestToSpeakTimestamp: JsonOption[OffsetDateTime] = JsonUndefined(Some("request_to_speak_timestamp"))
     ): ModifyCurrentUserVoiceStateBody = makeRawFromFields(
       "channel_id"                 :=? channelId,
       "suppress"                   :=? suppress,
@@ -2415,8 +2428,8 @@ object GuildRequests {
       *   Toggles the user's suppress state
       */
     def make20(
-        channelId: UndefOr[StageChannelId] = UndefOrUndefined,
-        suppress: UndefOr[Boolean] = UndefOrUndefined
+        channelId: UndefOr[StageChannelId] = UndefOrUndefined(Some("channel_id")),
+        suppress: UndefOr[Boolean] = UndefOrUndefined(Some("suppress"))
     ): ModifyUserVoiceStateBody = makeRawFromFields("channel_id" :=? channelId, "suppress" :=? suppress)
   }
 

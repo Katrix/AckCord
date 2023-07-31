@@ -4,9 +4,7 @@ import java.io.InputStream
 import java.nio.file.Path
 import java.util.UUID
 
-import ackcord.data.{GuildChannelId, GuildId, Permissions}
 import ackcord.requests.Request
-import cats.data.Ior
 import io.circe.{Decoder, Encoder, Json}
 import sttp.capabilities.Streams
 import sttp.client3.circe._

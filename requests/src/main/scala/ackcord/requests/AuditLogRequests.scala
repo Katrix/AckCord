@@ -65,11 +65,11 @@ object AuditLogRequests {
       *   Maximum number of entries (between 1-100) to return, defaults to 50
       */
     def make20(
-        userId: UndefOr[UserId] = UndefOrUndefined,
-        actionType: UndefOr[AuditLog.AuditLogEvent] = UndefOrUndefined,
-        before: UndefOr[RawSnowflake] = UndefOrUndefined,
-        after: UndefOr[RawSnowflake] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        userId: UndefOr[UserId] = UndefOrUndefined(Some("user_id")),
+        actionType: UndefOr[AuditLog.AuditLogEvent] = UndefOrUndefined(Some("action_type")),
+        before: UndefOr[RawSnowflake] = UndefOrUndefined(Some("before")),
+        after: UndefOr[RawSnowflake] = UndefOrUndefined(Some("after")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): GetGuildAuditLogQuery = makeRawFromFields(
       "user_id"     :=? userId,
       "action_type" :=? actionType,

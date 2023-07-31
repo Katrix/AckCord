@@ -5,13 +5,16 @@ import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEvent, GatewayEventBas
 import cats.Applicative
 import cats.syntax.all._
 
-abstract class DispatchEventProcess[F[_]: Applicative] extends GatewayProcess[F] {
+trait DispatchEventProcess[F[_]] extends GatewayProcess[F] {
 
   override def onEvent(event: GatewayEventBase[_], context: gateway.Context): F[gateway.Context] =
     event match {
       case dispatch: GatewayEvent.Dispatch => onDispatchEvent(dispatch.event, context)
-      case _                               => context.pure
+      case _                               => F.pure(context)
     }
 
   def onDispatchEvent(event: GatewayDispatchEvent, context: gateway.Context): F[gateway.Context]
+}
+object DispatchEventProcess {
+  abstract class Base[F[_]: Applicative] extends GatewayProcess.Base[F] with DispatchEventProcess[F]
 }

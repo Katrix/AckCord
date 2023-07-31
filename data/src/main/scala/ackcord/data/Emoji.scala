@@ -90,12 +90,12 @@ object Emoji extends DiscordObjectCompanion[Emoji] {
   def make20(
       id: Option[EmojiId],
       name: Option[String],
-      roles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
-      user: UndefOr[User] = UndefOrUndefined,
-      requireColons: UndefOr[Boolean] = UndefOrUndefined,
-      managed: UndefOr[Boolean] = UndefOrUndefined,
-      animated: UndefOr[Boolean] = UndefOrUndefined,
-      available: UndefOr[Boolean] = UndefOrUndefined
+      roles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("roles")),
+      user: UndefOr[User] = UndefOrUndefined(Some("user")),
+      requireColons: UndefOr[Boolean] = UndefOrUndefined(Some("require_colons")),
+      managed: UndefOr[Boolean] = UndefOrUndefined(Some("managed")),
+      animated: UndefOr[Boolean] = UndefOrUndefined(Some("animated")),
+      available: UndefOr[Boolean] = UndefOrUndefined(Some("available"))
   ): Emoji = makeRawFromFields(
     "id"              := id,
     "name"            := name,

@@ -421,39 +421,39 @@ object RawChannel extends DiscordObjectCompanion[RawChannel] {
   def make20(
       id: ChannelId,
       tpe: Channel.ChannelType,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
-      position: UndefOr[Int] = UndefOrUndefined,
-      permissionOverwrites: UndefOr[Seq[Channel.PermissionOverwrite]] = UndefOrUndefined,
-      name: JsonOption[String] = JsonUndefined,
-      topic: JsonOption[String] = JsonUndefined,
-      nsfw: UndefOr[Boolean] = UndefOrUndefined,
-      lastMessageId: JsonOption[MessageId] = JsonUndefined,
-      bitrate: UndefOr[Int] = UndefOrUndefined,
-      userLimit: UndefOr[Int] = UndefOrUndefined,
-      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined,
-      recipients: UndefOr[Seq[User]] = UndefOrUndefined,
-      icon: JsonOption[ImageHash] = JsonUndefined,
-      ownerId: UndefOr[UserId] = UndefOrUndefined,
-      applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-      managed: UndefOr[Boolean] = UndefOrUndefined,
-      parentId: UndefOr[GuildChannelId] = UndefOrUndefined,
-      lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined,
-      rtcRegion: JsonOption[VoiceRegion] = JsonUndefined,
-      videoQualityMode: UndefOr[Channel.VideoQualityMode] = UndefOrUndefined,
-      messageCount: UndefOr[Int] = UndefOrUndefined,
-      memberCount: UndefOr[Int] = UndefOrUndefined,
-      threadMetadata: UndefOr[Channel.ThreadMetadata] = UndefOrUndefined,
-      member: UndefOr[Channel.ThreadMember] = UndefOrUndefined,
-      defaultAutoArchiveDuration: UndefOr[Int] = UndefOrUndefined,
-      permissions: UndefOr[Permissions] = UndefOrUndefined,
-      flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined,
-      totalMessageSent: UndefOr[Int] = UndefOrUndefined,
-      availableTags: UndefOr[Seq[Channel.ForumTag]] = UndefOrUndefined,
-      appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] = UndefOrUndefined,
-      defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined,
-      defaultThreadRateLimitPerUser: UndefOr[Int] = UndefOrUndefined,
-      defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined,
-      defaultForumLayout: UndefOr[Channel.ForumLayout] = UndefOrUndefined
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+      position: UndefOr[Int] = UndefOrUndefined(Some("position")),
+      permissionOverwrites: UndefOr[Seq[Channel.PermissionOverwrite]] = UndefOrUndefined(Some("permission_overwrites")),
+      name: JsonOption[String] = JsonUndefined(Some("name")),
+      topic: JsonOption[String] = JsonUndefined(Some("topic")),
+      nsfw: UndefOr[Boolean] = UndefOrUndefined(Some("nsfw")),
+      lastMessageId: JsonOption[MessageId] = JsonUndefined(Some("last_message_id")),
+      bitrate: UndefOr[Int] = UndefOrUndefined(Some("bitrate")),
+      userLimit: UndefOr[Int] = UndefOrUndefined(Some("user_limit")),
+      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined(Some("rate_limit_per_user")),
+      recipients: UndefOr[Seq[User]] = UndefOrUndefined(Some("recipients")),
+      icon: JsonOption[ImageHash] = JsonUndefined(Some("icon")),
+      ownerId: UndefOr[UserId] = UndefOrUndefined(Some("owner_id")),
+      applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+      managed: UndefOr[Boolean] = UndefOrUndefined(Some("managed")),
+      parentId: UndefOr[GuildChannelId] = UndefOrUndefined(Some("parent_id")),
+      lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined(Some("last_pin_timestamp")),
+      rtcRegion: JsonOption[VoiceRegion] = JsonUndefined(Some("rtc_region")),
+      videoQualityMode: UndefOr[Channel.VideoQualityMode] = UndefOrUndefined(Some("video_quality_mode")),
+      messageCount: UndefOr[Int] = UndefOrUndefined(Some("message_count")),
+      memberCount: UndefOr[Int] = UndefOrUndefined(Some("member_count")),
+      threadMetadata: UndefOr[Channel.ThreadMetadata] = UndefOrUndefined(Some("thread_metadata")),
+      member: UndefOr[Channel.ThreadMember] = UndefOrUndefined(Some("member")),
+      defaultAutoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("default_auto_archive_duration")),
+      permissions: UndefOr[Permissions] = UndefOrUndefined(Some("permissions")),
+      flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined(Some("flags")),
+      totalMessageSent: UndefOr[Int] = UndefOrUndefined(Some("total_message_sent")),
+      availableTags: UndefOr[Seq[Channel.ForumTag]] = UndefOrUndefined(Some("available_tags")),
+      appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] = UndefOrUndefined(Some("applied_tags")),
+      defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined(Some("default_reaction_emoji")),
+      defaultThreadRateLimitPerUser: UndefOr[Int] = UndefOrUndefined(Some("default_thread_rate_limit_per_user")),
+      defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined(Some("default_sort_order")),
+      defaultForumLayout: UndefOr[Channel.ForumLayout] = UndefOrUndefined(Some("default_forum_layout"))
   ): RawChannel = makeRawFromFields(
     "id"                                  := id,
     "type"                                := tpe,
@@ -636,7 +636,7 @@ object TopLevelTextGuildChannel extends DiscordObjectCompanion[TopLevelTextGuild
   def make20(
       id: TopLevelTextGuildChannelId,
       lastMessageId: Option[MessageId],
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       position: Int,
       permissionOverwrites: Seq[Channel.PermissionOverwrite],
       name: String,
@@ -644,7 +644,7 @@ object TopLevelTextGuildChannel extends DiscordObjectCompanion[TopLevelTextGuild
       topic: Option[String],
       lastPinTimestamp: Option[OffsetDateTime],
       defaultAutoArchiveDuration: Int,
-      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined,
+      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined(Some("rate_limit_per_user")),
       defaultThreadRateLimitPerUser: Int
   ): TopLevelTextGuildChannel = makeRawFromFields(
     "id"                                 := id,
@@ -748,12 +748,12 @@ object NormalVoiceGuildChannel extends DiscordObjectCompanion[NormalVoiceGuildCh
   def make20(
       id: NormalVoiceGuildChannelId,
       lastMessageId: Option[MessageId],
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       position: Int,
       permissionOverwrites: Seq[Channel.PermissionOverwrite],
       name: String,
       parentId: Option[GuildChannelId],
-      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined,
+      rateLimitPerUser: UndefOr[Int] = UndefOrUndefined(Some("rate_limit_per_user")),
       bitrate: Int,
       userLimit: Int,
       rtcRegion: Option[String],
@@ -814,7 +814,7 @@ object GuildCategory extends DiscordObjectCompanion[GuildCategory] {
 
   def make20(
       id: GuildCategoryId,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       position: Int,
       permissionOverwrites: Seq[Channel.PermissionOverwrite],
       name: String,
@@ -902,7 +902,7 @@ object ThreadChannel extends DiscordObjectCompanion[ThreadChannel] {
 
   def make20(
       id: ThreadChannelId,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       name: String,
       lastMessageId: Option[MessageId],
       lastPinTimestamp: Option[OffsetDateTime],
@@ -993,7 +993,7 @@ object StageChannel extends DiscordObjectCompanion[StageChannel] {
 
   def make20(
       id: StageChannelId,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       position: Int,
       permissionOverwrites: Seq[Channel.PermissionOverwrite],
       name: String,
@@ -1122,7 +1122,7 @@ object ForumChannel extends DiscordObjectCompanion[ForumChannel] {
   def make20(
       id: ForumChannelId,
       lastMessageId: Option[ThreadChannelId],
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
       position: Int,
       permissionOverwrites: Seq[Channel.PermissionOverwrite],
       name: String,
@@ -1230,8 +1230,8 @@ object GroupDMChannel extends DiscordObjectCompanion[GroupDMChannel] {
       recipients: Seq[User],
       icon: Option[ImageHash],
       ownerId: UserId,
-      applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-      managed: UndefOr[Boolean] = UndefOrUndefined
+      applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+      managed: UndefOr[Boolean] = UndefOrUndefined(Some("managed"))
   ): GroupDMChannel = makeRawFromFields(
     "id"              := id,
     "last_message_id" := lastMessageId,
@@ -1553,8 +1553,8 @@ object Channel extends DiscordObjectCompanion[Channel] {
         autoArchiveDuration: Int,
         archiveTimestamp: OffsetDateTime,
         locked: Boolean,
-        invitable: UndefOr[Boolean] = UndefOrUndefined,
-        createTimestamp: UndefOr[OffsetDateTime] = UndefOrUndefined
+        invitable: UndefOr[Boolean] = UndefOrUndefined(Some("invitable")),
+        createTimestamp: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("create_timestamp"))
     ): ThreadMetadata = makeRawFromFields(
       "archived"              := archived,
       "auto_archive_duration" := autoArchiveDuration,
@@ -1617,11 +1617,11 @@ object Channel extends DiscordObjectCompanion[Channel] {
       *   Additional information about the user
       */
     def make20(
-        id: UndefOr[ThreadChannelId] = UndefOrUndefined,
-        userId: UndefOr[UserId] = UndefOrUndefined,
+        id: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("id")),
+        userId: UndefOr[UserId] = UndefOrUndefined(Some("user_id")),
         joinTimestamp: OffsetDateTime,
         flags: Int,
-        member: UndefOr[GuildMember] = UndefOrUndefined
+        member: UndefOr[GuildMember] = UndefOrUndefined(Some("member"))
     ): ThreadMember = makeRawFromFields(
       "id"            :=? id,
       "user_id"       :=? userId,
@@ -2045,26 +2045,26 @@ object Message extends DiscordObjectCompanion[Message] {
       mentionEveryone: Boolean,
       mentions: Seq[User],
       mentionRoles: Seq[RoleId],
-      mentionChannels: UndefOr[Seq[Message.ChannelMention]] = UndefOrUndefined,
+      mentionChannels: UndefOr[Seq[Message.ChannelMention]] = UndefOrUndefined(Some("mention_channels")),
       attachments: Seq[Attachment],
       embeds: Seq[Embed],
-      reactions: UndefOr[Seq[Reaction]] = UndefOrUndefined,
-      nonce: UndefOr[IntOrString] = UndefOrUndefined,
+      reactions: UndefOr[Seq[Reaction]] = UndefOrUndefined(Some("reactions")),
+      nonce: UndefOr[IntOrString] = UndefOrUndefined(Some("nonce")),
       pinned: Boolean,
-      webhookId: UndefOr[WebhookId] = UndefOrUndefined,
+      webhookId: UndefOr[WebhookId] = UndefOrUndefined(Some("webhook_id")),
       tpe: Message.MessageType,
-      activity: UndefOr[Message.MessageActivity] = UndefOrUndefined,
-      application: UndefOr[Message.MessageApplicationStub] = UndefOrUndefined,
-      applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-      messageReference: UndefOr[MessageReference] = UndefOrUndefined,
-      flags: UndefOr[Message.MessageFlags] = UndefOrUndefined,
-      referencedMessage: JsonOption[Message] = JsonUndefined,
-      interaction: UndefOr[Message.MessageInteractionStub] = UndefOrUndefined,
-      thread: UndefOr[Channel] = UndefOrUndefined,
-      components: UndefOr[Seq[Component]] = UndefOrUndefined,
-      stickerItems: UndefOr[Seq[Sticker.StickerItem]] = UndefOrUndefined,
-      position: UndefOr[Int] = UndefOrUndefined,
-      roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] = UndefOrUndefined
+      activity: UndefOr[Message.MessageActivity] = UndefOrUndefined(Some("activity")),
+      application: UndefOr[Message.MessageApplicationStub] = UndefOrUndefined(Some("application")),
+      applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+      messageReference: UndefOr[MessageReference] = UndefOrUndefined(Some("message_reference")),
+      flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags")),
+      referencedMessage: JsonOption[Message] = JsonUndefined(Some("referenced_message")),
+      interaction: UndefOr[Message.MessageInteractionStub] = UndefOrUndefined(Some("interaction")),
+      thread: UndefOr[Channel] = UndefOrUndefined(Some("thread")),
+      components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+      stickerItems: UndefOr[Seq[Sticker.StickerItem]] = UndefOrUndefined(Some("sticker_items")),
+      position: UndefOr[Int] = UndefOrUndefined(Some("position")),
+      roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] = UndefOrUndefined(Some("role_subscription_data"))
   ): Message = makeRawFromFields(
     "id"                      := id,
     "channel_id"              := channelId,
@@ -2411,34 +2411,34 @@ object Message extends DiscordObjectCompanion[Message] {
     def make20(
         id: MessageId,
         channelId: TextChannelId,
-        author: UndefOr[MessageAuthor] = UndefOrUndefined,
-        content: UndefOr[String] = UndefOrUndefined,
-        timestamp: UndefOr[OffsetDateTime] = UndefOrUndefined,
-        editedTimestamp: JsonOption[OffsetDateTime] = JsonUndefined,
-        tts: UndefOr[Boolean] = UndefOrUndefined,
-        mentionEveryone: UndefOr[Boolean] = UndefOrUndefined,
-        mentions: UndefOr[Seq[User]] = UndefOrUndefined,
-        mentionRoles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
-        mentionChannels: UndefOr[Seq[Message.ChannelMention]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[Attachment]] = UndefOrUndefined,
-        embeds: UndefOr[Seq[Embed]] = UndefOrUndefined,
-        reactions: UndefOr[Seq[Reaction]] = UndefOrUndefined,
-        nonce: UndefOr[IntOrString] = UndefOrUndefined,
-        pinned: UndefOr[Boolean] = UndefOrUndefined,
-        webhookId: UndefOr[WebhookId] = UndefOrUndefined,
-        tpe: UndefOr[Message.MessageType] = UndefOrUndefined,
-        activity: UndefOr[Message.MessageActivity] = UndefOrUndefined,
-        application: UndefOr[Message.MessageApplicationStub] = UndefOrUndefined,
-        applicationId: UndefOr[ApplicationId] = UndefOrUndefined,
-        messageReference: UndefOr[MessageReference] = UndefOrUndefined,
-        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined,
-        referencedMessage: JsonOption[Message] = JsonUndefined,
-        interaction: UndefOr[Message.MessageInteractionStub] = UndefOrUndefined,
-        thread: UndefOr[Channel] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        stickerItems: UndefOr[Seq[Sticker.StickerItem]] = UndefOrUndefined,
-        position: UndefOr[Int] = UndefOrUndefined,
-        roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] = UndefOrUndefined
+        author: UndefOr[MessageAuthor] = UndefOrUndefined(Some("author")),
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        timestamp: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("timestamp")),
+        editedTimestamp: JsonOption[OffsetDateTime] = JsonUndefined(Some("edited_timestamp")),
+        tts: UndefOr[Boolean] = UndefOrUndefined(Some("tts")),
+        mentionEveryone: UndefOr[Boolean] = UndefOrUndefined(Some("mention_everyone")),
+        mentions: UndefOr[Seq[User]] = UndefOrUndefined(Some("mentions")),
+        mentionRoles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("mention_roles")),
+        mentionChannels: UndefOr[Seq[Message.ChannelMention]] = UndefOrUndefined(Some("mention_channels")),
+        attachments: UndefOr[Seq[Attachment]] = UndefOrUndefined(Some("attachments")),
+        embeds: UndefOr[Seq[Embed]] = UndefOrUndefined(Some("embeds")),
+        reactions: UndefOr[Seq[Reaction]] = UndefOrUndefined(Some("reactions")),
+        nonce: UndefOr[IntOrString] = UndefOrUndefined(Some("nonce")),
+        pinned: UndefOr[Boolean] = UndefOrUndefined(Some("pinned")),
+        webhookId: UndefOr[WebhookId] = UndefOrUndefined(Some("webhook_id")),
+        tpe: UndefOr[Message.MessageType] = UndefOrUndefined(Some("tpe")),
+        activity: UndefOr[Message.MessageActivity] = UndefOrUndefined(Some("activity")),
+        application: UndefOr[Message.MessageApplicationStub] = UndefOrUndefined(Some("application")),
+        applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
+        messageReference: UndefOr[MessageReference] = UndefOrUndefined(Some("message_reference")),
+        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags")),
+        referencedMessage: JsonOption[Message] = JsonUndefined(Some("referenced_message")),
+        interaction: UndefOr[Message.MessageInteractionStub] = UndefOrUndefined(Some("interaction")),
+        thread: UndefOr[Channel] = UndefOrUndefined(Some("thread")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        stickerItems: UndefOr[Seq[Sticker.StickerItem]] = UndefOrUndefined(Some("sticker_items")),
+        position: UndefOr[Int] = UndefOrUndefined(Some("position")),
+        roleSubscriptionData: UndefOr[Message.RoleSubscriptionData] = UndefOrUndefined(Some("role_subscription_data"))
     ): Partial = makeRawFromFields(
       "id"                      := id,
       "channel_id"              := channelId,
@@ -2471,377 +2471,6 @@ object Message extends DiscordObjectCompanion[Message] {
       "position"               :=? position,
       "role_subscription_data" :=? roleSubscriptionData
     )
-
-    sealed case class MessageType private (value: Int) extends DiscordEnum[Int]
-    object MessageType extends DiscordEnumCompanion[Int, MessageType] {
-      val DEFAULT: MessageType = MessageType(0)
-
-      val RECIPIENT_ADD: MessageType = MessageType(1)
-
-      val RECIPIENT_REMOVE: MessageType = MessageType(2)
-
-      val CALL: MessageType = MessageType(3)
-
-      val CHANNEL_NAME_CHANGE: MessageType = MessageType(4)
-
-      val CHANNEL_ICON_CHANGE: MessageType = MessageType(5)
-
-      val CHANNEL_PINNED_MESSAGE: MessageType = MessageType(6)
-
-      val USER_JOIN: MessageType = MessageType(7)
-
-      val GUILD_BOOST: MessageType = MessageType(8)
-
-      val GUILD_BOOST_TIER_1: MessageType = MessageType(9)
-
-      val GUILD_BOOST_TIER_2: MessageType = MessageType(10)
-
-      val GUILD_BOOST_TIER_3: MessageType = MessageType(11)
-
-      val CHANNEL_FOLLOW_ADD: MessageType = MessageType(12)
-
-      val GUILD_DISCOVERY_DISQUALIFIED: MessageType = MessageType(14)
-
-      val GUILD_DISCOVERY_REQUALIFIED: MessageType = MessageType(15)
-
-      val GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING: MessageType = MessageType(16)
-
-      val GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING: MessageType = MessageType(17)
-
-      val THREAD_CREATED: MessageType = MessageType(18)
-
-      val REPLY: MessageType = MessageType(19)
-
-      val CHAT_INPUT_COMMAND: MessageType = MessageType(20)
-
-      val THREAD_STARTER_MESSAGE: MessageType = MessageType(21)
-
-      val GUILD_INVITE_REMINDER: MessageType = MessageType(22)
-
-      val CONTEXT_MENU_COMMAND: MessageType = MessageType(23)
-
-      val AUTO_MODERATION_ACTION: MessageType = MessageType(24)
-
-      val ROLE_SUBSCRIPTION_PURCHASE: MessageType = MessageType(25)
-
-      val INTERACTION_PREMIUM_UPSELL: MessageType = MessageType(26)
-
-      val STAGE_START: MessageType = MessageType(27)
-
-      val STAGE_END: MessageType = MessageType(28)
-
-      val STAGE_SPEAKER: MessageType = MessageType(29)
-
-      val STAGE_TOPIC: MessageType = MessageType(31)
-
-      val GUILD_APPLICATION_PREMIUM_SUBSCRIPTION: MessageType = MessageType(32)
-
-      def unknown(value: Int): MessageType = new MessageType(value)
-
-      val values: Seq[MessageType] = Seq(
-        DEFAULT,
-        RECIPIENT_ADD,
-        RECIPIENT_REMOVE,
-        CALL,
-        CHANNEL_NAME_CHANGE,
-        CHANNEL_ICON_CHANGE,
-        CHANNEL_PINNED_MESSAGE,
-        USER_JOIN,
-        GUILD_BOOST,
-        GUILD_BOOST_TIER_1,
-        GUILD_BOOST_TIER_2,
-        GUILD_BOOST_TIER_3,
-        CHANNEL_FOLLOW_ADD,
-        GUILD_DISCOVERY_DISQUALIFIED,
-        GUILD_DISCOVERY_REQUALIFIED,
-        GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING,
-        GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING,
-        THREAD_CREATED,
-        REPLY,
-        CHAT_INPUT_COMMAND,
-        THREAD_STARTER_MESSAGE,
-        GUILD_INVITE_REMINDER,
-        CONTEXT_MENU_COMMAND,
-        AUTO_MODERATION_ACTION,
-        ROLE_SUBSCRIPTION_PURCHASE,
-        INTERACTION_PREMIUM_UPSELL,
-        STAGE_START,
-        STAGE_END,
-        STAGE_SPEAKER,
-        STAGE_TOPIC,
-        GUILD_APPLICATION_PREMIUM_SUBSCRIPTION
-      )
-
-      implicit class MessageTypeBitFieldOps(private val here: MessageType) extends AnyVal {
-
-        def toInt: Int = here.value
-
-        def ++(there: MessageType): MessageType = MessageType(here.value | there.value)
-
-        def --(there: MessageType): MessageType = MessageType(here.value & ~there.value)
-
-        def isNone: Boolean = here.value == 0
-      }
-    }
-
-    class MessageInteractionStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-
-      override def values: Seq[() => Any] = Seq()
-    }
-    object MessageInteractionStub extends DiscordObjectCompanion[MessageInteractionStub] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageInteractionStub =
-        new MessageInteractionStub(json, cache)
-
-      def make20(): MessageInteractionStub = makeRawFromFields()
-    }
-
-    class MessageApplicationStub(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-
-      override def values: Seq[() => Any] = Seq()
-    }
-    object MessageApplicationStub extends DiscordObjectCompanion[MessageApplicationStub] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageApplicationStub =
-        new MessageApplicationStub(json, cache)
-
-      def make20(): MessageApplicationStub = makeRawFromFields()
-    }
-
-    class ChannelMention(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-
-      /** Id of the channel */
-      @inline def id: TextGuildChannelId = selectDynamic[TextGuildChannelId]("id")
-
-      @inline def withId(newValue: TextGuildChannelId): ChannelMention =
-        objWith(ChannelMention, "id", newValue)
-
-      /** Id of the guild containing the channel */
-      @inline def guildId: GuildId = selectDynamic[GuildId]("guild_id")
-
-      @inline def withGuildId(newValue: GuildId): ChannelMention = objWith(ChannelMention, "guild_id", newValue)
-
-      /** The type of channel */
-      @inline def tpe: Channel.ChannelType = selectDynamic[Channel.ChannelType]("type")
-
-      @inline def withTpe(newValue: Channel.ChannelType): ChannelMention =
-        objWith(ChannelMention, "type", newValue)
-
-      /** The name of the channel */
-      @inline def name: String = selectDynamic[String]("name")
-
-      @inline def withName(newValue: String): ChannelMention = objWith(ChannelMention, "name", newValue)
-
-      override def values: Seq[() => Any] = Seq(() => id, () => guildId, () => tpe, () => name)
-    }
-    object ChannelMention extends DiscordObjectCompanion[ChannelMention] {
-      def makeRaw(json: Json, cache: Map[String, Any]): ChannelMention =
-        new ChannelMention(json, cache)
-
-      /**
-        * @param id
-        *   Id of the channel
-        * @param guildId
-        *   Id of the guild containing the channel
-        * @param tpe
-        *   The type of channel
-        * @param name
-        *   The name of the channel
-        */
-      def make20(
-          id: TextGuildChannelId,
-          guildId: GuildId,
-          tpe: Channel.ChannelType,
-          name: String
-      ): ChannelMention = makeRawFromFields("id" := id, "guild_id" := guildId, "type" := tpe, "name" := name)
-    }
-
-    class MessageActivity(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-
-      /** Type of message activity */
-      @inline def tpe: MessageActivity.MessageActivityType = selectDynamic[MessageActivity.MessageActivityType]("type")
-
-      @inline def withTpe(newValue: MessageActivity.MessageActivityType): MessageActivity =
-        objWith(MessageActivity, "type", newValue)
-
-      /** party_id from a Rich Presence event */
-      @inline def partyId: UndefOr[String] = selectDynamic[UndefOr[String]]("party_id")
-
-      @inline def withPartyId(newValue: UndefOr[String]): MessageActivity =
-        objWithUndef(MessageActivity, "party_id", newValue)
-
-      override def values: Seq[() => Any] = Seq(() => tpe, () => partyId)
-    }
-    object MessageActivity extends DiscordObjectCompanion[MessageActivity] {
-      def makeRaw(json: Json, cache: Map[String, Any]): MessageActivity =
-        new MessageActivity(json, cache)
-
-      /**
-        * @param tpe
-        *   Type of message activity
-        * @param partyId
-        *   party_id from a Rich Presence event
-        */
-      def make20(
-          tpe: MessageActivity.MessageActivityType,
-          partyId: UndefOr[String] = UndefOrUndefined
-      ): MessageActivity = makeRawFromFields("type" := tpe, "party_id" :=? partyId)
-
-      sealed case class MessageActivityType private (value: Int) extends DiscordEnum[Int]
-      object MessageActivityType extends DiscordEnumCompanion[Int, MessageActivityType] {
-        val JOIN: MessageActivityType = MessageActivityType(1)
-
-        val SPECTATE: MessageActivityType = MessageActivityType(2)
-
-        val LISTEN: MessageActivityType = MessageActivityType(3)
-
-        val JOIN_REQUEST: MessageActivityType = MessageActivityType(5)
-
-        def unknown(value: Int): MessageActivityType = new MessageActivityType(value)
-
-        val values: Seq[MessageActivityType] = Seq(JOIN, SPECTATE, LISTEN, JOIN_REQUEST)
-      }
-    }
-
-    sealed case class MessageFlags private (value: Int) extends DiscordEnum[Int]
-    object MessageFlags                                 extends DiscordEnumCompanion[Int, MessageFlags] {
-
-      /**
-        * This message has been published to subscribed channels (via Channel
-        * Following)
-        */
-      val CROSSPOSTED: MessageFlags = MessageFlags(1 << 0)
-
-      /**
-        * This message originated from a message in another channel (via Channel
-        * Following)
-        */
-      val IS_CROSSPOST: MessageFlags = MessageFlags(1 << 1)
-
-      /** Do not include any embeds when serializing this message */
-      val SUPPRESS_EMBEDS: MessageFlags = MessageFlags(1 << 2)
-
-      /**
-        * The source message for this crosspost has been deleted (via Channel
-        * Following)
-        */
-      val SOURCE_MESSAGE_DELETED: MessageFlags = MessageFlags(1 << 3)
-
-      /** This message came from the urgent message system */
-      val URGENT: MessageFlags = MessageFlags(1 << 4)
-
-      /**
-        * This message has an associated thread, with the same id as the message
-        */
-      val HAS_THREAD: MessageFlags = MessageFlags(1 << 5)
-
-      /**
-        * This message is only visible to the user who invoked the Interaction
-        */
-      val EPHEMERAL: MessageFlags = MessageFlags(1 << 6)
-
-      /** This message is an Interaction Response and the bot is "thinking" */
-      val LOADING: MessageFlags = MessageFlags(1 << 7)
-
-      /**
-        * This message failed to mention some roles and add their members to the
-        * thread
-        */
-      val FAILED_TO_MENTION_SOME_ROLES_IN_THREAD: MessageFlags = MessageFlags(1 << 8)
-
-      /** This message will not trigger push and desktop notifications */
-      val SUPPRESS_NOTIFICATIONS: MessageFlags = MessageFlags(1 << 12)
-
-      /** This message is a voice message */
-      val IS_VOICE_MESSAGE: MessageFlags = MessageFlags(1 << 13)
-
-      def unknown(value: Int): MessageFlags = new MessageFlags(value)
-
-      val values: Seq[MessageFlags] = Seq(
-        CROSSPOSTED,
-        IS_CROSSPOST,
-        SUPPRESS_EMBEDS,
-        SOURCE_MESSAGE_DELETED,
-        URGENT,
-        HAS_THREAD,
-        EPHEMERAL,
-        LOADING,
-        FAILED_TO_MENTION_SOME_ROLES_IN_THREAD,
-        SUPPRESS_NOTIFICATIONS,
-        IS_VOICE_MESSAGE
-      )
-
-      implicit class MessageFlagsBitFieldOps(private val here: MessageFlags) extends AnyVal {
-
-        def toInt: Int = here.value
-
-        def ++(there: MessageFlags): MessageFlags = MessageFlags(here.value | there.value)
-
-        def --(there: MessageFlags): MessageFlags = MessageFlags(here.value & ~there.value)
-
-        def isNone: Boolean = here.value == 0
-      }
-    }
-
-    class RoleSubscriptionData(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
-
-      /** The id of the sku and listing that the user is subscribed to */
-      @inline def roleSubscriptionListingId: RawSnowflake = selectDynamic[RawSnowflake]("role_subscription_listing_id")
-
-      @inline def withRoleSubscriptionListingId(newValue: RawSnowflake): RoleSubscriptionData =
-        objWith(RoleSubscriptionData, "role_subscription_listing_id", newValue)
-
-      /** The name of the tier that the user is subscribed to */
-      @inline def tierName: String = selectDynamic[String]("tier_name")
-
-      @inline def withTierName(newValue: String): RoleSubscriptionData =
-        objWith(RoleSubscriptionData, "tier_name", newValue)
-
-      /**
-        * The cumulative number of months that the user has been subscribed for
-        */
-      @inline def totalMonthsSubscribed: Int = selectDynamic[Int]("total_months_subscribed")
-
-      @inline def withTotalMonthsSubscribed(newValue: Int): RoleSubscriptionData =
-        objWith(RoleSubscriptionData, "total_months_subscribed", newValue)
-
-      /**
-        * Whether this notification is for a renewal rather than a new purchase
-        */
-      @inline def isRenewal: Boolean = selectDynamic[Boolean]("is_renewal")
-
-      @inline def withIsRenewal(newValue: Boolean): RoleSubscriptionData =
-        objWith(RoleSubscriptionData, "is_renewal", newValue)
-
-      override def values: Seq[() => Any] =
-        Seq(() => roleSubscriptionListingId, () => tierName, () => totalMonthsSubscribed, () => isRenewal)
-    }
-    object RoleSubscriptionData extends DiscordObjectCompanion[RoleSubscriptionData] {
-      def makeRaw(json: Json, cache: Map[String, Any]): RoleSubscriptionData =
-        new RoleSubscriptionData(json, cache)
-
-      /**
-        * @param roleSubscriptionListingId
-        *   The id of the sku and listing that the user is subscribed to
-        * @param tierName
-        *   The name of the tier that the user is subscribed to
-        * @param totalMonthsSubscribed
-        *   The cumulative number of months that the user has been subscribed
-        *   for
-        * @param isRenewal
-        *   Whether this notification is for a renewal rather than a new
-        *   purchase
-        */
-      def make20(
-          roleSubscriptionListingId: RawSnowflake,
-          tierName: String,
-          totalMonthsSubscribed: Int,
-          isRenewal: Boolean
-      ): RoleSubscriptionData = makeRawFromFields(
-        "role_subscription_listing_id" := roleSubscriptionListingId,
-        "tier_name"                    := tierName,
-        "total_months_subscribed"      := totalMonthsSubscribed,
-        "is_renewal"                   := isRenewal
-      )
-    }
   }
 
   sealed case class MessageType private (value: Int) extends DiscordEnum[Int]
@@ -3054,7 +2683,7 @@ object Message extends DiscordObjectCompanion[Message] {
       */
     def make20(
         tpe: MessageActivity.MessageActivityType,
-        partyId: UndefOr[String] = UndefOrUndefined
+        partyId: UndefOr[String] = UndefOrUndefined(Some("party_id"))
     ): MessageActivity = makeRawFromFields("type" := tpe, "party_id" :=? partyId)
 
     sealed case class MessageActivityType private (value: Int) extends DiscordEnum[Int]
@@ -3255,10 +2884,10 @@ object MessageReference extends DiscordObjectCompanion[MessageReference] {
     *   instead of sending as a normal (non-reply) message, default true
     */
   def make20(
-      messageId: UndefOr[MessageId] = UndefOrUndefined,
-      channelId: UndefOr[TextChannelId] = UndefOrUndefined,
-      guildId: UndefOr[GuildId] = UndefOrUndefined,
-      failIfNotExists: UndefOr[Boolean] = UndefOrUndefined
+      messageId: UndefOr[MessageId] = UndefOrUndefined(Some("message_id")),
+      channelId: UndefOr[TextChannelId] = UndefOrUndefined(Some("channel_id")),
+      guildId: UndefOr[GuildId] = UndefOrUndefined(Some("guild_id")),
+      failIfNotExists: UndefOr[Boolean] = UndefOrUndefined(Some("fail_if_not_exists"))
   ): MessageReference = makeRawFromFields(
     "message_id"         :=? messageId,
     "channel_id"         :=? channelId,
@@ -3450,19 +3079,19 @@ object Embed extends DiscordObjectCompanion[Embed] {
     *   Fields information
     */
   def make20(
-      title: UndefOr[String] = UndefOrUndefined,
-      tpe: UndefOr[Embed.EmbedType] = UndefOrUndefined,
-      description: UndefOr[String] = UndefOrUndefined,
-      url: UndefOr[String] = UndefOrUndefined,
-      timestamp: UndefOr[OffsetDateTime] = UndefOrUndefined,
-      color: UndefOr[Int] = UndefOrUndefined,
-      footer: UndefOr[Embed.EmbedFooter] = UndefOrUndefined,
-      image: UndefOr[Embed.EmbedImage] = UndefOrUndefined,
-      thumbnail: UndefOr[Embed.EmbedThumbnail] = UndefOrUndefined,
-      video: UndefOr[Embed.EmbedVideo] = UndefOrUndefined,
-      provider: UndefOr[Embed.EmbedProvider] = UndefOrUndefined,
-      author: UndefOr[Embed.EmbedAuthor] = UndefOrUndefined,
-      fields: UndefOr[Seq[Embed.EmbedField]] = UndefOrUndefined
+      title: UndefOr[String] = UndefOrUndefined(Some("title")),
+      tpe: UndefOr[Embed.EmbedType] = UndefOrUndefined(Some("tpe")),
+      description: UndefOr[String] = UndefOrUndefined(Some("description")),
+      url: UndefOr[String] = UndefOrUndefined(Some("url")),
+      timestamp: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("timestamp")),
+      color: UndefOr[Int] = UndefOrUndefined(Some("color")),
+      footer: UndefOr[Embed.EmbedFooter] = UndefOrUndefined(Some("footer")),
+      image: UndefOr[Embed.EmbedImage] = UndefOrUndefined(Some("image")),
+      thumbnail: UndefOr[Embed.EmbedThumbnail] = UndefOrUndefined(Some("thumbnail")),
+      video: UndefOr[Embed.EmbedVideo] = UndefOrUndefined(Some("video")),
+      provider: UndefOr[Embed.EmbedProvider] = UndefOrUndefined(Some("provider")),
+      author: UndefOr[Embed.EmbedAuthor] = UndefOrUndefined(Some("author")),
+      fields: UndefOr[Seq[Embed.EmbedField]] = UndefOrUndefined(Some("fields"))
   ): Embed = makeRawFromFields(
     "title"       :=? title,
     "type"        :=? tpe,
@@ -3546,9 +3175,9 @@ object Embed extends DiscordObjectCompanion[Embed] {
       */
     def make20(
         url: String,
-        proxyUrl: UndefOr[String] = UndefOrUndefined,
-        height: UndefOr[Int] = UndefOrUndefined,
-        width: UndefOr[Int] = UndefOrUndefined
+        proxyUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_url")),
+        height: UndefOr[Int] = UndefOrUndefined(Some("height")),
+        width: UndefOr[Int] = UndefOrUndefined(Some("width"))
     ): EmbedThumbnail =
       makeRawFromFields("url" := url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
   }
@@ -3591,10 +3220,10 @@ object Embed extends DiscordObjectCompanion[Embed] {
       *   Width of video
       */
     def make20(
-        url: UndefOr[String] = UndefOrUndefined,
-        proxyUrl: UndefOr[String] = UndefOrUndefined,
-        height: UndefOr[Int] = UndefOrUndefined,
-        width: UndefOr[Int] = UndefOrUndefined
+        url: UndefOr[String] = UndefOrUndefined(Some("url")),
+        proxyUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_url")),
+        height: UndefOr[Int] = UndefOrUndefined(Some("height")),
+        width: UndefOr[Int] = UndefOrUndefined(Some("width"))
     ): EmbedVideo = makeRawFromFields("url" :=? url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
   }
 
@@ -3637,9 +3266,9 @@ object Embed extends DiscordObjectCompanion[Embed] {
       */
     def make20(
         url: String,
-        proxyUrl: UndefOr[String] = UndefOrUndefined,
-        height: UndefOr[Int] = UndefOrUndefined,
-        width: UndefOr[Int] = UndefOrUndefined
+        proxyUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_url")),
+        height: UndefOr[Int] = UndefOrUndefined(Some("height")),
+        width: UndefOr[Int] = UndefOrUndefined(Some("width"))
     ): EmbedImage = makeRawFromFields("url" := url, "proxy_url" :=? proxyUrl, "height" :=? height, "width" :=? width)
   }
 
@@ -3667,8 +3296,8 @@ object Embed extends DiscordObjectCompanion[Embed] {
       *   Url of provider
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        url: UndefOr[String] = UndefOrUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        url: UndefOr[String] = UndefOrUndefined(Some("url"))
     ): EmbedProvider = makeRawFromFields("name" :=? name, "url" :=? url)
   }
 
@@ -3712,9 +3341,9 @@ object Embed extends DiscordObjectCompanion[Embed] {
       */
     def make20(
         name: String,
-        url: UndefOr[String] = UndefOrUndefined,
-        iconUrl: UndefOr[String] = UndefOrUndefined,
-        proxyIconUrl: UndefOr[String] = UndefOrUndefined
+        url: UndefOr[String] = UndefOrUndefined(Some("url")),
+        iconUrl: UndefOr[String] = UndefOrUndefined(Some("icon_url")),
+        proxyIconUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_icon_url"))
     ): EmbedAuthor =
       makeRawFromFields("name" := name, "url" :=? url, "icon_url" :=? iconUrl, "proxy_icon_url" :=? proxyIconUrl)
   }
@@ -3752,8 +3381,8 @@ object Embed extends DiscordObjectCompanion[Embed] {
       */
     def make20(
         text: String,
-        iconUrl: UndefOr[String] = UndefOrUndefined,
-        proxyIconUrl: UndefOr[String] = UndefOrUndefined
+        iconUrl: UndefOr[String] = UndefOrUndefined(Some("icon_url")),
+        proxyIconUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_icon_url"))
     ): EmbedFooter = makeRawFromFields("text" := text, "icon_url" :=? iconUrl, "proxy_icon_url" :=? proxyIconUrl)
   }
 
@@ -3790,7 +3419,7 @@ object Embed extends DiscordObjectCompanion[Embed] {
     def make20(
         name: String,
         value: String,
-        inline: UndefOr[Boolean] = UndefOrUndefined
+        inline: UndefOr[Boolean] = UndefOrUndefined(Some("inline"))
     ): EmbedField = makeRawFromFields("name" := name, "value" := value, "inline" :=? inline)
   }
 }
@@ -3920,17 +3549,17 @@ object Attachment extends DiscordObjectCompanion[Attachment] {
   def make20(
       id: Snowflake[Attachment],
       filename: String,
-      description: UndefOr[String] = UndefOrUndefined,
-      contentType: UndefOr[String] = UndefOrUndefined,
+      description: UndefOr[String] = UndefOrUndefined(Some("description")),
+      contentType: UndefOr[String] = UndefOrUndefined(Some("content_type")),
       size: Int,
       url: String,
       proxyUrl: String,
-      height: JsonOption[Int] = JsonUndefined,
-      width: JsonOption[Int] = JsonUndefined,
-      ephemeral: UndefOr[Boolean] = UndefOrUndefined,
-      durationSecs: UndefOr[Float] = UndefOrUndefined,
-      waveform: UndefOr[String] = UndefOrUndefined,
-      flags: UndefOr[Attachment.AttachmentFlags] = UndefOrUndefined
+      height: JsonOption[Int] = JsonUndefined(Some("height")),
+      width: JsonOption[Int] = JsonUndefined(Some("width")),
+      ephemeral: UndefOr[Boolean] = UndefOrUndefined(Some("ephemeral")),
+      durationSecs: UndefOr[Float] = UndefOrUndefined(Some("duration_secs")),
+      waveform: UndefOr[String] = UndefOrUndefined(Some("waveform")),
+      flags: UndefOr[Attachment.AttachmentFlags] = UndefOrUndefined(Some("flags"))
   ): Attachment = makeRawFromFields(
     "id"             := id,
     "filename"       := filename,
@@ -4018,10 +3647,10 @@ object AllowedMentions extends DiscordObjectCompanion[AllowedMentions] {
     *   to (default false)
     */
   def make20(
-      parse: UndefOr[Seq[AllowedMentions.AllowedMentionsType]] = UndefOrUndefined,
-      roles: UndefOr[Seq[RoleId]] = UndefOrUndefined,
-      users: UndefOr[Seq[UserId]] = UndefOrUndefined,
-      repliedUser: UndefOr[Boolean] = UndefOrUndefined
+      parse: UndefOr[Seq[AllowedMentions.AllowedMentionsType]] = UndefOrUndefined(Some("parse")),
+      roles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("roles")),
+      users: UndefOr[Seq[UserId]] = UndefOrUndefined(Some("users")),
+      repliedUser: UndefOr[Boolean] = UndefOrUndefined(Some("replied_user"))
   ): AllowedMentions =
     makeRawFromFields("parse" :=? parse, "roles" :=? roles, "users" :=? users, "replied_user" :=? repliedUser)
 

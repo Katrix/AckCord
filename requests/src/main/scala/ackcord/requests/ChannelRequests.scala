@@ -87,8 +87,8 @@ object ChannelRequests {
         *   Base64 encoded icon
         */
       def make20(
-          name: UndefOr[String] = UndefOrUndefined,
-          icon: UndefOr[ImageData] = UndefOrUndefined
+          name: UndefOr[String] = UndefOrUndefined(Some("name")),
+          icon: UndefOr[ImageData] = UndefOrUndefined(Some("icon"))
       ): ModifyGroupDMBody = makeRawFromFields("name" :=? name, "icon" :=? icon)
     }
 
@@ -345,25 +345,27 @@ object ChannelRequests {
         *   channels
         */
       def make20(
-          name: UndefOr[String] = UndefOrUndefined,
-          tpe: UndefOr[Channel.ChannelType] = UndefOrUndefined,
-          position: JsonOption[Int] = JsonUndefined,
-          topic: JsonOption[String] = JsonUndefined,
-          nsfw: JsonOption[Boolean] = JsonUndefined,
-          rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-          bitrate: JsonOption[Int] = JsonUndefined,
-          userLimit: JsonOption[Int] = JsonUndefined,
-          permissionOverwrites: JsonOption[ModifyGuildChannelBody.EditChannelPartialOverwrite] = JsonUndefined,
-          parentId: JsonOption[GuildCategoryId] = JsonUndefined,
-          rtcRegion: JsonOption[VoiceRegion] = JsonUndefined,
-          videoQualityMode: JsonOption[Channel.VideoQualityMode] = JsonUndefined,
-          defaultAutoArchiveDuration: JsonOption[Int] = JsonUndefined,
-          flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined,
-          availableTags: UndefOr[Seq[Channel.ForumTag]] = UndefOrUndefined,
-          defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined,
-          defaultThreadRateLimitPerUser: UndefOr[Int] = UndefOrUndefined,
-          defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined,
-          defaultForumLayout: UndefOr[Channel.ForumLayout] = UndefOrUndefined
+          name: UndefOr[String] = UndefOrUndefined(Some("name")),
+          tpe: UndefOr[Channel.ChannelType] = UndefOrUndefined(Some("tpe")),
+          position: JsonOption[Int] = JsonUndefined(Some("position")),
+          topic: JsonOption[String] = JsonUndefined(Some("topic")),
+          nsfw: JsonOption[Boolean] = JsonUndefined(Some("nsfw")),
+          rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user")),
+          bitrate: JsonOption[Int] = JsonUndefined(Some("bitrate")),
+          userLimit: JsonOption[Int] = JsonUndefined(Some("user_limit")),
+          permissionOverwrites: JsonOption[ModifyGuildChannelBody.EditChannelPartialOverwrite] = JsonUndefined(
+            Some("permission_overwrites")
+          ),
+          parentId: JsonOption[GuildCategoryId] = JsonUndefined(Some("parent_id")),
+          rtcRegion: JsonOption[VoiceRegion] = JsonUndefined(Some("rtc_region")),
+          videoQualityMode: JsonOption[Channel.VideoQualityMode] = JsonUndefined(Some("video_quality_mode")),
+          defaultAutoArchiveDuration: JsonOption[Int] = JsonUndefined(Some("default_auto_archive_duration")),
+          flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined(Some("flags")),
+          availableTags: UndefOr[Seq[Channel.ForumTag]] = UndefOrUndefined(Some("available_tags")),
+          defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined(Some("default_reaction_emoji")),
+          defaultThreadRateLimitPerUser: UndefOr[Int] = UndefOrUndefined(Some("default_thread_rate_limit_per_user")),
+          defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined(Some("default_sort_order")),
+          defaultForumLayout: UndefOr[Channel.ForumLayout] = UndefOrUndefined(Some("default_forum_layout"))
       ): ModifyGuildChannelBody = makeRawFromFields(
         "name"                               :=? name,
         "type"                               :=? tpe,
@@ -434,8 +436,8 @@ object ChannelRequests {
         def make20(
             id: UserOrRoleId,
             tpe: Channel.PermissionOverwrite.PermissionOverwriteType,
-            allow: JsonOption[Permissions] = JsonUndefined,
-            deny: JsonOption[Permissions] = JsonUndefined
+            allow: JsonOption[Permissions] = JsonUndefined(Some("allow")),
+            deny: JsonOption[Permissions] = JsonUndefined(Some("deny"))
         ): EditChannelPartialOverwrite =
           makeRawFromFields("id" := id, "type" := tpe, "allow" :=? allow, "deny" :=? deny)
       }
@@ -556,14 +558,14 @@ object ChannelRequests {
         *   GUILD_FORUM channel; limited to 5
         */
       def make20(
-          name: UndefOr[String] = UndefOrUndefined,
-          archived: UndefOr[Boolean] = UndefOrUndefined,
-          autoArchiveDuration: UndefOr[Int] = UndefOrUndefined,
-          locked: UndefOr[Boolean] = UndefOrUndefined,
-          invitable: UndefOr[Boolean] = UndefOrUndefined,
-          rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-          flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined,
-          appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] = UndefOrUndefined
+          name: UndefOr[String] = UndefOrUndefined(Some("name")),
+          archived: UndefOr[Boolean] = UndefOrUndefined(Some("archived")),
+          autoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("auto_archive_duration")),
+          locked: UndefOr[Boolean] = UndefOrUndefined(Some("locked")),
+          invitable: UndefOr[Boolean] = UndefOrUndefined(Some("invitable")),
+          rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user")),
+          flags: UndefOr[Channel.ChannelFlags] = UndefOrUndefined(Some("flags")),
+          appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] = UndefOrUndefined(Some("applied_tags"))
       ): ModifyThreadChannelBody = makeRawFromFields(
         "name"                  :=? name,
         "archived"              :=? archived,
@@ -692,7 +694,9 @@ object ChannelRequests {
       () => flags
     )
   }
-  object CreateMessageBody extends DiscordObjectCompanion[CreateMessageBody] {
+  object CreateMessageBody
+      extends DiscordObjectCompanion[CreateMessageBody]
+      with CreateMessageLikeMixin[CreateMessageBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): CreateMessageBody =
       new CreateMessageBody(json, cache)
 
@@ -721,16 +725,16 @@ object ChannelRequests {
       *   SUPPRESS_NOTIFICATIONS can be set)
       */
     def make20(
-        content: UndefOr[String] = UndefOrUndefined,
-        nonce: UndefOr[IntOrString] = UndefOrUndefined,
-        tts: UndefOr[Boolean] = UndefOrUndefined,
-        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined,
-        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined,
-        messageReference: UndefOr[MessageReference] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        stickerIds: UndefOr[Seq[RawSnowflake]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined,
-        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        nonce: UndefOr[IntOrString] = UndefOrUndefined(Some("nonce")),
+        tts: UndefOr[Boolean] = UndefOrUndefined(Some("tts")),
+        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined(Some("embeds")),
+        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined(Some("allowed_mentions")),
+        messageReference: UndefOr[MessageReference] = UndefOrUndefined(Some("message_reference")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        stickerIds: UndefOr[Seq[RawSnowflake]] = UndefOrUndefined(Some("sticker_ids")),
+        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments")),
+        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags"))
     ): CreateMessageBody = makeRawFromFields(
       "content"           :=? content,
       "nonce"             :=? nonce,
@@ -921,18 +925,18 @@ object ChannelRequests {
       */
     def make20(
         id: Snowflake[Attachment],
-        filename: UndefOr[String] = UndefOrUndefined,
-        description: UndefOr[String] = UndefOrUndefined,
-        contentType: UndefOr[String] = UndefOrUndefined,
-        size: UndefOr[Int] = UndefOrUndefined,
-        url: UndefOr[String] = UndefOrUndefined,
-        proxyUrl: UndefOr[String] = UndefOrUndefined,
-        height: JsonOption[Int] = JsonUndefined,
-        width: JsonOption[Int] = JsonUndefined,
-        ephemeral: UndefOr[Boolean] = UndefOrUndefined,
-        durationSecs: UndefOr[Float] = UndefOrUndefined,
-        waveform: UndefOr[String] = UndefOrUndefined,
-        flags: UndefOr[Attachment.AttachmentFlags] = UndefOrUndefined
+        filename: UndefOr[String] = UndefOrUndefined(Some("filename")),
+        description: UndefOr[String] = UndefOrUndefined(Some("description")),
+        contentType: UndefOr[String] = UndefOrUndefined(Some("content_type")),
+        size: UndefOr[Int] = UndefOrUndefined(Some("size")),
+        url: UndefOr[String] = UndefOrUndefined(Some("url")),
+        proxyUrl: UndefOr[String] = UndefOrUndefined(Some("proxy_url")),
+        height: JsonOption[Int] = JsonUndefined(Some("height")),
+        width: JsonOption[Int] = JsonUndefined(Some("width")),
+        ephemeral: UndefOr[Boolean] = UndefOrUndefined(Some("ephemeral")),
+        durationSecs: UndefOr[Float] = UndefOrUndefined(Some("duration_secs")),
+        waveform: UndefOr[String] = UndefOrUndefined(Some("waveform")),
+        flags: UndefOr[Attachment.AttachmentFlags] = UndefOrUndefined(Some("flags"))
     ): MessageCreateEditAttachment = makeRawFromFields(
       "id"             := id,
       "filename"      :=? filename,
@@ -1060,8 +1064,8 @@ object ChannelRequests {
       *   Max number of users to return (1-100)
       */
     def make20(
-        after: UndefOr[RawSnowflake] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        after: UndefOr[RawSnowflake] = UndefOrUndefined(Some("after")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): GetReactionsQuery = makeRawFromFields("after" :=? after, "limit" :=? limit)
   }
 
@@ -1168,7 +1172,7 @@ object ChannelRequests {
     override def values: Seq[() => Any] =
       Seq(() => content, () => embeds, () => flags, () => allowedMentions, () => components, () => attachments)
   }
-  object EditMessageBody extends DiscordObjectCompanion[EditMessageBody] {
+  object EditMessageBody extends DiscordObjectCompanion[EditMessageBody] with CreateMessageLikeMixin[EditMessageBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): EditMessageBody =
       new EditMessageBody(json, cache)
 
@@ -1189,12 +1193,12 @@ object ChannelRequests {
       *   Uploading Files
       */
     def make20(
-        content: UndefOr[String] = UndefOrUndefined,
-        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined,
-        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined,
-        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined(Some("embeds")),
+        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags")),
+        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined(Some("allowed_mentions")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments"))
     ): EditMessageBody = makeRawFromFields(
       "content"          :=? content,
       "embeds"           :=? embeds,
@@ -1353,8 +1357,8 @@ object ChannelRequests {
       *   0 for a role or 1 for a member
       */
     def make20(
-        allow: JsonOption[String] = JsonUndefined,
-        deny: JsonOption[String] = JsonUndefined,
+        allow: JsonOption[String] = JsonUndefined(Some("allow")),
+        deny: JsonOption[String] = JsonUndefined(Some("deny")),
         tpe: Channel.PermissionOverwrite.PermissionOverwriteType
     ): EditChannelPermissionsBody = makeRawFromFields("allow" :=? allow, "deny" :=? deny, "type" := tpe)
   }
@@ -1486,13 +1490,13 @@ object ChannelRequests {
       *   if target_type is 2, the application must have the EMBEDDED flag
       */
     def make20(
-        maxAge: UndefOr[Int] = UndefOrUndefined,
-        maxUses: UndefOr[Int] = UndefOrUndefined,
-        temporary: UndefOr[Boolean] = UndefOrUndefined,
-        unique: UndefOr[Boolean] = UndefOrUndefined,
-        targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined,
-        targetUserId: UndefOr[UserId] = UndefOrUndefined,
-        targetApplicationId: UndefOr[ApplicationId] = UndefOrUndefined
+        maxAge: UndefOr[Int] = UndefOrUndefined(Some("max_age")),
+        maxUses: UndefOr[Int] = UndefOrUndefined(Some("max_uses")),
+        temporary: UndefOr[Boolean] = UndefOrUndefined(Some("temporary")),
+        unique: UndefOr[Boolean] = UndefOrUndefined(Some("unique")),
+        targetType: UndefOr[Invite.InviteTargetType] = UndefOrUndefined(Some("target_type")),
+        targetUserId: UndefOr[UserId] = UndefOrUndefined(Some("target_user_id")),
+        targetApplicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("target_application_id"))
     ): CreateChannelInviteBody = makeRawFromFields(
       "max_age"               :=? maxAge,
       "max_uses"              :=? maxUses,
@@ -1743,8 +1747,8 @@ object ChannelRequests {
       */
     def make20(
         name: String,
-        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined,
-        rateLimitPerUser: JsonOption[Int] = JsonUndefined
+        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("auto_archive_duration")),
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user"))
     ): StartThreadfromMessageBody = makeRawFromFields(
       "name"                   := name,
       "auto_archive_duration" :=? autoArchiveDuration,
@@ -1847,10 +1851,10 @@ object ChannelRequests {
       */
     def make20(
         name: String,
-        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined,
-        tpe: UndefOr[Channel.ChannelType] = UndefOrUndefined,
-        invitable: UndefOr[Boolean] = UndefOrUndefined,
-        rateLimitPerUser: JsonOption[Int] = JsonUndefined
+        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("auto_archive_duration")),
+        tpe: UndefOr[Channel.ChannelType] = UndefOrUndefined(Some("tpe")),
+        invitable: UndefOr[Boolean] = UndefOrUndefined(Some("invitable")),
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user"))
     ): StartThreadwithoutMessageBody = makeRawFromFields(
       "name"                   := name,
       "auto_archive_duration" :=? autoArchiveDuration,
@@ -1944,8 +1948,8 @@ object ChannelRequests {
       */
     def make20(
         name: String,
-        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined,
-        rateLimitPerUser: JsonOption[Int] = JsonUndefined,
+        autoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("auto_archive_duration")),
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user")),
         message: ForumThreadMessageParams,
         appliedTags: Seq[Snowflake[Channel.ForumTag]]
     ): StartThreadInForumChannelBody = makeRawFromFields(
@@ -2078,13 +2082,13 @@ object ChannelRequests {
       *   SUPPRESS_NOTIFICATIONS can be set)
       */
     def make20(
-        content: UndefOr[String] = UndefOrUndefined,
-        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined,
-        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        stickerIds: UndefOr[Seq[Snowflake[Sticker]]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined,
-        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined(Some("embeds")),
+        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined(Some("allowed_mentions")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        stickerIds: UndefOr[Seq[Snowflake[Sticker]]] = UndefOrUndefined(Some("sticker_ids")),
+        attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments")),
+        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags"))
     ): ForumThreadMessageParams = makeRawFromFields(
       "content"          :=? content,
       "embeds"           :=? embeds,
@@ -2172,8 +2176,9 @@ object ChannelRequests {
       * @param withMember
       *   Whether to include a guild member object for the thread member
       */
-    def make20(withMember: UndefOr[Boolean] = UndefOrUndefined): GetThreadMemberQuery =
-      makeRawFromFields("with_member" :=? withMember)
+    def make20(
+        withMember: UndefOr[Boolean] = UndefOrUndefined(Some("with_member"))
+    ): GetThreadMemberQuery = makeRawFromFields("with_member" :=? withMember)
   }
 
   /**
@@ -2232,9 +2237,9 @@ object ChannelRequests {
       *   Max number of thread members to return (1-100). Defaults to 100.
       */
     def make20(
-        withMember: UndefOr[Boolean] = UndefOrUndefined,
-        after: UndefOr[UserId] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        withMember: UndefOr[Boolean] = UndefOrUndefined(Some("with_member")),
+        after: UndefOr[UserId] = UndefOrUndefined(Some("after")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): ListThreadMembersQuery = makeRawFromFields("with_member" :=? withMember, "after" :=? after, "limit" :=? limit)
   }
 
@@ -2284,8 +2289,8 @@ object ChannelRequests {
       *   Optional maximum number of threads to return
       */
     def make20(
-        before: UndefOr[OffsetDateTime] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        before: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("before")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): ListPublicArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
   }
 
@@ -2388,8 +2393,8 @@ object ChannelRequests {
       *   Optional maximum number of threads to return
       */
     def make20(
-        before: UndefOr[OffsetDateTime] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        before: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("before")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): ListPrivateArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
   }
 
@@ -2490,8 +2495,8 @@ object ChannelRequests {
       *   Optional maximum number of threads to return
       */
     def make20(
-        before: UndefOr[RawSnowflake] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined
+        before: UndefOr[RawSnowflake] = UndefOrUndefined(Some("before")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit"))
     ): ListJoinedPrivateArchivedThreadsQuery = makeRawFromFields("before" :=? before, "limit" :=? limit)
   }
 

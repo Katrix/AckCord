@@ -26,15 +26,21 @@ sealed trait UndefOr[+A] {
   def orElse[B >: A](other: => UndefOr[B]): UndefOr[B]
 
   def toList[A1 >: A]: List[A]
+
+  def toEither: Either[MissingFieldException, A]
+  def get: A = toEither.toTry.get
 }
 object UndefOr {
   implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = (c: HCursor) =>
-    if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined)
+    if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined())
 
   def fromOption[A](opt: Option[A]): UndefOr[A] = opt match {
     case Some(value) => UndefOrSome(value)
-    case None        => UndefOrUndefined
+    case None        => UndefOrUndefined()
   }
+
+  def someIfTrue(bool: Boolean): UndefOr[Boolean] =
+    if (bool) UndefOrSome(bool) else UndefOrUndefined()
 }
 
 case class UndefOrSome[A](value: A) extends UndefOr[A] {
@@ -47,7 +53,7 @@ case class UndefOrSome[A](value: A) extends UndefOr[A] {
   override def map[B](f: A => B): UndefOr[B]              = UndefOrSome(f(value))
   override def flatMap[B](f: A => UndefOr[B]): UndefOr[B] = f(value)
 
-  override def filterToUndefined(f: A => Boolean): UndefOr[A] = if (f(value)) UndefOrSome(value) else UndefOrUndefined
+  override def filterToUndefined(f: A => Boolean): UndefOr[A] = if (f(value)) UndefOrSome(value) else UndefOrUndefined()
 
   override def contains[A1 >: A](value: A1): Boolean      = this.value == value
   override def exists[A1 >: A](f: A1 => Boolean): Boolean = f(value)
@@ -59,9 +65,14 @@ case class UndefOrSome[A](value: A) extends UndefOr[A] {
   override def orElse[B >: A](other: => UndefOr[B]): UndefOr[B] = this
 
   override def toList[A1 >: A]: List[A] = List(value)
+
+  override def toEither: Either[MissingFieldException, A] = Right(value)
 }
 
-case object UndefOrUndefined extends UndefOr[Nothing] {
+case class UndefOrUndefined(
+    missingField: Option[String] = None,
+    missingObj: AnyRef = null
+) extends UndefOr[Nothing] {
   override def isUndefined: Boolean = true
 
   override def toOption: Option[Nothing] = None
@@ -83,4 +94,11 @@ case object UndefOrUndefined extends UndefOr[Nothing] {
   override def orElse[B >: Nothing](other: => UndefOr[B]): UndefOr[B] = other
 
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
+
+  override def toEither: Either[MissingFieldException, Nothing] = Left(
+    MissingFieldException.default(
+      missingField.fold("unknown field")("field " + _),
+      if (missingObj == null) "unknown" else missingObj
+    )
+  )
 }

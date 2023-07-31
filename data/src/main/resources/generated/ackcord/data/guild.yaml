@@ -627,6 +627,7 @@ innerTypes:
 
   - name: GuildMember
     defType: Class
+    makePartial: true
     fields:
       2.0.x:
         user:

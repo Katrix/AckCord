@@ -248,12 +248,14 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       *   Whether to automatically detect mention raids
       */
     def make20(
-        keywordFilter: UndefOr[Seq[String]] = UndefOrUndefined,
-        regexPatterns: UndefOr[Seq[String]] = UndefOrUndefined,
-        presets: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]] = UndefOrUndefined,
-        allowList: UndefOr[Seq[String]] = UndefOrUndefined,
-        mentionTotalLimit: UndefOr[Int] = UndefOrUndefined,
-        mentionRaidProtectionEnabled: UndefOr[Boolean] = UndefOrUndefined
+        keywordFilter: UndefOr[Seq[String]] = UndefOrUndefined(Some("keyword_filter")),
+        regexPatterns: UndefOr[Seq[String]] = UndefOrUndefined(Some("regex_patterns")),
+        presets: UndefOr[Seq[AutoModerationRule.AutoModerationRuleKeywordPresetType]] = UndefOrUndefined(
+          Some("presets")
+        ),
+        allowList: UndefOr[Seq[String]] = UndefOrUndefined(Some("allow_list")),
+        mentionTotalLimit: UndefOr[Int] = UndefOrUndefined(Some("mention_total_limit")),
+        mentionRaidProtectionEnabled: UndefOr[Boolean] = UndefOrUndefined(Some("mention_raid_protection_enabled"))
     ): AutoModerationRuleTriggerMetadata = makeRawFromFields(
       "keyword_filter"                  :=? keywordFilter,
       "regex_patterns"                  :=? regexPatterns,
@@ -328,7 +330,7 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       */
     def make20(
         tpe: AutoModerationRule.AutoModerationRuleActionType,
-        metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata] = UndefOrUndefined
+        metadata: UndefOr[AutoModerationRule.AutoModerationRuleActionMetadata] = UndefOrUndefined(Some("metadata"))
     ): AutoModerationRuleAction = makeRawFromFields("type" := tpe, "metadata" :=? metadata)
   }
 
@@ -393,9 +395,9 @@ object AutoModerationRule extends DiscordObjectCompanion[AutoModerationRule] {
       *   message is blocked
       */
     def make20(
-        channelId: UndefOr[ChannelId] = UndefOrUndefined,
-        durationSeconds: UndefOr[Int] = UndefOrUndefined,
-        customMessage: UndefOr[String] = UndefOrUndefined
+        channelId: UndefOr[ChannelId] = UndefOrUndefined(Some("channel_id")),
+        durationSeconds: UndefOr[Int] = UndefOrUndefined(Some("duration_seconds")),
+        customMessage: UndefOr[String] = UndefOrUndefined(Some("custom_message"))
     ): AutoModerationRuleActionMetadata = makeRawFromFields(
       "channel_id"       :=? channelId,
       "duration_seconds" :=? durationSeconds,

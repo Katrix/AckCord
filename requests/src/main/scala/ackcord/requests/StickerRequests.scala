@@ -165,9 +165,9 @@ object StickerRequests {
       *   Autocomplete/suggestion tags for the sticker (max 200 characters)
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        description: JsonOption[String] = JsonUndefined,
-        tags: UndefOr[String] = UndefOrUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        description: JsonOption[String] = JsonUndefined(Some("description")),
+        tags: UndefOr[String] = UndefOrUndefined(Some("tags"))
     ): ModifyGuildStickerBody = makeRawFromFields("name" :=? name, "description" :=? description, "tags" :=? tags)
   }
 

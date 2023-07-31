@@ -440,16 +440,16 @@ object Guild extends DiscordObjectCompanion[Guild] {
       id: GuildId,
       name: String,
       icon: Option[ImageHash],
-      iconHash: JsonOption[ImageHash] = JsonUndefined,
+      iconHash: JsonOption[ImageHash] = JsonUndefined(Some("icon_hash")),
       splash: Option[ImageHash],
       discoverySplash: Option[ImageHash],
-      owner: UndefOr[Boolean] = UndefOrUndefined,
+      owner: UndefOr[Boolean] = UndefOrUndefined(Some("owner")),
       ownerId: UserId,
-      permissions: UndefOr[Permissions] = UndefOrUndefined,
+      permissions: UndefOr[Permissions] = UndefOrUndefined(Some("permissions")),
       afkChannelId: Option[VoiceGuildChannelId],
       afkTimeout: Int,
-      widgetEnabled: UndefOr[Boolean] = UndefOrUndefined,
-      widgetChannelId: JsonOption[GuildChannelId] = JsonUndefined,
+      widgetEnabled: UndefOr[Boolean] = UndefOrUndefined(Some("widget_enabled")),
+      widgetChannelId: JsonOption[GuildChannelId] = JsonUndefined(Some("widget_channel_id")),
       verificationLevel: Guild.VerificationLevel,
       defaultMessageNotifications: Guild.MessageNotificationLevel,
       explicitContentFilter: Guild.ExplicitContentFilterLevel,
@@ -461,22 +461,22 @@ object Guild extends DiscordObjectCompanion[Guild] {
       systemChannelId: Option[TextGuildChannelId],
       systemChannelFlags: Guild.SystemChannelFlags,
       rulesChannelId: Option[TextGuildChannelId],
-      maxPresences: JsonOption[Int] = JsonUndefined,
-      maxMembers: UndefOr[Int] = UndefOrUndefined,
+      maxPresences: JsonOption[Int] = JsonUndefined(Some("max_presences")),
+      maxMembers: UndefOr[Int] = UndefOrUndefined(Some("max_members")),
       vanityUrlCode: Option[String],
       description: Option[String],
       banner: Option[ImageHash],
       premiumTier: Guild.PremiumTier,
-      premiumSubscriptionCount: UndefOr[Int] = UndefOrUndefined,
+      premiumSubscriptionCount: UndefOr[Int] = UndefOrUndefined(Some("premium_subscription_count")),
       preferredLocale: String,
       publicUpdatesChannelId: Option[TextGuildChannelId],
-      maxVideoChannelUsers: UndefOr[Int] = UndefOrUndefined,
-      maxStageVideoChannelUsers: UndefOr[Int] = UndefOrUndefined,
-      approximateMemberCount: UndefOr[Int] = UndefOrUndefined,
-      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined,
-      welcomeScreen: UndefOr[WelcomeScreen] = UndefOrUndefined,
+      maxVideoChannelUsers: UndefOr[Int] = UndefOrUndefined(Some("max_video_channel_users")),
+      maxStageVideoChannelUsers: UndefOr[Int] = UndefOrUndefined(Some("max_stage_video_channel_users")),
+      approximateMemberCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_member_count")),
+      approximatePresenceCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_presence_count")),
+      welcomeScreen: UndefOr[WelcomeScreen] = UndefOrUndefined(Some("welcome_screen")),
       nsfwLevel: Guild.GuildNSFWLevel,
-      stickers: UndefOr[Seq[Sticker]] = UndefOrUndefined,
+      stickers: UndefOr[Seq[Sticker]] = UndefOrUndefined(Some("stickers")),
       premiumProgressBarEnabled: Boolean,
       safetyAlertsChannelId: Option[TextGuildChannelId]
   ): Guild = makeRawFromFields(
@@ -1294,18 +1294,18 @@ object GuildMember extends DiscordObjectCompanion[GuildMember] {
     *   is not timed out
     */
   def make20(
-      user: UndefOr[User] = UndefOrUndefined,
-      nick: JsonOption[String] = JsonUndefined,
-      avatar: JsonOption[ImageHash] = JsonUndefined,
+      user: UndefOr[User] = UndefOrUndefined(Some("user")),
+      nick: JsonOption[String] = JsonUndefined(Some("nick")),
+      avatar: JsonOption[ImageHash] = JsonUndefined(Some("avatar")),
       roles: Seq[RoleId],
       joinedAt: OffsetDateTime,
-      premiumSince: JsonOption[OffsetDateTime] = JsonUndefined,
+      premiumSince: JsonOption[OffsetDateTime] = JsonUndefined(Some("premium_since")),
       deaf: Boolean,
       mute: Boolean,
       flags: GuildMember.GuildMemberFlags,
-      pending: UndefOr[Boolean] = UndefOrUndefined,
-      permissions: UndefOr[Permissions] = UndefOrUndefined,
-      communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined
+      pending: UndefOr[Boolean] = UndefOrUndefined(Some("pending")),
+      permissions: UndefOr[Permissions] = UndefOrUndefined(Some("permissions")),
+      communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined(Some("communication_disabled_until"))
   ): GuildMember = makeRawFromFields(
     "user"                         :=? user,
     "nick"                         :=? nick,
@@ -1320,6 +1320,163 @@ object GuildMember extends DiscordObjectCompanion[GuildMember] {
     "permissions"                  :=? permissions,
     "communication_disabled_until" :=? communicationDisabledUntil
   )
+
+  class Partial(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+    /** The user this guild member represents */
+    @inline def user: UndefOr[User] = selectDynamic[UndefOr[User]]("user")
+
+    @inline def withUser(newValue: UndefOr[User]): Partial = objWithUndef(Partial, "user", newValue)
+
+    /** This user's guild nickname */
+    @inline def nick: JsonOption[String] = selectDynamic[JsonOption[String]]("nick")
+
+    @inline def withNick(newValue: JsonOption[String]): Partial = objWithUndef(Partial, "nick", newValue)
+
+    /** The member's guild avatar hash */
+    @inline def avatar: JsonOption[ImageHash] = selectDynamic[JsonOption[ImageHash]]("avatar")
+
+    @inline def withAvatar(newValue: JsonOption[ImageHash]): Partial =
+      objWithUndef(Partial, "avatar", newValue)
+
+    /** Array of role object ids */
+    @inline def roles: UndefOr[Seq[RoleId]] = selectDynamic[UndefOr[Seq[RoleId]]]("roles")
+
+    @inline def withRoles(newValue: UndefOr[Seq[RoleId]]): Partial = objWithUndef(Partial, "roles", newValue)
+
+    /** When the user joined the guild */
+    @inline def joinedAt: UndefOr[OffsetDateTime] = selectDynamic[UndefOr[OffsetDateTime]]("joined_at")
+
+    @inline def withJoinedAt(newValue: UndefOr[OffsetDateTime]): Partial =
+      objWithUndef(Partial, "joined_at", newValue)
+
+    /** When the user started boosting the guild */
+    @inline def premiumSince: JsonOption[OffsetDateTime] = selectDynamic[JsonOption[OffsetDateTime]]("premium_since")
+
+    @inline def withPremiumSince(newValue: JsonOption[OffsetDateTime]): Partial =
+      objWithUndef(Partial, "premium_since", newValue)
+
+    /** Whether the user is deafened in voice channels */
+    @inline def deaf: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("deaf")
+
+    @inline def withDeaf(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "deaf", newValue)
+
+    /** Whether the user is muted in voice channels */
+    @inline def mute: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("mute")
+
+    @inline def withMute(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "mute", newValue)
+
+    /** Guild member flags represented as a bit set, defaults to 0 */
+    @inline def flags: UndefOr[GuildMember.GuildMemberFlags] =
+      selectDynamic[UndefOr[GuildMember.GuildMemberFlags]]("flags")
+
+    @inline def withFlags(newValue: UndefOr[GuildMember.GuildMemberFlags]): Partial =
+      objWithUndef(Partial, "flags", newValue)
+
+    /**
+      * Whether the user has not yet passed the guild's Membership Screening
+      * requirements
+      */
+    @inline def pending: UndefOr[Boolean] = selectDynamic[UndefOr[Boolean]]("pending")
+
+    @inline def withPending(newValue: UndefOr[Boolean]): Partial = objWithUndef(Partial, "pending", newValue)
+
+    /**
+      * Total permissions of the member in the channel, including overwrites,
+      * returned when in the interaction object
+      */
+    @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
+
+    @inline def withPermissions(newValue: UndefOr[Permissions]): Partial =
+      objWithUndef(Partial, "permissions", newValue)
+
+    /**
+      * When the user's timeout will expire and the user will be able to
+      * communicate in the guild again, null or a time in the past if the user
+      * is not timed out
+      */
+    @inline def communicationDisabledUntil: JsonOption[OffsetDateTime] =
+      selectDynamic[JsonOption[OffsetDateTime]]("communication_disabled_until")
+
+    @inline def withCommunicationDisabledUntil(newValue: JsonOption[OffsetDateTime]): Partial =
+      objWithUndef(Partial, "communication_disabled_until", newValue)
+
+    override def values: Seq[() => Any] = Seq(
+      () => user,
+      () => nick,
+      () => avatar,
+      () => roles,
+      () => joinedAt,
+      () => premiumSince,
+      () => deaf,
+      () => mute,
+      () => flags,
+      () => pending,
+      () => permissions,
+      () => communicationDisabledUntil
+    )
+  }
+  object Partial extends DiscordObjectCompanion[Partial] {
+    def makeRaw(json: Json, cache: Map[String, Any]): Partial = new Partial(json, cache)
+
+    /**
+      * @param user
+      *   The user this guild member represents
+      * @param nick
+      *   This user's guild nickname
+      * @param avatar
+      *   The member's guild avatar hash
+      * @param roles
+      *   Array of role object ids
+      * @param joinedAt
+      *   When the user joined the guild
+      * @param premiumSince
+      *   When the user started boosting the guild
+      * @param deaf
+      *   Whether the user is deafened in voice channels
+      * @param mute
+      *   Whether the user is muted in voice channels
+      * @param flags
+      *   Guild member flags represented as a bit set, defaults to 0
+      * @param pending
+      *   Whether the user has not yet passed the guild's Membership Screening
+      *   requirements
+      * @param permissions
+      *   Total permissions of the member in the channel, including overwrites,
+      *   returned when in the interaction object
+      * @param communicationDisabledUntil
+      *   When the user's timeout will expire and the user will be able to
+      *   communicate in the guild again, null or a time in the past if the user
+      *   is not timed out
+      */
+    def make20(
+        user: UndefOr[User] = UndefOrUndefined(Some("user")),
+        nick: JsonOption[String] = JsonUndefined(Some("nick")),
+        avatar: JsonOption[ImageHash] = JsonUndefined(Some("avatar")),
+        roles: UndefOr[Seq[RoleId]] = UndefOrUndefined(Some("roles")),
+        joinedAt: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("joined_at")),
+        premiumSince: JsonOption[OffsetDateTime] = JsonUndefined(Some("premium_since")),
+        deaf: UndefOr[Boolean] = UndefOrUndefined(Some("deaf")),
+        mute: UndefOr[Boolean] = UndefOrUndefined(Some("mute")),
+        flags: UndefOr[GuildMember.GuildMemberFlags] = UndefOrUndefined(Some("flags")),
+        pending: UndefOr[Boolean] = UndefOrUndefined(Some("pending")),
+        permissions: UndefOr[Permissions] = UndefOrUndefined(Some("permissions")),
+        communicationDisabledUntil: JsonOption[OffsetDateTime] = JsonUndefined(Some("communication_disabled_until"))
+    ): Partial = makeRawFromFields(
+      "user"                         :=? user,
+      "nick"                         :=? nick,
+      "avatar"                       :=? avatar,
+      "roles"                        :=? roles,
+      "joined_at"                    :=? joinedAt,
+      "premium_since"                :=? premiumSince,
+      "deaf"                         :=? deaf,
+      "mute"                         :=? mute,
+      "flags"                        :=? flags,
+      "pending"                      :=? pending,
+      "permissions"                  :=? permissions,
+      "communication_disabled_until" :=? communicationDisabledUntil
+    )
+  }
 
   sealed case class GuildMemberFlags private (value: Int) extends DiscordEnum[Int]
   object GuildMemberFlags                                 extends DiscordEnumCompanion[Int, GuildMemberFlags] {
@@ -1509,18 +1666,18 @@ object Integration extends DiscordObjectCompanion[Integration] {
       name: String,
       tpe: String,
       enabled: Boolean,
-      syncing: UndefOr[Boolean] = UndefOrUndefined,
-      roleId: UndefOr[RoleId] = UndefOrUndefined,
-      enableEmoticons: UndefOr[Boolean] = UndefOrUndefined,
-      expireBehavior: UndefOr[Integration.IntegrationExpireBehavior] = UndefOrUndefined,
-      expireGracePeriod: UndefOr[Int] = UndefOrUndefined,
-      user: UndefOr[User] = UndefOrUndefined,
+      syncing: UndefOr[Boolean] = UndefOrUndefined(Some("syncing")),
+      roleId: UndefOr[RoleId] = UndefOrUndefined(Some("role_id")),
+      enableEmoticons: UndefOr[Boolean] = UndefOrUndefined(Some("enable_emoticons")),
+      expireBehavior: UndefOr[Integration.IntegrationExpireBehavior] = UndefOrUndefined(Some("expire_behavior")),
+      expireGracePeriod: UndefOr[Int] = UndefOrUndefined(Some("expire_grace_period")),
+      user: UndefOr[User] = UndefOrUndefined(Some("user")),
       account: Integration.IntegrationAccount,
-      syncedAt: UndefOr[OffsetDateTime] = UndefOrUndefined,
-      subscriberCount: UndefOr[Int] = UndefOrUndefined,
-      revoked: UndefOr[Boolean] = UndefOrUndefined,
-      application: UndefOr[Application] = UndefOrUndefined,
-      scopes: UndefOr[Seq[OAuth2Scope]] = UndefOrUndefined
+      syncedAt: UndefOr[OffsetDateTime] = UndefOrUndefined(Some("synced_at")),
+      subscriberCount: UndefOr[Int] = UndefOrUndefined(Some("subscriber_count")),
+      revoked: UndefOr[Boolean] = UndefOrUndefined(Some("revoked")),
+      application: UndefOr[Application] = UndefOrUndefined(Some("application")),
+      scopes: UndefOr[Seq[OAuth2Scope]] = UndefOrUndefined(Some("scopes"))
   ): Integration = makeRawFromFields(
     "id"                   := id,
     "name"                 := name,
@@ -1635,7 +1792,7 @@ object Integration extends DiscordObjectCompanion[Integration] {
         name: String,
         icon: Option[ImageHash],
         description: String,
-        bot: UndefOr[User] = UndefOrUndefined
+        bot: UndefOr[User] = UndefOrUndefined(Some("bot"))
     ): IntegrationApplication =
       makeRawFromFields("id" := id, "name" := name, "icon" := icon, "description" := description, "bot" :=? bot)
   }

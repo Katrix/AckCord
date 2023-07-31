@@ -133,7 +133,7 @@ object GenAST {
               |}""".stripMargin
         } else ""
 
-      val paramModsStr = if(paramsMods.nonEmpty) s" ${printMods(paramsMods)}" else ""
+      val paramModsStr = if (paramsMods.nonEmpty) s" ${printMods(paramsMods)}" else ""
 
       makeDocs(
         docs,

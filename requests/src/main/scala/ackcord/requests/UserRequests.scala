@@ -61,8 +61,8 @@ object UserRequests {
       *   If passed, modifies the user's avatar
       */
     def make20(
-        username: UndefOr[String] = UndefOrUndefined,
-        avatar: JsonOption[ImageData] = JsonUndefined
+        username: UndefOr[String] = UndefOrUndefined(Some("username")),
+        avatar: JsonOption[ImageData] = JsonUndefined(Some("avatar"))
     ): ModifyCurrentUserBody = makeRawFromFields("username" :=? username, "avatar" :=? avatar)
   }
 
@@ -119,10 +119,10 @@ object UserRequests {
       *   Include approximate member and presence counts in response
       */
     def make20(
-        before: UndefOr[GuildId] = UndefOrUndefined,
-        after: UndefOr[GuildId] = UndefOrUndefined,
-        limit: UndefOr[Int] = UndefOrUndefined,
-        withCounts: UndefOr[Boolean] = UndefOrUndefined
+        before: UndefOr[GuildId] = UndefOrUndefined(Some("before")),
+        after: UndefOr[GuildId] = UndefOrUndefined(Some("after")),
+        limit: UndefOr[Int] = UndefOrUndefined(Some("limit")),
+        withCounts: UndefOr[Boolean] = UndefOrUndefined(Some("with_counts"))
     ): GetCurrentUserGuildsQuery =
       makeRawFromFields("before" :=? before, "after" :=? after, "limit" :=? limit, "with_counts" :=? withCounts)
   }
@@ -191,8 +191,8 @@ object UserRequests {
         owner: Boolean,
         permissions: Permissions,
         features: Seq[Guild.GuildFeature],
-        approximateMemberCount: UndefOr[Int] = UndefOrUndefined,
-        approximatePresenceCount: UndefOr[Int] = UndefOrUndefined
+        approximateMemberCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_member_count")),
+        approximatePresenceCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_presence_count"))
     ): GetCurrentUserGuildsResult = makeRawFromFields(
       "id"                          := id,
       "name"                        := name,
@@ -379,9 +379,9 @@ object UserRequests {
       *   bot has connected
       */
     def make20(
-        platformName: UndefOr[String] = UndefOrUndefined,
-        platformUsername: UndefOr[String] = UndefOrUndefined,
-        metadata: UndefOr[Map[String, String]] = UndefOrUndefined
+        platformName: UndefOr[String] = UndefOrUndefined(Some("platform_name")),
+        platformUsername: UndefOr[String] = UndefOrUndefined(Some("platform_username")),
+        metadata: UndefOr[Map[String, String]] = UndefOrUndefined(Some("metadata"))
     ): UpdateUserApplicationRoleConnectionBody = makeRawFromFields(
       "platform_name"     :=? platformName,
       "platform_username" :=? platformUsername,

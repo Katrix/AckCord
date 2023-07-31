@@ -40,7 +40,7 @@ object WebhookRequests {
       */
     def make20(
         name: String,
-        avatar: JsonOption[ImageData] = JsonUndefined
+        avatar: JsonOption[ImageData] = JsonUndefined(Some("avatar"))
     ): CreateWebhookBody = makeRawFromFields("name" := name, "avatar" :=? avatar)
   }
 
@@ -142,9 +142,9 @@ object WebhookRequests {
       *   The new channel id this webhook should be moved to
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        avatar: JsonOption[ImageData] = JsonUndefined,
-        channelId: UndefOr[TextGuildChannelId] = UndefOrUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        avatar: JsonOption[ImageData] = JsonUndefined(Some("avatar")),
+        channelId: UndefOr[TextGuildChannelId] = UndefOrUndefined(Some("channel_id"))
     ): ModifyWebhookBody = makeRawFromFields("name" :=? name, "avatar" :=? avatar, "channel_id" :=? channelId)
   }
 
@@ -191,8 +191,8 @@ object WebhookRequests {
       *   Image for the default webhook avatar
       */
     def make20(
-        name: UndefOr[String] = UndefOrUndefined,
-        avatar: JsonOption[ImageData] = JsonUndefined
+        name: UndefOr[String] = UndefOrUndefined(Some("name")),
+        avatar: JsonOption[ImageData] = JsonUndefined(Some("avatar"))
     ): ModifyWebhookwithTokenBody = makeRawFromFields("name" :=? name, "avatar" :=? avatar)
   }
 
@@ -281,8 +281,8 @@ object WebhookRequests {
       *   thread will automatically be unarchived.
       */
     def make20(
-        doWait: UndefOr[Boolean] = UndefOrUndefined,
-        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined
+        doWait: UndefOr[Boolean] = UndefOrUndefined(Some("doWait")),
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id"))
     ): ExecuteWebhookQuery = makeRawFromFields("wait" :=? doWait, "thread_id" :=? threadId)
   }
 
@@ -369,7 +369,9 @@ object WebhookRequests {
       () => threadName
     )
   }
-  object ExecuteWebhookBody extends DiscordObjectCompanion[ExecuteWebhookBody] {
+  object ExecuteWebhookBody
+      extends DiscordObjectCompanion[ExecuteWebhookBody]
+      with CreateMessageLikeMixin[ExecuteWebhookBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): ExecuteWebhookBody =
       new ExecuteWebhookBody(json, cache)
 
@@ -398,16 +400,16 @@ object WebhookRequests {
       *   channel)
       */
     def make20(
-        content: UndefOr[String] = UndefOrUndefined,
-        username: UndefOr[String] = UndefOrUndefined,
-        avatarUrl: UndefOr[String] = UndefOrUndefined,
-        tts: UndefOr[Boolean] = UndefOrUndefined,
-        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined,
-        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[ChannelRequests.MessageCreateEditAttachment]] = UndefOrUndefined,
-        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined,
-        threadName: UndefOr[String] = UndefOrUndefined
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        username: UndefOr[String] = UndefOrUndefined(Some("username")),
+        avatarUrl: UndefOr[String] = UndefOrUndefined(Some("avatar_url")),
+        tts: UndefOr[Boolean] = UndefOrUndefined(Some("tts")),
+        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined(Some("embeds")),
+        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined(Some("allowed_mentions")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        attachments: UndefOr[Seq[ChannelRequests.MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments")),
+        flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags")),
+        threadName: UndefOr[String] = UndefOrUndefined(Some("thread_name"))
     ): ExecuteWebhookBody = makeRawFromFields(
       "content"          :=? content,
       "username"         :=? username,
@@ -488,8 +490,8 @@ object WebhookRequests {
       *   return an error)
       */
     def make20(
-        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined,
-        doWait: UndefOr[Boolean] = UndefOrUndefined
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id")),
+        doWait: UndefOr[Boolean] = UndefOrUndefined(Some("doWait"))
     ): ExecuteSlackCompatibleWebhookQuery = makeRawFromFields("thread_id" :=? threadId, "wait" :=? doWait)
   }
 
@@ -549,8 +551,8 @@ object WebhookRequests {
       *   return an error)
       */
     def make20(
-        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined,
-        doWait: UndefOr[Boolean] = UndefOrUndefined
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id")),
+        doWait: UndefOr[Boolean] = UndefOrUndefined(Some("doWait"))
     ): ExecuteGitHubCompatibleWebhookQuery = makeRawFromFields("thread_id" :=? threadId, "wait" :=? doWait)
   }
 
@@ -597,8 +599,9 @@ object WebhookRequests {
       * @param threadId
       *   Id of the thread the message is in
       */
-    def make20(threadId: UndefOr[ThreadChannelId] = UndefOrUndefined): GetWebhookMessageQuery =
-      makeRawFromFields("thread_id" :=? threadId)
+    def make20(
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id"))
+    ): GetWebhookMessageQuery = makeRawFromFields("thread_id" :=? threadId)
   }
 
   /**
@@ -638,8 +641,9 @@ object WebhookRequests {
       * @param threadId
       *   Id of the thread the message is in
       */
-    def make20(threadId: UndefOr[ThreadChannelId] = UndefOrUndefined): EditWebhookMessageQuery =
-      makeRawFromFields("thread_id" :=? threadId)
+    def make20(
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id"))
+    ): EditWebhookMessageQuery = makeRawFromFields("thread_id" :=? threadId)
   }
 
   class EditWebhookMessageBody(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
@@ -679,7 +683,9 @@ object WebhookRequests {
     override def values: Seq[() => Any] =
       Seq(() => content, () => embeds, () => allowedMentions, () => components, () => attachments)
   }
-  object EditWebhookMessageBody extends DiscordObjectCompanion[EditWebhookMessageBody] {
+  object EditWebhookMessageBody
+      extends DiscordObjectCompanion[EditWebhookMessageBody]
+      with CreateMessageLikeMixin[EditWebhookMessageBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): EditWebhookMessageBody =
       new EditWebhookMessageBody(json, cache)
 
@@ -696,11 +702,11 @@ object WebhookRequests {
       *   Attachment objects with filename and description
       */
     def make20(
-        content: UndefOr[String] = UndefOrUndefined,
-        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined,
-        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined,
-        components: UndefOr[Seq[Component]] = UndefOrUndefined,
-        attachments: UndefOr[Seq[ChannelRequests.MessageCreateEditAttachment]] = UndefOrUndefined
+        content: UndefOr[String] = UndefOrUndefined(Some("content")),
+        embeds: UndefOr[Seq[OutgoingEmbed]] = UndefOrUndefined(Some("embeds")),
+        allowedMentions: UndefOr[AllowedMentions] = UndefOrUndefined(Some("allowed_mentions")),
+        components: UndefOr[Seq[Component]] = UndefOrUndefined(Some("components")),
+        attachments: UndefOr[Seq[ChannelRequests.MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments"))
     ): EditWebhookMessageBody = makeRawFromFields(
       "content"          :=? content,
       "embeds"           :=? embeds,
@@ -770,8 +776,9 @@ object WebhookRequests {
       * @param threadId
       *   Id of the thread the message is in
       */
-    def make20(threadId: UndefOr[ThreadChannelId] = UndefOrUndefined): DeleteWebhookMessageQuery =
-      makeRawFromFields("thread_id" :=? threadId)
+    def make20(
+        threadId: UndefOr[ThreadChannelId] = UndefOrUndefined(Some("thread_id"))
+    ): DeleteWebhookMessageQuery = makeRawFromFields("thread_id" :=? threadId)
   }
 
   /**

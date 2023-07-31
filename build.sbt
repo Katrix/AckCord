@@ -150,7 +150,7 @@ lazy val example = project
     version                                := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
   )
-  .dependsOn(ackcordJVM)
+  .dependsOn(ackcordJVM, interactionsJVM)
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
