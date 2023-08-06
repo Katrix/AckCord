@@ -2,23 +2,16 @@ package ackcord
 
 import ackcord.gateway.GatewayConnector.HandleReconnect
 import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
-import ackcord.gateway.data.{GatewayDispatchEvent, GatewayIntents}
+import ackcord.gateway.GatewayProcessComponent.FAlter
+import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEventBase, GatewayIntents}
 import ackcord.gateway.impl.CatsGatewayHandlerFactory
-import ackcord.gateway.{
-  Context,
-  DispatchEventProcess,
-  GatewayConnector,
-  GatewayHandler,
-  GatewayProcess,
-  IdentifyData,
-  Inflate
-}
+import ackcord.gateway.{Context, DisconnectBehavior, DispatchEventProcess, DoAsync, GatewayConnector, GatewayContextUpdater, GatewayHandler, GatewayProcess, GatewayProcessComponent, GatewayProcessHandler, IdentifyData, Inflate}
 import ackcord.requests.{RequestSettings, Requests}
-import cats.Monad
 import cats.effect.ExitCode
 import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Supervisor
 import cats.syntax.all._
+import cats.{Applicative, Monad}
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 import sttp.capabilities.WebSockets
@@ -49,30 +42,37 @@ object BotSettings {
       handlerFactory: GatewayHandlerNormalFactory[F, Handler],
       handleReconnect: HandleReconnect[F],
       supervisor: Supervisor[F],
-      contextProcessors: Seq[GatewayProcess[F]],
-      processors: Seq[GatewayProcess[F]]
-  )(implicit F: _root_.cats.MonadError[F, Throwable])
+      processors: Seq[GatewayProcessComponent[F]]
+  )(implicit F: _root_.cats.MonadError[F, Throwable], doAsync: DoAsync[F])
       extends BotSettings[F, P, Handler] {
+    type Self = NormalBotSettings[F, P, Handler]
 
-    def useContext(newProcessors: GatewayProcess[F]*): NormalBotSettings[F, P, Handler] =
-      copy(contextProcessors = contextProcessors ++ newProcessors)
-
-    def useContextResource(
-        newProcessors: Resource[F, GatewayProcess[F]]*
-    ): Resource[F, NormalBotSettings[F, P, Handler]] =
-      newProcessors.sequence.map(ps => useContext(ps: _*))
-
-    def use(newProcessors: GatewayProcess[F]*): NormalBotSettings[F, P, Handler] =
+    def installContext(newProcessors: GatewayContextUpdater[F]*): Self =
       copy(processors = processors ++ newProcessors)
 
-    def useResource(newProcessors: Resource[F, GatewayProcess[F]]*): Resource[F, NormalBotSettings[F, P, Handler]] =
-      newProcessors.sequence.map(ps => use(ps: _*))
+    def installContextResource(
+        newProcessors: Resource[F, GatewayContextUpdater[F]]*
+    ): Resource[F, Self] =
+      newProcessors.sequence.map(ps => installContext(ps: _*))
 
-    def useEventListener(
+    def installContextEval(
+        newProcessors: F[GatewayContextUpdater[F]]*
+    ): Resource[F, Self] =
+      installContextResource(newProcessors.map(Resource.eval): _*)
+
+    def install(newProcessors: GatewayProcessHandler[F]*): Self =
+      copy(processors = processors ++ newProcessors)
+
+    def installResource(newProcessors: Resource[F, GatewayProcessHandler[F]]*): Resource[F, Self] =
+      newProcessors.sequence.map(ps => install(ps: _*))
+
+    def installEval(newProcessors: F[GatewayProcessHandler[F]]*): Resource[F, Self] =
+      installResource(newProcessors.map(Resource.eval): _*)
+
+    def installContextEventListener(
         f: gateway.Context => PartialFunction[GatewayDispatchEvent, F[gateway.Context]]
-    ): NormalBotSettings[F, P, Handler] =
-      use(new DispatchEventProcess.Base[F] {
-        override def name: String = "AnonymousEventListener"
+    ): Self =
+      installContext(new GatewayContextUpdater.Base[F]("AnonymousEventListener") with DispatchEventProcess[F] {
 
         override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] = {
           val f2 = f(context)
@@ -82,31 +82,48 @@ object BotSettings {
         }
       })
 
-    def useEventListenerNoContext(
+    def installEventListener(
         f: PartialFunction[GatewayDispatchEvent, F[Unit]]
-    ): NormalBotSettings[F, P, Handler] =
-      use(new DispatchEventProcess.Base[F] {
-        override def name: String = "AnonymousEventListener"
-
-        override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] =
-          if (f.isDefinedAt(event)) F.as(f(event), context)
-          else F.pure(context)
+    ): Self =
+      install(new GatewayProcessHandler.Base[F]("AnonymousEventListener") with DispatchEventProcess[F] {
+        override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Unit] =
+          if (f.isDefinedAt(event)) f(event)
+          else F.unit
       })
 
     def assembledProcessor: GatewayProcess[F] = {
       val log = loggerFactory.getLoggerFromClass(classOf[GatewayProcess[F]])
-      GatewayProcess.superviseIgnoreContext(
-        supervisor,
-        GatewayProcess.logErrors(
-          log,
-          GatewayProcess.sequenced(
-            contextProcessors.map(GatewayProcess.logErrors(log, _)) ++
-              processors
-                .map(GatewayProcess.logErrors(log, _))
-                .map(GatewayProcess.superviseIgnoreContext(supervisor, _)): _*
-          )
-        )
-      )
+      val M   = F
+
+      val allComponent: GatewayProcessComponent[F] { type Return[A] = A } = new GatewayProcessComponent[F] {
+        override def F: Monad[F] = M
+
+        override def name: String = "TopProcessComponent"
+
+        override type Return[A] = A
+        override def makeReturn[A](value: A): A = value
+
+        override def valueFromReturn[A](ret: A): Option[A] = Some(ret)
+
+        override def children: Seq[GatewayProcessComponent[F]] = processors
+      }
+
+      implicit val alter: FAlter[F] = FAlter.log(log).andThen(FAlter.async)
+
+      new GatewayProcess[F] {
+        override def F: Applicative[F] = allComponent.F
+
+        override def name: String = allComponent.name
+
+        override def onCreateHandler(context: Context): F[Context] =
+          allComponent.onCreateHandlerAll(context)
+
+        override def onEvent(event: GatewayEventBase[_], context: Context): F[Context] =
+          allComponent.onEventAll(event, context)
+
+        override def onDisconnected(behavior: DisconnectBehavior): F[DisconnectBehavior] =
+          allComponent.onDisconnectedAll(behavior)
+      }
     }
 
     def start: F[ExitCode] = {
@@ -145,6 +162,7 @@ object BotSettings {
       implicit val inflate: Inflate[F]       = Inflate.newInflate
 
       val handlerFactory = new CatsGatewayHandlerFactory[F]
+      implicit val doAsync: DoAsync[F] = DoAsync.doAsyncSupervisor(supervisor)
 
       NormalBotSettings(
         token,
@@ -158,7 +176,6 @@ object BotSettings {
         handleReconnect,
         supervisor,
         Seq.empty,
-        Seq.empty
       )
     }
   }

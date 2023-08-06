@@ -1,15 +1,21 @@
 package ackcord.interactions
 
-import ackcord.gateway.data.GatewayDispatchEvent
-import ackcord.gateway.{Context, DispatchEventProcess}
+import ackcord.gateway
+import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEvent, GatewayEventBase}
+import ackcord.gateway.{
+  Context,
+  ContextKey,
+  DispatchEventProcess,
+  GatewayProcessComponent,
+  GatewayProcessHandler,
+  GatewayPureContextUpdater
+}
 import ackcord.interactions.data.InteractionRequests
 import ackcord.requests.Requests
-import cats.Monad
 import cats.syntax.all._
+import cats.Monad
 
-trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] {
-
-  def respondToPing: Boolean
+trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] with GatewayProcessHandler[F] { self =>
 
   override def F: Monad[F]
 
@@ -35,12 +41,14 @@ trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] {
     }
   }
 
-  override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Context] = event match {
+  override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Unit] = event match {
     case ev: GatewayDispatchEvent.InteractionCreate =>
       implicit val monad: Monad[F] = F
       val interaction              = ev.retype(Interaction)
+      val respondToPing            = context.access(InteractionsProcess.respondToPing)
       val responseF: F[Option[HighInteractionResponse[F]]] = interaction.tpe match {
-        case Interaction.InteractionType.PING if respondToPing => F.pure(Some(HighInteractionResponse.Pong()))
+        case Interaction.InteractionType.PING if respondToPing =>
+          F.pure(Some(HighInteractionResponse.Pong()))
         case Interaction.InteractionType.APPLICATION_COMMAND |
             Interaction.InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE =>
           processCommandInteraction(interaction, context)
@@ -55,7 +63,7 @@ trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] {
       }
 
       responseF.flatMap { optResponse =>
-        optResponse.fold(F.pure(context)) { response =>
+        optResponse.fold(F.unit) { response =>
           requests
             .runRequest(
               InteractionRequests.createInteractionResponse(
@@ -65,15 +73,42 @@ trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] {
               )
             )
             .flatMap(_ => extractAsyncPart(response))
-            .as(context)
         }
       }
 
-    case _ => F.pure(context)
+    case _ => F.unit
   }
+
+  override def children: Seq[GatewayProcessComponent[F]] = Seq(
+    new GatewayPureContextUpdater[F] {
+      override def F: Monad[F] = self.F
+
+      override def name: String = self.name
+
+      override def onEventUpdateContext(event: GatewayEventBase[_], context: Context): Context = event match {
+        case dispatch: GatewayEvent.Dispatch =>
+          dispatch.event match {
+            case ev: GatewayDispatchEvent.InteractionCreate =>
+              val interaction   = ev.retype(Interaction)
+              val respondToPing = context.access(InteractionsProcess.respondToPing)
+
+              interaction.tpe match {
+                case Interaction.InteractionType.PING if respondToPing =>
+                  context.add(InteractionsProcess.respondToPing, false)
+                case _ => context
+              }
+
+            case _ => context
+          }
+        case _ => context
+      }
+    }
+  )
 }
 object InteractionsProcess {
-  abstract class Base[F[_]](implicit override val F: Monad[F])
-      extends DispatchEventProcess.Base[F]
+  val respondToPing: gateway.ContextKey[Boolean] = ContextKey.make(true)
+
+  abstract class Base[F[_]](name: String)(implicit override val F: Monad[F])
+      extends GatewayProcessHandler.Base[F](name)
       with InteractionsProcess[F]
 }

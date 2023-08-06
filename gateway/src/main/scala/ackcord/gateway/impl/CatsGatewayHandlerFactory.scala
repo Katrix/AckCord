@@ -3,9 +3,8 @@ package ackcord.gateway.impl
 import scala.concurrent.duration._
 
 import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
-import ackcord.gateway.GatewayProcess.{Context, ContextKey}
 import ackcord.gateway.data.{GatewayDispatchType, GatewayEvent}
-import ackcord.gateway.{DisconnectBehavior, GatewayProcess, IdentifyData, Inflate, ResumeData}
+import ackcord.gateway.{Context, ContextKey, DisconnectBehavior, GatewayProcess, IdentifyData, Inflate, ResumeData}
 import cats.Applicative
 import cats.data.OptionT
 import cats.effect.kernel._
@@ -18,8 +17,8 @@ import sttp.ws.{WebSocket, WebSocketFrame}
 class CatsGatewayHandlerFactory[F[_]: Temporal: Inflate: LoggerFactory]
     extends GatewayHandlerNormalFactory[F, CatsGatewayHandlerFactory.CatsGatewayHandler[F]] {
 
-  override val handlerContextKey: GatewayProcess.ContextKey[CatsGatewayHandlerFactory.CatsGatewayHandler[F]] =
-    ContextKey.make
+  override val handlerContextKey: ContextKey[CatsGatewayHandlerFactory.CatsGatewayHandler[F]] =
+    ContextKey.makeWithoutDefault
 
   override def create(
       ws: WebSocket[F],

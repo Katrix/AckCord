@@ -2,7 +2,6 @@ package ackcord.gateway
 
 import scala.annotation.tailrec
 
-import ackcord.gateway.GatewayProcess.Context
 import ackcord.requests._
 import ackcord.requests.base.{EncodeBody, Requests}
 import io.circe.{Decoder, HCursor}

@@ -23,7 +23,7 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
   def respondToPing: Boolean
 
   /** A builder to start making a new slash command. */
-  def SlashCommand: SlashCommandBuilder[F, Unit] =
+  val SlashCommand: SlashCommandBuilder[F, Unit] =
     new SlashCommandBuilder(
       Left(implicitly),
       Map.empty,
@@ -33,11 +33,11 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
     )
 
   /** A builder to start making a new user command. */
-  def UserCommand: UserCommandBuilder[F] =
+  val UserCommand: UserCommandBuilder[F] =
     new UserCommandBuilder(Map.empty, defaultMemberPermissions = None, nsfw = false)
 
   /** A builder to start making a new message command. */
-  def MessageCommand: MessageCommandBuilder[F] =
+  val MessageCommand: MessageCommandBuilder[F] =
     new MessageCommandBuilder(Map.empty, defaultMemberPermissions = None, nsfw = false)
 
   /**
@@ -373,9 +373,9 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
 object ApplicationCommandController {
   abstract class Base[F[_]](val requests: Requests[F, Any], val components: Components[F], val respondToPing: Boolean)(
       implicit override val F: MonadError[F, Throwable]
-  ) extends InteractionsProcess.Base[F]
+  ) extends InteractionsProcess.Base[F]("")
       with ApplicationCommandController[F] {
 
-    override lazy val name: String = getClass.getSimpleName
+    override val name: String = getClass.getSimpleName
   }
 }

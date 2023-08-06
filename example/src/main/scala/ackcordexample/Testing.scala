@@ -1,10 +1,16 @@
-package ackcord.example
+package ackcordexample
 
 import ackcord.BotSettings
 import ackcord.data._
 import ackcord.gateway._
 import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEventBase}
-import ackcord.interactions.{ApplicationCommandController, Components, CreatedApplicationCommand, SlashCommand}
+import ackcord.interactions.{
+  ApplicationCommandController,
+  Components,
+  CreatedApplicationCommand,
+  InteractionsRegistrar,
+  SlashCommand
+}
 import ackcord.requests.{ChannelRequests, Requests}
 import cats.effect.std.Console
 import cats.effect.{ExitCode, IO, Resource, ResourceApp}
@@ -14,10 +20,8 @@ import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
 object Testing extends ResourceApp {
   class StringCommandProcessor(commands: Map[String, (String, ChannelId) => IO[Unit]], log: Logger[IO])
-      extends DispatchEventProcess.Base[IO] {
-    override def name: String = "StringCommandProcessor"
-
-    override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): IO[Context] = event match {
+      extends GatewayProcessHandler.Base[IO]("StringCommandProcessor") with DispatchEventProcess[IO] {
+    override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): IO[Unit] = event match {
       case messageCreate: GatewayDispatchEvent.MessageCreate =>
         val channelId = messageCreate.message.channelId
         val content   = messageCreate.message.content
@@ -26,27 +30,24 @@ object Testing extends ResourceApp {
           .find(t => content.startsWith(t._1))
           .map[IO[Unit]](t => t._2(content, channelId))
           .getOrElse(IO.unit)
-          .as(context)
 
-      case _ => IO.pure(context)
+      case _ => IO.unit
     }
   }
 
   class PrintlnProcessor[Handler <: GatewayHandler[IO]](console: Console[IO], handlerKey: ContextKey[Handler])
-      extends GatewayProcess.Base[IO] {
-    override def name: String = "PrintlnProcessor"
-
-    override def onCreateHandler(context: Context): IO[Context] =
-      console.println(context.access(handlerKey)).as(context)
+      extends GatewayProcessHandler.Base[IO]("PrintlnProcessor") {
+    override def onCreateHandler(context: Context): IO[Unit] =
+      console.println(context.access(handlerKey))
 
     override def onEvent(
         event: GatewayEventBase[_],
         context: Context
-    ): IO[Context] =
-      console.println(event).as(context)
+    ): IO[Unit] =
+      console.println(event)
 
-    override def onDisconnected(behavior: DisconnectBehavior): IO[DisconnectBehavior] =
-      console.println(behavior).as(behavior)
+    override def onDisconnected(behavior: DisconnectBehavior): IO[Unit] =
+      console.println(behavior)
   }
 
   class MyCommands(requests: Requests[IO, Any], components: Components[IO], respondToPing: Boolean)
@@ -71,7 +72,8 @@ object Testing extends ResourceApp {
     }
 
     override val allCommands: Seq[CreatedApplicationCommand[IO]] = Seq(
-      infoCommand
+      infoCommand,
+      infoCommandAsync
     )
   }
 
@@ -84,6 +86,28 @@ object Testing extends ResourceApp {
         GatewayIntents.Guilds ++ GatewayIntents.GuildMessages ++ GatewayIntents.MessageContent,
         HttpClientCatsBackend.resource[IO]()
       )
+      .mproduct { settings =>
+        Resource.eval(
+          Components
+            .ofCats[IO](settings.requests, respondToPing = false)
+            .map(new MyCommands(settings.requests, _, respondToPing = true))
+        )
+      }
+      .map { case (settings, commands) =>
+        settings
+          .installEventListener { case ready: GatewayDispatchEvent.Ready =>
+            InteractionsRegistrar
+              .createGuildCommands[IO](
+                ready.application.id,
+                GuildId(??? : String),
+                settings.requests,
+                replaceAll = true,
+                commands.allCommands: _*
+              )
+              .void
+          }
+          .install(commands)
+      }
       .map { settings =>
         val console = Console[IO]
         val req     = settings.requests
@@ -91,10 +115,10 @@ object Testing extends ResourceApp {
         val log = settings.loggerFactory.getLoggerFromClass(this.getClass)
 
         settings
-          .useEventListenerNoContext { case _: GatewayDispatchEvent.Ready =>
+          .installEventListener { case _: GatewayDispatchEvent.Ready =>
             console.println("Ready")
           }
-          .use(
+          .install(
             new PrintlnProcessor(console, settings.handlerFactory.handlerContextKey),
             new StringCommandProcessor(
               Map(
@@ -113,25 +137,16 @@ object Testing extends ResourceApp {
                     .tabulate(content.substring("!ratelimitTest ".length).toInt)(i =>
                       ChannelRequests.createMessage(
                         channelId,
-                        ChannelRequests.CreateMessageBody.make20(content = UndefOrSome(s"Ratelimit message ${i + 1}"))
+                        ChannelRequests.CreateMessageBody
+                          .make20(content = UndefOrSome(s"Ratelimit message ${i + 1}"))
                       )
                     )
                     .traverse_(req.runRequest)
-                    .void
                 })
               ),
               log
             )
           )
-      }
-      .flatMap { settings =>
-        settings.useResource(
-          Resource.eval(
-            Components
-              .ofCats(settings.requests, respondToPing = false)
-              .map(new MyCommands(settings.requests, _, respondToPing = true))
-          )
-        )
       }
       .flatMap(_.startResource)
   }

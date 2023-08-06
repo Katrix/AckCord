@@ -1,6 +1,6 @@
 package ackcord.interactions
 
-import ackcord.data.{JsonOption, Permissions}
+import ackcord.data.Permissions
 
 /** A builder of some sort of command. */
 abstract class CommandBuilder[F[_], Args] {
