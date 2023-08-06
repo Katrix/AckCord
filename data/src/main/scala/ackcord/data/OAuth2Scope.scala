@@ -7,7 +7,6 @@ package ackcord.data
 // Instead, edit the file generated/ackcord/data/OAuth2Scope.yaml
 
 import ackcord.data.base._
-import io.circe.Json
 
 sealed case class OAuth2Scope private (value: String) extends DiscordEnum[String]
 object OAuth2Scope                                    extends DiscordEnumCompanion[String, OAuth2Scope] {

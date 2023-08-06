@@ -7,8 +7,6 @@ package ackcord.requests
 // Instead, edit the file generated/ackcord/requests/VoiceRegionRequests.yaml
 
 import ackcord.data._
-import ackcord.data.base._
-import io.circe.Json
 import sttp.model.Method
 
 object VoiceRegionRequests {

@@ -20,7 +20,8 @@ import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
 object Testing extends ResourceApp {
   class StringCommandProcessor(commands: Map[String, (String, ChannelId) => IO[Unit]], log: Logger[IO])
-      extends GatewayProcessHandler.Base[IO]("StringCommandProcessor") with DispatchEventProcess[IO] {
+      extends GatewayProcessHandler.Base[IO]("StringCommandProcessor")
+      with DispatchEventProcess[IO] {
     override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): IO[Unit] = event match {
       case messageCreate: GatewayDispatchEvent.MessageCreate =>
         val channelId = messageCreate.message.channelId

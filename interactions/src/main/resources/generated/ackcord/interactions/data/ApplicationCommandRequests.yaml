@@ -2,8 +2,6 @@ name: ApplicationCommandRequests
 defType: ObjectOnly
 imports:
   - ackcord.data._
-  - ackcord.requests._
-  - sttp.model.Method
 innerTypes:
   # Global command requests
   - name: getGlobalApplicationCommands

@@ -1,8 +1,8 @@
 package ackcord.gateway
 
 import cats.Functor
-import cats.syntax.all._
 import cats.effect.std.Supervisor
+import cats.syntax.all._
 
 trait DoAsync[F[_]] {
 

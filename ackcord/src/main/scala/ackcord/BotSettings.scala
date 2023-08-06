@@ -5,7 +5,20 @@ import ackcord.gateway.GatewayHandlerFactory.GatewayHandlerNormalFactory
 import ackcord.gateway.GatewayProcessComponent.FAlter
 import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEventBase, GatewayIntents}
 import ackcord.gateway.impl.CatsGatewayHandlerFactory
-import ackcord.gateway.{Context, DisconnectBehavior, DispatchEventProcess, DoAsync, GatewayConnector, GatewayContextUpdater, GatewayHandler, GatewayProcess, GatewayProcessComponent, GatewayProcessHandler, IdentifyData, Inflate}
+import ackcord.gateway.{
+  Context,
+  DisconnectBehavior,
+  DispatchEventProcess,
+  DoAsync,
+  GatewayConnector,
+  GatewayContextUpdater,
+  GatewayHandler,
+  GatewayProcess,
+  GatewayProcessComponent,
+  GatewayProcessHandler,
+  IdentifyData,
+  Inflate
+}
 import ackcord.requests.{RequestSettings, Requests}
 import cats.effect.ExitCode
 import cats.effect.kernel.{Async, Resource}
@@ -161,7 +174,7 @@ object BotSettings {
       implicit val monadError: MonadError[F] = backend.responseMonad
       implicit val inflate: Inflate[F]       = Inflate.newInflate
 
-      val handlerFactory = new CatsGatewayHandlerFactory[F]
+      val handlerFactory               = new CatsGatewayHandlerFactory[F]
       implicit val doAsync: DoAsync[F] = DoAsync.doAsyncSupervisor(supervisor)
 
       NormalBotSettings(
@@ -175,7 +188,7 @@ object BotSettings {
         handlerFactory,
         handleReconnect,
         supervisor,
-        Seq.empty,
+        Seq.empty
       )
     }
   }

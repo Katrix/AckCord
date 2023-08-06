@@ -2,8 +2,6 @@ name: InteractionRequests
 defType: ObjectOnly
 imports:
   - ackcord.data._
-  - ackcord.requests._
-  - sttp.model.Method
 innerTypes:
   - name: createInteractionResponse
     defType: Request

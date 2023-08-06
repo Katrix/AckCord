@@ -7,7 +7,6 @@ package ackcord.gateway.data
 // Instead, edit the file generated/ackcord/gateway/data/GatewayIntents.yaml
 
 import ackcord.data.base._
-import io.circe.Json
 
 sealed case class GatewayIntents private (value: Int) extends DiscordEnum[Int]
 object GatewayIntents extends DiscordEnumCompanion[Int, GatewayIntents] {

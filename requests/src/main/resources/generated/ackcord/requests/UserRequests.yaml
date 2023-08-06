@@ -2,7 +2,6 @@ name: UserRequests
 defType: ObjectOnly
 imports:
   - ackcord.data._
-  - sttp.model.Method
 innerTypes:
   - name: getCurrentUser
     defType: Request

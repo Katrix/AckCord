@@ -1,17 +1,22 @@
 //noinspection ScalaUnusedSymbol, ScalaWeakerAccess
 package ackcord.interactions
 
+import scala.language.implicitConversions
+
+import java.util.Locale
+
+import scala.annotation.tailrec
+
 import ackcord.data._
 import ackcord.interactions.data.ApplicationCommand.ApplicationCommandOption
-import ackcord.interactions.data.ApplicationCommand.ApplicationCommandOption.{ApplicationCommandOptionChoice, ApplicationCommandOptionType}
+import ackcord.interactions.data.ApplicationCommand.ApplicationCommandOption.{
+  ApplicationCommandOptionChoice,
+  ApplicationCommandOptionType
+}
 import ackcord.interactions.data.Interaction.ApplicationCommandInteractionDataOption
 import ackcord.interactions.data.{IntOrDouble, Interaction, StringOrIntOrDoubleOrBoolean}
 import cats.Id
 import cats.syntax.all._
-
-import java.util.Locale
-import scala.annotation.tailrec
-import scala.language.implicitConversions
 
 /**
   * A parameter that can be used in a slash command.
@@ -71,7 +76,7 @@ object Param {
 
 /**
   * A parameter that allows multiple choices for the user.
- *
+  *
   * @param tpe
   *   Type of the parameter.
   * @param name
@@ -98,7 +103,7 @@ object Param {
   *   The type the parameter has after a bit of processing.
   * @tparam F
   *   The context of the parameter, either Id or Option currently.
- */
+  */
 case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     tpe: ApplicationCommandOptionType,
     name: String,
@@ -121,9 +126,9 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
   require(choices.nonEmpty && autocomplete.isEmpty || choices.isEmpty, "Can't use both autocomplete and static choices")
 
   /**
-   * Sets the choices for the parameter. Can't be set at the same time as
-   * autocomplete.
-   */
+    * Sets the choices for the parameter. Can't be set at the same time as
+    * autocomplete.
+    */
   def withLocalizedChoices(choices: Map[String, (JsonOption[Map[String, String]], A)]): ChoiceParam[Orig, A, F] =
     copy(choices = choices.map(t => t._1 -> (t._2._1, contramap(t._2._2))))
 

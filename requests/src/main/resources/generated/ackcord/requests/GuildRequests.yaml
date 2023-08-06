@@ -2,7 +2,7 @@ name: GuildRequests
 defType: ObjectOnly
 imports:
   - ackcord.data._
-  - sttp.model.{Method, StatusCode}
+  - sttp.model.StatusCode
   - java.time.OffsetDateTime
 innerTypes:
   - name: createGuild

@@ -12,8 +12,8 @@ import ackcord.gateway.{
 }
 import ackcord.interactions.data.InteractionRequests
 import ackcord.requests.Requests
-import cats.syntax.all._
 import cats.Monad
+import cats.syntax.all._
 
 trait InteractionsProcess[F[_]] extends DispatchEventProcess[F] with GatewayProcessHandler[F] { self =>
 

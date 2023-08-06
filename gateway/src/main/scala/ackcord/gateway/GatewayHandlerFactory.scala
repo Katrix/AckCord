@@ -1,7 +1,7 @@
 package ackcord.gateway
 
-import ackcord.gateway.GatewayHandler.{NormalGatewayHandler, StreamGatewayHandler}
 import ackcord.gateway.ContextKey
+import ackcord.gateway.GatewayHandler.{NormalGatewayHandler, StreamGatewayHandler}
 import sttp.ws.WebSocket
 
 sealed trait GatewayHandlerFactory[F[_], Handler <: GatewayHandler[F]]

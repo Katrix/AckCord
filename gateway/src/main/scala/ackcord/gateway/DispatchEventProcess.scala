@@ -2,7 +2,6 @@ package ackcord.gateway
 
 import ackcord.gateway
 import ackcord.gateway.data.{GatewayDispatchEvent, GatewayEvent, GatewayEventBase}
-import cats.Applicative
 
 trait DispatchEventProcess[F[_]] extends GatewayProcessComponent[F] {
 

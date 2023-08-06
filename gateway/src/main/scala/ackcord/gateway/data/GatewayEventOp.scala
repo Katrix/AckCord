@@ -7,7 +7,6 @@ package ackcord.gateway.data
 // Instead, edit the file generated/ackcord/gateway/data/GatewayEventOp.yaml
 
 import ackcord.data.base._
-import io.circe.Json
 
 sealed case class GatewayEventOp private (value: Int) extends DiscordEnum[Int]
 object GatewayEventOp extends DiscordEnumCompanion[Int, GatewayEventOp] with GatewayEventOpMixin {

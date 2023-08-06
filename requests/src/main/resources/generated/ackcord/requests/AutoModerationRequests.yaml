@@ -2,7 +2,6 @@ name: AutoModerationRequests
 defType: ObjectOnly
 imports:
   - ackcord.data._
-  - sttp.model.Method
 innerTypes:
   - name: listAutoModerationRulesForGuild
     defType: Request

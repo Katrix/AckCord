@@ -7,7 +7,6 @@ package ackcord.gateway.data
 // Instead, edit the file generated/ackcord/gateway/data/GatewayDispatchType.yaml
 
 import ackcord.data.base._
-import io.circe.Json
 
 sealed case class GatewayDispatchType private (value: String) extends DiscordEnum[String]
 object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchType] {

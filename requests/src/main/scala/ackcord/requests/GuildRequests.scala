@@ -11,7 +11,8 @@ import java.time.OffsetDateTime
 import ackcord.data._
 import ackcord.data.base._
 import io.circe.Json
-import sttp.model.{Method, StatusCode}
+import sttp.model.Method
+import sttp.model.StatusCode
 
 object GuildRequests {
 
