@@ -33,10 +33,11 @@ lazy val commonSettings = Seq(
 
 inThisBuild(
   Seq(
-    homepage     := Some(url("https://github.com/Katrix/AckCord")),
-    organization := "net.katsstuff",
-    licenses     := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
-    developers   := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/")))
+    homepage      := Some(url("https://github.com/Katrix/AckCord")),
+    organization  := "net.katsstuff",
+    licenses      := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers    := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
+    versionScheme := Some("pvp")
   )
 )
 
