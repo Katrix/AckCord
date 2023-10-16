@@ -1,0 +1,9 @@
+options:
+  - title: AckCord's data objects
+    url: docs/data_objects.html
+
+  - title: Requests
+    url: docs/requests.html
+
+  - title: Snowflake types
+    url: docs/snowflakes.html

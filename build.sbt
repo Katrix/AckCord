@@ -38,13 +38,6 @@ lazy val publishSettings = Seq(
   publishMavenStyle      := true,
   Test / publishArtifact := false,
   licenses               := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
-  scmInfo := Some(
-    ScmInfo(
-      url("https://github.com/Katrix/AckCord"),
-      "scm:git:github.com/Katrix/AckCord",
-      Some("scm:git:github.com/Katrix/AckCord")
-    )
-  ),
   moduleName := {
     val old = moduleName.value
     s"ackcord-$old"
@@ -178,7 +171,8 @@ lazy val docs = project
       dataJVM,
       requestsJVM,
       gatewayJVM,
-      interactionsJVM
+      interactionsJVM,
+      ackcordJVM
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp"),
     docsMappingsAPIDir := "api",
