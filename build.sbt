@@ -1,14 +1,12 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val circeVersion   = "0.14.2"
-lazy val ackCordVersion = "2.0.0.0-SNAPSHOT"
+lazy val circeVersion = "0.14.2"
 
 lazy val generateData = taskKey[Unit]("Generate AckCord data classes")
 
 lazy val commonSettings = Seq(
   scalaVersion       := "2.13.8",
   crossScalaVersions := Seq(scalaVersion.value),
-  organization       := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature",
@@ -17,7 +15,6 @@ lazy val commonSettings = Seq(
     "-Ywarn-dead-code"
   ),
   libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
-  publishTo := sonatypePublishToBundle.value,
   generateData := {
     val sourceDir    = (Compile / sourceDirectory).value.getParentFile.getParentFile.getParentFile / "src" / "main"
     val scalaDir     = sourceDir / "scala"
@@ -34,20 +31,25 @@ lazy val commonSettings = Seq(
   }
 )
 
+inThisBuild(
+  Seq(
+    homepage     := Some(url("https://github.com/Katrix/AckCord")),
+    organization := "net.katsstuff",
+    licenses     := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers   := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/")))
+  )
+)
+
 lazy val publishSettings = Seq(
-  publishMavenStyle      := true,
   Test / publishArtifact := false,
-  licenses               := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
   moduleName := {
     val old = moduleName.value
     s"ackcord-$old"
   },
-  homepage        := Some(url("https://github.com/Katrix/AckCord")),
-  developers      := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
   autoAPIMappings := true
 )
 
-lazy val noPublishSettings = Seq(publish := {}, publishLocal := {}, publishArtifact := false)
+lazy val noPublishSettings = Seq(publish := {}, publishLocal := {}, publishArtifact := false, publish / skip := true)
 
 lazy val data = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -55,7 +57,6 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name                                  := "data",
-    version                               := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.8",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core"   % circeVersion,
@@ -73,8 +74,7 @@ lazy val requests = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     publishSettings,
-    name    := "requests",
-    version := ackCordVersion,
+    name := "requests",
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "core"          % "3.8.15",
       "com.softwaremill.sttp.client3" %% "circe"         % "3.8.15",
@@ -97,7 +97,6 @@ lazy val gateway = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name                                                   := "gateway",
-    version                                                := ackCordVersion,
     libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2"             % "3.8.15",
     libraryDependencies += "ch.qos.logback"                 % "logback-classic" % "1.4.7",
     description                                            := "The gateway module of AckCord"
@@ -113,7 +112,6 @@ lazy val interactions = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name        := "interactions",
-    version     := ackCordVersion,
     description := "The interactions module of AckCord"
   )
 
@@ -128,7 +126,6 @@ lazy val ackcord = crossProject(JSPlatform, JVMPlatform)
     publishSettings,
     name        := "ackcord",
     moduleName  := "ackcord",
-    version     := ackCordVersion,
     description := "The high level API of AckCord"
   )
 
@@ -205,6 +202,5 @@ lazy val ackCordRoot = project
   .settings(
     commonSettings,
     publishSettings,
-    noPublishSettings,
-    version := ackCordVersion
+    noPublishSettings
   )
