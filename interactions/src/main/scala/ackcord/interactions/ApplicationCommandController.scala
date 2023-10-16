@@ -20,8 +20,6 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
 
   val components: Components[F]
 
-  def respondToPing: Boolean
-
   /** A builder to start making a new slash command. */
   val SlashCommand: SlashCommandBuilder[F, Unit] =
     new SlashCommandBuilder(
@@ -371,7 +369,7 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
     components.processComponentInteraction(interaction, context)
 }
 object ApplicationCommandController {
-  abstract class Base[F[_]](val requests: Requests[F, Any], val components: Components[F], val respondToPing: Boolean)(
+  abstract class Base[F[_]](val requests: Requests[F, Any], val components: Components[F])(
       implicit override val F: MonadError[F, Throwable]
   ) extends InteractionsProcess.Base[F]("")
       with ApplicationCommandController[F] {

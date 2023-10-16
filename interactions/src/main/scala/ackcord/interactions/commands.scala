@@ -61,23 +61,26 @@ sealed trait CreatedApplicationCommand[F[_]] {
   def commandType: ApplicationCommandType
 
   def toApplicationCommand(applicationId: ApplicationId, guildId: UndefOr[GuildId]): ApplicationCommand =
-    ApplicationCommand.make20(
-      id = Snowflake("0"),
-      tpe = UndefOrSome(commandType),
-      applicationId = applicationId,
-      guildId = guildId,
-      name = name,
-      nameLocalized = UndefOrUndefined(),
-      nameLocalizations = nameLocalizations,
-      description = description.get,
-      descriptionLocalized = UndefOrUndefined(),
-      descriptionLocalizations = descriptionLocalizations,
-      options = UndefOrSome(makeCommandOptions),
-      defaultMemberPermissions = defaultMemberPermissions,
-      dmPermission = UndefOrSome(dmPermission),
-      nsfw = UndefOrSome(nsfw),
-      version = RawSnowflake("0")
-    )
+    ApplicationCommand
+      .make20(
+        id = Snowflake("0"),
+        tpe = UndefOrSome(commandType),
+        applicationId = applicationId,
+        guildId = guildId,
+        name = name,
+        nameLocalized = UndefOrUndefined(),
+        nameLocalizations = nameLocalizations,
+        description = description.get,
+        descriptionLocalized = UndefOrUndefined(),
+        descriptionLocalizations = descriptionLocalizations,
+        options = UndefOrSome(makeCommandOptions),
+        defaultMemberPermissions = defaultMemberPermissions,
+        dmPermission = UndefOrSome(dmPermission),
+        nsfw = UndefOrSome(nsfw),
+        version = RawSnowflake("0")
+      )
+      .objWithout(ApplicationCommand, "id")
+      .objWithout(ApplicationCommand, "version")
 }
 object CreatedApplicationCommand {
   def verifyDataAndType[F[_]](interaction: Interaction, tpe: ApplicationCommandType, commandTypeStr: String)(

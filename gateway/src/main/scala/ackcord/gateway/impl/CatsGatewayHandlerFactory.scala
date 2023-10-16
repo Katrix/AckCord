@@ -104,65 +104,69 @@ object CatsGatewayHandlerFactory {
       ws.send(WebSocketFrame.Close(code, reason)) *> reconnect(true)
 
     private def receiveSingleEvent(supervisor: Supervisor[F], inflater: Inflate.PureInflater[F]): F[Unit] =
-      receiveRawGatewayEvent(inflater).flatMap {
-        case Some(js) =>
-          GatewayEvent.tryDecode(js) match {
-            case Right(ev) =>
-              val handleExternally = handle
-                .onEvent(ev, Context.empty.add(handlerContextKey, this))
-                .void
-                .handleError { e =>
-                  log.error(e)("Encountered error while handling event")
-                }
-                .race(
-                  Temporal[F].sleep(3.seconds) *> log.error(new Exception("Event execution took too long"))(
-                    "Handling of event too too long and has timed out. Make sure to not block in event handlers"
-                  )
-                )
-                .void
-
-              val actOnEvent = ev match {
-                case GatewayEvent.Dispatch(ev) =>
-                  val setSeq = lastReceivedSeqRef.set(Some(ev.s))
-
-                  //We don't access to dispatch type for a tiny bit more safety. Don't want to crash here
-                  val setResumeDataEither = if (ev.t == GatewayDispatchType.Ready) {
-                    val d = ev.d.json.hcursor
-                    for {
-                      resumeGatewayUrl <- d.get[String]("resume_gateway_url")
-                      sessionId        <- d.get[String]("session_id")
-                    } yield for {
-                      _ <- resumeGatewayUrlRef.set(Some(resumeGatewayUrl))
-                      _ <- sessionIdRef.set(Some(sessionId))
-                    } yield ()
-                  } else Right(().pure)
-
-                  setResumeDataEither match {
-                    case Right(setRefs) => setSeq *> setRefs
-                    case Left(_) =>
-                      val reason =
-                        s"Received ${GatewayDispatchType.Ready.value} with invalid resume_gateway_url or session_id"
-                      log.warn(reason) *> disconnectAndReconnect(reason, code = 4002)
+      receiveRawGatewayEvent(inflater)
+        .flatMap {
+          case Some(js) =>
+            GatewayEvent.tryDecode(js) match {
+              case Right(ev) =>
+                val handleExternally = handle
+                  .onEvent(ev, Context.empty.add(handlerContextKey, this))
+                  .void
+                  .handleErrorWith { e =>
+                    log.error(e)("Encountered error while handling event")
                   }
-                case GatewayEvent.Reconnect(_)       => reconnect(true)
-                case GatewayEvent.InvalidSession(ev) => reconnect(ev.d)
-                case GatewayEvent.Hello(ev) =>
-                  for {
-                    _ <- startHeartbeat(ev.d.heartbeatInterval.millis, supervisor)
-                    _ <- sendIdentify
-                  } yield ()
+                  .race(
+                    Temporal[F].sleep(3.seconds) *> log.error(new Exception("Event execution took too long"))(
+                      "Handling of event too too long and has timed out. Make sure to not block in event handlers"
+                    )
+                  )
+                  .void
 
-                case GatewayEvent.Heartbeat(_)    => heartbeatNowQueue.offer(())
-                case GatewayEvent.HeartbeatACK(_) => receivedHeartbeatAckRef.set(true)
-                case _                            => Applicative[F].unit
-              }
+                val actOnEvent = ev match {
+                  case GatewayEvent.Dispatch(ev) =>
+                    val setSeq = lastReceivedSeqRef.set(Some(ev.s))
 
-              Concurrent[F].uncancelable(p => p(actOnEvent) *> handleExternally)
-            case Left(_) =>
-              disconnectAndReconnect("Received payload with invalid op field", code = 4002).widen
-          }
-        case None => ().pure
-      }
+                    //We don't access to dispatch type for a tiny bit more safety. Don't want to crash here
+                    val setResumeDataEither = if (ev.t == GatewayDispatchType.Ready) {
+                      val d = ev.d.json.hcursor
+                      for {
+                        resumeGatewayUrl <- d.get[String]("resume_gateway_url")
+                        sessionId        <- d.get[String]("session_id")
+                      } yield for {
+                        _ <- resumeGatewayUrlRef.set(Some(resumeGatewayUrl))
+                        _ <- sessionIdRef.set(Some(sessionId))
+                      } yield ()
+                    } else Right(().pure)
+
+                    setResumeDataEither match {
+                      case Right(setRefs) => setSeq *> setRefs
+                      case Left(_) =>
+                        val reason =
+                          s"Received ${GatewayDispatchType.Ready.value} with invalid resume_gateway_url or session_id"
+                        log.warn(reason) *> disconnectAndReconnect(reason, code = 4002)
+                    }
+                  case GatewayEvent.Reconnect(_)       => reconnect(true)
+                  case GatewayEvent.InvalidSession(ev) => reconnect(ev.d)
+                  case GatewayEvent.Hello(ev) =>
+                    for {
+                      _ <- startHeartbeat(ev.d.heartbeatInterval.millis, supervisor)
+                      _ <- sendIdentify
+                    } yield ()
+
+                  case GatewayEvent.Heartbeat(_)    => heartbeatNowQueue.offer(())
+                  case GatewayEvent.HeartbeatACK(_) => receivedHeartbeatAckRef.set(true)
+                  case _                            => Applicative[F].unit
+                }
+
+                Concurrent[F].uncancelable(p => p(actOnEvent) *> handleExternally)
+              case Left(_) =>
+                disconnectAndReconnect("Received payload with invalid op field", code = 4002).widen
+            }
+          case None => ().pure
+        }
+        .handleErrorWith { e =>
+          log.error(e)("Exception raised while handling WebSocket event. Please report this to AckCord")
+        }
 
     private def checkHeartbeatAckReceived: F[Unit] = receivedHeartbeatAckRef.get.ifM(
       ifTrue = ().pure,

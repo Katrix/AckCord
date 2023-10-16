@@ -78,6 +78,8 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, R1]] = None,
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty
+  )(
+      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = complexBaseRestRequest(
     route,
     requestBody.getOrElse(
@@ -93,6 +95,8 @@ object ComplexRequest {
       requestBody: Option[EncodeBody[Params, Any]] = None,
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty
+  )(
+      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] = complexRestRequest(
     route,
     params,
@@ -207,7 +211,6 @@ object EncodeBody {
   }
 }
 
-//TODO: Logging
 trait ParseResponse[Response, -R] { self =>
   def setSttpResponse[T, R1](
       request: RequestT[Identity, T, R1]

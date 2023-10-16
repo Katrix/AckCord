@@ -48,6 +48,7 @@ trait GatewayProcessComponent[F[_]] { self =>
 
   def onEventAll(event: GatewayEventBase[_], context: Context)(implicit alter: FAlter[F]): F[Context] = {
     implicit val m: Monad[F] = F
+
     alter
       .alter(onEvent(event, context), makeReturn(context))
       .map(r => valueFromReturn(r).getOrElse(context))

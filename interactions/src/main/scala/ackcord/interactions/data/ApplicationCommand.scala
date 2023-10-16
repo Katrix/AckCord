@@ -210,26 +210,26 @@ object ApplicationCommand extends DiscordObjectCompanion[ApplicationCommand] {
     "version"                    := version
   )
 
-  sealed case class ApplicationCommandType private (value: String) extends DiscordEnum[String]
-  object ApplicationCommandType extends DiscordEnumCompanion[String, ApplicationCommandType] {
+  sealed case class ApplicationCommandType private (value: Int) extends DiscordEnum[Int]
+  object ApplicationCommandType extends DiscordEnumCompanion[Int, ApplicationCommandType] {
 
     /**
       * Slash commands; a text-based command that shows up when a user types /
       */
-    val ChatInput: ApplicationCommandType = ApplicationCommandType("1")
+    val ChatInput: ApplicationCommandType = ApplicationCommandType(1)
 
     /**
       * A UI-based command that shows up when you right click or tap on a user
       */
-    val User: ApplicationCommandType = ApplicationCommandType("2")
+    val User: ApplicationCommandType = ApplicationCommandType(2)
 
     /**
       * A UI-based command that shows up when you right click or tap on a
       * message
       */
-    val Message: ApplicationCommandType = ApplicationCommandType("3")
+    val Message: ApplicationCommandType = ApplicationCommandType(3)
 
-    def unknown(value: String): ApplicationCommandType = new ApplicationCommandType(value)
+    def unknown(value: Int): ApplicationCommandType = new ApplicationCommandType(value)
 
     val values: Seq[ApplicationCommandType] = Seq(ChatInput, User, Message)
   }

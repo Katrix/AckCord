@@ -56,7 +56,7 @@ object BotSettings {
       handleReconnect: HandleReconnect[F],
       supervisor: Supervisor[F],
       processors: Seq[GatewayProcessComponent[F]]
-  )(implicit F: _root_.cats.MonadError[F, Throwable], doAsync: DoAsync[F])
+  )(implicit F: _root_.cats.MonadError[F, Throwable], val doAsync: DoAsync[F])
       extends BotSettings[F, P, Handler] {
     type Self = NormalBotSettings[F, P, Handler]
 

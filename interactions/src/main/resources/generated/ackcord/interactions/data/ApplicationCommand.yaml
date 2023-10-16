@@ -86,7 +86,7 @@ fields:
 innerTypes:
   - name: ApplicationCommandType
     defType: Enum
-    type: String
+    type: Int
     values:
       ChatInput:
         value: "1"

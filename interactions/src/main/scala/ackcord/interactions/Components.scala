@@ -43,7 +43,6 @@ object Components {
 
   class CatsInteractions[F[_]](
       val requests: Requests[F, Any],
-      val respondToPing: Boolean,
       handlers: MapRef[F, String, Option[(Interaction, Context) => F[HighInteractionResponse[F]]]]
   )(
       implicit override val F: Sync[F]
@@ -69,10 +68,10 @@ object Components {
     }
   }
 
-  def ofCats[F[_]](requests: Requests[F, Any], respondToPing: Boolean)(implicit F: Sync[F]): F[CatsInteractions[F]] =
+  def ofCats[F[_]](requests: Requests[F, Any])(implicit F: Sync[F]): F[CatsInteractions[F]] =
     MapRef
       .ofConcurrentHashMap[F, String, (Interaction, Context) => F[HighInteractionResponse[F]]]()
-      .map(new CatsInteractions[F](requests, respondToPing, _))
+      .map(new CatsInteractions[F](requests, _))
 
   abstract class SpecificComponent[F[_], C <: Component, CD](implicit F: MonadError[F, Throwable]) {
     def top: Components[F]

@@ -1,6 +1,8 @@
 package ackcord.data
 
-import io.circe.{Decoder, HCursor}
+import cats.data.{NonEmptyList, Validated}
+import io.circe.Decoder.{AccumulatingResult, Result}
+import io.circe.{ACursor, Decoder, HCursor}
 
 sealed trait UndefOr[+A] {
   def isUndefined: Boolean
@@ -31,8 +33,18 @@ sealed trait UndefOr[+A] {
   def get: A = toEither.toTry.get
 }
 object UndefOr {
-  implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = (c: HCursor) =>
-    if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined())
+  implicit def undefOrDecoder[A: Decoder]: Decoder[UndefOr[A]] = new Decoder[UndefOr[A]] {
+
+    override def apply(c: HCursor): Result[UndefOr[A]] =
+      if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined())
+
+    override def tryDecode(c: ACursor): Result[UndefOr[A]] =
+      if (c.succeeded) c.as[A].map(UndefOrSome(_)) else Right(UndefOrUndefined())
+
+    override def tryDecodeAccumulating(c: ACursor): AccumulatingResult[UndefOr[A]] =
+      if (c.succeeded) Validated.fromEither(c.as[A].map(UndefOrSome(_))).leftMap(NonEmptyList.one)
+      else Validated.Valid(UndefOrUndefined())
+  }
 
   def fromOption[A](opt: Option[A]): UndefOr[A] = opt match {
     case Some(value) => UndefOrSome(value)
