@@ -12,39 +12,39 @@ import io.circe.Json
 /** A Discord application */
 class Application(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
-  /** The id of the app */
+  /** ID of the app */
   @inline def id: ApplicationId = selectDynamic[ApplicationId]("id")
 
   @inline def withId(newValue: ApplicationId): Application = objWith(Application, "id", newValue)
 
-  /** The name of the app */
+  /** Name of the app */
   @inline def name: String = selectDynamic[String]("name")
 
   @inline def withName(newValue: String): Application = objWith(Application, "name", newValue)
 
-  /** The icon hash of the app */
+  /** Icon hash of the app */
   @inline def icon: Option[ImageHash] = selectDynamic[Option[ImageHash]]("icon")
 
   @inline def withIcon(newValue: Option[ImageHash]): Application = objWith(Application, "icon", newValue)
 
-  /** The description of the app */
+  /** Description of the app */
   @inline def description: String = selectDynamic[String]("description")
 
   @inline def withDescription(newValue: String): Application = objWith(Application, "description", newValue)
 
-  /** An array of rpc origin urls, if rpc is enabled */
+  /** List of RPC origin URLs, if RPC is enabled */
   @inline def rpcOrigins: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("rpc_origins")
 
   @inline def withRpcOrigins(newValue: UndefOr[Seq[String]]): Application =
     objWithUndef(Application, "rpc_origins", newValue)
 
-  /** When false only app owner can join the app's bot to guilds */
+  /** When false only the app owner can add the app to guilds */
   @inline def botPublic: Boolean = selectDynamic[Boolean]("bot_public")
 
   @inline def withBotPublic(newValue: Boolean): Application = objWith(Application, "bot_public", newValue)
 
   /**
-    * When true the app's bot will only join upon completion of the full oauth2
+    * When true the app's bot will only join upon completion of the full OAuth2
     * code grant flow
     */
   @inline def botRequireCodeGrant: Boolean = selectDynamic[Boolean]("bot_require_code_grant")
@@ -52,19 +52,24 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   @inline def withBotRequireCodeGrant(newValue: Boolean): Application =
     objWith(Application, "bot_require_code_grant", newValue)
 
-  /** The url of the app's terms of service */
+  /** Partial user object for the bot user associated with the app */
+  @inline def bot: User.Partial = selectDynamic[User.Partial]("bot")
+
+  @inline def withBot(newValue: User.Partial): Application = objWith(Application, "bot", newValue)
+
+  /** URL of the app's Terms of Service */
   @inline def termsOfServiceUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("terms_of_service_url")
 
   @inline def withTermsOfServiceUrl(newValue: UndefOr[String]): Application =
     objWithUndef(Application, "terms_of_service_url", newValue)
 
-  /** The url of the app's privacy policy */
+  /** URL of the app's Privacy Policy */
   @inline def privacyPolicyUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("privacy_policy_url")
 
   @inline def withPrivacyPolicyUrl(newValue: UndefOr[String]): Application =
     objWithUndef(Application, "privacy_policy_url", newValue)
 
-  /** Partial user object containing info on the owner of the application */
+  /** Partial user object for the owner of the app */
   @inline def owner: UndefOr[Application.ApplicationOwner] =
     selectDynamic[UndefOr[Application.ApplicationOwner]]("owner")
 
@@ -72,7 +77,7 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     objWithUndef(Application, "owner", newValue)
 
   /**
-    * The hex encoded key for verification in interactions and the GameSDK's
+    * Hex encoded key for verification in interactions and the GameSDK's
     * GetTicket
     */
   @inline def verifyKey: String = selectDynamic[String]("verify_key")
@@ -80,8 +85,8 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   @inline def withVerifyKey(newValue: String): Application = objWith(Application, "verify_key", newValue)
 
   /**
-    * If the application belongs to a team, this will be a list of the members
-    * of that team
+    * If the app belongs to a team, this will be a list of the members of that
+    * team
     */
   @inline def team: Option[Application.Team] = selectDynamic[Option[Application.Team]]("team")
 
@@ -93,7 +98,7 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
 
   @inline def withGuildId(newValue: UndefOr[GuildId]): Application = objWithUndef(Application, "guild_id", newValue)
 
-  /** A partial object of the associated guild */
+  /** Partial object of the associated guild */
   @inline def guild: UndefOr[Application.ApplicationGuild] =
     selectDynamic[UndefOr[Application.ApplicationGuild]]("guild")
 
@@ -101,8 +106,8 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     objWithUndef(Application, "guild", newValue)
 
   /**
-    * If this application is a game sold on Discord, this field will be the id
-    * of the "Game SKU" that is created, if exists
+    * If this app is a game sold on Discord, this field will be the id of the
+    * "Game SKU" that is created, if exists
     */
   @inline def primarySkuId: UndefOr[RawSnowflake] = selectDynamic[UndefOr[RawSnowflake]]("primary_sku_id")
 
@@ -110,64 +115,70 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     objWithUndef(Application, "primary_sku_id", newValue)
 
   /**
-    * If this application is a game sold on Discord, this field will be the URL
-    * slug that links to the store page
+    * If this app is a game sold on Discord, this field will be the URL slug
+    * that links to the store page
     */
   @inline def slug: UndefOr[String] = selectDynamic[UndefOr[String]]("slug")
 
   @inline def withSlug(newValue: UndefOr[String]): Application = objWithUndef(Application, "slug", newValue)
 
-  /** The application's default rich presence invite cover image hash */
+  /** App's default rich presence invite cover image hash */
   @inline def coverImage: UndefOr[ImageHash] = selectDynamic[UndefOr[ImageHash]]("cover_image")
 
   @inline def withCoverImage(newValue: UndefOr[ImageHash]): Application =
     objWithUndef(Application, "cover_image", newValue)
 
-  /** The application's public flags */
+  /** App's public flags */
   @inline def flags: UndefOr[Application.Flags] = selectDynamic[UndefOr[Application.Flags]]("flags")
 
   @inline def withFlags(newValue: UndefOr[Application.Flags]): Application =
     objWithUndef(Application, "flags", newValue)
 
-  /** An approximate count of the app's guild membership */
+  /** Approximate count of guilds the app has been added to */
   @inline def approximateGuildCount: UndefOr[Int] = selectDynamic[UndefOr[Int]]("approximate_guild_count")
 
   @inline def withApproximateGuildCount(newValue: UndefOr[Int]): Application =
     objWithUndef(Application, "approximate_guild_count", newValue)
 
+  /** Array of redirect URIs for the app */
+  @inline def redirectUris: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("redirect_uris")
+
+  @inline def withRedirectUris(newValue: UndefOr[Seq[String]]): Application =
+    objWithUndef(Application, "redirect_uris", newValue)
+
+  /** Interactions endpoint URL for the app */
+  @inline def interactionsEndpointUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("interactions_endpoint_url")
+
+  @inline def withInteractionsEndpointUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "interactions_endpoint_url", newValue)
+
+  /** Role connection verification URL for the app */
+  @inline def roleConnectionsVerificationUrl: UndefOr[String] =
+    selectDynamic[UndefOr[String]]("role_connections_verification_url")
+
+  @inline def withRoleConnectionsVerificationUrl(newValue: UndefOr[String]): Application =
+    objWithUndef(Application, "role_connections_verification_url", newValue)
+
   /**
-    * Up to 5 tags describing the content and functionality of the application
+    * List of tags describing the content and functionality of the app. Max of 5
+    * tags.
     */
   @inline def tags: UndefOr[Seq[String]] = selectDynamic[UndefOr[Seq[String]]]("tags")
 
   @inline def withTags(newValue: UndefOr[Seq[String]]): Application = objWithUndef(Application, "tags", newValue)
 
-  /**
-    * Settings for the application's default in-app authorization link, if
-    * enabled
-    */
+  /** Settings for the app's default in-app authorization link, if enabled */
   @inline def installParams: UndefOr[Application.InstallParams] =
     selectDynamic[UndefOr[Application.InstallParams]]("install_params")
 
   @inline def withInstallParams(newValue: UndefOr[Application.InstallParams]): Application =
     objWithUndef(Application, "install_params", newValue)
 
-  /** The application's default custom authorization link, if enabled */
+  /** Default custom authorization URL for the app, if enabled */
   @inline def customInstallUrl: UndefOr[String] = selectDynamic[UndefOr[String]]("custom_install_url")
 
   @inline def withCustomInstallUrl(newValue: UndefOr[String]): Application =
     objWithUndef(Application, "custom_install_url", newValue)
-
-  /**
-    * The application's role connection verification entry point, which when
-    * configured will render the app as a verification method in the guild role
-    * verification configuration
-    */
-  @inline def roleConnectionsVerificationUrl: UndefOr[String] =
-    selectDynamic[UndefOr[String]]("role_connections_verification_url")
-
-  @inline def withRoleConnectionsVerificationUrl(newValue: UndefOr[String]): Application =
-    objWithUndef(Application, "role_connections_verification_url", newValue)
 
   override def values: Seq[() => Any] = Seq(
     () => id,
@@ -177,6 +188,7 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     () => rpcOrigins,
     () => botPublic,
     () => botRequireCodeGrant,
+    () => bot,
     () => termsOfServiceUrl,
     () => privacyPolicyUrl,
     () => owner,
@@ -189,10 +201,12 @@ class Application(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     () => coverImage,
     () => flags,
     () => approximateGuildCount,
+    () => redirectUris,
+    () => interactionsEndpointUrl,
+    () => roleConnectionsVerificationUrl,
     () => tags,
     () => installParams,
-    () => customInstallUrl,
-    () => roleConnectionsVerificationUrl
+    () => customInstallUrl
   )
 }
 object Application extends DiscordObjectCompanion[Application] {
@@ -200,59 +214,63 @@ object Application extends DiscordObjectCompanion[Application] {
 
   /**
     * @param id
-    *   The id of the app
+    *   ID of the app
     * @param name
-    *   The name of the app
+    *   Name of the app
     * @param icon
-    *   The icon hash of the app
+    *   Icon hash of the app
     * @param description
-    *   The description of the app
+    *   Description of the app
     * @param rpcOrigins
-    *   An array of rpc origin urls, if rpc is enabled
+    *   List of RPC origin URLs, if RPC is enabled
     * @param botPublic
-    *   When false only app owner can join the app's bot to guilds
+    *   When false only the app owner can add the app to guilds
     * @param botRequireCodeGrant
     *   When true the app's bot will only join upon completion of the full
-    *   oauth2 code grant flow
+    *   OAuth2 code grant flow
+    * @param bot
+    *   Partial user object for the bot user associated with the app
     * @param termsOfServiceUrl
-    *   The url of the app's terms of service
+    *   URL of the app's Terms of Service
     * @param privacyPolicyUrl
-    *   The url of the app's privacy policy
+    *   URL of the app's Privacy Policy
     * @param owner
-    *   Partial user object containing info on the owner of the application
+    *   Partial user object for the owner of the app
     * @param verifyKey
-    *   The hex encoded key for verification in interactions and the GameSDK's
+    *   Hex encoded key for verification in interactions and the GameSDK's
     *   GetTicket
     * @param team
-    *   If the application belongs to a team, this will be a list of the members
-    *   of that team
+    *   If the app belongs to a team, this will be a list of the members of that
+    *   team
     * @param guildId
     *   Guild associated with the app. For example, a developer support server.
     * @param guild
-    *   A partial object of the associated guild
+    *   Partial object of the associated guild
     * @param primarySkuId
-    *   If this application is a game sold on Discord, this field will be the id
-    *   of the "Game SKU" that is created, if exists
+    *   If this app is a game sold on Discord, this field will be the id of the
+    *   "Game SKU" that is created, if exists
     * @param slug
-    *   If this application is a game sold on Discord, this field will be the
-    *   URL slug that links to the store page
+    *   If this app is a game sold on Discord, this field will be the URL slug
+    *   that links to the store page
     * @param coverImage
-    *   The application's default rich presence invite cover image hash
+    *   App's default rich presence invite cover image hash
     * @param flags
-    *   The application's public flags
+    *   App's public flags
     * @param approximateGuildCount
-    *   An approximate count of the app's guild membership
-    * @param tags
-    *   Up to 5 tags describing the content and functionality of the application
-    * @param installParams
-    *   Settings for the application's default in-app authorization link, if
-    *   enabled
-    * @param customInstallUrl
-    *   The application's default custom authorization link, if enabled
+    *   Approximate count of guilds the app has been added to
+    * @param redirectUris
+    *   Array of redirect URIs for the app
+    * @param interactionsEndpointUrl
+    *   Interactions endpoint URL for the app
     * @param roleConnectionsVerificationUrl
-    *   The application's role connection verification entry point, which when
-    *   configured will render the app as a verification method in the guild
-    *   role verification configuration
+    *   Role connection verification URL for the app
+    * @param tags
+    *   List of tags describing the content and functionality of the app. Max of
+    *   5 tags.
+    * @param installParams
+    *   Settings for the app's default in-app authorization link, if enabled
+    * @param customInstallUrl
+    *   Default custom authorization URL for the app, if enabled
     */
   def make20(
       id: ApplicationId,
@@ -262,6 +280,7 @@ object Application extends DiscordObjectCompanion[Application] {
       rpcOrigins: UndefOr[Seq[String]] = UndefOrUndefined(Some("rpc_origins")),
       botPublic: Boolean,
       botRequireCodeGrant: Boolean,
+      bot: User.Partial,
       termsOfServiceUrl: UndefOr[String] = UndefOrUndefined(Some("terms_of_service_url")),
       privacyPolicyUrl: UndefOr[String] = UndefOrUndefined(Some("privacy_policy_url")),
       owner: UndefOr[Application.ApplicationOwner] = UndefOrUndefined(Some("owner")),
@@ -274,10 +293,12 @@ object Application extends DiscordObjectCompanion[Application] {
       coverImage: UndefOr[ImageHash] = UndefOrUndefined(Some("cover_image")),
       flags: UndefOr[Application.Flags] = UndefOrUndefined(Some("flags")),
       approximateGuildCount: UndefOr[Int] = UndefOrUndefined(Some("approximate_guild_count")),
+      redirectUris: UndefOr[Seq[String]] = UndefOrUndefined(Some("redirect_uris")),
+      interactionsEndpointUrl: UndefOr[String] = UndefOrUndefined(Some("interactions_endpoint_url")),
+      roleConnectionsVerificationUrl: UndefOr[String] = UndefOrUndefined(Some("role_connections_verification_url")),
       tags: UndefOr[Seq[String]] = UndefOrUndefined(Some("tags")),
       installParams: UndefOr[Application.InstallParams] = UndefOrUndefined(Some("install_params")),
-      customInstallUrl: UndefOr[String] = UndefOrUndefined(Some("custom_install_url")),
-      roleConnectionsVerificationUrl: UndefOr[String] = UndefOrUndefined(Some("role_connections_verification_url"))
+      customInstallUrl: UndefOr[String] = UndefOrUndefined(Some("custom_install_url"))
   ): Application = makeRawFromFields(
     "id"                                 := id,
     "name"                               := name,
@@ -286,6 +307,7 @@ object Application extends DiscordObjectCompanion[Application] {
     "rpc_origins"                       :=? rpcOrigins,
     "bot_public"                         := botPublic,
     "bot_require_code_grant"             := botRequireCodeGrant,
+    "bot"                                := bot,
     "terms_of_service_url"              :=? termsOfServiceUrl,
     "privacy_policy_url"                :=? privacyPolicyUrl,
     "owner"                             :=? owner,
@@ -298,10 +320,12 @@ object Application extends DiscordObjectCompanion[Application] {
     "cover_image"                       :=? coverImage,
     "flags"                             :=? flags,
     "approximate_guild_count"           :=? approximateGuildCount,
+    "redirect_uris"                     :=? redirectUris,
+    "interactions_endpoint_url"         :=? interactionsEndpointUrl,
+    "role_connections_verification_url" :=? roleConnectionsVerificationUrl,
     "tags"                              :=? tags,
     "install_params"                    :=? installParams,
-    "custom_install_url"                :=? customInstallUrl,
-    "role_connections_verification_url" :=? roleConnectionsVerificationUrl
+    "custom_install_url"                :=? customInstallUrl
   )
 
   sealed case class Flags private (value: Int) extends DiscordEnum[Int]
@@ -363,10 +387,12 @@ object Application extends DiscordObjectCompanion[Application] {
 
   class InstallParams(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
+    /** Scopes to add the application to the server with */
     @inline def scopes: Seq[String] = selectDynamic[Seq[String]]("scopes")
 
     @inline def withScopes(newValue: Seq[String]): InstallParams = objWith(InstallParams, "scopes", newValue)
 
+    /** Permissions to request for the bot role */
     @inline def permissions: Permissions = selectDynamic[Permissions]("permissions")
 
     @inline def withPermissions(newValue: Permissions): InstallParams =
@@ -377,6 +403,12 @@ object Application extends DiscordObjectCompanion[Application] {
   object InstallParams extends DiscordObjectCompanion[InstallParams] {
     def makeRaw(json: Json, cache: Map[String, Any]): InstallParams = new InstallParams(json, cache)
 
+    /**
+      * @param scopes
+      *   Scopes to add the application to the server with
+      * @param permissions
+      *   Permissions to request for the bot role
+      */
     def make20(scopes: Seq[String], permissions: Permissions): InstallParams =
       makeRawFromFields("scopes" := scopes, "permissions" := permissions)
   }
@@ -428,27 +460,27 @@ object Application extends DiscordObjectCompanion[Application] {
 
   class Team(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
-    /** A hash of the image of the team's icon */
+    /** Hash of the image of the team's icon */
     @inline def icon: ImageHash = selectDynamic[ImageHash]("icon")
 
     @inline def withIcon(newValue: ImageHash): Team = objWith(Team, "icon", newValue)
 
-    /** The unique id of the team */
+    /** Unique ID of the team */
     @inline def id: Snowflake[Team] = selectDynamic[Snowflake[Team]]("id")
 
     @inline def withId(newValue: Snowflake[Team]): Team = objWith(Team, "id", newValue)
 
-    /** The members of the team */
+    /** Members of the team */
     @inline def members: Seq[Team.TeamMember] = selectDynamic[Seq[Team.TeamMember]]("members")
 
     @inline def withMembers(newValue: Seq[Team.TeamMember]): Team = objWith(Team, "members", newValue)
 
-    /** The name of the team */
+    /** Name of the team */
     @inline def name: String = selectDynamic[String]("name")
 
     @inline def withName(newValue: String): Team = objWith(Team, "name", newValue)
 
-    /** The user id of the current team owner */
+    /** User ID of the current team owner */
     @inline def ownerUserId: UserId = selectDynamic[UserId]("owner_user_id")
 
     @inline def withOwnerUserId(newValue: UserId): Team = objWith(Team, "owner_user_id", newValue)
@@ -460,15 +492,15 @@ object Application extends DiscordObjectCompanion[Application] {
 
     /**
       * @param icon
-      *   A hash of the image of the team's icon
+      *   Hash of the image of the team's icon
       * @param id
-      *   The unique id of the team
+      *   Unique ID of the team
       * @param members
-      *   The members of the team
+      *   Members of the team
       * @param name
-      *   The name of the team
+      *   Name of the team
       * @param ownerUserId
-      *   The user id of the current team owner
+      *   User ID of the current team owner
       */
     def make20(
         icon: ImageHash,
@@ -486,55 +518,87 @@ object Application extends DiscordObjectCompanion[Application] {
 
     class TeamMember(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
-      /** The user's membership state on the team */
+      /** User's membership state on the team */
       @inline def membershipState: Team.TeamMembershipState =
         selectDynamic[Team.TeamMembershipState]("membership_state")
 
       @inline def withMembershipState(newValue: Team.TeamMembershipState): TeamMember =
         objWith(TeamMember, "membership_state", newValue)
 
-      /** Will always be ["*"] */
-      @inline def permissions: Seq[String] = selectDynamic[Seq[String]]("permissions")
-
-      @inline def withPermissions(newValue: Seq[String]): TeamMember =
-        objWith(TeamMember, "permissions", newValue)
-
-      /** the id of the parent team of which they are a member */
+      /** ID of the parent team of which they are a member */
       @inline def teamId: Snowflake[Team] = selectDynamic[Snowflake[Team]]("team_id")
 
       @inline def withTeamId(newValue: Snowflake[Team]): TeamMember = objWith(TeamMember, "team_id", newValue)
 
-      /** The avatar, discriminator, id, and username of the user */
+      /** Avatar, discriminator, ID, and username of the user */
       @inline def user: Team.TeamUser = selectDynamic[Team.TeamUser]("user")
 
       @inline def withUser(newValue: Team.TeamUser): TeamMember = objWith(TeamMember, "user", newValue)
 
-      override def values: Seq[() => Any] = Seq(() => membershipState, () => permissions, () => teamId, () => user)
+      /** Role of the team member */
+      @inline def role: TeamMemberRole = selectDynamic[TeamMemberRole]("role")
+
+      @inline def withRole(newValue: TeamMemberRole): TeamMember = objWith(TeamMember, "role", newValue)
+
+      override def values: Seq[() => Any] = Seq(() => membershipState, () => teamId, () => user, () => role)
     }
     object TeamMember extends DiscordObjectCompanion[TeamMember] {
       def makeRaw(json: Json, cache: Map[String, Any]): TeamMember = new TeamMember(json, cache)
 
       /**
         * @param membershipState
-        *   The user's membership state on the team
-        * @param permissions
-        *   Will always be ["*"]
+        *   User's membership state on the team
         * @param teamId
-        *   the id of the parent team of which they are a member
+        *   ID of the parent team of which they are a member
         * @param user
-        *   The avatar, discriminator, id, and username of the user
+        *   Avatar, discriminator, ID, and username of the user
+        * @param role
+        *   Role of the team member
         */
       def make20(
           membershipState: Team.TeamMembershipState,
-          permissions: Seq[String],
           teamId: Snowflake[Team],
-          user: Team.TeamUser
-      ): TeamMember = makeRawFromFields(
-        "membership_state" := membershipState,
-        "permissions"      := permissions,
-        "team_id"          := teamId,
-        "user"             := user
-      )
+          user: Team.TeamUser,
+          role: TeamMemberRole
+      ): TeamMember =
+        makeRawFromFields("membership_state" := membershipState, "team_id" := teamId, "user" := user, "role" := role)
+    }
+
+    sealed case class TeamMemberRole private (value: String) extends DiscordEnum[String]
+    object TeamMemberRole                                    extends DiscordEnumCompanion[String, TeamMemberRole] {
+
+      /**
+        * Owners are the most permissiable role, and can take destructive,
+        * irreversible actions like deleting team-owned apps or the team itself.
+        * Teams are limited to 1 owner.
+        */
+      val Owner: TeamMemberRole = TeamMemberRole("owner")
+
+      /**
+        * Admins have similar access as owners, except they cannot take
+        * destructive actions on the team or team-owned apps.
+        */
+      val Admin: TeamMemberRole = TeamMemberRole("admin")
+
+      /**
+        * Developers can access information about team-owned apps, like the
+        * client secret or public key. They can also take limited actions on
+        * team-owned apps, like configuring interaction endpoints or resetting
+        * the bot token. Members with the Developer role cannot manage the team
+        * or its members, or take destructive actions on team-owned apps.
+        */
+      val Developer: TeamMemberRole = TeamMemberRole("developer")
+
+      /**
+        * Read-only members can access information about a team and any
+        * team-owned apps. Some examples include getting the IDs of applications
+        * and exporting payout records.
+        */
+      val ReadOnly: TeamMemberRole = TeamMemberRole("read_only")
+
+      def unknown(value: String): TeamMemberRole = new TeamMemberRole(value)
+
+      val values: Seq[TeamMemberRole] = Seq(Owner, Admin, Developer, ReadOnly)
     }
 
     sealed case class TeamMembershipState private (value: Int) extends DiscordEnum[Int]

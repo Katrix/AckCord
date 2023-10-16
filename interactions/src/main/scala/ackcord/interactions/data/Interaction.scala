@@ -100,6 +100,15 @@ class Interaction(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
   @inline def withGuildLocale(newValue: UndefOr[String]): Interaction =
     objWithUndef(Interaction, "guild_locale", newValue)
 
+  /**
+    * For monetized apps, any entitlements for the invoking user, representing
+    * access to premium SKUs
+    */
+  @inline def entitlements: Seq[Entitlement] = selectDynamic[Seq[Entitlement]]("entitlements")
+
+  @inline def withEntitlements(newValue: Seq[Entitlement]): Interaction =
+    objWith(Interaction, "entitlements", newValue)
+
   override def values: Seq[() => Any] = Seq(
     () => id,
     () => applicationId,
@@ -115,7 +124,8 @@ class Interaction(json: Json, cache: Map[String, Any] = Map.empty) extends Disco
     () => message,
     () => appPermissions,
     () => locale,
-    () => guildLocale
+    () => guildLocale,
+    () => entitlements
   )
 }
 object Interaction extends DiscordObjectCompanion[Interaction] {
@@ -153,6 +163,9 @@ object Interaction extends DiscordObjectCompanion[Interaction] {
     *   Selected language of the invoking user
     * @param guildLocale
     *   Guild's preferred locale, if invoked in a guild
+    * @param entitlements
+    *   For monetized apps, any entitlements for the invoking user, representing
+    *   access to premium SKUs
     */
   def make20(
       id: InteractionId,
@@ -169,7 +182,8 @@ object Interaction extends DiscordObjectCompanion[Interaction] {
       message: UndefOr[Message] = UndefOrUndefined(Some("message")),
       appPermissions: UndefOr[Permissions] = UndefOrUndefined(Some("app_permissions")),
       locale: UndefOr[String] = UndefOrUndefined(Some("locale")),
-      guildLocale: UndefOr[String] = UndefOrUndefined(Some("guild_locale"))
+      guildLocale: UndefOr[String] = UndefOrUndefined(Some("guild_locale")),
+      entitlements: Seq[Entitlement]
   ): Interaction = makeRawFromFields(
     "id"               := id,
     "application_id"   := applicationId,
@@ -185,7 +199,8 @@ object Interaction extends DiscordObjectCompanion[Interaction] {
     "message"         :=? message,
     "app_permissions" :=? appPermissions,
     "locale"          :=? locale,
-    "guild_locale"    :=? guildLocale
+    "guild_locale"    :=? guildLocale,
+    "entitlements"     := entitlements
   )
 
   sealed case class InteractionType private (value: Int) extends DiscordEnum[Int]
@@ -335,7 +350,7 @@ object Interaction extends DiscordObjectCompanion[Interaction] {
     @inline def withSelectValues(newValue: UndefOr[Seq[Component.SelectOption]]): MessageComponentData =
       objWithUndef(MessageComponentData, "values", newValue)
 
-    /** Converted users + roles + channels + attachments */
+    /** Resolved entities from selected options */
     @inline def resolved: UndefOr[Interaction.ResolvedData] =
       selectDynamic[UndefOr[Interaction.ResolvedData]]("resolved")
 
@@ -356,7 +371,7 @@ object Interaction extends DiscordObjectCompanion[Interaction] {
       * @param selectValues
       *   Values the user selected in a select menu component
       * @param resolved
-      *   Converted users + roles + channels + attachments
+      *   Resolved entities from selected options
       */
     def make20(
         customId: String,
@@ -744,6 +759,13 @@ object InteractionResponse extends DiscordObjectCompanion[InteractionResponse] {
     /** Respond to an interaction with a popup modal */
     val MODAL: InteractionCallbackType = InteractionCallbackType(9)
 
+    /**
+      * Respond to an interaction with an upgrade button, only available for
+      * apps with monetization enabled Not available for MODAL_SUBMIT and PING
+      * interactions.
+      */
+    val PREMIUM_REQUIRED: InteractionCallbackType = InteractionCallbackType(10)
+
     def unknown(value: Int): InteractionCallbackType = new InteractionCallbackType(value)
 
     val values: Seq[InteractionCallbackType] = Seq(
@@ -753,7 +775,8 @@ object InteractionResponse extends DiscordObjectCompanion[InteractionResponse] {
       DEFERRED_UPDATE_MESSAGE,
       UPDATE_MESSAGE,
       APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
-      MODAL
+      MODAL,
+      PREMIUM_REQUIRED
     )
   }
 

@@ -80,6 +80,10 @@ innerTypes:
           withUndefined: true
           documentation: Guild's preferred locale, if invoked in a guild
 
+        entitlements:
+          type: Seq[Entitlement]
+          documentation: For monetized apps, any entitlements for the invoking user, representing access to premium SKUs
+
     innerTypes:
       - name: InteractionType
         defType: Enum
@@ -177,7 +181,7 @@ innerTypes:
             resolved:
               type: Interaction.ResolvedData
               withUndefined: true
-              documentation: Converted users + roles + channels + attachments
+              documentation: Resolved entities from selected options
 
       - name: ModalSubmitData
         defType: Class
@@ -359,6 +363,13 @@ innerTypes:
           MODAL:
             value: "9"
             documentation: Respond to an interaction with a popup modal
+
+          PREMIUM_REQUIRED:
+            value: "10"
+            documentation: >-
+              Respond to an interaction with an upgrade button, only available for apps with monetization enabled
+              
+              Not available for MODAL_SUBMIT and PING interactions.
 
       - defType: Freeform
         content: |-

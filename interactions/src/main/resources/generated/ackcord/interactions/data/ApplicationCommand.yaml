@@ -89,15 +89,15 @@ innerTypes:
     type: String
     values:
       ChatInput:
-        value: "CHAT_INPUT"
+        value: "1"
         documentation: Slash commands; a text-based command that shows up when a user types /
 
       User:
-        value: "USER"
+        value: "2"
         documentation: A UI-based command that shows up when you right click or tap on a user
 
       Message:
-        value: "MESSAGE"
+        value: "3"
         documentation: A UI-based command that shows up when you right click or tap on a message
 
   - name: ApplicationCommandOption

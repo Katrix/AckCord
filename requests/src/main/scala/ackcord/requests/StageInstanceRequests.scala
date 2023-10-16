@@ -40,8 +40,15 @@ object StageInstanceRequests {
     @inline def withSendStartNotification(newValue: UndefOr[Boolean]): CreateStageInstanceBody =
       objWithUndef(CreateStageInstanceBody, "send_start_notification", newValue)
 
+    /** The guild scheduled event associated with this Stage instance */
+    @inline def guildScheduledEventId: UndefOr[Snowflake[GuildScheduledEvent]] =
+      selectDynamic[UndefOr[Snowflake[GuildScheduledEvent]]]("guild_scheduled_event_id")
+
+    @inline def withGuildScheduledEventId(newValue: UndefOr[Snowflake[GuildScheduledEvent]]): CreateStageInstanceBody =
+      objWithUndef(CreateStageInstanceBody, "guild_scheduled_event_id", newValue)
+
     override def values: Seq[() => Any] =
-      Seq(() => channelId, () => topic, () => privacyLevel, () => sendStartNotification)
+      Seq(() => channelId, () => topic, () => privacyLevel, () => sendStartNotification, () => guildScheduledEventId)
   }
   object CreateStageInstanceBody extends DiscordObjectCompanion[CreateStageInstanceBody] {
     def makeRaw(json: Json, cache: Map[String, Any]): CreateStageInstanceBody =
@@ -56,17 +63,23 @@ object StageInstanceRequests {
       *   The privacy level of the Stage instance (default GUILD_ONLY)
       * @param sendStartNotification
       *   Notify @everyone that a Stage instance has started
+      * @param guildScheduledEventId
+      *   The guild scheduled event associated with this Stage instance
       */
     def make20(
         channelId: StageChannelId,
         topic: String,
         privacyLevel: UndefOr[StageInstance.StagePrivacyLevel] = UndefOrUndefined(Some("privacy_level")),
-        sendStartNotification: UndefOr[Boolean] = UndefOrUndefined(Some("send_start_notification"))
+        sendStartNotification: UndefOr[Boolean] = UndefOrUndefined(Some("send_start_notification")),
+        guildScheduledEventId: UndefOr[Snowflake[GuildScheduledEvent]] = UndefOrUndefined(
+          Some("guild_scheduled_event_id")
+        )
     ): CreateStageInstanceBody = makeRawFromFields(
-      "channel_id"               := channelId,
-      "topic"                    := topic,
-      "privacy_level"           :=? privacyLevel,
-      "send_start_notification" :=? sendStartNotification
+      "channel_id"                := channelId,
+      "topic"                     := topic,
+      "privacy_level"            :=? privacyLevel,
+      "send_start_notification"  :=? sendStartNotification,
+      "guild_scheduled_event_id" :=? guildScheduledEventId
     )
   }
 

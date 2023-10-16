@@ -144,10 +144,7 @@ object Sticker extends DiscordObjectCompanion[Sticker] {
   sealed case class StickerType private (value: Int) extends DiscordEnum[Int]
   object StickerType                                 extends DiscordEnumCompanion[Int, StickerType] {
 
-    /**
-      * An official sticker in a pack, part of Nitro or in a removed purchasable
-      * pack
-      */
+    /** An official sticker in a pack */
     val STANDARD: StickerType = StickerType(1)
 
     /** A sticker uploaded to a guild for the guild's members */

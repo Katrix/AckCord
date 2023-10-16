@@ -34,6 +34,9 @@ innerTypes:
             case GatewayDispatchType.ThreadMemberUpdate => unknown.retype(ThreadMemberUpdate)
             case GatewayDispatchType.ThreadMembersUpdate => unknown.retype(ThreadMembersUpdate)
             case GatewayDispatchType.ChannelPinsUpdate => unknown.retype(ChannelPinsUpdate)
+            case GatewayDispatchType.EntitlementCreate => unknown.retype(EntitlementCreate)
+            case GatewayDispatchType.EntitlementUpdate => unknown.retype(EntitlementUpdate)
+            case GatewayDispatchType.EntitlementDelete => unknown.retype(EntitlementDelete)
             case GatewayDispatchType.GuildCreate => unknown.retype(GuildCreate)
             case GatewayDispatchType.GuildUpdate => unknown.retype(GuildUpdate)
             case GatewayDispatchType.GuildDelete => unknown.retype(GuildDelete)
@@ -255,7 +258,7 @@ innerTypes:
         defType: Class
         extends: [GatewayDispatchEvent]
         documentation: |-
-          Sent when a channel is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events (or Thread Create events for GUILD_FORUM channels).
+          Sent when a channel is updated. The inner payload is a channel object. This is not sent when the field last_message_id is altered. To keep track of the last_message_id changes, you must listen for Message Create events (or Thread Create events for GUILD_FORUM and GUILD_MEDIA channels).
 
           This event may reference roles or guild members that no longer exist in the guild.
         fields:
@@ -402,6 +405,40 @@ innerTypes:
               withUndefined: true
               withNull: true
               documentation: Time at which the most recent pinned message was pinned
+
+      - name: EntitlementCreate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an entitlement is created. The inner payload is an entitlement object.
+        fields:
+          2.0.x:
+            entitlement:
+              type: Entitlement
+              isExtension: true
+
+      - name: EntitlementUpdate
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an entitlement is updated. The inner payload is an entitlement object. When an entitlement for a subscription is renewed, the ends_at field may have an updated value with the new expiration date.
+        fields:
+          2.0.x:
+            entitlement:
+              type: Entitlement
+              isExtension: true
+
+      - name: EntitlementDelete
+        defType: Class
+        extends: [GatewayDispatchEvent]
+        documentation: >-
+          Sent when an entitlement is deleted. The inner payload is an entitlement object. Entitlements are not deleted when they expire.
+        fields:
+          2.0.x:
+            entitlement:
+              type: Entitlement
+              isExtension: true
+
 
       - name: GuildCreate
         defType: Class
@@ -1308,7 +1345,7 @@ innerTypes:
               type: String
               withUndefined: true
               withNull: true
-              documentation: User's current party status
+              documentation: User's current party status, or text used for a custom status
 
             emoji:
               type: Activity.ActivityEmoji
@@ -1369,7 +1406,7 @@ innerTypes:
 
               Custom:
                 value: "4"
-                documentation: "{emoji} {name}"
+                documentation: "{emoji} {state}"
 
               Competing:
                 value: "5"

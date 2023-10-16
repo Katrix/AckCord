@@ -294,6 +294,7 @@ object Components {
 
     def make(
         placeholder: Option[String] = None,
+        defaultValues: Seq[UserId] = Nil,
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
@@ -302,7 +303,13 @@ object Components {
   object UserSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends UserSelectMenuComponents[F] {
-      override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
+      override def make(
+          placeholder: Option[String],
+          defaultValues: Seq[UserId],
+          minValues: Int,
+          maxValues: Int,
+          disabled: Boolean
+      )(
           handler: ComponentInvocation[Seq[(User, GuildMember.Partial)]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
@@ -310,6 +317,11 @@ object Components {
             tpe = ComponentType.UserSelect,
             customId = customId,
             placeholder = UndefOr.fromOption(placeholder),
+            defaultValues = UndefOr.fromOption(
+              Option.when(defaultValues.nonEmpty)(
+                defaultValues.map(id => SelectDefaultValue.make20(id, "user"))
+              )
+            ),
             minValues = if (minValues != 1) UndefOrSome(minValues) else UndefOrUndefined(),
             maxValues = if (maxValues != 1) UndefOrSome(maxValues) else UndefOrUndefined(),
             disabled = UndefOr.someIfTrue(disabled)
@@ -352,6 +364,7 @@ object Components {
 
     def make(
         placeholder: Option[String] = None,
+        defaultValues: Seq[RoleId] = Nil,
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
@@ -360,7 +373,13 @@ object Components {
   object RoleSelectMenuComponents {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends RoleSelectMenuComponents[F] {
-      override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
+      override def make(
+          placeholder: Option[String],
+          defaultValues: Seq[RoleId],
+          minValues: Int,
+          maxValues: Int,
+          disabled: Boolean
+      )(
           handler: ComponentInvocation[Seq[Role]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
@@ -368,6 +387,11 @@ object Components {
             tpe = ComponentType.RoleSelect,
             customId = customId,
             placeholder = UndefOr.fromOption(placeholder),
+            defaultValues = UndefOr.fromOption(
+              Option.when(defaultValues.nonEmpty)(
+                defaultValues.map(id => SelectDefaultValue.make20(id, "role"))
+              )
+            ),
             minValues = if (minValues != 1) UndefOrSome(minValues) else UndefOrUndefined(),
             maxValues = if (maxValues != 1) UndefOrSome(maxValues) else UndefOrUndefined(),
             disabled = UndefOr.someIfTrue(disabled)
@@ -405,6 +429,9 @@ object Components {
 
     def make(
         placeholder: Option[String] = None,
+        defaultValuesUsers: Seq[UserId] = Nil,
+        defaultValuesRoles: Seq[RoleId] = Nil,
+        defaultValuesChannels: Seq[ChannelId] = Nil,
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
@@ -416,7 +443,15 @@ object Components {
     class Default[F[_]](val top: Components[F])(implicit F: MonadError[F, Throwable])
         extends MentionableSelectMenuComponents[F] {
 
-      override def make(placeholder: Option[String], minValues: Int, maxValues: Int, disabled: Boolean)(
+      override def make(
+          placeholder: Option[String],
+          defaultValuesUsers: Seq[UserId],
+          defaultValuesRoles: Seq[RoleId],
+          defaultValuesChannels: Seq[ChannelId],
+          minValues: Int,
+          maxValues: Int,
+          disabled: Boolean
+      )(
           handler: ComponentInvocation[Seq[(UserOrRole, Option[GuildMember.Partial])]] => F[HighInteractionResponse[F]]
       ): F[SelectMenu] =
         SpecificComponent.makeBase(this, handler) { customId =>
@@ -424,6 +459,13 @@ object Components {
             tpe = ComponentType.MentionableSelect,
             customId = customId,
             placeholder = UndefOr.fromOption(placeholder),
+            defaultValues = UndefOr.fromOption(
+              Option.when(defaultValuesUsers.nonEmpty || defaultValuesRoles.nonEmpty || defaultValuesChannels.nonEmpty)(
+                defaultValuesUsers.map(id => SelectDefaultValue.make20(id, "user")) ++
+                  defaultValuesRoles.map(id => SelectDefaultValue.make20(id, "role")) ++
+                  defaultValuesChannels.map(id => SelectDefaultValue.make20(id, "channel"))
+              )
+            ),
             minValues = if (minValues != 1) UndefOrSome(minValues) else UndefOrUndefined(),
             maxValues = if (maxValues != 1) UndefOrSome(maxValues) else UndefOrUndefined(),
             disabled = UndefOr.someIfTrue(disabled)
@@ -485,6 +527,7 @@ object Components {
     def make(
         channelTypes: Seq[Channel.ChannelType] = Nil,
         placeholder: Option[String] = None,
+        defaultValues: Seq[ChannelId] = Nil,
         minValues: Int = 1,
         maxValues: Int = 1,
         disabled: Boolean = false
@@ -496,6 +539,7 @@ object Components {
       override def make(
           channelTypes: Seq[Channel.ChannelType],
           placeholder: Option[String],
+          defaultValues: Seq[ChannelId],
           minValues: Int,
           maxValues: Int,
           disabled: Boolean
@@ -508,6 +552,11 @@ object Components {
             customId = customId,
             channelTypes = UndefOrSome(channelTypes),
             placeholder = UndefOr.fromOption(placeholder),
+            defaultValues = UndefOr.fromOption(
+              Option.when(defaultValues.nonEmpty)(
+                defaultValues.map(id => SelectDefaultValue.make20(id, "channel"))
+              )
+            ),
             minValues = if (minValues != 1) UndefOrSome(minValues) else UndefOrUndefined(),
             maxValues = if (maxValues != 1) UndefOrSome(maxValues) else UndefOrUndefined(),
             disabled = UndefOr.someIfTrue(disabled)

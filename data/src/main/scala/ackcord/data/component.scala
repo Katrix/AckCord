@@ -265,8 +265,8 @@ object Component extends DiscordObjectCompanion[Component] {
     * to command option types.
     *
     * In addition to the values array in all select menu interaction payloads,
-    * auto-populated select menu components (users, roles, mentionables, and
-    * channels) also include an additional resolved object that provides
+    * auto-populated select menu components (user, role, mentionable, and
+    * channel) also include an additional resolved object that provides
     * additional details about the user's selected resource.
     *
     * The payloads for the select menu components are detailed in the select
@@ -309,6 +309,17 @@ object Component extends DiscordObjectCompanion[Component] {
       objWithUndef(SelectMenu, "placeholder", newValue)
 
     /**
+      * List of default values for auto-populated select menu components; number
+      * of default values must be in the range defined by min_values and
+      * max_values
+      */
+    @inline def defaultValues: UndefOr[Seq[SelectDefaultValue]] =
+      selectDynamic[UndefOr[Seq[SelectDefaultValue]]]("default_values")
+
+    @inline def withDefaultValues(newValue: UndefOr[Seq[SelectDefaultValue]]): SelectMenu =
+      objWithUndef(SelectMenu, "default_values", newValue)
+
+    /**
       * Minimum number of items that must be chosen (defaults to 1); min 0, max
       * 25
       */
@@ -333,6 +344,7 @@ object Component extends DiscordObjectCompanion[Component] {
       () => options,
       () => channelTypes,
       () => placeholder,
+      () => defaultValues,
       () => minValues,
       () => maxValues,
       () => disabled
@@ -352,6 +364,10 @@ object Component extends DiscordObjectCompanion[Component] {
       *   8)
       * @param placeholder
       *   Placeholder text if nothing is selected; max 150 characters
+      * @param defaultValues
+      *   List of default values for auto-populated select menu components;
+      *   number of default values must be in the range defined by min_values
+      *   and max_values
       * @param minValues
       *   Minimum number of items that must be chosen (defaults to 1); min 0,
       *   max 25
@@ -366,18 +382,20 @@ object Component extends DiscordObjectCompanion[Component] {
         options: UndefOr[Seq[SelectOption]] = UndefOrUndefined(Some("options")),
         channelTypes: UndefOr[Seq[Channel.ChannelType]] = UndefOrUndefined(Some("channel_types")),
         placeholder: UndefOr[String] = UndefOrUndefined(Some("placeholder")),
+        defaultValues: UndefOr[Seq[SelectDefaultValue]] = UndefOrUndefined(Some("default_values")),
         minValues: UndefOr[Int] = UndefOrUndefined(Some("min_values")),
         maxValues: UndefOr[Int] = UndefOrUndefined(Some("max_values")),
         disabled: UndefOr[Boolean] = UndefOrUndefined(Some("disabled"))
     ): SelectMenu = makeRawFromFields(
-      "type"           := tpe,
-      "custom_id"      := customId,
-      "options"       :=? options,
-      "channel_types" :=? channelTypes,
-      "placeholder"   :=? placeholder,
-      "min_values"    :=? minValues,
-      "max_values"    :=? maxValues,
-      "disabled"      :=? disabled
+      "type"            := tpe,
+      "custom_id"       := customId,
+      "options"        :=? options,
+      "channel_types"  :=? channelTypes,
+      "placeholder"    :=? placeholder,
+      "default_values" :=? defaultValues,
+      "min_values"     :=? minValues,
+      "max_values"     :=? maxValues,
+      "disabled"       :=? disabled
     )
   }
 
@@ -443,9 +461,37 @@ object Component extends DiscordObjectCompanion[Component] {
     )
   }
 
+  class SelectDefaultValue(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+    /** ID of a user, role, or channel */
+    @inline def id: RawSnowflake = selectDynamic[RawSnowflake]("id")
+
+    @inline def withId(newValue: RawSnowflake): SelectDefaultValue = objWith(SelectDefaultValue, "id", newValue)
+
+    /** Type of value that id represents. Either "user", "role", or "channel" */
+    @inline def tpe: String = selectDynamic[String]("type")
+
+    @inline def withTpe(newValue: String): SelectDefaultValue = objWith(SelectDefaultValue, "type", newValue)
+
+    override def values: Seq[() => Any] = Seq(() => id, () => tpe)
+  }
+  object SelectDefaultValue extends DiscordObjectCompanion[SelectDefaultValue] {
+    def makeRaw(json: Json, cache: Map[String, Any]): SelectDefaultValue =
+      new SelectDefaultValue(json, cache)
+
+    /**
+      * @param id
+      *   ID of a user, role, or channel
+      * @param tpe
+      *   Type of value that id represents. Either "user", "role", or "channel"
+      */
+    def make20(id: RawSnowflake, tpe: String): SelectDefaultValue = makeRawFromFields("id" := id, "type" := tpe)
+  }
+
   /**
-    * Text inputs are an interactive component that render on modals. They can
-    * be used to collect short-form or long-form text.
+    * When defining a text input component, you can set attributes to customize
+    * the behavior and appearance of it. However, not all attributes will be
+    * returned in the text input interaction payload.
     */
   class TextInput(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) with Component {
 

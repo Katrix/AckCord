@@ -331,6 +331,12 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
 
     @inline def withTpe(newValue: UndefOr[String]): AuditEntryInfo = objWithUndef(AuditEntryInfo, "type", newValue)
 
+    /** The type of integration which performed the action */
+    @inline def integrationType: UndefOr[String] = selectDynamic[UndefOr[String]]("integration_type")
+
+    @inline def withIntegrationType(newValue: UndefOr[String]): AuditEntryInfo =
+      objWithUndef(AuditEntryInfo, "integration_type", newValue)
+
     override def values: Seq[() => Any] = Seq(
       () => applicationId,
       () => autoModerationRuleName,
@@ -342,7 +348,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       () => membersRemoved,
       () => messageId,
       () => roleName,
-      () => tpe
+      () => tpe,
+      () => integrationType
     )
   }
   object AuditEntryInfo extends DiscordObjectCompanion[AuditEntryInfo] {
@@ -372,6 +379,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       *   Name of the role if type is "0" (not present if type is "1")
       * @param tpe
       *   Type of overwritten entity - role ("0") or member ("1")
+      * @param integrationType
+      *   The type of integration which performed the action
       */
     def make20(
         applicationId: UndefOr[ApplicationId] = UndefOrUndefined(Some("application_id")),
@@ -384,7 +393,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
         membersRemoved: UndefOr[String] = UndefOrUndefined(Some("members_removed")),
         messageId: UndefOr[MessageId] = UndefOrUndefined(Some("message_id")),
         roleName: UndefOr[String] = UndefOrUndefined(Some("role_name")),
-        tpe: UndefOr[String] = UndefOrUndefined(Some("tpe"))
+        tpe: UndefOr[String] = UndefOrUndefined(Some("tpe")),
+        integrationType: UndefOr[String] = UndefOrUndefined(Some("integration_type"))
     ): AuditEntryInfo = makeRawFromFields(
       "application_id"                    :=? applicationId,
       "auto_moderation_rule_name"         :=? autoModerationRuleName,
@@ -396,7 +406,8 @@ object AuditLog extends DiscordObjectCompanion[AuditLog] {
       "members_removed"                   :=? membersRemoved,
       "message_id"                        :=? messageId,
       "role_name"                         :=? roleName,
-      "type"                              :=? tpe
+      "type"                              :=? tpe,
+      "integration_type"                  :=? integrationType
     )
   }
 

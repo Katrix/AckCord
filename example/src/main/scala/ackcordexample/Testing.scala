@@ -100,7 +100,7 @@ object Testing extends ResourceApp {
             InteractionsRegistrar
               .createGuildCommands[IO](
                 ready.application.id,
-                GuildId(??? : String),
+                GuildId("269988507378909186": String),
                 settings.requests,
                 replaceAll = true,
                 commands.allCommands: _*

@@ -84,7 +84,7 @@ innerTypes:
             topic:
               type: String
               withNull: true
-              documentation: 0-1024 character channel topic (0-4096 characters for GUILD_FORUM channels)
+              documentation: 0-1024 character channel topic (0-4096 characters for GUILD_FORUM and GUILD_MEDIA channels)
               verification:
                 max_length: 4096
 
@@ -135,18 +135,18 @@ innerTypes:
 
             flags:
               type: Channel.ChannelFlags
-              documentation: Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1 << 4) is supported.
+              documentation: Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1 << 4) is supported by GUILD_FORUM and GUILD_MEDIA channels. HIDE_MEDIA_DOWNLOAD_OPTIONS (1 << 15) is supported only by GUILD_MEDIA channels
 
             available_tags:
               type: Seq[Channel.ForumTag]
-              documentation: The set of tags that can be used in a GUILD_FORUM channel; limited to 20
+              documentation: The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel; limited to 20
               verification:
                 max_length: 20
 
             default_reaction_emoji:
               type: Channel.DefaultReaction
               withNull: true
-              documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM channel
+              documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM or a GUILD_MEDIA channel
 
             default_thread_rate_limit_per_user:
               type: Int
@@ -155,7 +155,7 @@ innerTypes:
             default_sort_order:
               type: Channel.ForumSortOrder
               withNull: true
-              documentation: The default sort order type used to order posts in GUILD_FORUM channels
+              documentation: The default sort order type used to order posts in GUILD_FORUM and GUILD_MEDIA channels
 
             default_forum_layout:
               type: Channel.ForumLayout
@@ -223,11 +223,11 @@ innerTypes:
 
             flags:
               type: Channel.ChannelFlags
-              documentation: Channel flags combined as a bitfield; PINNED can only be set for threads in forum channels
+              documentation: Channel flags combined as a bitfield; PINNED can only be set for threads in forum and media channels
 
             applied_tags:
               type: Seq[Snowflake[Channel.ForumTag]]
-              documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel; limited to 5
+              documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM or a GUILD_MEDIA channel; limited to 5
               verification:
                 max_length: 5
 
@@ -682,11 +682,9 @@ innerTypes:
   - name: triggerTypingIndicator
     defType: Request
     documentation: >-
-      Post a typing indicator for the specified channel. Generally bots should not
-      implement this route. However, if a bot is responding to a command and
-      expects the computation to take a few seconds, this endpoint may be called
-      to let the user know that the bot is processing their message. Returns a 204
-      empty response on success. Fires a Typing Start Gateway event.
+      Post a typing indicator for the specified channel, which expires after 10 seconds. Returns a 204 empty response on success. Fires a Typing Start Gateway event.
+      
+      Generally bots should not use this route. However, if a bot is responding to a command and expects the computation to take a few seconds, this endpoint may be called to let the user know that the bot is processing their message.
     method: POST
     path: [ channels, { argOf: ChannelId }, typing ]
 
@@ -747,7 +745,7 @@ innerTypes:
     documentation: |-
       Creates a new thread from an existing message. Returns a channel on success, and a 400 BAD REQUEST on invalid parameters. Fires a Thread Create and a Message Update Gateway event.
 
-      When called on a GUILD_TEXT channel, creates a PUBLIC_THREAD. When called on a GUILD_ANNOUNCEMENT channel, creates a ANNOUNCEMENT_THREAD. Does not work on a GUILD_FORUM channel. The id of the created thread will be the same as the id of the source message, and as such a message can only have a single thread created from it.
+      When called on a GUILD_TEXT channel, creates a PUBLIC_THREAD. When called on a GUILD_ANNOUNCEMENT channel, creates a ANNOUNCEMENT_THREAD. Does not work on a GUILD_FORUM or a GUILD_MEDIA channel. The id of the created thread will be the same as the id of the source message, and as such a message can only have a single thread created from it.
     method: POST
     path: [ channels, { argOf: ChannelId }, messages, { argOf: MessageId }, threads ]
     allowsReason: true
@@ -822,10 +820,10 @@ innerTypes:
               message (0-21600)
     return: Channel
 
-  - name: startThreadInForumChannel
+  - name: startThreadInForumOrMediaChannel
     defType: Request
     documentation: |-
-      Creates a new thread in a forum channel, and sends a message within the
+      Creates a new thread in a forum or a media channel, and sends a message within the
       created thread. Returns a channel, with a nested message object, on success,
       and a 400 BAD REQUEST on invalid parameters. Fires a Thread Create and
       Message Create Gateway event.
@@ -875,7 +873,7 @@ innerTypes:
             documentation: Amount of seconds a user has to wait before sending another message (0-21600)
 
           message:
-            type: ForumThreadMessageParams
+            type: ForumAndMediaThreadMessageParams
             documentation: Contents of the first message in the forum thread
 
           applied_tags:
@@ -883,7 +881,7 @@ innerTypes:
             documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel
     return: Channel
 
-  - name: ForumThreadMessageParams
+  - name: ForumAndMediaThreadMessageParams
     defType: Class
     allUndefined: true
     fields:
@@ -896,7 +894,7 @@ innerTypes:
 
         embeds:
           type: Seq[OutgoingEmbed]
-          documentation: Up to 10 rich embeds (up to 6000 characters)
+          documentation: Embedded rich content (up to 6000 characters)
           verification:
             max_length: 10
 
@@ -920,7 +918,7 @@ innerTypes:
 
         flags:
           type: Message.MessageFlags
-          documentation: Message flags combined as a bitfield (only SUPPRESS_EMBEDS and SUPPRESS_NOTIFICATIONS can be set)
+          documentation: Message flags combined as a bitfield (only SUPPRESS_EMBEDS can be set)
 
   - name: joinThread
     defType: Request

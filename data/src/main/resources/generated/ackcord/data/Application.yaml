@@ -8,57 +8,61 @@ fields:
   2.0.x:
     id:
       type: ApplicationId
-      documentation: The id of the app
+      documentation: ID of the app
 
     name:
       type: String
-      documentation: The name of the app
+      documentation: Name of the app
 
     icon:
       type: ImageHash
       withNull: true
-      documentation: The icon hash of the app
+      documentation: Icon hash of the app
 
     description:
       type: String
-      documentation: The description of the app
+      documentation: Description of the app
 
     rpc_origins:
       type: Seq[String]
       withUndefined: true
-      documentation: An array of rpc origin urls, if rpc is enabled
+      documentation: List of RPC origin URLs, if RPC is enabled
 
     bot_public:
       type: Boolean
-      documentation: When false only app owner can join the app's bot to guilds
+      documentation: When false only the app owner can add the app to guilds
 
     bot_require_code_grant:
       type: Boolean
-      documentation: When true the app's bot will only join upon completion of the full oauth2 code grant flow
+      documentation: When true the app's bot will only join upon completion of the full OAuth2 code grant flow
+
+    bot:
+      type: User.Partial
+      documentation: Partial user object for the bot user associated with the app
 
     terms_of_service_url:
       type: String
       withUndefined: true
-      documentation: The url of the app's terms of service
+      documentation: URL of the app's Terms of Service
 
     privacy_policy_url:
       type: String
       withUndefined: true
-      documentation: The url of the app's privacy policy
+      documentation: URL of the app's Privacy Policy
 
     owner:
       type: Application.ApplicationOwner
       withUndefined: true
-      documentation: Partial user object containing info on the owner of the application
+      documentation: Partial user object for the owner of the app
 
     verify_key:
       type: String
-      documentation: The hex encoded key for verification in interactions and the GameSDK's GetTicket
+      documentation: Hex encoded key for verification in interactions and the GameSDK's GetTicket
 
     team:
       type: Application.Team
       withNull: true
-      documentation: If the application belongs to a team, this will be a list of the members of that team
+      documentation: If the app belongs to a team, this will be a list of the members of that team
 
     guild_id:
       type: GuildId
@@ -68,54 +72,64 @@ fields:
     guild:
       type: Application.ApplicationGuild
       withUndefined: true
-      documentation: A partial object of the associated guild
+      documentation: Partial object of the associated guild
 
     primary_sku_id:
       type: RawSnowflake
       withUndefined: true
-      documentation: If this application is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists
+      documentation: If this app is a game sold on Discord, this field will be the id of the "Game SKU" that is created, if exists
 
     slug:
       type: String
       withUndefined: true
-      documentation: If this application is a game sold on Discord, this field will be the URL slug that links to the store page
+      documentation: If this app is a game sold on Discord, this field will be the URL slug that links to the store page
 
     cover_image:
       type: ImageHash
       withUndefined: true
-      documentation: The application's default rich presence invite cover image hash
+      documentation: App's default rich presence invite cover image hash
 
     flags:
       type: Application.Flags
       withUndefined: true
-      documentation: The application's public flags
+      documentation: App's public flags
 
     approximate_guild_count:
       type: Int
       withUndefined: true
-      documentation: An approximate count of the app's guild membership
+      documentation: Approximate count of guilds the app has been added to
+
+    redirect_uris:
+      type: Seq[String]
+      withUndefined: true
+      documentation: Array of redirect URIs for the app
+
+    interactions_endpoint_url:
+      type: String
+      withUndefined: true
+      documentation: Interactions endpoint URL for the app
+
+    role_connections_verification_url:
+      type: String
+      withUndefined: true
+      documentation: Role connection verification URL for the app
 
     tags:
       type: Seq[String]
       withUndefined: true
-      documentation: Up to 5 tags describing the content and functionality of the application
+      documentation: List of tags describing the content and functionality of the app. Max of 5 tags.
       verification:
         max_length: 5
 
     install_params:
       type: Application.InstallParams
       withUndefined: true
-      documentation: Settings for the application's default in-app authorization link, if enabled
+      documentation: Settings for the app's default in-app authorization link, if enabled
 
     custom_install_url:
       type: String
       withUndefined: true
-      documentation: The application's default custom authorization link, if enabled
-
-    role_connections_verification_url:
-      type: String
-      withUndefined: true
-      documentation: The application's role connection verification entry point, which when configured will render the app as a verification method in the guild role verification configuration
+      documentation: Default custom authorization URL for the app, if enabled
 
 innerTypes:
   - defType: Enum
@@ -144,9 +158,13 @@ innerTypes:
 
     fields:
       2.0.x:
-        scopes: Seq[String]
+        scopes:
+          type: Seq[String]
+          documentation: Scopes to add the application to the server with
 
-        permissions: Permissions
+        permissions:
+          type: Permissions
+          documentation: Permissions to request for the bot role
 
   - defType: Class
     name: ApplicationOwner
@@ -171,23 +189,23 @@ innerTypes:
       2.0.x:
         icon:
           type: ImageHash
-          documentation: A hash of the image of the team's icon
+          documentation: Hash of the image of the team's icon
 
         id:
           type: Snowflake[Team]
-          documentation: The unique id of the team
+          documentation: Unique ID of the team
 
         members:
           type: Seq[Team.TeamMember]
-          documentation: The members of the team
+          documentation: Members of the team
 
         name:
           type: String
-          documentation: The name of the team
+          documentation: Name of the team
 
         owner_user_id:
           type: UserId
-          documentation: The user id of the current team owner
+          documentation: User ID of the current team owner
 
     innerTypes:
       - name: TeamMember
@@ -196,19 +214,52 @@ innerTypes:
           2.0.x:
             membership_state:
               type: Team.TeamMembershipState
-              documentation: The user's membership state on the team
-
-            permissions:
-              type: Seq[String]
-              documentation: Will always be ["*"]
+              documentation: User's membership state on the team
 
             team_id:
               type: Snowflake[Team]
-              documentation: the id of the parent team of which they are a member
+              documentation: ID of the parent team of which they are a member
 
             user:
               type: Team.TeamUser
-              documentation: The avatar, discriminator, id, and username of the user
+              documentation: Avatar, discriminator, ID, and username of the user
+
+            role:
+              type: TeamMemberRole
+              documentation: Role of the team member
+
+      - name: TeamMemberRole
+        defType: Enum
+        type: String
+        values:
+          Owner:
+            value: owner
+            documentation: >-
+              Owners are the most permissiable role, and can take destructive, 
+              irreversible actions like deleting team-owned apps or the team itself. 
+              Teams are limited to 1 owner.
+
+          Admin:
+            value: admin
+            documentation: >-
+              Admins have similar access as owners, except they cannot take 
+              destructive actions on the team or team-owned apps.
+          
+          Developer:
+            value: developer
+            documentation: >-
+              Developers can access information about team-owned apps, like the 
+              client secret or public key. They can also take limited actions on 
+              team-owned apps, like configuring interaction endpoints or resetting 
+              the bot token. Members with the Developer role cannot manage the 
+              team or its members, or take destructive actions on team-owned apps.
+
+          ReadOnly:
+            value: read_only
+            documentation: >-
+              Read-only members can access information about a team and any 
+              team-owned apps. Some examples include getting the IDs of 
+              applications and exporting payout records.
 
       - name: TeamMembershipState
         defType: Enum

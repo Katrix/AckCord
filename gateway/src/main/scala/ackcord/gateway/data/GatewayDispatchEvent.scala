@@ -37,6 +37,9 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     case GatewayDispatchType.ThreadMemberUpdate                  => unknown.retype(ThreadMemberUpdate)
     case GatewayDispatchType.ThreadMembersUpdate                 => unknown.retype(ThreadMembersUpdate)
     case GatewayDispatchType.ChannelPinsUpdate                   => unknown.retype(ChannelPinsUpdate)
+    case GatewayDispatchType.EntitlementCreate                   => unknown.retype(EntitlementCreate)
+    case GatewayDispatchType.EntitlementUpdate                   => unknown.retype(EntitlementUpdate)
+    case GatewayDispatchType.EntitlementDelete                   => unknown.retype(EntitlementDelete)
     case GatewayDispatchType.GuildCreate                         => unknown.retype(GuildCreate)
     case GatewayDispatchType.GuildUpdate                         => unknown.retype(GuildUpdate)
     case GatewayDispatchType.GuildDelete                         => unknown.retype(GuildDelete)
@@ -503,7 +506,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
     * Sent when a channel is updated. The inner payload is a channel object.
     * This is not sent when the field last_message_id is altered. To keep track
     * of the last_message_id changes, you must listen for Message Create events
-    * (or Thread Create events for GUILD_FORUM channels).
+    * (or Thread Create events for GUILD_FORUM and GUILD_MEDIA channels).
     *
     * This event may reference roles or guild members that no longer exist in
     * the guild.
@@ -860,6 +863,79 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
         lastPinTimestamp: JsonOption[OffsetDateTime] = JsonUndefined(Some("last_pin_timestamp"))
     ): ChannelPinsUpdate =
       makeRawFromFields("guild_id" :=? guildId, "channel_id" := channelId, "last_pin_timestamp" :=? lastPinTimestamp)
+  }
+
+  /**
+    * Sent when an entitlement is created. The inner payload is an entitlement
+    * object.
+    */
+  class EntitlementCreate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
+
+    @inline def entitlement: Entitlement = Entitlement.makeRaw(json, extensionCache("entitlement"))
+
+    @inline def withEntitlement(newValue: Entitlement): EntitlementCreate =
+      objWithJson(EntitlementCreate, newValue.json, newValue.cacheCopy)
+
+    override def values: Seq[() => Any] = Seq(() => entitlement)
+  }
+  object EntitlementCreate extends DiscordObjectCompanion[EntitlementCreate] {
+    def makeRaw(json: Json, cache: Map[String, Any]): EntitlementCreate =
+      new EntitlementCreate(json, cache)
+
+    def make20(entitlement: Entitlement): EntitlementCreate = makeRawFromFields(
+      DiscordObjectFrom.FromExtension("entitlement", entitlement)
+    )
+  }
+
+  /**
+    * Sent when an entitlement is updated. The inner payload is an entitlement
+    * object. When an entitlement for a subscription is renewed, the ends_at
+    * field may have an updated value with the new expiration date.
+    */
+  class EntitlementUpdate(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
+
+    @inline def entitlement: Entitlement = Entitlement.makeRaw(json, extensionCache("entitlement"))
+
+    @inline def withEntitlement(newValue: Entitlement): EntitlementUpdate =
+      objWithJson(EntitlementUpdate, newValue.json, newValue.cacheCopy)
+
+    override def values: Seq[() => Any] = Seq(() => entitlement)
+  }
+  object EntitlementUpdate extends DiscordObjectCompanion[EntitlementUpdate] {
+    def makeRaw(json: Json, cache: Map[String, Any]): EntitlementUpdate =
+      new EntitlementUpdate(json, cache)
+
+    def make20(entitlement: Entitlement): EntitlementUpdate = makeRawFromFields(
+      DiscordObjectFrom.FromExtension("entitlement", entitlement)
+    )
+  }
+
+  /**
+    * Sent when an entitlement is deleted. The inner payload is an entitlement
+    * object. Entitlements are not deleted when they expire.
+    */
+  class EntitlementDelete(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache)
+      with GatewayDispatchEvent {
+
+    @inline def entitlement: Entitlement = Entitlement.makeRaw(json, extensionCache("entitlement"))
+
+    @inline def withEntitlement(newValue: Entitlement): EntitlementDelete =
+      objWithJson(EntitlementDelete, newValue.json, newValue.cacheCopy)
+
+    override def values: Seq[() => Any] = Seq(() => entitlement)
+  }
+  object EntitlementDelete extends DiscordObjectCompanion[EntitlementDelete] {
+    def makeRaw(json: Json, cache: Map[String, Any]): EntitlementDelete =
+      new EntitlementDelete(json, cache)
+
+    def make20(entitlement: Entitlement): EntitlementDelete = makeRawFromFields(
+      DiscordObjectFrom.FromExtension("entitlement", entitlement)
+    )
   }
 
   /**
@@ -2860,7 +2936,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
 
     @inline def withDetails(newValue: JsonOption[String]): Activity = objWithUndef(Activity, "details", newValue)
 
-    /** User's current party status */
+    /** User's current party status, or text used for a custom status */
     @inline def state: JsonOption[String] = selectDynamic[JsonOption[String]]("state")
 
     @inline def withState(newValue: JsonOption[String]): Activity = objWithUndef(Activity, "state", newValue)
@@ -2945,7 +3021,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       * @param details
       *   What the player is currently doing
       * @param state
-      *   User's current party status
+      *   User's current party status, or text used for a custom status
       * @param emoji
       *   Emoji used for a custom status
       * @param party
@@ -3010,7 +3086,7 @@ object GatewayDispatchEvent extends DiscordObjectCompanion[GatewayDispatchEvent]
       /** Watching {name} */
       val Watching: ActivityType = ActivityType(3)
 
-      /** {emoji} {name} */
+      /** {emoji} {state} */
       val Custom: ActivityType = ActivityType(4)
 
       /** Competing in {name} */

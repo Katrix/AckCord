@@ -21,7 +21,9 @@ object AckCordCodeGen {
 
     val packageLoc = relativeYamlPath.mkString(".")
     val extraImports =
-      automaticImports(typeDef).filter(s => if (s.endsWith("._")) s.substring(0, s.length - 2) != packageLoc else true)
+      automaticImports(typeDef)
+        .filter(s => if (s.endsWith("._")) s.substring(0, s.length - 2) != packageLoc else true)
+        .distinct
 
     GenAST.printFile(
       GenAST.ScalaFile(

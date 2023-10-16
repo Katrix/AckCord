@@ -355,25 +355,29 @@ innerTypes:
             withUndefined: true
             withNull: true
             documentation: Emoji to show in the add reaction button on a thread in a
-              GUILD_FORUM channel
+              GUILD_FORUM or a GUILD_MEDIA channel
 
           available_tags:
             type: Seq[Channel.ForumTag]
             withUndefined: true
             withNull: true
-            documentation: Set of tags that can be used in a GUILD_FORUM channel
+            documentation: Set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel
 
           default_sort_order:
             type: Channel.ForumSortOrder
             withUndefined: true
             withNull: true
-            documentation: The default sort order type used to order posts in GUILD_FORUM
+            documentation: The default sort order type used to order posts in GUILD_FORUM and GUILD_MEDIA
               channels
 
           default_forum_layout:
             type: Channel.ForumLayout
             documentation: The default forum layout view used to display posts in
-              GUILD_FORUM channels
+              GUILD_FORUM and GUILD_MEDIA channels
+
+          default_thread_rate_limit_per_user:
+            type: Int
+            documentation: The initial rate_limit_per_user to set on newly created threads in a channel. This field is copied to the thread at creation time and does not live update.
     return: GuildChannel
 
   - name: modifyGuildChannelPositions
@@ -958,7 +962,7 @@ innerTypes:
     documentation: >-
       Modify a guild widget settings object for the guild. All attributes may be
       passed in with JSON and modified. Requires the MANAGE_GUILD permission.
-      Returns the updated guild widget settings object.
+      Returns the updated guild widget settings object. Fires a Guild Update Gateway event.
     method: PATCH
     path: [ guilds, { argOf: GuildId }, widget ]
     body: GuildWidgetSettings
@@ -968,7 +972,7 @@ innerTypes:
   - name: getGuildWidget
     defType: Request
     documentation: >-
-      Returns the widget for the guild.
+      Returns the widget for the guild. Fires an Invite Create Gateway event when an invite channel is defined and a new Invite is generated.
     method: GET
     path: [ guilds, { argOf: GuildId }, widget.json ]
     return: GuildWidget

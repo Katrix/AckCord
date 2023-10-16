@@ -207,7 +207,7 @@ object UserRequests {
 
   /**
     * Returns a list of partial guild objects the current user is a member of.
-    * Requires the guilds OAuth2 scope.
+    * For OAuth2, requires the guilds scope.
     */
   def getCurrentUserGuilds(
       query: GetCurrentUserGuildsQuery = GetCurrentUserGuildsQuery.make20()
@@ -315,7 +315,7 @@ object UserRequests {
     * Returns a list of connection objects. Requires the connections OAuth2
     * scope.
     */
-  val getUserConnections: Request[Unit, Seq[Connection]] =
+  val getCurrentUserConnections: Request[Unit, Seq[Connection]] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "connections").toRequest(Method.GET)
     )
@@ -325,7 +325,7 @@ object UserRequests {
     * access token with role_connections.write scope for the application
     * specified in the path.
     */
-  def getUserApplicationRoleConnection(applicationId: ApplicationId): Request[Unit, ApplicationRoleConnection] =
+  def getCurrentUserApplicationRoleConnection(applicationId: ApplicationId): Request[Unit, ApplicationRoleConnection] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "applications" / Parameters[ApplicationId](
         "applicationId",
@@ -333,7 +333,7 @@ object UserRequests {
       ) / "role-connection").toRequest(Method.GET)
     )
 
-  class UpdateUserApplicationRoleConnectionBody(json: Json, cache: Map[String, Any] = Map.empty)
+  class UpdateCurrentUserApplicationRoleConnectionBody(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache) {
 
     /**
@@ -341,14 +341,14 @@ object UserRequests {
       */
     @inline def platformName: UndefOr[String] = selectDynamic[UndefOr[String]]("platform_name")
 
-    @inline def withPlatformName(newValue: UndefOr[String]): UpdateUserApplicationRoleConnectionBody =
-      objWithUndef(UpdateUserApplicationRoleConnectionBody, "platform_name", newValue)
+    @inline def withPlatformName(newValue: UndefOr[String]): UpdateCurrentUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateCurrentUserApplicationRoleConnectionBody, "platform_name", newValue)
 
     /** The username on the platform a bot has connected (max 100 characters) */
     @inline def platformUsername: UndefOr[String] = selectDynamic[UndefOr[String]]("platform_username")
 
-    @inline def withPlatformUsername(newValue: UndefOr[String]): UpdateUserApplicationRoleConnectionBody =
-      objWithUndef(UpdateUserApplicationRoleConnectionBody, "platform_username", newValue)
+    @inline def withPlatformUsername(newValue: UndefOr[String]): UpdateCurrentUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateCurrentUserApplicationRoleConnectionBody, "platform_username", newValue)
 
     /**
       * Object mapping application role connection metadata keys to their
@@ -357,15 +357,15 @@ object UserRequests {
       */
     @inline def metadata: UndefOr[Map[String, String]] = selectDynamic[UndefOr[Map[String, String]]]("metadata")
 
-    @inline def withMetadata(newValue: UndefOr[Map[String, String]]): UpdateUserApplicationRoleConnectionBody =
-      objWithUndef(UpdateUserApplicationRoleConnectionBody, "metadata", newValue)
+    @inline def withMetadata(newValue: UndefOr[Map[String, String]]): UpdateCurrentUserApplicationRoleConnectionBody =
+      objWithUndef(UpdateCurrentUserApplicationRoleConnectionBody, "metadata", newValue)
 
     override def values: Seq[() => Any] = Seq(() => platformName, () => platformUsername, () => metadata)
   }
-  object UpdateUserApplicationRoleConnectionBody
-      extends DiscordObjectCompanion[UpdateUserApplicationRoleConnectionBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): UpdateUserApplicationRoleConnectionBody =
-      new UpdateUserApplicationRoleConnectionBody(json, cache)
+  object UpdateCurrentUserApplicationRoleConnectionBody
+      extends DiscordObjectCompanion[UpdateCurrentUserApplicationRoleConnectionBody] {
+    def makeRaw(json: Json, cache: Map[String, Any]): UpdateCurrentUserApplicationRoleConnectionBody =
+      new UpdateCurrentUserApplicationRoleConnectionBody(json, cache)
 
     /**
       * @param platformName
@@ -382,7 +382,7 @@ object UserRequests {
         platformName: UndefOr[String] = UndefOrUndefined(Some("platform_name")),
         platformUsername: UndefOr[String] = UndefOrUndefined(Some("platform_username")),
         metadata: UndefOr[Map[String, String]] = UndefOrUndefined(Some("metadata"))
-    ): UpdateUserApplicationRoleConnectionBody = makeRawFromFields(
+    ): UpdateCurrentUserApplicationRoleConnectionBody = makeRawFromFields(
       "platform_name"     :=? platformName,
       "platform_username" :=? platformUsername,
       "metadata"          :=? metadata
@@ -394,10 +394,10 @@ object UserRequests {
     * an OAuth2 access token with role_connections.write scope for the
     * application specified in the path.
     */
-  def updateUserApplicationRoleConnection(
+  def updateCurrentUserApplicationRoleConnection(
       applicationId: ApplicationId,
-      body: UpdateUserApplicationRoleConnectionBody
-  ): Request[UpdateUserApplicationRoleConnectionBody, ApplicationRoleConnection] =
+      body: UpdateCurrentUserApplicationRoleConnectionBody
+  ): Request[UpdateCurrentUserApplicationRoleConnectionBody, ApplicationRoleConnection] =
     Request.restRequest(
       route = (Route.Empty / "users" / "@me" / "applications" / Parameters[ApplicationId](
         "applicationId",

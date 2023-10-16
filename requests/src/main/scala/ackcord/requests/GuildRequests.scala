@@ -680,8 +680,8 @@ object GuildRequests {
       objWithUndef(CreateGuildChannelBody, "default_auto_archive_duration", newValue)
 
     /**
-      * Emoji to show in the add reaction button on a thread in a GUILD_FORUM
-      * channel
+      * Emoji to show in the add reaction button on a thread in a GUILD_FORUM or
+      * a GUILD_MEDIA channel
       */
     @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
       selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
@@ -689,7 +689,9 @@ object GuildRequests {
     @inline def withDefaultReactionEmoji(newValue: JsonOption[Channel.DefaultReaction]): CreateGuildChannelBody =
       objWithUndef(CreateGuildChannelBody, "default_reaction_emoji", newValue)
 
-    /** Set of tags that can be used in a GUILD_FORUM channel */
+    /**
+      * Set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel
+      */
     @inline def availableTags: JsonOption[Seq[Channel.ForumTag]] =
       selectDynamic[JsonOption[Seq[Channel.ForumTag]]]("available_tags")
 
@@ -697,7 +699,8 @@ object GuildRequests {
       objWithUndef(CreateGuildChannelBody, "available_tags", newValue)
 
     /**
-      * The default sort order type used to order posts in GUILD_FORUM channels
+      * The default sort order type used to order posts in GUILD_FORUM and
+      * GUILD_MEDIA channels
       */
     @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
       selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
@@ -706,13 +709,23 @@ object GuildRequests {
       objWithUndef(CreateGuildChannelBody, "default_sort_order", newValue)
 
     /**
-      * The default forum layout view used to display posts in GUILD_FORUM
-      * channels
+      * The default forum layout view used to display posts in GUILD_FORUM and
+      * GUILD_MEDIA channels
       */
     @inline def defaultForumLayout: Channel.ForumLayout = selectDynamic[Channel.ForumLayout]("default_forum_layout")
 
     @inline def withDefaultForumLayout(newValue: Channel.ForumLayout): CreateGuildChannelBody =
       objWith(CreateGuildChannelBody, "default_forum_layout", newValue)
+
+    /**
+      * The initial rate_limit_per_user to set on newly created threads in a
+      * channel. This field is copied to the thread at creation time and does
+      * not live update.
+      */
+    @inline def defaultThreadRateLimitPerUser: Int = selectDynamic[Int]("default_thread_rate_limit_per_user")
+
+    @inline def withDefaultThreadRateLimitPerUser(newValue: Int): CreateGuildChannelBody =
+      objWith(CreateGuildChannelBody, "default_thread_rate_limit_per_user", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => name,
@@ -731,7 +744,8 @@ object GuildRequests {
       () => defaultReactionEmoji,
       () => availableTags,
       () => defaultSortOrder,
-      () => defaultForumLayout
+      () => defaultForumLayout,
+      () => defaultThreadRateLimitPerUser
     )
   }
   object CreateGuildChannelBody extends DiscordObjectCompanion[CreateGuildChannelBody] {
@@ -772,15 +786,19 @@ object GuildRequests {
       *   the thread after recent activity
       * @param defaultReactionEmoji
       *   Emoji to show in the add reaction button on a thread in a GUILD_FORUM
-      *   channel
+      *   or a GUILD_MEDIA channel
       * @param availableTags
-      *   Set of tags that can be used in a GUILD_FORUM channel
+      *   Set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel
       * @param defaultSortOrder
-      *   The default sort order type used to order posts in GUILD_FORUM
-      *   channels
+      *   The default sort order type used to order posts in GUILD_FORUM and
+      *   GUILD_MEDIA channels
       * @param defaultForumLayout
-      *   The default forum layout view used to display posts in GUILD_FORUM
-      *   channels
+      *   The default forum layout view used to display posts in GUILD_FORUM and
+      *   GUILD_MEDIA channels
+      * @param defaultThreadRateLimitPerUser
+      *   The initial rate_limit_per_user to set on newly created threads in a
+      *   channel. This field is copied to the thread at creation time and does
+      *   not live update.
       */
     def make20(
         name: String,
@@ -801,25 +819,27 @@ object GuildRequests {
         defaultReactionEmoji: JsonOption[Channel.DefaultReaction] = JsonUndefined(Some("default_reaction_emoji")),
         availableTags: JsonOption[Seq[Channel.ForumTag]] = JsonUndefined(Some("available_tags")),
         defaultSortOrder: JsonOption[Channel.ForumSortOrder] = JsonUndefined(Some("default_sort_order")),
-        defaultForumLayout: Channel.ForumLayout
+        defaultForumLayout: Channel.ForumLayout,
+        defaultThreadRateLimitPerUser: Int
     ): CreateGuildChannelBody = makeRawFromFields(
-      "name"                           := name,
-      "type"                          :=? tpe,
-      "topic"                         :=? topic,
-      "bitrate"                       :=? bitrate,
-      "user_limit"                    :=? userLimit,
-      "rate_limit_per_user"           :=? rateLimitPerUser,
-      "position"                      :=? position,
-      "permission_overwrites"         :=? permissionOverwrites,
-      "parent_id"                     :=? parentId,
-      "nsfw"                          :=? nsfw,
-      "rtc_region"                    :=? rtcRegion,
-      "video_quality_mode"            :=? videoQualityMode,
-      "default_auto_archive_duration" :=? defaultAutoArchiveDuration,
-      "default_reaction_emoji"        :=? defaultReactionEmoji,
-      "available_tags"                :=? availableTags,
-      "default_sort_order"            :=? defaultSortOrder,
-      "default_forum_layout"           := defaultForumLayout
+      "name"                               := name,
+      "type"                              :=? tpe,
+      "topic"                             :=? topic,
+      "bitrate"                           :=? bitrate,
+      "user_limit"                        :=? userLimit,
+      "rate_limit_per_user"               :=? rateLimitPerUser,
+      "position"                          :=? position,
+      "permission_overwrites"             :=? permissionOverwrites,
+      "parent_id"                         :=? parentId,
+      "nsfw"                              :=? nsfw,
+      "rtc_region"                        :=? rtcRegion,
+      "video_quality_mode"                :=? videoQualityMode,
+      "default_auto_archive_duration"     :=? defaultAutoArchiveDuration,
+      "default_reaction_emoji"            :=? defaultReactionEmoji,
+      "available_tags"                    :=? availableTags,
+      "default_sort_order"                :=? defaultSortOrder,
+      "default_forum_layout"               := defaultForumLayout,
+      "default_thread_rate_limit_per_user" := defaultThreadRateLimitPerUser
     )
   }
 
@@ -2056,7 +2076,8 @@ object GuildRequests {
   /**
     * Modify a guild widget settings object for the guild. All attributes may be
     * passed in with JSON and modified. Requires the MANAGE_GUILD permission.
-    * Returns the updated guild widget settings object.
+    * Returns the updated guild widget settings object. Fires a Guild Update
+    * Gateway event.
     */
   def modifyGuildWidget(
       guildId: GuildId,
@@ -2070,7 +2091,10 @@ object GuildRequests {
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
-  /** Returns the widget for the guild. */
+  /**
+    * Returns the widget for the guild. Fires an Invite Create Gateway event
+    * when an invite channel is defined and a new Invite is generated.
+    */
   def getGuildWidget(guildId: GuildId): Request[Unit, GuildWidget] =
     Request.restRequest(
       route = (Route.Empty / "guilds" / Parameters[GuildId]("guildId", guildId, major = true) / "widget.json")

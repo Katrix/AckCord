@@ -63,7 +63,10 @@ class Guild(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObje
 
   @inline def withOwnerId(newValue: UserId): Guild = objWith(Guild, "owner_id", newValue)
 
-  /** Total permissions for the user in the guild (excludes overwrites) */
+  /**
+    * Total permissions for the user in the guild (excludes overwrites and
+    * implicit permissions)
+    */
   @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
 
   @inline def withPermissions(newValue: UndefOr[Permissions]): Guild =
@@ -357,7 +360,8 @@ object Guild extends DiscordObjectCompanion[Guild] {
     * @param ownerId
     *   Id of owner
     * @param permissions
-    *   Total permissions for the user in the guild (excludes overwrites)
+    *   Total permissions for the user in the guild (excludes overwrites and
+    *   implicit permissions)
     * @param afkChannelId
     *   Id of afk channel
     * @param afkTimeout

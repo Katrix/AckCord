@@ -45,7 +45,7 @@ innerTypes:
           type: String
           withUndefined: true
           withNull: true
-          documentation: The channel topic (0-4096 characters for GUILD_FORUM channels, 0-1024 characters for all others)
+          documentation: The channel topic (0-4096 characters for GUILD_FORUM and GUILD_MEDIA channels, 0-1024 characters for all others)
           verification:
             max_length: 4096
 
@@ -58,7 +58,7 @@ innerTypes:
           type: MessageId
           withUndefined: true
           withNull: true
-          documentation: The id of the last message sent in this channel (or thread for GUILD_FORUM channels) (may not point to an existing or valid message or thread)
+          documentation: The id of the last message sent in this channel (or thread for GUILD_FORUM and GUILD_MEDIA channels) (may not point to an existing or valid message or thread)
 
         bitrate:
           type: Int
@@ -151,7 +151,7 @@ innerTypes:
         permissions:
           type: Permissions
           withUndefined: true
-          documentation: Computed permissions for the invoking user in the channel, including overwrites, only included when part of the resolved data received on a slash command interaction
+          documentation: Computed permissions for the invoking user in the channel, including overwrites, only included when part of the resolved data received on a slash command interaction. This does not include implicit permissions, which may need to be checked separately
 
         flags:
           type: Channel.ChannelFlags
@@ -166,18 +166,18 @@ innerTypes:
         available_tags:
           type: Seq[Channel.ForumTag]
           withUndefined: true
-          documentation: The set of tags that can be used in a GUILD_FORUM channel
+          documentation: The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel
 
         applied_tags:
           type: Seq[Snowflake[Channel.ForumTag]]
           withUndefined: true
-          documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM channel
+          documentation: The IDs of the set of tags that have been applied to a thread in a GUILD_FORUM or a GUILD_MEDIA channel
 
         default_reaction_emoji:
           type: Channel.DefaultReaction
           withUndefined: true
           withNull: true
-          documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM channel
+          documentation: The emoji to show in the add reaction button on a thread in a GUILD_FORUM or a GUILD_MEDIA channel
 
         default_thread_rate_limit_per_user:
           type: Int
@@ -188,7 +188,7 @@ innerTypes:
           type: Channel.ForumSortOrder
           withUndefined: true
           withNull: true
-          documentation: The default sort order type used to order posts in GUILD_FORUM channels. Defaults to null, which indicates a preferred sort order hasn't been set by a channel admin
+          documentation: The default sort order type used to order posts in GUILD_FORUM and GUILD_MEDIA channels. Defaults to null, which indicates a preferred sort order hasn't been set by a channel admin
 
         default_forum_layout:
           type: Channel.ForumLayout
@@ -562,6 +562,7 @@ innerTypes:
               case ChannelType.GUILD_STAGE_VOICE => StageChannel.makeRaw(json, cache)
               case ChannelType.GUILD_DIRECTORY => RawChannel.makeRaw(json, cache)
               case ChannelType.GUILD_FORUM => ForumChannel.makeRaw(json, cache)
+              case ChannelType.GUILD_MEDIA => ForumChannel.makeRaw(json, cache)
               case _ => RawChannel.makeRaw(json, cache)
             }
 
@@ -617,6 +618,10 @@ innerTypes:
             value: "15"
             documentation: Channel that can only contain threads
 
+          GUILD_MEDIA:
+            value: "16"
+            documentation: Channel that can only contain threads, similar to GUILD_FORUM channels
+
       - name: VideoQualityMode
         defType: Enum
         type: Int
@@ -641,6 +646,10 @@ innerTypes:
           REQUIRE_TAG:
             value: "1 << 4"
             documentation: Whether a tag is required to be specified when creating a thread in a GUILD_FORUM channel. Tags are specified in the applied_tags field.
+
+          HIDE_MEDIA_DOWNLOAD_OPTIONS:
+            value: "1 << 15"
+            documentation: When set hides the embedded media download options. Available only for media channels
 
       - name: ForumSortOrder
         defType: Enum
@@ -775,7 +784,7 @@ innerTypes:
 
       - name: ForumTag
         defType: Class
-        documentation: An object that represents a tag that is able to be applied to a thread in a GUILD_FORUM channel.
+        documentation: An object that represents a tag that is able to be applied to a thread in a GUILD_FORUM or GUILD_MEDIA channel.
         fields:
           2.0.x:
             id:
@@ -1154,15 +1163,40 @@ innerTypes:
       2.0.x:
         count:
           type: Int
-          documentation: Times this emoji has been used to react
+          documentation: Total number of times this emoji has been used to react (including super reacts)
+
+        count_details:
+          type: Reaction.CountDetails
+          documentation: Reaction count details
 
         me:
           type: Boolean
           documentation: Whether the current user reacted using this emoji
 
+        me_burst:
+          type: Boolean
+          documentation: Whether the current user super-reacted using this emoji
+
         emoji:
           type: Emoji
           documentation: Emoji information
+
+        burst_colors:
+          type: Seq[String]
+          documentation: HEX colors used for super reaction
+
+    innerTypes:
+      - name: CountDetails
+        defType: Class
+        fields:
+          2.0.x:
+            burst:
+              type: Int
+              documentation: Count of super reactions
+
+            normal:
+              type: Int
+              documentation: Count of normal reactions
 
   - name: Embed
     defType: Class

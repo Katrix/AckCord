@@ -216,18 +216,18 @@ object ApplicationCommand extends DiscordObjectCompanion[ApplicationCommand] {
     /**
       * Slash commands; a text-based command that shows up when a user types /
       */
-    val ChatInput: ApplicationCommandType = ApplicationCommandType("CHAT_INPUT")
+    val ChatInput: ApplicationCommandType = ApplicationCommandType("1")
 
     /**
       * A UI-based command that shows up when you right click or tap on a user
       */
-    val User: ApplicationCommandType = ApplicationCommandType("USER")
+    val User: ApplicationCommandType = ApplicationCommandType("2")
 
     /**
       * A UI-based command that shows up when you right click or tap on a
       * message
       */
-    val Message: ApplicationCommandType = ApplicationCommandType("MESSAGE")
+    val Message: ApplicationCommandType = ApplicationCommandType("3")
 
     def unknown(value: String): ApplicationCommandType = new ApplicationCommandType(value)
 

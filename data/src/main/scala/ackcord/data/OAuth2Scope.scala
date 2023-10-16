@@ -23,7 +23,7 @@ object OAuth2Scope                                    extends DiscordEnumCompani
     */
   val ActivitiesWrite: OAuth2Scope = OAuth2Scope("activities.write")
 
-  /** allows your app to read build data for a user's applications */
+  /** Allows your app to read build data for a user's applications */
   val ApplicationsBuildsRead: OAuth2Scope = OAuth2Scope("applications.builds.read")
 
   /**
@@ -32,7 +32,10 @@ object OAuth2Scope                                    extends DiscordEnumCompani
     */
   val ApplicationsBuildsUpload: OAuth2Scope = OAuth2Scope("applications.builds.upload")
 
-  /** Allows your app to use commands in a guild */
+  /**
+    * Allows your app to add commands to a guild - included by default with the
+    * bot scope
+    */
   val ApplicationsCommands: OAuth2Scope = OAuth2Scope("applications.commands")
 
   /**

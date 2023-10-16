@@ -35,6 +35,11 @@ innerTypes:
             type: Boolean
             withUndefined: true
             documentation: Notify @everyone that a Stage instance has started
+
+          guild_scheduled_event_id:
+            type: Snowflake[GuildScheduledEvent]
+            withUndefined: true
+            documentation: The guild scheduled event associated with this Stage instance
     return: StageInstance
 
   - name: getStageInstance

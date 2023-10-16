@@ -26,6 +26,11 @@ values:
   ThreadMembersUpdate: "THREAD_MEMBERS_UPDATE"
   ChannelPinsUpdate: "CHANNEL_PINS_UPDATE"
 
+  #Entitlements
+  EntitlementCreate: "ENTITLEMENT_CREATE"
+  EntitlementUpdate: "ENTITLEMENT_UPDATE"
+  EntitlementDelete: "ENTITLEMENT_DELETE"
+
   #Guilds
   GuildCreate: "GUILD_CREATE"
   GuildUpdate: "GUILD_UPDATE"

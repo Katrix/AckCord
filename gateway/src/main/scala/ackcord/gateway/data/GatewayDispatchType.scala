@@ -46,6 +46,12 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
 
   val ChannelPinsUpdate: GatewayDispatchType = GatewayDispatchType("CHANNEL_PINS_UPDATE")
 
+  val EntitlementCreate: GatewayDispatchType = GatewayDispatchType("ENTITLEMENT_CREATE")
+
+  val EntitlementUpdate: GatewayDispatchType = GatewayDispatchType("ENTITLEMENT_UPDATE")
+
+  val EntitlementDelete: GatewayDispatchType = GatewayDispatchType("ENTITLEMENT_DELETE")
+
   val GuildCreate: GatewayDispatchType = GatewayDispatchType("GUILD_CREATE")
 
   val GuildUpdate: GatewayDispatchType = GatewayDispatchType("GUILD_UPDATE")
@@ -154,6 +160,9 @@ object GatewayDispatchType extends DiscordEnumCompanion[String, GatewayDispatchT
     ThreadMemberUpdate,
     ThreadMembersUpdate,
     ChannelPinsUpdate,
+    EntitlementCreate,
+    EntitlementUpdate,
+    EntitlementDelete,
     GuildCreate,
     GuildUpdate,
     GuildDelete,

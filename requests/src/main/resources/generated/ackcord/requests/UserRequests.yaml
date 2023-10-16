@@ -47,7 +47,7 @@ innerTypes:
     defType: Request
     documentation: >-
       Returns a list of partial guild objects the current user is a member of.
-      Requires the guilds OAuth2 scope.
+      For OAuth2, requires the guilds scope.
     method: GET
     path: [ users, "@me", guilds ]
     query:
@@ -140,7 +140,7 @@ innerTypes:
             documentation: A dictionary of user ids to their respective nicknames
     return: GroupDMChannel
 
-  - name: getUserConnections
+  - name: getCurrentUserConnections
     defType: Request
     documentation: >-
       Returns a list of connection objects. Requires the connections OAuth2 scope.
@@ -148,7 +148,7 @@ innerTypes:
     path: [ users, "@me", connections ]
     return: Seq[Connection]
 
-  - name: getUserApplicationRoleConnection
+  - name: getCurrentUserApplicationRoleConnection
     defType: Request
     documentation: >-
       Returns the application role connection for the user. Requires an OAuth2
@@ -158,7 +158,7 @@ innerTypes:
     path: [ users, "@me", applications, { argOf: ApplicationId }, role-connection ]
     return: ApplicationRoleConnection
 
-  - name: updateUserApplicationRoleConnection
+  - name: updateCurrentUserApplicationRoleConnection
     defType: Request
     documentation: >-
       Updates and returns the application role connection for the user. Requires

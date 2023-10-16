@@ -187,7 +187,7 @@ innerTypes:
           
           The string select menu (type 3) is the only select type that allows (and requires) apps to define the options that appear in the dropdown list. The other 4 select menu components (users, roles, mentionables, and channels) are auto-populated with options corresponding to the resource type—similar to command option types.
           
-          In addition to the values array in all select menu interaction payloads, auto-populated select menu components (users, roles, mentionables, and channels) also include an additional resolved object that provides additional details about the user's selected resource.
+          In addition to the values array in all select menu interaction payloads, auto-populated select menu components (user, role, mentionable, and channel) also include an additional resolved object that provides additional details about the user's selected resource.
           
           The payloads for the select menu components are detailed in the select menu structure.
         fields:
@@ -220,6 +220,11 @@ innerTypes:
               documentation: Placeholder text if nothing is selected; max 150 characters
               verification:
                 max_length: 150
+
+            default_values:
+              type: Seq[SelectDefaultValue]
+              withUndefined: true
+              documentation: List of default values for auto-populated select menu components; number of default values must be in the range defined by min_values and max_values
 
             min_values:
               type: Int
@@ -269,11 +274,24 @@ innerTypes:
               withUndefined: true
               documentation: Will show this option as selected by default
 
+      - name: SelectDefaultValue
+        defType: Class
+        fields:
+          2.0.x:
+            id:
+              type: RawSnowflake
+              documentation: ID of a user, role, or channel
+
+            tpe:
+              jsonName: type
+              type: String
+              documentation: Type of value that id represents. Either "user", "role", or "channel"
+
       - name: TextInput
         defType: Class
         extends: [Component]
         documentation: |-
-          Text inputs are an interactive component that render on modals. They can be used to collect short-form or long-form text.
+          When defining a text input component, you can set attributes to customize the behavior and appearance of it. However, not all attributes will be returned in the text input interaction payload.
 
         fields:
           2.0.x:

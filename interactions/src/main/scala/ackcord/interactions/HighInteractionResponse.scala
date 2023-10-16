@@ -34,6 +34,11 @@ sealed trait HighInteractionResponse[F[_]] {
         InteractionResponse.InteractionCallbackType.MODAL,
         UndefOrSome(modal)
       )
+    case HighInteractionResponse.PremiumRequired() =>
+      InteractionResponse.make20(
+        InteractionResponse.InteractionCallbackType.PREMIUM_REQUIRED,
+        UndefOrUndefined()
+      )
   }
 }
 object HighInteractionResponse {
@@ -70,6 +75,8 @@ object HighInteractionResponse {
       modal: InteractionResponse.ModalData,
       andThenDo: F[A]
   ) extends HighInteractionResponse[F]
+
+  case class PremiumRequired[F[_]]() extends HighInteractionResponse[F]
 
   private[interactions] case class Autocomplete[F[_]](
       choices: Seq[data.ApplicationCommand.ApplicationCommandOption.ApplicationCommandOptionChoice]

@@ -19,26 +19,25 @@ object StickerRequests {
       route = (Route.Empty / "stickers" / Parameters[Snowflake[Sticker]]("stickerId", stickerId)).toRequest(Method.GET)
     )
 
-  class ListNitroStickerPacksResult(json: Json, cache: Map[String, Any] = Map.empty)
-      extends DiscordObject(json, cache) {
+  class ListStickerPacksResult(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
     @inline def stickerPacks: Seq[Sticker.StickerPack] = selectDynamic[Seq[Sticker.StickerPack]]("sticker_packs")
 
-    @inline def withStickerPacks(newValue: Seq[Sticker.StickerPack]): ListNitroStickerPacksResult =
-      objWith(ListNitroStickerPacksResult, "sticker_packs", newValue)
+    @inline def withStickerPacks(newValue: Seq[Sticker.StickerPack]): ListStickerPacksResult =
+      objWith(ListStickerPacksResult, "sticker_packs", newValue)
 
     override def values: Seq[() => Any] = Seq(() => stickerPacks)
   }
-  object ListNitroStickerPacksResult extends DiscordObjectCompanion[ListNitroStickerPacksResult] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ListNitroStickerPacksResult =
-      new ListNitroStickerPacksResult(json, cache)
+  object ListStickerPacksResult extends DiscordObjectCompanion[ListStickerPacksResult] {
+    def makeRaw(json: Json, cache: Map[String, Any]): ListStickerPacksResult =
+      new ListStickerPacksResult(json, cache)
 
-    def make20(stickerPacks: Seq[Sticker.StickerPack]): ListNitroStickerPacksResult =
+    def make20(stickerPacks: Seq[Sticker.StickerPack]): ListStickerPacksResult =
       makeRawFromFields("sticker_packs" := stickerPacks)
   }
 
-  /** Returns the list of sticker packs available to Nitro subscribers. */
-  val listNitroStickerPacks: Request[Unit, ListNitroStickerPacksResult] =
+  /** Returns a list of available sticker packs. */
+  val listStickerPacks: Request[Unit, ListStickerPacksResult] =
     Request.restRequest(
       route = (Route.Empty / "sticker-packs").toRequest(Method.GET)
     )

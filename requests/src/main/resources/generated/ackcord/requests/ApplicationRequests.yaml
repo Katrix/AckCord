@@ -8,3 +8,56 @@ innerTypes:
     method: GET
     path: [applications, '@me']
     return: Application
+
+  - name: editCurrentApplication
+    defType: Request
+    method: PATCH
+    path: [applications, '@me']
+    return: Application
+    body:
+      allUndefined: true
+      fields:
+        2.0.x:
+          custom_install_url:
+            type: String
+            documentation: Default custom authorization URL for the app, if enabled
+
+          description:
+            type: String
+            documentation: Description of the app
+
+          role_connections_verification_url:
+            type: String
+            documentation: Role connection verification URL for the app
+
+          install_params:
+            type: Application.InstallParams
+            documentation: Settings for the app's default in-app authorization link, if enabled
+
+          flags:
+            type: Application.Flags
+            documentation: >-
+              App's public flags
+              
+              Only limited intent flags (GATEWAY_PRESENCE_LIMITED, GATEWAY_GUILD_MEMBERS_LIMITED, and GATEWAY_MESSAGE_CONTENT_LIMITED) can be updated via the API.
+
+          icon:
+            type: ImageData
+            withNull: true
+            documentation: Icon for the app
+
+          cover_image:
+            type: ImageData
+            withNull: true
+            documentation: Default rich presence invite cover image for the app
+
+          interactions_endpoint_url :
+            type: String
+            documentation: >-
+              Interactions endpoint URL for the app
+              
+              To update an Interactions endpoint URL via the API, the URL must be valid according to the Receiving an Interaction documentation.
+
+          tags:
+            type: Seq[String]
+            documentation: List of tags describing the content and functionality of the app (max of 20 characters per tag). Max of 5 tags.

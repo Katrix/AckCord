@@ -145,6 +145,10 @@ innerTypes:
           type: String
           documentation: Type of overwritten entity - role ("0") or member ("1")
 
+        integration_type:
+          type: String
+          documentation: The type of integration which performed the action
+
   - name: AuditLogChange
     defType: Class
     fields:

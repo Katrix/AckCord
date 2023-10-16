@@ -1,0 +1,55 @@
+name: Entitlement
+defType: Class
+imports:
+  - java.time.OffsetDateTime
+fields:
+  2.0.x:
+    id:
+      type: Snowflake[Entitlement]
+      documentation: ID of the entitlement
+
+    sku_id:
+      type: RawSnowflake
+      documentation: ID of the SKU
+
+    user_id:
+      type: UserId
+      withUndefined: true
+      documentation: ID of the user that is granted access to the entitlement's sku
+
+    guild_id:
+      type: GuildId
+      withUndefined: true
+      documentation: ID of the guild that is granted access to the entitlement's sku
+
+    application_id:
+      type: ApplicationId
+      documentation: ID of the parent application
+
+    tpe:
+      jsonName: type
+      type: Entitlement.EntitlementType
+      documentation: Type of entitlement
+
+    consumed:
+      type: Boolean
+      documentation: Not applicable for App Subscriptions. Subscriptions are not consumed and will be false
+
+    starts_at:
+      type: OffsetDateTime
+      withUndefined: true
+      documentation: Start date at which the entitlement is valid. Not present when using test entitlements.
+
+    ends_at:
+      type: OffsetDateTime
+      withUndefined: true
+      documentation: Date at which the entitlement is no longer valid. Not present when using test entitlements.
+
+innerTypes:
+  - name: EntitlementType
+    defType: Enum
+    type: Int
+    values:
+      APPLICATION_SUBSCRIPTION:
+        value: "8"
+        documentation: Entitlement was purchased as an app subscription

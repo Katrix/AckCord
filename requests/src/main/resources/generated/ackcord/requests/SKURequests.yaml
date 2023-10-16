@@ -1,0 +1,12 @@
+name: SKURequests
+defType: ObjectOnly
+imports:
+  - ackcord.data._
+innerTypes:
+  - name: listSKUs
+    defType: Request
+    documentation: >-
+      Returns all SKUs for a given application. Because of how our SKU and subscription systems work, you will see two SKUs for your premium offering. For integration and testing entitlements, you should use the SKU with type: 5.
+    method: GET
+    path: [applications, {argOf: ApplicationId}, skus]
+    return: Seq[SKU]

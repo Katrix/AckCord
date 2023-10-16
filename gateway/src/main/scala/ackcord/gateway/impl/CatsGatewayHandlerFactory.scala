@@ -100,7 +100,7 @@ object CatsGatewayHandlerFactory {
       case None                                => log.warn("Received close without close code") *> reconnect(true)
     }
 
-    private def disconnect(reason: String, code: Int = 1000): F[Unit] =
+    private def disconnectAndReconnect(reason: String, code: Int): F[Unit] =
       ws.send(WebSocketFrame.Close(code, reason)) *> reconnect(true)
 
     private def receiveSingleEvent(supervisor: Supervisor[F], inflater: Inflate.PureInflater[F]): F[Unit] =
@@ -142,7 +142,7 @@ object CatsGatewayHandlerFactory {
                     case Left(_) =>
                       val reason =
                         s"Received ${GatewayDispatchType.Ready.value} with invalid resume_gateway_url or session_id"
-                      log.warn(reason) *> disconnect(reason, code = 4002)
+                      log.warn(reason) *> disconnectAndReconnect(reason, code = 4002)
                   }
                 case GatewayEvent.Reconnect(_)       => reconnect(true)
                 case GatewayEvent.InvalidSession(ev) => reconnect(ev.d)
@@ -159,15 +159,17 @@ object CatsGatewayHandlerFactory {
 
               Concurrent[F].uncancelable(p => p(actOnEvent) *> handleExternally)
             case Left(_) =>
-              disconnect("Received payload with invalid op field", code = 4002).widen
+              disconnectAndReconnect("Received payload with invalid op field", code = 4002).widen
           }
         case None => ().pure
       }
 
     private def checkHeartbeatAckReceived: F[Unit] = receivedHeartbeatAckRef.get.ifM(
       ifTrue = ().pure,
-      ifFalse =
-        log.warn("Did not receive HeartbeatACK. Reconnecting") *> disconnect("Did not receive HeartbeatACK", 4000)
+      ifFalse = log.warn("Did not receive HeartbeatACK. Reconnecting") *> disconnectAndReconnect(
+        "Did not receive HeartbeatACK",
+        4000
+      )
     )
 
     private def startHeartbeat(heartbeatInterval: FiniteDuration, supervisor: Supervisor[F]): F[Unit] = {

@@ -1,0 +1,57 @@
+name: SKU
+defType: Class
+documentation: SKUs (stock-keeping units) in Discord represent premium offerings that can be made available to your application's users or guilds.
+fields:
+  2.0.x:
+    id:
+      type: Snowflake[SKU]
+      documentation: ID of SKU
+
+    tpe:
+      jsonName: type
+      type: SKU.SKUType
+      documentation: Type of SKU
+
+    application_id:
+      type: ApplicationId
+      documentation: ID of the parent application
+
+    name:
+      type: String
+      documentation: Customer-facing name of your premium offering
+
+    slug:
+      type: String
+      documentation: System-generated URL slug based on the SKU's name
+
+    flags:
+      type: SKU.Flags
+      documentation: SKU flags combined as a bitfield
+
+innerTypes:
+  - name: SKUType
+    defType: Enum
+    documentation: >-
+      For subscriptions, SKUs will have a type of either SUBSCRIPTION represented by type: 5 or SUBSCRIPTION_GROUP represented by type:6. For any current implementations, you will want to use the SKU defined by type: 5. A SUBSCRIPTION_GROUP is automatically created for each SUBSCRIPTION SKU and are not used at this time.
+    type: Int
+    values:
+      SUBSCRIPTION:
+        value: "5"
+        documentation: Represents a recurring subscription
+
+      SUBSCRIPTION_GROUP:
+        value: "6"
+        documentation: System-generated group for each SUBSCRIPTION SKU created
+
+  - name: Flags
+    defType: Enum
+    type: Int
+    isBitfield: true
+    documentation: >-
+      For subscriptions, there are two types of access levels you can offer to users:
+
+      The flags field can be used to differentiate user and server subscriptions with a bitwise && operator.
+
+    values:
+      GUILD_SUBSCRIPTION: "1 << 7"
+      USER_SUBSCRIPTION: "1 << 8"

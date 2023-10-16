@@ -16,7 +16,7 @@ values:
 
   ApplicationsBuildsRead:
     value: applications.builds.read
-    documentation: allows your app to read build data for a user's applications
+    documentation: Allows your app to read build data for a user's applications
 
   ApplicationsBuildsUpload:
     value: applications.builds.upload
@@ -26,7 +26,7 @@ values:
 
   ApplicationsCommands:
     value: applications.commands
-    documentation: Allows your app to use commands in a guild
+    documentation: Allows your app to add commands to a guild - included by default with the bot scope
 
   ApplicationsCommandsUpdate:
     value: applications.commands.update

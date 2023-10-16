@@ -127,8 +127,8 @@ object ChannelRequests {
         objWithUndef(ModifyGuildChannelBody, "position", newValue)
 
       /**
-        * 0-1024 character channel topic (0-4096 characters for GUILD_FORUM
-        * channels)
+        * 0-1024 character channel topic (0-4096 characters for GUILD_FORUM and
+        * GUILD_MEDIA channels)
         */
       @inline def topic: JsonOption[String] = selectDynamic[JsonOption[String]]("topic")
 
@@ -206,7 +206,9 @@ object ChannelRequests {
 
       /**
         * Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1 <<
-        * 4) is supported.
+        * 4) is supported by GUILD_FORUM and GUILD_MEDIA channels.
+        * HIDE_MEDIA_DOWNLOAD_OPTIONS (1 << 15) is supported only by GUILD_MEDIA
+        * channels
         */
       @inline def flags: UndefOr[Channel.ChannelFlags] = selectDynamic[UndefOr[Channel.ChannelFlags]]("flags")
 
@@ -214,8 +216,8 @@ object ChannelRequests {
         objWithUndef(ModifyGuildChannelBody, "flags", newValue)
 
       /**
-        * The set of tags that can be used in a GUILD_FORUM channel; limited to
-        * 20
+        * The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA
+        * channel; limited to 20
         */
       @inline def availableTags: UndefOr[Seq[Channel.ForumTag]] =
         selectDynamic[UndefOr[Seq[Channel.ForumTag]]]("available_tags")
@@ -225,7 +227,7 @@ object ChannelRequests {
 
       /**
         * The emoji to show in the add reaction button on a thread in a
-        * GUILD_FORUM channel
+        * GUILD_FORUM or a GUILD_MEDIA channel
         */
       @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
         selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
@@ -245,8 +247,8 @@ object ChannelRequests {
         objWithUndef(ModifyGuildChannelBody, "default_thread_rate_limit_per_user", newValue)
 
       /**
-        * The default sort order type used to order posts in GUILD_FORUM
-        * channels
+        * The default sort order type used to order posts in GUILD_FORUM and
+        * GUILD_MEDIA channels
         */
       @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
         selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
@@ -300,7 +302,7 @@ object ChannelRequests {
         *   The position of the channel in the left-hand listing
         * @param topic
         *   0-1024 character channel topic (0-4096 characters for GUILD_FORUM
-        *   channels)
+        *   and GUILD_MEDIA channels)
         * @param nsfw
         *   Whether the channel is nsfw
         * @param rateLimitPerUser
@@ -326,20 +328,22 @@ object ChannelRequests {
         *   the thread after recent activity
         * @param flags
         *   Channel flags combined as a bitfield. Currently only REQUIRE_TAG (1
-        *   << 4) is supported.
+        *   << 4) is supported by GUILD_FORUM and GUILD_MEDIA channels.
+        *   HIDE_MEDIA_DOWNLOAD_OPTIONS (1 << 15) is supported only by
+        *   GUILD_MEDIA channels
         * @param availableTags
-        *   The set of tags that can be used in a GUILD_FORUM channel; limited
-        *   to 20
+        *   The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA
+        *   channel; limited to 20
         * @param defaultReactionEmoji
         *   The emoji to show in the add reaction button on a thread in a
-        *   GUILD_FORUM channel
+        *   GUILD_FORUM or a GUILD_MEDIA channel
         * @param defaultThreadRateLimitPerUser
         *   The initial rate_limit_per_user to set on newly created threads in a
         *   channel. This field is copied to the thread at creation time and
         *   does not live update
         * @param defaultSortOrder
-        *   The default sort order type used to order posts in GUILD_FORUM
-        *   channels
+        *   The default sort order type used to order posts in GUILD_FORUM and
+        *   GUILD_MEDIA channels
         * @param defaultForumLayout
         *   The default forum layout type used to display posts in GUILD_FORUM
         *   channels
@@ -499,7 +503,7 @@ object ChannelRequests {
 
       /**
         * Channel flags combined as a bitfield; PINNED can only be set for
-        * threads in forum channels
+        * threads in forum and media channels
         */
       @inline def flags: UndefOr[Channel.ChannelFlags] = selectDynamic[UndefOr[Channel.ChannelFlags]]("flags")
 
@@ -508,7 +512,7 @@ object ChannelRequests {
 
       /**
         * The IDs of the set of tags that have been applied to a thread in a
-        * GUILD_FORUM channel; limited to 5
+        * GUILD_FORUM or a GUILD_MEDIA channel; limited to 5
         */
       @inline def appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] =
         selectDynamic[UndefOr[Seq[Snowflake[Channel.ForumTag]]]]("applied_tags")
@@ -552,10 +556,10 @@ object ChannelRequests {
         *   manage_messages, manage_thread, or manage_channel, are unaffected
         * @param flags
         *   Channel flags combined as a bitfield; PINNED can only be set for
-        *   threads in forum channels
+        *   threads in forum and media channels
         * @param appliedTags
         *   The IDs of the set of tags that have been applied to a thread in a
-        *   GUILD_FORUM channel; limited to 5
+        *   GUILD_FORUM or a GUILD_MEDIA channel; limited to 5
         */
       def make20(
           name: UndefOr[String] = UndefOrUndefined(Some("name")),
@@ -1588,11 +1592,12 @@ object ChannelRequests {
     )
 
   /**
-    * Post a typing indicator for the specified channel. Generally bots should
-    * not implement this route. However, if a bot is responding to a command and
-    * expects the computation to take a few seconds, this endpoint may be called
-    * to let the user know that the bot is processing their message. Returns a
-    * 204 empty response on success. Fires a Typing Start Gateway event.
+    * Post a typing indicator for the specified channel, which expires after 10
+    * seconds. Returns a 204 empty response on success. Fires a Typing Start
+    * Gateway event. Generally bots should not use this route. However, if a bot
+    * is responding to a command and expects the computation to take a few
+    * seconds, this endpoint may be called to let the user know that the bot is
+    * processing their message.
     */
   def triggerTypingIndicator(channelId: ChannelId): Request[Unit, Unit] =
     Request.restRequest(
@@ -1763,9 +1768,9 @@ object ChannelRequests {
     *
     * When called on a GUILD_TEXT channel, creates a PUBLIC_THREAD. When called
     * on a GUILD_ANNOUNCEMENT channel, creates a ANNOUNCEMENT_THREAD. Does not
-    * work on a GUILD_FORUM channel. The id of the created thread will be the
-    * same as the id of the source message, and as such a message can only have
-    * a single thread created from it.
+    * work on a GUILD_FORUM or a GUILD_MEDIA channel. The id of the created
+    * thread will be the same as the id of the source message, and as such a
+    * message can only have a single thread created from it.
     */
   def startThreadfromMessage(
       channelId: ChannelId,
@@ -1881,14 +1886,14 @@ object ChannelRequests {
       extraHeaders = reason.fold(Map.empty[String, String])(r => Map("X-Audit-Log-Reason" -> r))
     )
 
-  class StartThreadInForumChannelBody(json: Json, cache: Map[String, Any] = Map.empty)
+  class StartThreadInForumOrMediaChannelBody(json: Json, cache: Map[String, Any] = Map.empty)
       extends DiscordObject(json, cache) {
 
     /** 1-100 character channel name */
     @inline def name: String = selectDynamic[String]("name")
 
-    @inline def withName(newValue: String): StartThreadInForumChannelBody =
-      objWith(StartThreadInForumChannelBody, "name", newValue)
+    @inline def withName(newValue: String): StartThreadInForumOrMediaChannelBody =
+      objWith(StartThreadInForumOrMediaChannelBody, "name", newValue)
 
     /**
       * Duration in minutes to automatically archive the thread after recent
@@ -1896,8 +1901,8 @@ object ChannelRequests {
       */
     @inline def autoArchiveDuration: UndefOr[Int] = selectDynamic[UndefOr[Int]]("auto_archive_duration")
 
-    @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): StartThreadInForumChannelBody =
-      objWithUndef(StartThreadInForumChannelBody, "auto_archive_duration", newValue)
+    @inline def withAutoArchiveDuration(newValue: UndefOr[Int]): StartThreadInForumOrMediaChannelBody =
+      objWithUndef(StartThreadInForumOrMediaChannelBody, "auto_archive_duration", newValue)
 
     /**
       * Amount of seconds a user has to wait before sending another message
@@ -1905,14 +1910,14 @@ object ChannelRequests {
       */
     @inline def rateLimitPerUser: JsonOption[Int] = selectDynamic[JsonOption[Int]]("rate_limit_per_user")
 
-    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): StartThreadInForumChannelBody =
-      objWithUndef(StartThreadInForumChannelBody, "rate_limit_per_user", newValue)
+    @inline def withRateLimitPerUser(newValue: JsonOption[Int]): StartThreadInForumOrMediaChannelBody =
+      objWithUndef(StartThreadInForumOrMediaChannelBody, "rate_limit_per_user", newValue)
 
     /** Contents of the first message in the forum thread */
-    @inline def message: ForumThreadMessageParams = selectDynamic[ForumThreadMessageParams]("message")
+    @inline def message: ForumAndMediaThreadMessageParams = selectDynamic[ForumAndMediaThreadMessageParams]("message")
 
-    @inline def withMessage(newValue: ForumThreadMessageParams): StartThreadInForumChannelBody =
-      objWith(StartThreadInForumChannelBody, "message", newValue)
+    @inline def withMessage(newValue: ForumAndMediaThreadMessageParams): StartThreadInForumOrMediaChannelBody =
+      objWith(StartThreadInForumOrMediaChannelBody, "message", newValue)
 
     /**
       * The IDs of the set of tags that have been applied to a thread in a
@@ -1921,15 +1926,15 @@ object ChannelRequests {
     @inline def appliedTags: Seq[Snowflake[Channel.ForumTag]] =
       selectDynamic[Seq[Snowflake[Channel.ForumTag]]]("applied_tags")
 
-    @inline def withAppliedTags(newValue: Seq[Snowflake[Channel.ForumTag]]): StartThreadInForumChannelBody =
-      objWith(StartThreadInForumChannelBody, "applied_tags", newValue)
+    @inline def withAppliedTags(newValue: Seq[Snowflake[Channel.ForumTag]]): StartThreadInForumOrMediaChannelBody =
+      objWith(StartThreadInForumOrMediaChannelBody, "applied_tags", newValue)
 
     override def values: Seq[() => Any] =
       Seq(() => name, () => autoArchiveDuration, () => rateLimitPerUser, () => message, () => appliedTags)
   }
-  object StartThreadInForumChannelBody extends DiscordObjectCompanion[StartThreadInForumChannelBody] {
-    def makeRaw(json: Json, cache: Map[String, Any]): StartThreadInForumChannelBody =
-      new StartThreadInForumChannelBody(json, cache)
+  object StartThreadInForumOrMediaChannelBody extends DiscordObjectCompanion[StartThreadInForumOrMediaChannelBody] {
+    def makeRaw(json: Json, cache: Map[String, Any]): StartThreadInForumOrMediaChannelBody =
+      new StartThreadInForumOrMediaChannelBody(json, cache)
 
     /**
       * @param name
@@ -1950,9 +1955,9 @@ object ChannelRequests {
         name: String,
         autoArchiveDuration: UndefOr[Int] = UndefOrUndefined(Some("auto_archive_duration")),
         rateLimitPerUser: JsonOption[Int] = JsonUndefined(Some("rate_limit_per_user")),
-        message: ForumThreadMessageParams,
+        message: ForumAndMediaThreadMessageParams,
         appliedTags: Seq[Snowflake[Channel.ForumTag]]
-    ): StartThreadInForumChannelBody = makeRawFromFields(
+    ): StartThreadInForumOrMediaChannelBody = makeRawFromFields(
       "name"                   := name,
       "auto_archive_duration" :=? autoArchiveDuration,
       "rate_limit_per_user"   :=? rateLimitPerUser,
@@ -1962,10 +1967,10 @@ object ChannelRequests {
   }
 
   /**
-    * Creates a new thread in a forum channel, and sends a message within the
-    * created thread. Returns a channel, with a nested message object, on
-    * success, and a 400 BAD REQUEST on invalid parameters. Fires a Thread
-    * Create and Message Create Gateway event.
+    * Creates a new thread in a forum or a media channel, and sends a message
+    * within the created thread. Returns a channel, with a nested message
+    * object, on success, and a 400 BAD REQUEST on invalid parameters. Fires a
+    * Thread Create and Message Create Gateway event.
     *
     *   - The type of the created thread is PUBLIC_THREAD.
     *   - See message formatting for more information on how to properly format
@@ -1982,12 +1987,12 @@ object ChannelRequests {
     *   - Note that when sending a message, you must provide a value for at
     *     least one of content, embeds, sticker_ids, components, or files[n].
     */
-  def startThreadInForumChannel[MPR](
+  def startThreadInForumOrMediaChannel[MPR](
       channelId: ChannelId,
-      body: StartThreadInForumChannelBody,
+      body: StartThreadInForumOrMediaChannelBody,
       reason: Option[String],
       parts: Seq[EncodeBody.Multipart[_, MPR]] = Nil
-  ): ComplexRequest[StartThreadInForumChannelBody, Channel, MPR, Any] =
+  ): ComplexRequest[StartThreadInForumOrMediaChannelBody, Channel, MPR, Any] =
     Request.complexRestRequest(
       route = (Route.Empty / "channels" / Parameters[ChannelId]("channelId", channelId, major = true) / "threads")
         .toRequest(Method.POST),
@@ -2001,54 +2006,54 @@ object ChannelRequests {
       )
     )
 
-  class ForumThreadMessageParams(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+  class ForumAndMediaThreadMessageParams(json: Json, cache: Map[String, Any] = Map.empty)
+      extends DiscordObject(json, cache) {
 
     /** Message contents (up to 2000 characters) */
     @inline def content: UndefOr[String] = selectDynamic[UndefOr[String]]("content")
 
-    @inline def withContent(newValue: UndefOr[String]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "content", newValue)
+    @inline def withContent(newValue: UndefOr[String]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "content", newValue)
 
-    /** Up to 10 rich embeds (up to 6000 characters) */
+    /** Embedded rich content (up to 6000 characters) */
     @inline def embeds: UndefOr[Seq[OutgoingEmbed]] = selectDynamic[UndefOr[Seq[OutgoingEmbed]]]("embeds")
 
-    @inline def withEmbeds(newValue: UndefOr[Seq[OutgoingEmbed]]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "embeds", newValue)
+    @inline def withEmbeds(newValue: UndefOr[Seq[OutgoingEmbed]]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "embeds", newValue)
 
     /** Allowed mentions for the message */
     @inline def allowedMentions: UndefOr[AllowedMentions] = selectDynamic[UndefOr[AllowedMentions]]("allowed_mentions")
 
-    @inline def withAllowedMentions(newValue: UndefOr[AllowedMentions]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "allowed_mentions", newValue)
+    @inline def withAllowedMentions(newValue: UndefOr[AllowedMentions]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "allowed_mentions", newValue)
 
     /** Components to include with the message */
     @inline def components: UndefOr[Seq[Component]] = selectDynamic[UndefOr[Seq[Component]]]("components")
 
-    @inline def withComponents(newValue: UndefOr[Seq[Component]]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "components", newValue)
+    @inline def withComponents(newValue: UndefOr[Seq[Component]]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "components", newValue)
 
     /** IDs of up to 3 stickers in the server to send in the message */
     @inline def stickerIds: UndefOr[Seq[Snowflake[Sticker]]] =
       selectDynamic[UndefOr[Seq[Snowflake[Sticker]]]]("sticker_ids")
 
-    @inline def withStickerIds(newValue: UndefOr[Seq[Snowflake[Sticker]]]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "sticker_ids", newValue)
+    @inline def withStickerIds(newValue: UndefOr[Seq[Snowflake[Sticker]]]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "sticker_ids", newValue)
 
     /** Attachment objects with filename and description. See Uploading Files */
     @inline def attachments: UndefOr[Seq[MessageCreateEditAttachment]] =
       selectDynamic[UndefOr[Seq[MessageCreateEditAttachment]]]("attachments")
 
-    @inline def withAttachments(newValue: UndefOr[Seq[MessageCreateEditAttachment]]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "attachments", newValue)
+    @inline def withAttachments(newValue: UndefOr[Seq[MessageCreateEditAttachment]]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "attachments", newValue)
 
     /**
-      * Message flags combined as a bitfield (only SUPPRESS_EMBEDS and
-      * SUPPRESS_NOTIFICATIONS can be set)
+      * Message flags combined as a bitfield (only SUPPRESS_EMBEDS can be set)
       */
     @inline def flags: UndefOr[Message.MessageFlags] = selectDynamic[UndefOr[Message.MessageFlags]]("flags")
 
-    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): ForumThreadMessageParams =
-      objWithUndef(ForumThreadMessageParams, "flags", newValue)
+    @inline def withFlags(newValue: UndefOr[Message.MessageFlags]): ForumAndMediaThreadMessageParams =
+      objWithUndef(ForumAndMediaThreadMessageParams, "flags", newValue)
 
     override def values: Seq[() => Any] = Seq(
       () => content,
@@ -2060,15 +2065,15 @@ object ChannelRequests {
       () => flags
     )
   }
-  object ForumThreadMessageParams extends DiscordObjectCompanion[ForumThreadMessageParams] {
-    def makeRaw(json: Json, cache: Map[String, Any]): ForumThreadMessageParams =
-      new ForumThreadMessageParams(json, cache)
+  object ForumAndMediaThreadMessageParams extends DiscordObjectCompanion[ForumAndMediaThreadMessageParams] {
+    def makeRaw(json: Json, cache: Map[String, Any]): ForumAndMediaThreadMessageParams =
+      new ForumAndMediaThreadMessageParams(json, cache)
 
     /**
       * @param content
       *   Message contents (up to 2000 characters)
       * @param embeds
-      *   Up to 10 rich embeds (up to 6000 characters)
+      *   Embedded rich content (up to 6000 characters)
       * @param allowedMentions
       *   Allowed mentions for the message
       * @param components
@@ -2078,8 +2083,7 @@ object ChannelRequests {
       * @param attachments
       *   Attachment objects with filename and description. See Uploading Files
       * @param flags
-      *   Message flags combined as a bitfield (only SUPPRESS_EMBEDS and
-      *   SUPPRESS_NOTIFICATIONS can be set)
+      *   Message flags combined as a bitfield (only SUPPRESS_EMBEDS can be set)
       */
     def make20(
         content: UndefOr[String] = UndefOrUndefined(Some("content")),
@@ -2089,7 +2093,7 @@ object ChannelRequests {
         stickerIds: UndefOr[Seq[Snowflake[Sticker]]] = UndefOrUndefined(Some("sticker_ids")),
         attachments: UndefOr[Seq[MessageCreateEditAttachment]] = UndefOrUndefined(Some("attachments")),
         flags: UndefOr[Message.MessageFlags] = UndefOrUndefined(Some("flags"))
-    ): ForumThreadMessageParams = makeRawFromFields(
+    ): ForumAndMediaThreadMessageParams = makeRawFromFields(
       "content"          :=? content,
       "embeds"           :=? embeds,
       "allowed_mentions" :=? allowedMentions,

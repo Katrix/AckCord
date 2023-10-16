@@ -53,7 +53,7 @@ innerTypes:
         permissions:
           type: Permissions
           withUndefined: true
-          documentation: Total permissions for the user in the guild (excludes overwrites)
+          documentation: Total permissions for the user in the guild (excludes overwrites and implicit permissions)
 
         afk_channel_id:
           type: VoiceGuildChannelId

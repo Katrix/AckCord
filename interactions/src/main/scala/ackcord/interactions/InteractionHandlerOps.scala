@@ -73,4 +73,6 @@ trait InteractionHandlerOps[F[_]] {
   def deletePreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): F[Unit] = requests.runRequest(
     InteractionRequests.deleteFollowupMessage(async.applicationId, async.interactionToken, messageId)
   )
+
+  def premiumRequired: HighInteractionResponse[F] = interactions.HighInteractionResponse.PremiumRequired()
 }

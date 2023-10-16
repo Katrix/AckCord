@@ -50,8 +50,8 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def withName(newValue: JsonOption[String]): RawChannel = objWithUndef(RawChannel, "name", newValue)
 
   /**
-    * The channel topic (0-4096 characters for GUILD_FORUM channels, 0-1024
-    * characters for all others)
+    * The channel topic (0-4096 characters for GUILD_FORUM and GUILD_MEDIA
+    * channels, 0-1024 characters for all others)
     */
   @inline def topic: JsonOption[String] = selectDynamic[JsonOption[String]]("topic")
 
@@ -64,7 +64,8 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
 
   /**
     * The id of the last message sent in this channel (or thread for GUILD_FORUM
-    * channels) (may not point to an existing or valid message or thread)
+    * and GUILD_MEDIA channels) (may not point to an existing or valid message
+    * or thread)
     */
   @inline def lastMessageId: JsonOption[MessageId] = selectDynamic[JsonOption[MessageId]]("last_message_id")
 
@@ -196,7 +197,8 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   /**
     * Computed permissions for the invoking user in the channel, including
     * overwrites, only included when part of the resolved data received on a
-    * slash command interaction
+    * slash command interaction. This does not include implicit permissions,
+    * which may need to be checked separately
     */
   @inline def permissions: UndefOr[Permissions] = selectDynamic[UndefOr[Permissions]]("permissions")
 
@@ -219,7 +221,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
   @inline def withTotalMessageSent(newValue: UndefOr[Int]): RawChannel =
     objWithUndef(RawChannel, "total_message_sent", newValue)
 
-  /** The set of tags that can be used in a GUILD_FORUM channel */
+  /**
+    * The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA channel
+    */
   @inline def availableTags: UndefOr[Seq[Channel.ForumTag]] =
     selectDynamic[UndefOr[Seq[Channel.ForumTag]]]("available_tags")
 
@@ -228,7 +232,7 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
 
   /**
     * The IDs of the set of tags that have been applied to a thread in a
-    * GUILD_FORUM channel
+    * GUILD_FORUM or a GUILD_MEDIA channel
     */
   @inline def appliedTags: UndefOr[Seq[Snowflake[Channel.ForumTag]]] =
     selectDynamic[UndefOr[Seq[Snowflake[Channel.ForumTag]]]]("applied_tags")
@@ -238,7 +242,7 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
 
   /**
     * The emoji to show in the add reaction button on a thread in a GUILD_FORUM
-    * channel
+    * or a GUILD_MEDIA channel
     */
   @inline def defaultReactionEmoji: JsonOption[Channel.DefaultReaction] =
     selectDynamic[JsonOption[Channel.DefaultReaction]]("default_reaction_emoji")
@@ -258,9 +262,9 @@ class RawChannel(json: Json, cache: Map[String, Any] = Map.empty) extends Discor
     objWithUndef(RawChannel, "default_thread_rate_limit_per_user", newValue)
 
   /**
-    * The default sort order type used to order posts in GUILD_FORUM channels.
-    * Defaults to null, which indicates a preferred sort order hasn't been set
-    * by a channel admin
+    * The default sort order type used to order posts in GUILD_FORUM and
+    * GUILD_MEDIA channels. Defaults to null, which indicates a preferred sort
+    * order hasn't been set by a channel admin
     */
   @inline def defaultSortOrder: JsonOption[Channel.ForumSortOrder] =
     selectDynamic[JsonOption[Channel.ForumSortOrder]]("default_sort_order")
@@ -335,14 +339,14 @@ object RawChannel extends DiscordObjectCompanion[RawChannel] {
     * @param name
     *   The name of the channel (1-100 characters)
     * @param topic
-    *   The channel topic (0-4096 characters for GUILD_FORUM channels, 0-1024
-    *   characters for all others)
+    *   The channel topic (0-4096 characters for GUILD_FORUM and GUILD_MEDIA
+    *   channels, 0-1024 characters for all others)
     * @param nsfw
     *   Whether the channel is nsfw
     * @param lastMessageId
     *   The id of the last message sent in this channel (or thread for
-    *   GUILD_FORUM channels) (may not point to an existing or valid message or
-    *   thread)
+    *   GUILD_FORUM and GUILD_MEDIA channels) (may not point to an existing or
+    *   valid message or thread)
     * @param bitrate
     *   The bitrate (in bits) of the voice channel
     * @param userLimit
@@ -390,7 +394,8 @@ object RawChannel extends DiscordObjectCompanion[RawChannel] {
     * @param permissions
     *   Computed permissions for the invoking user in the channel, including
     *   overwrites, only included when part of the resolved data received on a
-    *   slash command interaction
+    *   slash command interaction. This does not include implicit permissions,
+    *   which may need to be checked separately
     * @param flags
     *   Channel flags combined as a bitfield
     * @param totalMessageSent
@@ -398,21 +403,22 @@ object RawChannel extends DiscordObjectCompanion[RawChannel] {
     *   on message creation, but will not decrement the number when a message is
     *   deleted
     * @param availableTags
-    *   The set of tags that can be used in a GUILD_FORUM channel
+    *   The set of tags that can be used in a GUILD_FORUM or a GUILD_MEDIA
+    *   channel
     * @param appliedTags
     *   The IDs of the set of tags that have been applied to a thread in a
-    *   GUILD_FORUM channel
+    *   GUILD_FORUM or a GUILD_MEDIA channel
     * @param defaultReactionEmoji
     *   The emoji to show in the add reaction button on a thread in a
-    *   GUILD_FORUM channel
+    *   GUILD_FORUM or a GUILD_MEDIA channel
     * @param defaultThreadRateLimitPerUser
     *   The initial rate_limit_per_user to set on newly created threads in a
     *   channel. this field is copied to the thread at creation time and does
     *   not live update.
     * @param defaultSortOrder
-    *   The default sort order type used to order posts in GUILD_FORUM channels.
-    *   Defaults to null, which indicates a preferred sort order hasn't been set
-    *   by a channel admin
+    *   The default sort order type used to order posts in GUILD_FORUM and
+    *   GUILD_MEDIA channels. Defaults to null, which indicates a preferred sort
+    *   order hasn't been set by a channel admin
     * @param defaultForumLayout
     *   The default forum layout view used to display posts in GUILD_FORUM
     *   channels. Defaults to 0, which indicates a layout view has not been set
@@ -1259,6 +1265,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
       case ChannelType.GUILD_STAGE_VOICE   => StageChannel.makeRaw(json, cache)
       case ChannelType.GUILD_DIRECTORY     => RawChannel.makeRaw(json, cache)
       case ChannelType.GUILD_FORUM         => ForumChannel.makeRaw(json, cache)
+      case ChannelType.GUILD_MEDIA         => ForumChannel.makeRaw(json, cache)
       case _                               => RawChannel.makeRaw(json, cache)
     }
 
@@ -1307,6 +1314,11 @@ object Channel extends DiscordObjectCompanion[Channel] {
     /** Channel that can only contain threads */
     val GUILD_FORUM: ChannelType = ChannelType(15)
 
+    /**
+      * Channel that can only contain threads, similar to GUILD_FORUM channels
+      */
+    val GUILD_MEDIA: ChannelType = ChannelType(16)
+
     def unknown(value: Int): ChannelType = new ChannelType(value)
 
     val values: Seq[ChannelType] = Seq(
@@ -1321,7 +1333,8 @@ object Channel extends DiscordObjectCompanion[Channel] {
       PRIVATE_THREAD,
       GUILD_STAGE_VOICE,
       GUILD_DIRECTORY,
-      GUILD_FORUM
+      GUILD_FORUM,
+      GUILD_MEDIA
     )
   }
 
@@ -1351,9 +1364,15 @@ object Channel extends DiscordObjectCompanion[Channel] {
       */
     val REQUIRE_TAG: ChannelFlags = ChannelFlags(1 << 4)
 
+    /**
+      * When set hides the embedded media download options. Available only for
+      * media channels
+      */
+    val HIDE_MEDIA_DOWNLOAD_OPTIONS: ChannelFlags = ChannelFlags(1 << 15)
+
     def unknown(value: Int): ChannelFlags = new ChannelFlags(value)
 
-    val values: Seq[ChannelFlags] = Seq(PINNED, REQUIRE_TAG)
+    val values: Seq[ChannelFlags] = Seq(PINNED, REQUIRE_TAG, HIDE_MEDIA_DOWNLOAD_OPTIONS)
 
     implicit class ChannelFlagsBitFieldOps(private val here: ChannelFlags) extends AnyVal {
 
@@ -1667,7 +1686,7 @@ object Channel extends DiscordObjectCompanion[Channel] {
 
   /**
     * An object that represents a tag that is able to be applied to a thread in
-    * a GUILD_FORUM channel.
+    * a GUILD_FORUM or GUILD_MEDIA channel.
     */
   class ForumTag(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
@@ -2926,36 +2945,102 @@ object FollowedChannel extends DiscordObjectCompanion[FollowedChannel] {
 
 class Reaction(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
 
-  /** Times this emoji has been used to react */
+  /**
+    * Total number of times this emoji has been used to react (including super
+    * reacts)
+    */
   @inline def count: Int = selectDynamic[Int]("count")
 
   @inline def withCount(newValue: Int): Reaction = objWith(Reaction, "count", newValue)
+
+  /** Reaction count details */
+  @inline def countDetails: Reaction.CountDetails = selectDynamic[Reaction.CountDetails]("count_details")
+
+  @inline def withCountDetails(newValue: Reaction.CountDetails): Reaction =
+    objWith(Reaction, "count_details", newValue)
 
   /** Whether the current user reacted using this emoji */
   @inline def me: Boolean = selectDynamic[Boolean]("me")
 
   @inline def withMe(newValue: Boolean): Reaction = objWith(Reaction, "me", newValue)
 
+  /** Whether the current user super-reacted using this emoji */
+  @inline def meBurst: Boolean = selectDynamic[Boolean]("me_burst")
+
+  @inline def withMeBurst(newValue: Boolean): Reaction = objWith(Reaction, "me_burst", newValue)
+
   /** Emoji information */
   @inline def emoji: Emoji = selectDynamic[Emoji]("emoji")
 
   @inline def withEmoji(newValue: Emoji): Reaction = objWith(Reaction, "emoji", newValue)
 
-  override def values: Seq[() => Any] = Seq(() => count, () => me, () => emoji)
+  /** HEX colors used for super reaction */
+  @inline def burstColors: Seq[String] = selectDynamic[Seq[String]]("burst_colors")
+
+  @inline def withBurstColors(newValue: Seq[String]): Reaction = objWith(Reaction, "burst_colors", newValue)
+
+  override def values: Seq[() => Any] =
+    Seq(() => count, () => countDetails, () => me, () => meBurst, () => emoji, () => burstColors)
 }
 object Reaction extends DiscordObjectCompanion[Reaction] {
   def makeRaw(json: Json, cache: Map[String, Any]): Reaction = new Reaction(json, cache)
 
   /**
     * @param count
-    *   Times this emoji has been used to react
+    *   Total number of times this emoji has been used to react (including super
+    *   reacts)
+    * @param countDetails
+    *   Reaction count details
     * @param me
     *   Whether the current user reacted using this emoji
+    * @param meBurst
+    *   Whether the current user super-reacted using this emoji
     * @param emoji
     *   Emoji information
+    * @param burstColors
+    *   HEX colors used for super reaction
     */
-  def make20(count: Int, me: Boolean, emoji: Emoji): Reaction =
-    makeRawFromFields("count" := count, "me" := me, "emoji" := emoji)
+  def make20(
+      count: Int,
+      countDetails: Reaction.CountDetails,
+      me: Boolean,
+      meBurst: Boolean,
+      emoji: Emoji,
+      burstColors: Seq[String]
+  ): Reaction = makeRawFromFields(
+    "count"         := count,
+    "count_details" := countDetails,
+    "me"            := me,
+    "me_burst"      := meBurst,
+    "emoji"         := emoji,
+    "burst_colors"  := burstColors
+  )
+
+  class CountDetails(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {
+
+    /** Count of super reactions */
+    @inline def burst: Int = selectDynamic[Int]("burst")
+
+    @inline def withBurst(newValue: Int): CountDetails = objWith(CountDetails, "burst", newValue)
+
+    /** Count of normal reactions */
+    @inline def normal: Int = selectDynamic[Int]("normal")
+
+    @inline def withNormal(newValue: Int): CountDetails = objWith(CountDetails, "normal", newValue)
+
+    override def values: Seq[() => Any] = Seq(() => burst, () => normal)
+  }
+  object CountDetails extends DiscordObjectCompanion[CountDetails] {
+    def makeRaw(json: Json, cache: Map[String, Any]): CountDetails = new CountDetails(json, cache)
+
+    /**
+      * @param burst
+      *   Count of super reactions
+      * @param normal
+      *   Count of normal reactions
+      */
+    def make20(burst: Int, normal: Int): CountDetails = makeRawFromFields("burst" := burst, "normal" := normal)
+  }
 }
 
 class Embed(json: Json, cache: Map[String, Any] = Map.empty) extends DiscordObject(json, cache) {

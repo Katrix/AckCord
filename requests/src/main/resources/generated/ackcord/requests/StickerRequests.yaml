@@ -11,10 +11,10 @@ innerTypes:
     path: [ stickers, { name: stickerId, customArgType: "Snowflake[Sticker]" }]
     return: Sticker
 
-  - name: listNitroStickerPacks
+  - name: listStickerPacks
     defType: Request
     documentation: >-
-      Returns the list of sticker packs available to Nitro subscribers.
+      Returns a list of available sticker packs.
     method: GET
     path: [ sticker-packs ]
     return:

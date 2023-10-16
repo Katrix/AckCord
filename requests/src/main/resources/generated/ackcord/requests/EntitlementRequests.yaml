@@ -1,0 +1,75 @@
+name: EntitlementRequests
+defType: ObjectOnly
+imports:
+  - ackcord.data._
+innerTypes:
+  - name: listEntitlements
+    defType: Request
+    method: GET
+    path: [ applications, { argOf: ApplicationId }, entitlements ]
+    return: Seq[Entitlement]
+    documentation: Returns all entitlements for a given app, active and expired.
+    query:
+      allUndefined: true
+      fields:
+        2.0.x:
+          user_id:
+            type: UserId
+            documentation: User ID to look up entitlements for
+
+          sku_ids:
+            type: String
+            documentation: Comma-delimited set of snowflakes. Optional list of SKU IDs to check entitlements for
+
+          before:
+            type: RawSnowflake
+            documentation: Retrieve entitlements before this time
+
+          after:
+            type: RawSnowflake
+            documentation: Retrieve entitlements after this time
+
+          limit:
+            type: Int
+            documentation: Number of entitlements to return, 1-100, default 100
+
+          guild_id:
+            type: GuildId
+            documentation: Guild ID to look up entitlements for
+
+          exclude_ended:
+            type: Boolean
+            documentation: Whether entitlements should be omitted
+
+  - name: createTestEntitlement
+    defType: Request
+    method: POST
+    path: [ applications, { argOf: ApplicationId }, entitlements ]
+    return: Entitlement
+    documentation: >-
+      Creates a test entitlement to a given SKU for a given guild or user. Discord will act as though that user or guild has entitlement to your premium offering.
+      
+      This endpoint returns a partial entitlement object. It will not contain subscription_id, starts_at, or ends_at, as it's valid in perpetuity.
+      
+      After creating a test entitlement, you'll need to reload your Discord client. After doing so, you'll see that your server or user now has premium access.
+    body:
+      fields:
+        2.0.x:
+          sku_id:
+            type: Snowflake[SKU]
+            documentation: ID of the SKU to grant the entitlement to
+
+          owner_id:
+            type: RawSnowflake
+            documentation: ID of the guild or user to grant the entitlement to
+
+          owner_type:
+            type: Int
+            documentation: 1 for a guild subscription, 2 for a user subscription
+
+  - name: deleteTestEntitlement
+    defType: Request
+    method: DELETE
+    path: [ applications, { argOf: ApplicationId }, entitlements, { name: entitlementId, customArgType: "Snowflake[Entitlement]" } ]
+    documentation: Deletes a currently-active test entitlement. Discord will act as though that user or guild no longer has entitlement to your premium offering.
+
