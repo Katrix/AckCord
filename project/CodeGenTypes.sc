@@ -1,5 +1,6 @@
 import scala.collection.immutable.ListMap
 
+import $ivy.`io.circe::circe-core:0.14.1`
 import io.circe._
 
 object CodeGenTypes {

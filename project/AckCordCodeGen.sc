@@ -1,9 +1,14 @@
 import java.nio.file.{Files, Path}
 
-import scala.collection.JavaConverters.*
+import scala.jdk.CollectionConverters._
 
-import CodeGenTypes.*
-import io.circe.*
+import $file.CodeGenTypes
+import $file.GenAST
+import $ivy.`io.circe::circe-core:0.14.1`
+import $ivy.`io.circe::circe-yaml:0.14.1`
+import CodeGenTypes.CodeGenTypes._
+import GenAST.GenAST
+import io.circe._
 
 object AckCordCodeGen {
 
@@ -273,7 +278,7 @@ object AckCordCodeGen {
       members = objectOnlyDef.innerTypes.flatMap(codeFromTypeDef(_))
     )
 
-  def codeFromFreeform(freeformDef: CodeGenTypes.TypeDef.FreeformDef): GenAST.Definition =
+  def codeFromFreeform(freeformDef: TypeDef.FreeformDef): GenAST.Definition =
     GenAST.FreeformDefinition(freeformDef.documentation, freeformDef.content)
 
   def codeFromEnumTypeDef(enumTypeDef: TypeDef.EnumTypeDef): GenAST.Definition = {
