@@ -35,3 +35,18 @@ project/target
 #travis
 /travis-deploy-key
 /travis-deploy-key.pub
+
+#Make defns
+
+node_modules
+makeDefns/docsRepo
+makeDefns/debug
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

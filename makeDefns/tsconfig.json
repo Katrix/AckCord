@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/recommended",
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "noEmit": true,
+    "isolatedModules": true
+  }
+}

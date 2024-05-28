@@ -114,7 +114,7 @@
       ]
     },
     "anonymousClassTypeDefBase": {
-      "description": "A anonymous class type definition",
+      "description": "An anonymous class type definition",
       "type": "object",
       "properties": {
         "defType": true,
@@ -321,7 +321,7 @@
       "additionalProperties": false
     },
     "enumTypeDef": {
-      "description": "A enum type definition",
+      "description": "An enum type definition",
       "type": "object",
       "properties": {
         "defType": true,
@@ -400,13 +400,17 @@
       "additionalProperties": false
     },
     "opaqueTypeDef": {
-      "description": "A opaque type definition",
+      "description": "An opaque type definition",
       "type": "object",
       "properties": {
         "defType": true,
         "name": {
           "type": "string",
           "description": "Name of the type"
+        },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
         },
         "imports": {
           "type": "array",
@@ -415,12 +419,8 @@
             "type": "string"
           }
         },
-        "documentation": {
-          "type": "string",
-          "description": "A Scaladoc documentation string to add to the definition"
-        },
         "underlying": {
-          "type": "string",
+          "$ref": "#/definitions/scalaType",
           "description": "The underlying type of the opaque type"
         },
         "includeAlias": {
@@ -459,16 +459,16 @@
           "type": "string",
           "description": "Name of the request"
         },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
         "imports": {
           "type": "array",
           "description": "Imports to add to this file",
           "items": {
             "type": "string"
           }
-        },
-        "documentation": {
-          "type": "string",
-          "description": "A Scaladoc documentation string to add to the definition"
         },
         "path": {
           "type": "array",
@@ -520,7 +520,7 @@
                 "type": "object",
                 "properties": {
                   "customArgType": {
-                    "type": "string"
+                    "$ref": "#/definitions/scalaType"
                   },
                   "name": {
                     "type": "string",
@@ -729,16 +729,16 @@
             "language": "Scala"
           }
         },
+        "documentation": {
+          "type": "string",
+          "description": "A Scaladoc documentation string to add to the definition"
+        },
         "imports": {
           "type": "array",
           "description": "Imports to add to this file",
           "items": {
             "type": "string"
           }
-        },
-        "documentation": {
-          "type": "string",
-          "description": "A Scaladoc documentation string to add to the definition"
         }
       },
       "required": [
