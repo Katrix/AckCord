@@ -150,7 +150,7 @@ sealed trait SlashCommandOrGroup[F[_]] extends CreatedApplicationCommand[F] {
   override def commandType: ApplicationCommandType = ApplicationCommandType.ChatInput
 }
 
-case class SlashCommand[F[_], A] private (
+case class SlashCommand[F[_], A] private[interactions] (
     name: String,
     nameLocalizations: JsonOption[Map[String, String]],
     descriptionSome: String,
@@ -234,7 +234,7 @@ case class SlashCommand[F[_], A] private (
       }
 
 }
-case class SlashCommandGroup[F[_]] private (
+case class SlashCommandGroup[F[_]] private[interactions] (
     name: String,
     nameLocalizations: JsonOption[Map[String, String]],
     descriptionSome: String,
@@ -293,7 +293,7 @@ case class SlashCommandGroup[F[_]] private (
   }
 }
 
-case class UserCommand[F[_]] private (
+case class UserCommand[F[_]] private[interactions] (
     name: String,
     nameLocalizations: JsonOption[Map[String, String]],
     defaultMemberPermissions: Option[Permissions],
@@ -335,7 +335,7 @@ case class UserCommand[F[_]] private (
     )
 }
 
-case class MessageCommand[F[_]] private (
+case class MessageCommand[F[_]] private[interactions] (
     name: String,
     nameLocalizations: JsonOption[Map[String, String]],
     defaultMemberPermissions: Option[Permissions],

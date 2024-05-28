@@ -48,7 +48,7 @@ object ComplexRequest {
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty
   )(
-      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
+      implicit ev: OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = ComplexRequest(
     route,
     requestBody,
@@ -67,7 +67,7 @@ object ComplexRequest {
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty
   )(
-      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
+      implicit ev: OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] =
     complexBaseRestRequest(route, requestBody, parseResponse, extraHeaders)
 
@@ -79,7 +79,7 @@ object ComplexRequest {
       parseResponse: Option[ParseResponse[Response, R2]] = None,
       extraHeaders: Map[String, String] = Map.empty
   )(
-      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
+      implicit ev: OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, R2], Decoder[Response]]
   ): ComplexRequest[Params, Response, R1, R2] = complexBaseRestRequest(
     route,
     requestBody.getOrElse(
@@ -96,7 +96,7 @@ object ComplexRequest {
       parseResponse: Option[ParseResponse[Response, Any]] = None,
       extraHeaders: Map[String, String] = Map.empty
   )(
-      implicit ev: shapeless.OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
+      implicit ev: OrElse[ParseResponse[Unit, Any] =:= ParseResponse[Response, Any], Decoder[Response]]
   ): Request[Params, Response] = complexRestRequest(
     route,
     params,

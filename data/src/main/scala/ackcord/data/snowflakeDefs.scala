@@ -91,8 +91,8 @@ object Snowflake {
 
   def apply[A](content: String): Snowflake[A] = apply[A](JLong.parseUnsignedLong(content))
 
-  def apply[A](other: Snowflake[_]): Snowflake[A] =
-    other.asInstanceOf[Snowflake[A]]
+  def apply[A, B](other: Snowflake[A]): Snowflake[B] =
+    other.asInstanceOf[Snowflake[B]]
 
   /**
     * Creates a snowflake tag for the earliest moment in time. Use this for
@@ -138,5 +138,5 @@ object Snowflake {
 trait SnowflakeCompanion[Type] {
   def apply(content: String): Snowflake[Type]     = JLong.parseUnsignedLong(content).asInstanceOf[Snowflake[Type]]
   def apply(long: Long): Snowflake[Type]          = long.asInstanceOf[Snowflake[Type]]
-  def apply(other: Snowflake[_]): Snowflake[Type] = other.asInstanceOf[Snowflake[Type]]
+  def apply[A](other: Snowflake[A]): Snowflake[Type] = other.asInstanceOf[Snowflake[Type]]
 }

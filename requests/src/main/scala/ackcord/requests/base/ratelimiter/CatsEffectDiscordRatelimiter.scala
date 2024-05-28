@@ -17,15 +17,19 @@ import cats.{Monad, Order}
 import sttp.monad.{MonadError => SttpMonadError}
 
 //noinspection MutatorLikeMethodIsParameterless
-class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError](logRateLimitEvents: Boolean = false)(
-    protected val globalRatelimitQueue: CatsPQueue[F],
+class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError] private (logRateLimitEvents: Boolean = false)(
+    catsGlobalRatelimitQueue: CatsPQueue[F],
     routeRateLimitQueues: RouteMap[F, CatsPQueue[F]],
-    protected val globalTokenBucket: CatsTokenBucket[F],
+    catsGlobalTokenBucket: CatsTokenBucket[F],
     routeTokenBuckets: RouteMap[F, CatsTokenBucket[F]],
     routeLimitsNoParams: MapRef[F, String, Option[Int]],
     uriToBucket: MapRef[F, String, Option[Bucket]],
     supervisor: Supervisor[F]
 ) extends BaseDiscordRatelimiter[F](logRateLimitEvents) {
+
+  override protected def globalRatelimitQueue: PQueue[F] = catsGlobalRatelimitQueue
+
+  override protected def globalTokenBucket: TokenBucket[F] = catsGlobalTokenBucket
 
   override protected def routeRatelimitQueue(route: RequestRoute): F[PQueue[F]] =
     routeRateLimitQueues.getOrMake(route, CatsPQueue[F]).widen
@@ -84,13 +88,13 @@ class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError](logRateLimitEven
       _ <- routeTokenBuckets.updateBucket(route, bucket)
     } yield ()
 
-  override protected def globalRatelimitRetry: F[Long] = globalTokenBucket.retryAt
+  override protected def globalRatelimitRetry: F[Long] = catsGlobalTokenBucket.retryAt
 
   override protected def routeRatelimitReset(route: RequestRoute): F[Long] =
     routeTokenBuckets.get(route).flatMap(_.flatTraverse(_.resetAt)).map(_.getOrElse(-1))
 
   override protected def onGlobalRatelimit(retryAt: Long): F[Unit] =
-    globalTokenBucket.setResetRetryAt(-1, retryAt)
+    catsGlobalTokenBucket.setResetRetryAt(-1, retryAt)
 
   private def releaseWaitingRequests(bucket: CatsTokenBucket[F], queue: CatsPQueue[F]): F[Unit] =
     acquireTokenLockstep(bucket).use { case (hasTokens, acquire) =>
@@ -113,7 +117,7 @@ class CatsEffectDiscordRatelimiter[F[_]: Async: SttpMonadError](logRateLimitEven
     } yield ()
 
   protected def start: F[Unit] = {
-    def checkOnGlobalQueue: F[Unit] = releaseWaitingRequests(globalTokenBucket, globalRatelimitQueue)
+    def checkOnGlobalQueue: F[Unit] = releaseWaitingRequests(catsGlobalTokenBucket, catsGlobalRatelimitQueue)
 
     def checkOnRouteQueues: F[Unit] =
       for {
@@ -229,7 +233,7 @@ object CatsEffectDiscordRatelimiter {
     implicit def order[F[_]]: Order[QueueElement[F]] = Order.reverse(Order.by(_.time))
   }
 
-  class CatsPQueue[F[_]: Concurrent](underlying: cats.effect.std.PQueue[F, QueueElement[F]])
+  private class CatsPQueue[F[_]: Concurrent](underlying: cats.effect.std.PQueue[F, QueueElement[F]])
       extends BaseDiscordRatelimiter.PQueue[F] {
     override def size: F[Int] = underlying.size
 

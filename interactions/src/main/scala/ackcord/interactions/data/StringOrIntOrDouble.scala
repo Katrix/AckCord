@@ -11,9 +11,9 @@ object StringOrIntOrDouble {
   implicit val codec: Codec[StringOrIntOrDouble] = Codec.from(
     (c: HCursor) =>
       c.as[String]
-        .map(OfString)
-        .orElse(c.as[Int].map(OfInt))
-        .orElse(c.as[Double].map(OfDouble)),
+        .map(OfString.apply)
+        .orElse(c.as[Int].map(OfInt.apply))
+        .orElse(c.as[Double].map(OfDouble.apply)),
     {
       case OfString(s) => Json.fromString(s)
       case OfInt(i)    => Json.fromInt(i)

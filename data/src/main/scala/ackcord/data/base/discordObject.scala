@@ -22,8 +22,8 @@ class DiscordObject(val json: Json, startCache: Map[String, Any]) {
   def objWithUndef[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: UndefOr[V])(
       implicit encoder: Encoder[V]
   ): A = obj match {
-    case UndefOrSome(value)     => objWith(companion, name, value)
-    case UndefOrUndefined(_, _) => objWithout(companion, name)
+    case UndefOrSome(value)     => objWith[A, V](companion, name, value)
+    case UndefOrUndefined(_, _) => objWithout[A](companion, name)
   }
 
   def objWithUndef[A <: DiscordObject, V](companion: DiscordObjectCompanion[A], name: String, obj: JsonOption[V])(

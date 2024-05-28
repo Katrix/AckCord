@@ -145,5 +145,7 @@ trait GatewayProcessHandler[F[_]] extends GatewayProcessComponent[F] {
   override def valueFromReturn[A](ret: Unit): Option[A] = None
 }
 object GatewayProcessHandler {
-  abstract class Base[F[_]](val name: String)(implicit val F: Monad[F]) extends GatewayProcessHandler[F]
+  abstract class Base[F[_]](name0: String)(implicit val F: Monad[F]) extends GatewayProcessHandler[F] {
+    val name: String = name0
+  }
 }

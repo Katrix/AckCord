@@ -343,7 +343,7 @@ sealed trait ParamList[A] {
   def ~[B, G[_]](param: Param[_, B, G]): ParamList[A ~ G[B]] = ParamList.ParamListBranch(this, param)
 
   /** Map all the parameters in this parameter list. */
-  def map[B](f: Param[_, _, Any] => B): List[B] = foldRight(Nil: List[B])(f(_) :: _)
+  def map[B](f: Param[_, _, ParamList.AnyK] => B): List[B] = foldRight(Nil: List[B])(f(_) :: _)
 
   protected def constructParam[Orig, A1, F[_]](
       param: Param[Orig, A1, F],
@@ -393,11 +393,11 @@ sealed trait ParamList[A] {
   ): Seq[ApplicationCommandOptionChoice]
 
   /** Fold this parameter list. */
-  def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
+  def foldRight[B](start: B)(f: (Param[_, _, ParamList.AnyK], B) => B): B = {
     @tailrec
     def inner(list: ParamList[_], b: B): B = list match {
-      case startParam: ParamList.ParamListStart[_, _, Any @unchecked] => f(startParam.leaf, b)
-      case branchParam: ParamList.ParamListBranch[_, _, Any @unchecked] =>
+      case startParam: ParamList.ParamListStart[_, _, ParamList.AnyK] => f(startParam.leaf, b)
+      case branchParam: ParamList.ParamListBranch[_, _, ParamList.AnyK] =>
         inner(branchParam.left, f(branchParam.right, b))
     }
 
@@ -405,6 +405,8 @@ sealed trait ParamList[A] {
   }
 }
 object ParamList {
+  type AnyK[_] = Any
+
   implicit def paramToParamList[A, F[_]](param: Param[_, A, F]): ParamList[F[A]] = ParamListStart(param)
 
   case class ParamListStart[Orig, A, F[_]](leaf: Param[Orig, A, F]) extends ParamList[F[A]] {

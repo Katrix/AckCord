@@ -10,8 +10,8 @@ object IntOrDouble {
   implicit val codec: Codec[IntOrDouble] = Codec.from(
     (c: HCursor) =>
       c.as[Int]
-        .map(OfInt)
-        .orElse(c.as[Double].map(OfDouble)),
+        .map(OfInt.apply)
+        .orElse(c.as[Double].map(OfDouble.apply)),
     {
       case OfInt(i)    => Json.fromInt(i)
       case OfDouble(d) => Json.fromDoubleOrString(d)

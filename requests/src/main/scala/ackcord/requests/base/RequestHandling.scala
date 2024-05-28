@@ -131,7 +131,7 @@ object RequestHandling {
       .ratelimitRequest(request.route, request, request.identifier)
       .flatMap[RequestAnswer[Response]] {
         case Right(req) =>
-          runRequestWithoutRatelimits(req, backend, settings).flatTap(settings.ratelimiter.reportRatelimits)
+          runRequestWithoutRatelimits[Response, R, R1, F](req, backend, settings).flatTap(settings.ratelimiter.reportRatelimits)
         case Left(dropped) => backend.responseMonad.unit(dropped)
       }
   }

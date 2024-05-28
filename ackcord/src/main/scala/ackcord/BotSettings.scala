@@ -91,7 +91,7 @@ object BotSettings {
           val f2 = f(context)
 
           if (f2.isDefinedAt(event)) f2(event)
-          else F.pure(context)
+          else this.F.pure(context)
         }
       })
 
@@ -101,7 +101,7 @@ object BotSettings {
       install(new GatewayProcessHandler.Base[F]("AnonymousEventListener") with DispatchEventProcess[F] {
         override def onDispatchEvent(event: GatewayDispatchEvent, context: Context): F[Unit] =
           if (f.isDefinedAt(event)) f(event)
-          else F.unit
+          else this.F.unit
       })
 
     def assembledProcessor: GatewayProcess[F] = {

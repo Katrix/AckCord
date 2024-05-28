@@ -5,16 +5,32 @@ lazy val circeVersion = "0.14.2"
 lazy val generateData = taskKey[Unit]("Generate AckCord data classes")
 
 lazy val commonSettings = Seq(
-  scalaVersion       := "2.13.8",
-  crossScalaVersions := Seq(scalaVersion.value),
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-feature",
-    "-unchecked",
-    "-Xlint",
-    "-Ywarn-dead-code"
-  ),
-  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+  scalaVersion       := "2.13.14",
+  crossScalaVersions := Seq(scalaVersion.value, "3.3.2"),
+  scalacOptions ++= {
+    if (scalaVersion.value.startsWith("2"))
+      Seq(
+        "-deprecation",
+        "-feature",
+        "-unchecked",
+        "-Xlint",
+        "-Wdead-code"
+      )
+    else
+      Seq(
+        "-deprecation",
+        "-feature",
+        "-unchecked",
+        "-Wunused:all",
+        //"-Xlint",
+        "-Ykind-projector"
+      )
+  },
+  libraryDependencies ++= {
+    if (scalaVersion.value.startsWith("2"))
+      Seq(compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full))
+    else Nil
+  },
   generateData := {
     val sourceDir    = (Compile / sourceDirectory).value.getParentFile.getParentFile.getParentFile / "src" / "main"
     val scalaDir     = sourceDir / "scala"
@@ -57,8 +73,7 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     publishSettings,
-    name                                  := "data",
-    libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.8",
+    name := "data",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core"   % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion

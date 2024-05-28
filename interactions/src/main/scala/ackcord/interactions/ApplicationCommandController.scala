@@ -96,8 +96,8 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
       nameLocalizations,
       description,
       descriptionLocalizations,
-      minValue.map(IntOrDouble.OfInt),
-      maxValue.map(IntOrDouble.OfInt),
+      minValue.map(IntOrDouble.OfInt.apply),
+      maxValue.map(IntOrDouble.OfInt.apply),
       None,
       None,
       (name, nameLocalizations, i) =>
@@ -334,8 +334,8 @@ trait ApplicationCommandController[F[_]] extends InteractionHandlerOps[F] with I
     nameLocalizations,
     description,
     descriptionLocalizations,
-    minValue.map(IntOrDouble.OfDouble),
-    maxValue.map(IntOrDouble.OfDouble),
+    minValue.map(IntOrDouble.OfDouble.apply),
+    maxValue.map(IntOrDouble.OfDouble.apply),
     None,
     None,
     (name, nameLocalizations, num) =>

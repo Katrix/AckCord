@@ -37,7 +37,7 @@ class Requests[F[_], +R](
   def runRequestWithoutRatelimits[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1]
   )(implicit @unused iKnowWhatImDoing: Requests.IWantToMakeRequestsWithoutRatelimits): F[RequestAnswer[Response]] =
-    addExtraProcessing(request, RequestHandling.runRequestWithoutRatelimits(request, backend, settings))
+    addExtraProcessing(request, RequestHandling.runRequestWithoutRatelimits[Response, R, R1, F](request, backend, settings))
 
   /**
     * Run a normal request, returning the [[RequestAnswer]]. If it fails, it
@@ -46,7 +46,7 @@ class Requests[F[_], +R](
   def runRequestToAnswer[Response, R1 >: R with Effect[F]](
       request: AckCordRequest[Response, R1]
   ): F[RequestAnswer[Response]] =
-    addExtraProcessing(request, RequestHandling.runRequest(request, backend, settings))
+    addExtraProcessing(request, RequestHandling.runRequest[Response, R, R1, F](request, backend, settings))
 
   /**
     * Run a normal request, returning the response type. If it fails, it will
@@ -66,7 +66,7 @@ class Requests[F[_], +R](
   ): F[RequestAnswer[Response]] =
     addExtraProcessing(
       request,
-      RequestHandling.runRequestWithRetry(RequestHandling.runRequest(request, backend, settings), settings)(
+      RequestHandling.runRequestWithRetry(RequestHandling.runRequest[Response, R, R1, F](request, backend, settings), settings)(
         backend.responseMonad
       )
     )

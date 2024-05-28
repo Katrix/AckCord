@@ -12,10 +12,10 @@ object StringOrIntOrDoubleOrBoolean {
   implicit val codec: Codec[StringOrIntOrDoubleOrBoolean] = Codec.from(
     (c: HCursor) =>
       c.as[String]
-        .map(OfString)
-        .orElse(c.as[Int].map(OfInt))
-        .orElse(c.as[Double].map(OfDouble))
-        .orElse(c.as[Boolean].map(OfBoolean)),
+        .map(OfString.apply)
+        .orElse(c.as[Int].map(OfInt.apply))
+        .orElse(c.as[Double].map(OfDouble.apply))
+        .orElse(c.as[Boolean].map(OfBoolean.apply)),
     {
       case OfString(s)  => Json.fromString(s)
       case OfInt(i)     => Json.fromInt(i)

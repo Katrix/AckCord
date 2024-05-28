@@ -8,7 +8,7 @@ object IntOrString {
   case class AsInt(i: Int)       extends IntOrString
 
   implicit val codec: Codec[IntOrString] = Codec.from(
-    Decoder[Int].map(AsInt).or(Decoder[String].map(AsString)),
+    Decoder[Int].map(AsInt.apply).or(Decoder[String].map(AsString.apply)),
     {
       case AsString(s) => Json.fromString(s)
       case AsInt(i)    => Json.fromInt(i)
