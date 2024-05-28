@@ -113,9 +113,8 @@ lazy val gateway = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name                                                   := "gateway",
-    libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2"             % "3.8.15",
-    libraryDependencies += "ch.qos.logback"                 % "logback-classic" % "1.4.7",
-    description                                            := "The gateway module of AckCord"
+    description                                            := "The gateway module of AckCord",
+    libraryDependencies += "com.softwaremill.sttp.client3" %% "fs2" % "3.8.15"
   )
 
 lazy val gatewayJVM = gateway.jvm
@@ -154,7 +153,7 @@ lazy val example = project
     noPublishSettings,
     name                                   := "example",
     version                                := "1.0",
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.4.7"
   )
   .dependsOn(ackcordJVM, interactionsJVM)
 
