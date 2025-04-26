@@ -357,6 +357,12 @@ trait DiscordProtocol {
         case ComponentType.UserSelect        => c.as[UserSelect]
         case ComponentType.RoleSelect        => c.as[RoleSelect]
         case ComponentType.MentionableSelect => c.as[MentionableSelect]
+        case ComponentType.TextDisplay       => c.as[TextDisplay]
+        case ComponentType.Thumbnail         => c.as[Thumbnail]
+        case ComponentType.MediaGallery      => c.as[MediaGallery]
+        case ComponentType.File              => c.as[File]
+        case ComponentType.Separator         => c.as[Separator]
+        case ComponentType.Container         => c.as[Container]
         case ComponentType.InputText         => Left(DecodingFailure("Unhandled component type: InputText", c.history))
         case ComponentType.ActionRow         => Left(DecodingFailure("Invalid component type ActionRow", c.history))
         case ComponentType.Unknown(id)       => Left(DecodingFailure(s"Unknown component type $id", c.history))
