@@ -348,6 +348,60 @@ trait DiscordProtocol {
     )
   }
 
+  implicit val textDisplayCodec: Codec[TextDisplay] = {
+    val base: Codec[TextDisplay] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: TextDisplay) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val thumbnailCodec: Codec[Thumbnail] = {
+    val base: Codec[Thumbnail] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: Thumbnail) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val mediaGalleryCodec: Codec[MediaGallery] = {
+    val base: Codec[MediaGallery] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: MediaGallery) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val fileCodec: Codec[File] = {
+    val base: Codec[File] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: File) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val separatorCodec: Codec[Separator] = {
+    val base: Codec[Separator] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: Separator) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
+  implicit val containerCodec: Codec[Container] = {
+    val base: Codec[Container] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: Container) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
       c.get[ComponentType]("type").flatMap {
