@@ -7,6 +7,14 @@ import scala.collection.immutable
 import ackcord.util.{IntCirceEnumWithUnknown, Verifier}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 
+case class UnfurledMediaItem(
+    url: String,
+    proxyUrl: Option[String],
+    height: Option[Int],
+    width: Option[Int],
+    contentType: Option[String]
+)
+
 sealed trait Component {
   def tpe: ComponentType
 }
@@ -249,6 +257,58 @@ case class ChannelSelect(
   override def tpe: ComponentType = ComponentType.ChannelSelect
 }
 
+case class TextDisplay(
+    content: String
+) extends ActionRowContent {
+  override def tpe: ComponentType = ComponentType.TextDisplay
+}
+
+case class Thumbnail(
+    media: UnfurledMediaItem,
+    description: Option[String],
+    spoiler: Option[Boolean]
+) extends Component {
+
+  override def tpe: ComponentType = ComponentType.Thumbnail
+}
+
+case class MediaGalleryItem(
+    media: UnfurledMediaItem,
+    description: Option[String],
+    spoiler: Option[Boolean]
+)
+
+case class MediaGallery(
+    media: Seq[MediaGalleryItem],
+    description: Option[String],
+    spoiler: Option[Boolean]
+) extends Component {
+  override def tpe: ComponentType = ComponentType.MediaGallery
+}
+
+case class File(
+    file: UnfurledMediaItem,
+    spoiler: Option[Boolean]
+) extends Component {
+  override def tpe: ComponentType = ComponentType.File
+}
+
+case class Separator(
+    divider: Option[Boolean] = None,
+    spacing: Option[Int]
+) extends Component {
+  Verifier.requireRangeO(spacing, "Spacing", min = 1, max = 2)
+  override def tpe: ComponentType = ComponentType.Separator
+}
+
+case class Container(
+    components: Seq[ActionRowContent]
+) extends Component {
+  require(components.size <= 5, "Too many components in Container")
+
+  override def tpe: ComponentType = ComponentType.Container
+}
+
 case class SelectOption(
     label: String,
     value: String,
@@ -281,6 +341,13 @@ object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown
   case object RoleSelect        extends ComponentType(6)
   case object MentionableSelect extends ComponentType(7)
   case object ChannelSelect     extends ComponentType(8)
+  // TODO: 9
+  case object TextDisplay  extends ComponentType(10)
+  case object Thumbnail    extends ComponentType(11)
+  case object MediaGallery extends ComponentType(12)
+  case object File         extends ComponentType(13)
+  case object Separator    extends ComponentType(14)
+  case object Container    extends ComponentType(15)
 
   case class Unknown(id: Int) extends ComponentType(id)
 
