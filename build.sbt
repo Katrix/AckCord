@@ -25,23 +25,22 @@ lazy val commonSettings = Seq(
   publishTo := sonatypePublishToBundle.value
 )
 
+inThisBuild(
+  Seq(
+    homepage      := Some(url("https://github.com/Katrix/AckCord")),
+    organization  := "net.katsstuff",
+    licenses      := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
+    developers    := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
+    versionScheme := Some("pvp")
+  )
+)
+
 lazy val publishSettings = Seq(
-  publishMavenStyle      := true,
   Test / publishArtifact := false,
-  licenses               := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
-  scmInfo := Some(
-    ScmInfo(
-      url("https://github.com/Katrix/AckCord"),
-      "scm:git:github.com/Katrix/AckCord",
-      Some("scm:git:github.com/Katrix/AckCord")
-    )
-  ),
   moduleName := {
     val old = moduleName.value
     s"ackcord-$old"
   },
-  homepage        := Some(url("https://github.com/Katrix/AckCord")),
-  developers      := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
   autoAPIMappings := true
 )
 
@@ -53,7 +52,6 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name                                  := "data",
-    version                               := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.8",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core"           % circeVersion,
@@ -76,8 +74,7 @@ lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     publishSettings,
-    name    := "gateway-data",
-    version := ackCordVersion
+    name    := "gateway-data"
   )
   .dependsOn(data)
 
@@ -89,7 +86,6 @@ lazy val requests = project
     commonSettings,
     publishSettings,
     name        := "requests",
-    version     := ackCordVersion,
     description := "The request module of AckCord",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
@@ -105,7 +101,6 @@ lazy val gateway = project
     commonSettings,
     publishSettings,
     name        := "gateway",
-    version     := ackCordVersion,
     description := "The gateway module of AckCord",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
@@ -121,7 +116,6 @@ lazy val voice = project
     commonSettings,
     publishSettings,
     name        := "voice",
-    version     := ackCordVersion,
     description := "The voice websocket module of AckCord",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
@@ -138,7 +132,6 @@ lazy val commands = project
     commonSettings,
     publishSettings,
     name                                   := "commands",
-    version                                := ackCordVersion,
     libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.1",
     description                            := "ackCord-commands provides a Play like commands framework for AckCord"
   )
@@ -149,7 +142,6 @@ val interactions = project
     commonSettings,
     publishSettings,
     name        := "interactions",
-    version     := ackCordVersion,
     description := "ackCord-interactions provides a high level API to interact with Discord's interactions"
   )
   .dependsOn(requests)
@@ -159,7 +151,6 @@ lazy val core = project
     commonSettings,
     publishSettings,
     name    := "core",
-    version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
       "org.scalatest"     %% "scalatest"    % "3.2.11"    % Test
@@ -173,7 +164,6 @@ lazy val lavaplayerCore = project
     commonSettings,
     publishSettings,
     name    := "lavaplayer-core",
-    version := ackCordVersion,
     resolvers += Resolver.JCenterRepository,
     resolvers += "dv8tion" at "https://m2.dv8tion.net/releases",
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.78",
@@ -186,7 +176,6 @@ lazy val ackCord = project
     commonSettings,
     publishSettings,
     name                                       := "ackcord",
-    version                                    := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     moduleName                                 := "ackcord",
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
@@ -286,6 +275,5 @@ lazy val ackCordRoot = project
   .settings(
     commonSettings,
     publishSettings,
-    noPublishSettings,
-    version := ackCordVersion
+    noPublishSettings
   )
