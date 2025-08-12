@@ -73,7 +73,7 @@ lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
   .settings(
     commonSettings,
     publishSettings,
-    name    := "gateway-data"
+    name := "gateway-data"
   )
   .dependsOn(data)
 
@@ -149,7 +149,7 @@ lazy val core = project
   .settings(
     commonSettings,
     publishSettings,
-    name    := "core",
+    name := "core",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
       "org.scalatest"     %% "scalatest"    % "3.2.11"    % Test
@@ -162,7 +162,7 @@ lazy val lavaplayerCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name    := "lavaplayer-core",
+    name := "lavaplayer-core",
     resolvers += Resolver.JCenterRepository,
     resolvers += "dv8tion" at "https://m2.dv8tion.net/releases",
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.78",
