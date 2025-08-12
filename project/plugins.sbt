@@ -10,4 +10,4 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-yaml" % circeVersion
 )
 
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.12")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.1")

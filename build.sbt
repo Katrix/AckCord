@@ -21,8 +21,7 @@ lazy val commonSettings = Seq(
       Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
     else Nil
   ),
-  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
-  publishTo := sonatypePublishToBundle.value
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
 )
 
 inThisBuild(
