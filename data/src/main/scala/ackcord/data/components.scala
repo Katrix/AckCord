@@ -267,7 +267,7 @@ case class Thumbnail(
     media: UnfurledMediaItem,
     description: Option[String],
     spoiler: Option[Boolean]
-) extends Component {
+) extends ActionRowContent {
 
   override def tpe: ComponentType = ComponentType.Thumbnail
 }
@@ -282,28 +282,28 @@ case class MediaGallery(
     media: Seq[MediaGalleryItem],
     description: Option[String],
     spoiler: Option[Boolean]
-) extends Component {
+) extends ActionRowContent {
   override def tpe: ComponentType = ComponentType.MediaGallery
 }
 
 case class File(
     file: UnfurledMediaItem,
     spoiler: Option[Boolean]
-) extends Component {
+) extends ActionRowContent {
   override def tpe: ComponentType = ComponentType.File
 }
 
 case class Separator(
     divider: Option[Boolean] = None,
     spacing: Option[Int]
-) extends Component {
+) extends ActionRowContent {
   Verifier.requireRangeO(spacing, "Spacing", min = 1, max = 2)
   override def tpe: ComponentType = ComponentType.Separator
 }
 
 case class Container(
     components: Seq[ActionRowContent]
-) extends Component {
+) extends ActionRowContent {
   require(components.size <= 5, "Too many components in Container")
 
   override def tpe: ComponentType = ComponentType.Container

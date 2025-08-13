@@ -272,6 +272,12 @@ trait DiscordProtocol {
   implicit private val rawButtonCodec: Codec[RawButton] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit private val unfurledMediaItemCodec: Codec[UnfurledMediaItem] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit private val mediaGalleryItemCodec: Codec[MediaGalleryItem] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val buttonEncoder: Encoder[Button] = (a: Button) => {
     val rawButton = a match {
       case raw: RawButton => raw
