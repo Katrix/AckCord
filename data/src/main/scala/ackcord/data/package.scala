@@ -556,6 +556,15 @@ package object data {
     val Ephermal: MessageFlags                         = MessageFlags(1 << 6)
     val Loading: MessageFlags                          = MessageFlags(1 << 7)
     val FailedToMentionSomeRolesInThread: MessageFlags = MessageFlags(1 << 8)
+    val IsVoiceMessage: MessageFlags                   = MessageFlags(1 << 13)
+    val HasSnapshot: MessageFlags                      = MessageFlags(1 << 14)
+
+    /**
+      * This message uses the components v2 system. When set, the message's
+      * `components` may contain layout components such as [[Container]], [[Section]]
+      * and [[MediaGallery]] instead of only [[ActionRow]]s.
+      */
+    val IsComponentsV2: MessageFlags = MessageFlags(1 << 15)
   }
   implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
 

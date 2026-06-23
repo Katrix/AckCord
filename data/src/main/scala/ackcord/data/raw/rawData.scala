@@ -569,7 +569,7 @@ case class RawMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[RawMessage],
     interaction: Option[MessageInteraction],
-    components: Option[Seq[ActionRow]],
+    components: Option[Seq[TopLevelComponent]],
     thread: Option[RawChannel]
 ) {
 

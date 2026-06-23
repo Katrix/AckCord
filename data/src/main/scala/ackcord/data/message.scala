@@ -376,7 +376,7 @@ sealed trait Message {
   def guildMember(implicit c: CacheSnapshot): Option[GuildMember]
 
   /** The extra interaction components added to this message. */
-  def components: Seq[ActionRow]
+  def components: Seq[TopLevelComponent]
 
   /** If the author is a user, their user id. */
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
@@ -429,7 +429,7 @@ case class SparseMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction],
-    components: Seq[ActionRow],
+    components: Seq[TopLevelComponent],
     threadId: Option[ThreadGuildChannelId]
 ) extends Message {
 
@@ -452,7 +452,10 @@ case class SparseMessage(
   override private[ackcord] def withReactions(reactions: Seq[Reaction]): SparseMessage = copy(reactions = reactions)
 
   override def updateButton(identifier: String, f: TextButton => Button): SparseMessage =
-    copy(components = components.map(_.updateButton(identifier, f)))
+    copy(components = components.map {
+      case actionRow: ActionRow => actionRow.updateButton(identifier, f)
+      case other                => other
+    })
 }
 
 /**
@@ -499,7 +502,7 @@ case class GuildGatewayMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction],
-    components: Seq[ActionRow],
+    components: Seq[TopLevelComponent],
     threadId: Option[ThreadGuildChannelId]
 ) extends Message {
 
@@ -542,7 +545,10 @@ case class GuildGatewayMessage(
     copy(reactions = reactions)
 
   override def updateButton(identifier: String, f: TextButton => Button): GuildGatewayMessage =
-    copy(components = components.map(_.updateButton(identifier, f)))
+    copy(components = components.map {
+      case actionRow: ActionRow => actionRow.updateButton(identifier, f)
+      case other                => other
+    })
 }
 
 /**
