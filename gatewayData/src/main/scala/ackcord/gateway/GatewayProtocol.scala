@@ -259,7 +259,7 @@ object GatewayProtocol extends DiscordProtocol {
       stickerItems      <- c.get[JsonOption[Seq[StickerItem]]]("sticker_items")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
       interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
-      components        <- c.get[JsonOption[Seq[ActionRow]]]("components")
+      components        <- c.get[JsonOption[Seq[TopLevelComponent]]]("components")
       thread            <- c.get[JsonOption[RawChannel]]("thread")
     } yield GatewayEvent.RawPartialMessage(
       id,

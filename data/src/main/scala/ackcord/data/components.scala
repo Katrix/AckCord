@@ -19,9 +19,19 @@ sealed trait Component {
   def tpe: ComponentType
 }
 
+/**
+  * A component that can be placed at the top level of a message's components, or
+  * inside a [[Container]]. When the [[MessageFlags.IsComponentsV2]] flag is set on
+  * a message, its components can be any of these, rather than only [[ActionRow]]s.
+  */
+sealed trait TopLevelComponent extends Component
+
+/** A component that can be used as the accessory of a [[Section]]. */
+sealed trait SectionAccessory extends Component
+
 case class ActionRow private (
     components: Seq[ActionRowContent]
-) extends Component {
+) extends TopLevelComponent {
   require(components.size <= 5, "Too many components in ActionRow")
 
   override def tpe: ComponentType = ComponentType.ActionRow
@@ -48,7 +58,7 @@ sealed trait InteractiveComponent extends ActionRowContent {
   def customId: String
 }
 
-sealed trait Button extends ActionRowContent {
+sealed trait Button extends ActionRowContent with SectionAccessory {
   def tpe: ComponentType = ComponentType.Button
 
   def label: Option[String]
@@ -259,53 +269,65 @@ case class ChannelSelect(
 
 case class TextDisplay(
     content: String
-) extends ActionRowContent {
+) extends TopLevelComponent {
   override def tpe: ComponentType = ComponentType.TextDisplay
+}
+
+case class Section(
+    components: Seq[TextDisplay],
+    accessory: SectionAccessory
+) extends TopLevelComponent {
+  Verifier.requireLengthS(components, "Section components", max = 3)
+
+  override def tpe: ComponentType = ComponentType.Section
 }
 
 case class Thumbnail(
     media: UnfurledMediaItem,
-    description: Option[String],
-    spoiler: Option[Boolean]
-) extends ActionRowContent {
+    description: Option[String] = None,
+    spoiler: Option[Boolean] = None
+) extends SectionAccessory {
 
   override def tpe: ComponentType = ComponentType.Thumbnail
 }
 
 case class MediaGalleryItem(
     media: UnfurledMediaItem,
-    description: Option[String],
-    spoiler: Option[Boolean]
+    description: Option[String] = None,
+    spoiler: Option[Boolean] = None
 )
 
 case class MediaGallery(
-    media: Seq[MediaGalleryItem],
-    description: Option[String],
-    spoiler: Option[Boolean]
-) extends ActionRowContent {
+    items: Seq[MediaGalleryItem]
+) extends TopLevelComponent {
+  Verifier.requireLengthS(items, "Media gallery items", max = 10)
+
   override def tpe: ComponentType = ComponentType.MediaGallery
 }
 
 case class File(
     file: UnfurledMediaItem,
-    spoiler: Option[Boolean]
-) extends ActionRowContent {
+    spoiler: Option[Boolean] = None,
+    // Provided by Discord on the response, ignored when sending
+    name: Option[String] = None,
+    size: Option[Int] = None
+) extends TopLevelComponent {
   override def tpe: ComponentType = ComponentType.File
 }
 
 case class Separator(
     divider: Option[Boolean] = None,
-    spacing: Option[Int]
-) extends ActionRowContent {
+    spacing: Option[Int] = None
+) extends TopLevelComponent {
   Verifier.requireRangeO(spacing, "Spacing", min = 1, max = 2)
   override def tpe: ComponentType = ComponentType.Separator
 }
 
 case class Container(
-    components: Seq[ActionRowContent]
-) extends ActionRowContent {
-  require(components.size <= 5, "Too many components in Container")
-
+    components: Seq[TopLevelComponent],
+    accentColor: Option[Int] = None,
+    spoiler: Option[Boolean] = None
+) extends TopLevelComponent {
   override def tpe: ComponentType = ComponentType.Container
 }
 
@@ -341,13 +363,13 @@ object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown
   case object RoleSelect        extends ComponentType(6)
   case object MentionableSelect extends ComponentType(7)
   case object ChannelSelect     extends ComponentType(8)
-  // TODO: 9
+  case object Section           extends ComponentType(9)
   case object TextDisplay  extends ComponentType(10)
   case object Thumbnail    extends ComponentType(11)
   case object MediaGallery extends ComponentType(12)
   case object File         extends ComponentType(13)
   case object Separator    extends ComponentType(14)
-  case object Container    extends ComponentType(15)
+  case object Container    extends ComponentType(17)
 
   case class Unknown(id: Int) extends ComponentType(id)
 

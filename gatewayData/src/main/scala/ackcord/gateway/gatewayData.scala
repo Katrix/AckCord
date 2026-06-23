@@ -982,7 +982,7 @@ object GatewayEvent {
       stickerItems: JsonOption[Seq[StickerItem]],
       referencedMessage: JsonOption[RawPartialMessage],
       interaction: JsonOption[MessageInteraction],
-      components: JsonOption[Seq[ActionRow]],
+      components: JsonOption[Seq[TopLevelComponent]],
       thread: JsonOption[RawChannel]
   )
 

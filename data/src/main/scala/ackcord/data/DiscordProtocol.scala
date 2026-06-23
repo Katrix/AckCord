@@ -372,6 +372,29 @@ trait DiscordProtocol {
     )
   }
 
+  implicit val sectionAccessoryCodec: Codec[SectionAccessory] = Codec.from(
+    (c: HCursor) =>
+      c.get[ComponentType]("type").flatMap {
+        case ComponentType.Button      => c.as[Button]
+        case ComponentType.Thumbnail   => c.as[Thumbnail]
+        case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown section accessory type $id", c.history))
+        case other                     => Left(DecodingFailure(s"Invalid section accessory type ${other.value}", c.history))
+      },
+    {
+      case button: Button       => button.asJson
+      case thumbnail: Thumbnail => thumbnail.asJson
+    }
+  )
+
+  implicit val sectionCodec: Codec[Section] = {
+    val base: Codec[Section] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(
+      base,
+      (a: Section) => base(a).deepMerge(Json.obj("type" := a.tpe))
+    )
+  }
+
   implicit val mediaGalleryCodec: Codec[MediaGallery] = {
     val base: Codec[MediaGallery] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -399,14 +422,25 @@ trait DiscordProtocol {
     )
   }
 
-  implicit val containerCodec: Codec[Container] = {
-    val base: Codec[Container] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-
-    Codec.from(
-      base,
-      (a: Container) => base(a).deepMerge(Json.obj("type" := a.tpe))
-    )
-  }
+  // Hand-written rather than derived because a Container's children are themselves
+  // top-level components (including other Containers in theory). Keeping the recursive
+  // reference to componentCodec inside the encode/decode functions means it's resolved
+  // lazily at runtime, so the initialization order of the two codecs doesn't matter.
+  implicit val containerCodec: Codec[Container] = Codec.from(
+    (c: HCursor) =>
+      for {
+        components  <- c.get[Seq[TopLevelComponent]]("components")
+        accentColor <- c.get[Option[Int]]("accent_color")
+        spoiler     <- c.get[Option[Boolean]]("spoiler")
+      } yield Container(components, accentColor, spoiler),
+    (a: Container) =>
+      Json.obj(
+        "type"         := a.tpe,
+        "components"   := a.components,
+        "accent_color" := a.accentColor,
+        "spoiler"      := a.spoiler
+      )
+  )
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
     (c: HCursor) =>
@@ -417,15 +451,9 @@ trait DiscordProtocol {
         case ComponentType.UserSelect        => c.as[UserSelect]
         case ComponentType.RoleSelect        => c.as[RoleSelect]
         case ComponentType.MentionableSelect => c.as[MentionableSelect]
-        case ComponentType.TextDisplay       => c.as[TextDisplay]
-        case ComponentType.Thumbnail         => c.as[Thumbnail]
-        case ComponentType.MediaGallery      => c.as[MediaGallery]
-        case ComponentType.File              => c.as[File]
-        case ComponentType.Separator         => c.as[Separator]
-        case ComponentType.Container         => c.as[Container]
         case ComponentType.InputText         => Left(DecodingFailure("Unhandled component type: InputText", c.history))
-        case ComponentType.ActionRow         => Left(DecodingFailure("Invalid component type ActionRow", c.history))
         case ComponentType.Unknown(id)       => Left(DecodingFailure(s"Unknown component type $id", c.history))
+        case other                           => Left(DecodingFailure(s"Invalid action row component type ${other.value}", c.history))
       },
     {
       case button: Button          => button.asJson
@@ -442,6 +470,33 @@ trait DiscordProtocol {
 
     Codec.from(base, base.mapJson(json => json.deepMerge(Json.obj("type" := 1))))
   }
+
+  // The components of a message. Discord only allows these specific component types
+  // at the top level (and inside a Container). Plain Buttons, selects and Thumbnails
+  // are not valid here, they only appear nested inside an ActionRow or a Section.
+  implicit val componentCodec: Codec[TopLevelComponent] = Codec.from(
+    (c: HCursor) =>
+      c.get[ComponentType]("type").flatMap {
+        case ComponentType.ActionRow    => c.as[ActionRow]
+        case ComponentType.Section      => c.as[Section]
+        case ComponentType.TextDisplay  => c.as[TextDisplay]
+        case ComponentType.MediaGallery => c.as[MediaGallery]
+        case ComponentType.File         => c.as[File]
+        case ComponentType.Separator    => c.as[Separator]
+        case ComponentType.Container    => c.as[Container]
+        case ComponentType.Unknown(id)  => Left(DecodingFailure(s"Unknown top level component type $id", c.history))
+        case other                      => Left(DecodingFailure(s"Invalid top level component type ${other.value}", c.history))
+      },
+    {
+      case actionRow: ActionRow       => actionRow.asJson
+      case section: Section           => section.asJson
+      case textDisplay: TextDisplay   => textDisplay.asJson
+      case mediaGallery: MediaGallery => mediaGallery.asJson
+      case file: File                 => file.asJson
+      case separator: Separator       => separator.asJson
+      case container: Container       => container.asJson
+    }
+  )
   implicit val applicationCodec: Codec[Application] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -522,7 +577,7 @@ trait DiscordProtocol {
       stickerItems       <- c.get[Option[Seq[StickerItem]]]("sticker_items")
       referencedMessage  <- c.get[Option[RawMessage]]("referenced_message")
       messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
-      components         <- c.get[Option[Seq[ActionRow]]]("components")
+      components         <- c.get[Option[Seq[TopLevelComponent]]]("components")
       thread             <- c.get[Option[RawChannel]]("thread")
     } yield RawMessage(
       id,

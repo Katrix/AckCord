@@ -294,7 +294,7 @@ case class InteractionPartialMessage(
     pinned: Boolean,
     `type`: MessageType,
     flags: MessageFlags,
-    components: Option[Seq[ActionRow]]
+    components: Option[Seq[TopLevelComponent]]
 )
 
 case class ApplicationCommandInteractionDataOption[A](
